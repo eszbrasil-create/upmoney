@@ -1,0 +1,32 @@
+/* Fonte Google (Poppins) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Tailwind */
+@import "tailwindcss";
+
+/* Aplica a fonte globalmente */
+@layer base {
+  html {
+    font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, 
+    "Segoe UI", Roboto, Arial, sans-serif;
+  }
+}
+/* Scrollbar fina e elegante */
+::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.25);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.45);
+}
+

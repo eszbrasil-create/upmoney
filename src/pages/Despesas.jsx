@@ -1,0 +1,616 @@
+// src/pages/Despesas.jsx
+import React, { useEffect, useMemo, useState } from "react";
+import { Trash2, Download, Eraser } from "lucide-react";
+
+const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const ANOS = [2025, 2026];
+
+function novaLinha(tipo = "DESPESA") {
+  return {
+    id: crypto.randomUUID(),
+    tipo, // "RECEITA" | "DESPESA"
+    descricao: "",
+    valores: Array(12).fill(""),
+  };
+}
+
+const lsKeyForAno = (ano) => `cc_despesas_${ano}`;
+
+const initialAno = (() => {
+  const atual = new Date().getFullYear();
+  return ANOS.includes(atual) ? atual : ANOS[0];
+})();
+
+export default function DespesasPage() {
+  // ===== Ano selecionado =====
+  const [anoSelecionado, setAnoSelecionado] = useState(initialAno);
+
+  // ===== Linhas: carrega do localStorage na criação =====
+  const [linhas, setLinhas] = useState(() => {
+    try {
+      const raw = localStorage.getItem(lsKeyForAno(initialAno));
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Trocar ano
+  const trocarAno = (ano) => {
+    setAnoSelecionado(ano);
+    try {
+      const raw = localStorage.getItem(lsKeyForAno(ano));
+      setLinhas(raw ? JSON.parse(raw) : []);
+    } catch {
+      setLinhas([]);
+    }
+  };
+
+  // Salvar sempre que ano ou linhas mudarem
+  useEffect(() => {
+    try {
+      localStorage.setItem(lsKeyForAno(anoSelecionado), JSON.stringify(linhas));
+    } catch {}
+  }, [linhas, anoSelecionado]);
+
+  // Helpers de edição
+  const setDescricao = (id, texto) =>
+    setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, descricao: texto } : l)));
+
+  const setValor = (id, mesIdx, texto) =>
+    setLinhas((prev) =>
+      prev.map((l) =>
+        l.id === id
+          ? { ...l, valores: l.valores.map((v, i) => (i === mesIdx ? texto : v)) }
+          : l
+      )
+    );
+
+  const delLinha = (id) => setLinhas((prev) => prev.filter((l) => l.id !== id));
+
+  const fillAteFim = (id, mesIdx) =>
+    setLinhas((prev) =>
+      prev.map((l) => {
+        if (l.id !== id) return l;
+        const base = l.valores[mesIdx];
+        const novos = l.valores.map((v, i) => (i >= mesIdx ? base : v));
+        return { ...l, valores: novos };
+      })
+    );
+
+  // Conversão para número inteiro (arredondado)
+  const toNum = (x) => {
+    if (x === "" || x === null || x === undefined) return 0;
+    const n = Number(String(x).replace(",", "."));
+    if (!Number.isFinite(n)) return 0;
+    return Math.round(n);
+  };
+
+  const receitas = useMemo(() => linhas.filter((l) => l.tipo === "RECEITA"), [linhas]);
+  const despesas = useMemo(() => linhas.filter((l) => l.tipo === "DESPESA"), [linhas]);
+
+  const addReceita = () => setLinhas((prev) => [...prev, novaLinha("RECEITA")]);
+  const addDespesa = () => setLinhas((prev) => [...prev, novaLinha("DESPESA")]);
+
+  // Totais
+  const {
+    totReceitas, totDespesas, saldo,
+    totalReceitasAno, totalDespesasAno, saldoAno,
+  } = useMemo(() => {
+    const r = Array(12).fill(0);
+    const d = Array(12).fill(0);
+    for (const l of linhas) {
+      for (let i = 0; i < 12; i++) {
+        const n = toNum(l.valores[i]);
+        if (l.tipo === "RECEITA") r[i] += n;
+        else d[i] += n;
+      }
+    }
+    const s = r.map((v, i) => v - d[i]);
+    const sum = (arr) => arr.reduce((a, b) => a + b, 0);
+    return {
+      totReceitas: r,
+      totDespesas: d,
+      saldo: s,
+      totalReceitasAno: sum(r),
+      totalDespesasAno: sum(d),
+      saldoAno: sum(r) - sum(d),
+    };
+  }, [linhas]);
+
+  const fmtBR = (v) =>
+    Math.round(v).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+
+  const exportCSV = () => {
+    const header = ["Tipo","Descrição",...MESES,"Total"];
+    const rows = [
+      ["— RECEITAS —","",...Array(12).fill(""),""],
+      ...receitas.map((l) => {
+        const valoresNum = l.valores.map(toNum);
+        const total = valoresNum.reduce((a,b)=>a+b,0);
+        return [l.tipo, l.descricao, ...valoresNum.map(Math.round), Math.round(total)];
+      }),
+      ["TOTAL RECEITAS","",...totReceitas.map(Math.round), Math.round(totalReceitasAno)],
+      ["— DESPESAS —","",...Array(12).fill(""),""],
+      ...despesas.map((l) => {
+        const valoresNum = l.valores.map(toNum);
+        const total = valoresNum.reduce((a,b)=>a+b,0);
+        return [l.tipo, l.descricao, ...valoresNum.map(Math.round), Math.round(total)];
+      }),
+      ["TOTAL DESPESAS","",...totDespesas.map(Math.round), Math.round(totalDespesasAno)],
+      ["SALDO (R-D)","",...saldo.map(Math.round), Math.round(saldoAno)],
+    ];
+
+    const csv = [header, ...rows]
+      .map((r) => r.map((v) => (typeof v === "string" ? `"${v.replace(/"/g,'""')}"` : v)).join(";"))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `despesas_${anoSelecionado}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const clearAll = () => {
+    if (confirm(`Apagar todas as linhas de ${anoSelecionado}?`)) {
+      setLinhas([]);
+      try { localStorage.removeItem(lsKeyForAno(anoSelecionado)); } catch {}
+    }
+  };
+
+  // Layout
+  const colW = "w-20";
+  const firstColWidth = "w-[240px]";
+  const actionsColWidth = "w-14";
+  const tableMinW = "min-w-[1400px]";
+
+  const cellBase =
+    "px-3 py-1.5 border-t border-slate-700 text-right text-sm whitespace-nowrap";
+  const headBase =
+    "px-3 py-1.5 border-t border-slate-700 text-slate-300 text-sm font-medium text-right";
+  const firstColHead =
+    "px-3 py-1.5 border-t border-slate-700 text-slate-300 text-sm font-semibold text-left";
+  const firstColCell =
+    "px-3 py-1.5 border-t border-slate-700 text-sm text-left";
+
+  const SectionDivider = ({ label, variant }) => (
+    <tr>
+      <td colSpan={MESES.length + 3} className="py-2">
+        <div className="flex items-center gap-3">
+          <div className="h-0.5 w-full bg-slate-700" />
+          <span
+            className={[
+              "text-xs uppercase tracking-wider",
+              variant === "green" ? "text-emerald-300 font-semibold" : "",
+              variant === "red" ? "text-rose-300 font-semibold" : "",
+            ].join(" ").trim()}
+          >
+            {label}
+          </span>
+          <div className="h-0.5 w-full bg-slate-700" />
+        </div>
+      </td>
+    </tr>
+  );
+
+  // ===== Navegação por teclado =====
+  const focusCell = (sec, row, col) => {
+    const el = document.querySelector(
+      `input[data-sec="${sec}"][data-row="${row}"][data-col="${col}"]`
+    );
+    if (el) el.focus();
+  };
+
+  const focusDesc = (sec, row) => {
+    const el = document.querySelector(
+      `input[data-dsec="${sec}"][data-drow="${row}"]`
+    );
+    if (el) el.focus();
+  };
+
+  // Células de valor: Enter + setas
+  const handleKeyVal = (sec, rowIdx, colIdx) => (e) => {
+    const key = e.key;
+
+    if (key === "Enter" || key === "ArrowRight") {
+      e.preventDefault();
+      const next = colIdx + 1;
+      if (next < 12) {
+        focusCell(sec, rowIdx, next);
+      }
+      return;
+    }
+
+    if (key === "ArrowLeft") {
+      e.preventDefault();
+      if (colIdx > 0) {
+        focusCell(sec, rowIdx, colIdx - 1);
+      } else {
+        // volta para descrição da mesma linha
+        focusDesc(sec, rowIdx);
+      }
+      return;
+    }
+
+    if (key === "ArrowDown") {
+      e.preventDefault();
+      focusCell(sec, rowIdx + 1, colIdx); // se não existir linha, não faz nada
+      return;
+    }
+
+    if (key === "ArrowUp") {
+      e.preventDefault();
+      if (rowIdx > 0) {
+        focusCell(sec, rowIdx - 1, colIdx);
+      }
+      return;
+    }
+  };
+
+  // Descrição: Enter + setas
+  const handleKeyDesc = (sec, rowIdx) => (e) => {
+    const key = e.key;
+
+    if (key === "Enter" || key === "ArrowDown") {
+      e.preventDefault();
+      focusDesc(sec, rowIdx + 1);
+      return;
+    }
+
+    if (key === "ArrowUp") {
+      e.preventDefault();
+      if (rowIdx > 0) focusDesc(sec, rowIdx - 1);
+      return;
+    }
+
+    if (key === "ArrowRight") {
+      e.preventDefault();
+      // vai para a primeira célula de mês (coluna 0)
+      focusCell(sec, rowIdx, 0);
+      return;
+    }
+  };
+
+  const saldoRowClass =
+    (saldoAno >= 0 ? "text-emerald-300" : "text-rose-300") + " font-bold";
+
+  // Resumo compacto (texto abaixo do título)
+  const percGasto =
+    totalReceitasAno > 0 ? (totalDespesasAno / totalReceitasAno) * 100 : 0;
+  const saldoMedioMensal = saldoAno / 12;
+
+  return (
+    <div className="h-screen flex flex-col pr-0 pl-0">
+      {/* Cabeçalho + ações */}
+      <div className="mb-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          {/* Título + seleção de ano */}
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-slate-100 text-3xl font-semibold">
+              Despesas
+            </h1>
+            <div className="inline-flex rounded-full bg-slate-800 p-1 text-xs">
+              {ANOS.map((ano) => (
+                <button
+                  key={ano}
+                  onClick={() => trocarAno(ano)}
+                  className={[
+                    "px-3 py-1 rounded-full transition-colors",
+                    anoSelecionado === ano
+                      ? "bg-slate-100 text-slate-900 font-semibold"
+                      : "text-slate-300 hover:bg-slate-700",
+                  ].join(" ")}
+                >
+                  {ano}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Botões */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={addReceita}
+              className="px-3 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-500"
+            >
+              + Receita
+            </button>
+            <button
+              onClick={addDespesa}
+              className="px-3 py-2 rounded-md bg-rose-600 text-white text-sm hover:bg-rose-500"
+            >
+              + Despesa
+            </button>
+
+            <button
+              onClick={exportCSV}
+              title="Exportar CSV"
+              className="flex items-center gap-1 px-3 py-2 rounded-md bg-slate-700 text-white text-sm hover:bg-slate-600"
+            >
+              <Download size={16} /> Exportar
+            </button>
+
+            <button
+              onClick={clearAll}
+              title="Limpar tudo"
+              className="flex items-center gap-1 px-3 py-2 rounded-md bg-slate-800 text-white text-sm hover:bg-slate-700"
+            >
+              <Eraser size={16} /> Limpar
+            </button>
+          </div>
+        </div>
+
+        {/* Resumo compacto textual */}
+        <div className="mt-2 text-[11px] sm:text-xs text-slate-400">
+          {totalReceitasAno > 0 ? (
+            <>
+              Em <span className="font-semibold text-slate-200">{anoSelecionado}</span> você está
+              gastando{" "}
+              <span className="font-semibold text-rose-300">
+                {percGasto.toFixed(0)}%
+              </span>{" "}
+              do que ganha. Saldo médio mensal:{" "}
+              <span
+                className={[
+                  "font-semibold",
+                  saldoMedioMensal >= 0 ? "text-emerald-300" : "text-rose-300",
+                ].join(" ")}
+              >
+                {fmtBR(saldoMedioMensal)}
+              </span>
+              .
+            </>
+          ) : (
+            <>Preencha suas receitas para ver o resumo anual de {anoSelecionado}.</>
+          )}
+        </div>
+      </div>
+
+      {/* Tabela */}
+      <div className="flex-1 overflow-hidden rounded-lg border border-slate-800 bg-slate-900/30">
+        <div className="relative h-full overflow-y-auto">
+          <table className={`table-fixed ${tableMinW} w-full`}>
+            <colgroup>
+              <col className={actionsColWidth} />
+              <col className={firstColWidth} />
+              {MESES.map((_, i) => (
+                <col key={`c${i}`} className={colW} />
+              ))}
+              <col className={colW} />
+            </colgroup>
+
+            <thead className="sticky top-0 z-30 bg-slate-900">
+              <tr>
+                <th
+                  className="px-2 py-1.5 border-t border-slate-700 text-slate-300 text-sm font-medium text-center sticky left-0 bg-slate-900 z-30"
+                />
+                <th
+                  className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 z-20`}
+                >
+                  Descrição
+                </th>
+                {MESES.map((m) => (
+                  <th key={m} className={headBase}>{m}</th>
+                ))}
+                <th className={headBase}>Total</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {/* RECEITAS */}
+              <SectionDivider label="Receitas" variant="green" />
+
+              {receitas.map((l, rIdx) => {
+                const valoresNum = l.valores.map(toNum);
+                const somaLinha = valoresNum.reduce((a, b) => a + b, 0);
+                return (
+                  <tr key={l.id} className="hover:bg-slate-800/30">
+                    <td className="px-2 py-1.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900">
+                      <button
+                        onClick={() => delLinha(l.id)}
+                        className="p-1.5 rounded hover:bg-white/10 text-slate-400 hover:text-rose-400"
+                        title="Excluir linha"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+
+                    <td className={`${firstColCell} sticky left-[3.5rem] bg-slate-900`}>
+                      <input
+                        className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500"
+                        placeholder="Nova receita"
+                        value={l.descricao}
+                        onChange={(e) => setDescricao(l.id, e.target.value)}
+                        onKeyDown={handleKeyDesc("rec", rIdx)}
+                        data-dsec="rec"
+                        data-drow={rIdx}
+                      />
+                    </td>
+
+                    {MESES.map((_, i) => (
+                      <td key={i} className={cellBase}>
+                        <input
+                          className="w-full bg-transparent outline-none text-slate-100 text-right placeholder:text-slate-600"
+                          inputMode="numeric"
+                          placeholder="0"
+                          value={String(l.valores[i] ?? "")}
+                          onChange={(e) => setValor(l.id, i, e.target.value)}
+                          onBlur={(e) => {
+                            const n = toNum(e.target.value);
+                            setValor(l.id, i, n === 0 ? "" : String(n));
+                          }}
+                          onDoubleClick={() => fillAteFim(l.id, i)}
+                          onKeyDown={handleKeyVal("rec", rIdx, i)}
+                          data-sec="rec"
+                          data-row={rIdx}
+                          data-col={i}
+                          title="Setas: navegar • Enter/→: próxima célula • Duplo clique: copiar até o fim"
+                        />
+                      </td>
+                    ))}
+
+                    <td className={`${cellBase} font-semibold text-slate-200`}>
+                      {fmtBR(somaLinha)}
+                    </td>
+                  </tr>
+                );
+              })}
+
+              {/* TOTAL RECEITAS */}
+              <tr className="bg-slate-900">
+                <td
+                  className="sticky left-0 bg-slate-900 border-t border-slate-700"
+                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                />
+                <td
+                  className={`${firstColHead} text-emerald-300 sticky left-[3.5rem] bg-slate-900`}
+                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                >
+                  Total Receitas
+                </td>
+                {totReceitas.map((v, i) => (
+                  <td
+                    key={`tr${i}`}
+                    className={`${headBase} text-emerald-300 bg-slate-900`}
+                  >
+                    {fmtBR(v)}
+                  </td>
+                ))}
+                <td
+                  className={`${headBase} font-semibold text-emerald-300 bg-slate-900`}
+                >
+                  {fmtBR(totalReceitasAno)}
+                </td>
+              </tr>
+
+              {/* DESPESAS */}
+              <SectionDivider label="Despesas" variant="red" />
+
+              {despesas.map((l, dIdx) => {
+                const valoresNum = l.valores.map(toNum);
+                const somaLinha = valoresNum.reduce((a, b) => a + b, 0);
+                return (
+                  <tr key={l.id} className="hover:bg-slate-800/30">
+                    <td className="px-2 py-1.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900">
+                      <button
+                        onClick={() => delLinha(l.id)}
+                        className="p-1.5 rounded hover:bg-white/10 text-slate-400 hover:text-rose-400"
+                        title="Excluir linha"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+
+                    <td className={`${firstColCell} sticky left-[3.5rem] bg-slate-900`}>
+                      <input
+                        className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500"
+                        placeholder="Nova despesa"
+                        value={l.descricao}
+                        onChange={(e) => setDescricao(l.id, e.target.value)}
+                        onKeyDown={handleKeyDesc("des", dIdx)}
+                        data-dsec="des"
+                        data-drow={dIdx}
+                      />
+                    </td>
+
+                    {MESES.map((_, i) => (
+                      <td key={i} className={cellBase}>
+                        <input
+                          className="w-full bg-transparent outline-none text-slate-100 text-right placeholder:text-slate-600"
+                          inputMode="numeric"
+                          placeholder="0"
+                          value={String(l.valores[i] ?? "")}
+                          onChange={(e) => setValor(l.id, i, e.target.value)}
+                          onBlur={(e) => {
+                            const n = toNum(e.target.value);
+                            setValor(l.id, i, n === 0 ? "" : String(n));
+                          }}
+                          onDoubleClick={() => fillAteFim(l.id, i)}
+                          onKeyDown={handleKeyVal("des", dIdx, i)}
+                          data-sec="des"
+                          data-row={dIdx}
+                          data-col={i}
+                          title="Setas: navegar • Enter/→: próxima célula • Duplo clique: copiar até o fim"
+                        />
+                      </td>
+                    ))}
+
+                    <td className={`${cellBase} font-semibold text-slate-200`}>
+                      {fmtBR(somaLinha)}
+                    </td>
+                  </tr>
+                );
+              })}
+
+              {/* TOTAL DESPESAS – fixo */}
+              <tr>
+                <td
+                  className="sticky bottom-[40px] left-0 z-20 bg-slate-900 border-t border-slate-700"
+                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                />
+                <td
+                  className={`${firstColHead} text-rose-300 sticky bottom-[40px] left-[3.5rem] z-20 bg-slate-900`}
+                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                >
+                  Total Despesas
+                </td>
+                {totDespesas.map((v, i) => (
+                  <td
+                    key={`td${i}`}
+                    className={`${headBase} text-rose-300 sticky bottom-[40px] z-20 bg-slate-900`}
+                    style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                  >
+                    {fmtBR(v)}
+                  </td>
+                ))}
+                <td
+                  className={`${headBase} font-semibold text-rose-300 sticky bottom-[40px] z-20 bg-slate-900`}
+                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                >
+                  {fmtBR(totalDespesasAno)}
+                </td>
+              </tr>
+
+              {/* SALDO – fixo */}
+              <tr>
+                <td
+                  className="sticky bottom-0 left-0 z-30 bg-slate-900 border-t border-slate-700"
+                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                />
+                <td
+                  className={`${firstColHead} sticky bottom-0 left-[3.5rem] z-30 bg-slate-900 ${saldoRowClass}`}
+                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                >
+                  Saldo (R − D)
+                </td>
+                {saldo.map((v, i) => (
+                  <td
+                    key={`sl${i}`}
+                    className={`${headBase} sticky bottom-0 z-30 bg-slate-900 ${saldoRowClass}`}
+                    style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                  >
+                    {fmtBR(v)}
+                  </td>
+                ))}
+                <td
+                  className={`${headBase} sticky bottom-0 z-30 bg-slate-900 ${saldoRowClass}`}
+                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                >
+                  {fmtBR(saldoAno)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

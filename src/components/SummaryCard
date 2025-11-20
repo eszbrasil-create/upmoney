@@ -1,0 +1,68 @@
+// SummaryCard.jsx
+// Card de resumo (fixo: 540x460), encostado no canto, com mês,
+// patrimõnio atual, comparativos e distribuição da carteira.
+
+export default function SummaryCard() {
+  // 🔢 Dados de exemplo — depois você pode puxar de estado/API
+  const mesReferencia = "Dez/2025";
+  const patrimonioAtual = "R$ 551.050,00";
+
+  const comparativos = [
+    { label: "vs mês anterior", valor: "R$ 20.200,00", pct: "+3,8%" },
+    { label: "vs últimos 3 meses", valor: "R$ 35.400,00", pct: "+6,9%" },
+    { label: "vs últimos 6 meses", valor: "R$ 62.100,00", pct: "+12,7%" },
+    { label: "vs últimos 12 meses", valor: "R$ 102.300,00", pct: "+22,8%" },
+  ];
+
+  const distribuicao = [
+    { label: "Ações",       valor: "R$ 185.000", pct: "33,6%" },
+    { label: "Renda Fixa",  valor: "R$ 160.000", pct: "29,0%" },
+    { label: "Cripto",      valor: "R$ 95.000",  pct: "17,2%" },
+    { label: "FIIs",        valor: "R$ 81.000",  pct: "14,7%" },
+    { label: "Caixa",       valor: "R$ 30.050",  pct: "5,5%"  },
+  ];
+
+  return (
+    <section className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[540px] h-[460px] overflow-y-auto">
+      {/* Cabeçalho: Mês */}
+      <div className="text-xs uppercase tracking-wide text-slate-300">{mesReferencia}</div>
+
+      {/* Patrimônio atual (título à esquerda, valor à direita) */}
+      <div className="mt-1 flex items-end justify-between">
+        <h2 className="text-sm text-slate-300">Patrimônio atual</h2>
+        <div className="text-2xl font-semibold">{patrimonioAtual}</div>
+      </div>
+
+      {/* Comparativos */}
+      <div className="mt-3 space-y-2">
+        {comparativos.map((row, i) => (
+          <div key={i} className="flex items-center justify-between text-sm">
+            <span className="text-slate-400">{row.label}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-slate-200">{row.valor}</span>
+              <span className="text-emerald-400 font-medium">{row.pct}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Linha divisória */}
+      <div className="my-3 border-t border-white/10" />
+
+      {/* Distribuição da carteira */}
+      <h3 className="text-sm font-semibold mb-2">Distribuição da carteira</h3>
+
+      <div className="space-y-2">
+        {distribuicao.map((item, i) => (
+          <div key={i} className="flex items-center justify-between text-sm">
+            <span className="text-slate-300">{item.label}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-slate-200">{item.valor}</span>
+              <span className="text-slate-400">{item.pct}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
