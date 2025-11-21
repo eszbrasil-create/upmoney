@@ -231,7 +231,7 @@ export default function Landing({ onNavigate }) {
                   type="submit"
                   className="bg-[#d6af5f] px-5 py-2 rounded-xl font-semibold text-[#1f3548] hover:brightness-105"
                 >
-                  Agendar minha análise
+                  Agendar minha consulta
                 </button>
               </div>
             </form>
@@ -259,7 +259,7 @@ export default function Landing({ onNavigate }) {
           </nav>
 
           <p className="mt-8 text-sm text-white/75">
-            Meu Patrimônio — Educação e controle financeiro para uma vida com
+            upControl — Educação e controle financeiro para uma vida com
             liberdade.
           </p>
         </div>
