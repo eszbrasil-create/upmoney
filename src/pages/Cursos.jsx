@@ -33,7 +33,7 @@ export default function Cursos({ onNavigate }) {
             className="font-semibold tracking-tight text-xl cursor-pointer"
             onClick={() => onNavigate?.("landing")}
           >
-            Meu Patrimônio
+            upMoney
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-sm">
@@ -232,7 +232,7 @@ export default function Cursos({ onNavigate }) {
           </div>
 
           <p className="mt-6 text-xs text-white/70">
-            Meu Patrimônio — Conteúdo educacional. Não constitui recomendação
+            UpMoney — Conteúdo educacional. Não constitui recomendação
             de investimento.
           </p>
         </div>
