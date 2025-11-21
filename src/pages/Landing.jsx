@@ -9,21 +9,10 @@ const IconWhatsApp = (props) => (
   </svg>
 );
 
-const IconYouTube = (props) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-    <path d="M23.5 6.19a3.03 3.03 0 0 0-2.13-2.13C19.6 3.5 12 3.5 12 3.5s-7.6 0-9.37.56A3.03 3.03 0 0 0 .5 6.19 31.5 31.5 0 0 0 0 12c0 1.94.18 3.87.5 5.81.28 1.01 1.11 1.8 2.13 2.08C4.4 20.5 12 20.5 12 20.5s7.6 0 9.37-.56a3.03 3.03 0 0 0 2.13-2.13c.32-1.93.5-3.86.5-5.81 0-1.94-.18-3.87-.5-5.81ZM9.75 15.5v-7l6 3.5-6 3.5Z" />
-  </svg>
-);
-
-const IconInstagram = (props) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-    <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.24.42.56.22.96.49 1.38.9.41.41.67.82.9 1.38.17.43.37 1.07.42 2.24.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.42 2.24a3.6 3.6 0 0 1-.9 1.38 3.6 3.6 0 0 1-1.38.9c-.43.17-1.07.37-2.24.42-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.24-.42a3.6 3.6 0 0 1-1.38-.9 3.6 3.6 0 0 1-.9-1.38c-.17-.43-.37-1.07-.42-2.24C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.42-2.24.22-.56.49-.96.9-1.38.41-.41.82-.67 1.38-.9.43-.17 1.07-.37 2.24-.42C8.42 2.17 8.8 2.16 12 2.16Zm0 3.4c-3.16 0-3.53.01-4.77.07-.98.05-1.52.21-1.87.35-.47.18-.8.4-1.15.75-.35.35-.57.68-.75 1.15-.14.35-.3.89-.35 1.87-.06 1.24-.07 1.61-.07 4.77s.01 3.53.07 4.77c.05.98.21 1.52.35 1.87.18.47.4.8.75 1.15.35.35.68.57 1.15.75.35.14.89.3 1.87.35 1.24.06 1.61.07 4.77.07s3.53-.01 4.77-.07c.98-.05 1.52-.21 1.87-.35.47-.18.8-.4 1.15-1.15.35-.35.57-.68.75-1.15.14-.35.3-.89.35-1.87.06-1.24.07-1.61.07-4.77s-.01-3.53-.07-4.77c-.05-.98-.21-1.52-.35-1.87a2.62 2.62 0 0 0-.75-1.15c-.35-.35-.68-.57-1.15-.75-.35-.14-.89-.3-1.87-.35-1.24-.06-1.61-.07-4.77-.07Zm0 2.7a4.64 4.64 0 1 1 0 9.28 4.64 4.64 0 0 1 0-9.28Zm0 1.8a2.84 2.84 0 1 0 0 5.68 2.84 2.84 0 0 0 0-5.68Zm5.93-2.18a1.09 1.09 0 1 1 0 2.18 1.09 1.09 0 0 1 0-2.18Z" />
-  </svg>
-);
-
 export default function Landing({ onNavigate }) {
-  const RECEIVER_EMAIL = "contato@meupatrimonio.com";
-  const WHATSAPP_NUMBER = "5585999999999"; // formato internacional, sem + nem traços
+  // 🔥 SEUS CONTATOS
+  const RECEIVER_EMAIL = "eszbrasil@gmail.com";
+  const WHATSAPP_NUMBER = "393517380919"; // formato correto para wa.me
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({ nome: "", email: "", telefone: "" });
@@ -38,13 +27,17 @@ export default function Landing({ onNavigate }) {
     const subject = "Novo agendamento — Meu Primeiro Dividendo";
     const body = `Nome: ${form.nome}\nE-mail: ${form.email}\nTelefone: ${form.telefone}\nOrigem: Landing > Agendar reunião`;
 
+    // Enviar e-mail
     window.location.href = `mailto:${RECEIVER_EMAIL}?subject=${encodeURIComponent(
       subject
     )}&body=${encodeURIComponent(body)}`;
+
+    // Enviar WhatsApp
     window.open(
       `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(body)}`,
       "_blank"
     );
+
     setIsModalOpen(false);
   };
 
@@ -61,7 +54,6 @@ export default function Landing({ onNavigate }) {
             upControl
           </button>
 
-          {/* Navegação principal */}
           <nav className="hidden md:flex items-center gap-8 text-sm">
             <a
               href="#cursos"
@@ -111,7 +103,6 @@ export default function Landing({ onNavigate }) {
               href="#cashcontrol"
               onClick={(e) => {
                 e.preventDefault();
-                // leva para a página CashControlHome
                 onNavigate?.("cashcontrol-home");
               }}
               className="hover:text-white"
@@ -120,34 +111,13 @@ export default function Landing({ onNavigate }) {
             </a>
           </nav>
 
-          {/* Lado direito: Meu Plano + ícones sociais */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => onNavigate?.("login")}
-              className="rounded-xl bg-[#d6af5f] px-4 py-2 font-medium text-[#1f3548] hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-white/40"
+              className="rounded-xl bg-[#d6af5f] px-4 py-2 font-medium text-[#1f3548] hover:brightness-105"
             >
               Meu Plano
             </button>
-
-            <a
-              href="https://youtube.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg:white/20"
-              aria-label="YouTube"
-            >
-              <IconYouTube className="h-4 w-4" />
-            </a>
-
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
-              aria-label="Instagram"
-            >
-              <IconInstagram className="h-4 w-4" />
-            </a>
           </div>
         </div>
       </header>
@@ -167,27 +137,30 @@ export default function Landing({ onNavigate }) {
               </div>
             </div>
 
-            {/* Texto e CTA */}
+            {/* Texto */}
             <div className="order-1 md:order-2">
               <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#1f3548]">
                 Conquiste seu Primeiro Dividendo
               </h1>
+
               <p className="mt-4 text-lg text-[#1f3548]/80">
-                O passo a passo para começar a investir e conquistar sua
-                primeira renda passiva com acompanhamento educacional
-                individual.
+                O passo a passo para começar a investir e conquistar sua primeira
+                renda passiva com acompanhamento educacional individual.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
+                {/* Botão Quero começar – abre o modal */}
                 <button
                   onClick={() => setIsModalOpen(true)}
                   className="inline-flex items-center rounded-xl bg-[#d6af5f] px-5 py-3 font-semibold text-[#1f3548] shadow-sm hover:brightness-105"
                 >
                   Quero começar
                 </button>
+
+                {/* Botão WhatsApp direto */}
                 <a
                   href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-                    "Olá! Vi sua página e quero saber mais sobre o programa Meu Primeiro Dividendo."
+                    "Olá! Quero saber mais sobre o curso Meu Primeiro Dividendo."
                   )}`}
                   target="_blank"
                   rel="noreferrer"
@@ -202,21 +175,17 @@ export default function Landing({ onNavigate }) {
         </section>
       </main>
 
-      {/* Modal de agendamento */}
+      {/* Modal */}
       {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <div className="flex items-start justify-between">
+            <div className="flex justify-between items-start">
               <h2 className="text-xl font-bold text-[#1f3548]">
                 Agendar reunião gratuita
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="ml-4 rounded-lg px-2 py-1 text-[#1f3548]/70 hover:bg-[#cfd6dc]/40"
+                className="px-2 py-1 rounded-lg text-[#1f3548]/70 hover:bg-[#cfd6dc]/40"
                 aria-label="Fechar"
               >
                 ✕
@@ -257,6 +226,7 @@ export default function Landing({ onNavigate }) {
                 >
                   Cancelar
                 </button>
+
                 <button
                   type="submit"
                   className="bg-[#d6af5f] px-5 py-2 rounded-xl font-semibold text-[#1f3548] hover:brightness-105"
@@ -267,7 +237,7 @@ export default function Landing({ onNavigate }) {
             </form>
 
             <p className="mt-4 text-xs text-[#1f3548]/60">
-              Os dados serão enviados por e-mail e WhatsApp.
+              Seus dados serão enviados para e-mail e WhatsApp.
             </p>
           </div>
         </div>
@@ -276,21 +246,19 @@ export default function Landing({ onNavigate }) {
       {/* Footer */}
       <footer className="mt-10 bg-[#1f3548] text-white/95">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <nav className="flex items-center gap-6">
-              <a href="#sobre" className="hover:text-white">
-                Sobre
-              </a>
-              <a href="#contato" className="hover:text-white">
-                Contato
-              </a>
-              <a href="#privacidade" className="hover:text-white">
-                Política de Privacidade
-              </a>
-            </nav>
-          </div>
+          <nav className="flex items-center gap-6">
+            <a href="#sobre" className="hover:text-white">
+              Sobre
+            </a>
+            <a href="#contato" className="hover:text-white">
+              Contato
+            </a>
+            <a href="#privacidade" className="hover:text-white">
+              Política de Privacidade
+            </a>
+          </nav>
 
-          <p className="mt-8 text-sm text:white/75">
+          <p className="mt-8 text-sm text-white/75">
             Meu Patrimônio — Educação e controle financeiro para uma vida com
             liberdade.
           </p>
