@@ -91,7 +91,7 @@ export default function Landing({ onNavigate }) {
             onClick={() => onNavigate?.("landing")}
             className="font-semibold tracking-tight text-xl hover:opacity-90 transition-opacity"
           >
-            upControl
+            UpMoney
           </button>
 
           {/* Navegação principal */}
@@ -397,7 +397,7 @@ export default function Landing({ onNavigate }) {
           </div>
 
           <p className="mt-8 text-sm text:white/75">
-            Meu Patrimônio — Educação e controle financeiro para uma vida com
+            UpMoney — Educação e controle financeiro para uma vida com
             liberdade.
           </p>
         </div>
