@@ -109,7 +109,9 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
   return (
     <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[605px] min-w-[590px] max-w-[605px] h-[360px] p-4 overflow-hidden">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-slate-100 font-semibold text-lg">Participação</span>
+        <span className="text-slate-100 font-semibold text-lg">
+          Participação
+        </span>
         <span className="text-xs px-2 py-1 rounded bg-slate-700/60 text-slate-200">
           {mesAtual}
         </span>
@@ -132,13 +134,16 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
                     ${isActive ? "ring-1 ring-sky-400/50 bg-slate-900/60" : ""}`}
                   title={`${it.nome} • ${it.pct.toFixed(1)}%`}
                 >
-                  <div className="flex items-center gap-2">
+                  {/* ✅ AJUSTE: nome à esquerda, % à direita */}
+                  <div className="flex items-center w-full">
                     <span
-                      className="inline-block h-3 w-3 rounded-full"
+                      className="inline-block h-3 w-3 rounded-full mr-2"
                       style={{ backgroundColor: it.color }}
                     />
-                    <span className="text-slate-100 text-sm">{it.nome}</span>
-                    <span className="text-slate-300 text-sm ml-2">
+                    <span className="text-slate-100 text-sm truncate flex-1">
+                      {it.nome}
+                    </span>
+                    <span className="text-slate-300 text-sm ml-auto tabular-nums">
                       {it.pct.toFixed(1)}%
                     </span>
                   </div>
@@ -181,7 +186,9 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
                     fill={p.color}
                     fillOpacity={selected ? 1 : 0.85}
                     className={`transition-all duration-150 cursor-pointer ${
-                      selected ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" : ""
+                      selected
+                        ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]"
+                        : ""
                     }`}
                     onMouseEnter={() => setHoverIdx(i)}
                     onMouseLeave={() => setHoverIdx(null)}
