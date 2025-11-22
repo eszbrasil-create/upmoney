@@ -79,7 +79,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
                 />
 
                 {/* Mês e ano — fonte aumentada */}
-                <div className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap">
+                <div className="text-[13px] text-slate-300 text-center leading-tight whitespace-nowrap">
                   {mes}
                   <br />
                   <span className="text-[12px] opacity-60">{ano}</span>
