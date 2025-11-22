@@ -9,10 +9,12 @@ function normalizeMesAno(str) {
 
   let [mes, ano] = str.split("/").map(s => s.trim());
 
+  // mês numérico -> MMM
   if (/^\d+$/.test(mes)) {
     const idx = Number(mes) - 1;
     if (idx >= 0 && idx < 12) mes = MESES[idx];
   } else {
+    // mês texto -> MMM
     mes = mes.charAt(0).toUpperCase() + mes.slice(1,3).toLowerCase();
     if (!MESES.includes(mes)) {
       const found = MESES.find(m => m.toLowerCase() === mes.toLowerCase());
@@ -20,17 +22,19 @@ function normalizeMesAno(str) {
     }
   }
 
+  // ano 2 dígitos -> 4 dígitos
   if (/^\d{2}$/.test(ano)) ano = `20${ano}`;
+
   return `${mes}/${ano}`;
 }
 
 export default function CardRegistro({ columns = [], rows = [], onDeleteMonth }) {
-  // Formato NUMÉRICO sem símbolo de moeda (opção B)
+  // ✅ formato numérico sem moeda e sem casas decimais (arredondado)
   const fmt = useMemo(
     () =>
       new Intl.NumberFormat("pt-BR", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
       }),
     []
   );
@@ -50,6 +54,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
 
   return (
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[640px] h-[360px] p-4 overflow-hidden">
+      
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="text-slate-100 font-semibold text-lg">
@@ -60,13 +65,15 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
         </div>
       </div>
 
-      {/* Scroll vertical + horizontal apenas dentro da área da tabela */}
+      {/* Área da tabela com scroll interno */}
       <div className="relative h-[300px] overflow-x-auto overflow-y-auto pb-2 rounded-2xl border border-white/10 bg-slate-900/40">
         <table className="min-w-full border-separate border-spacing-0">
-          {/* Cabeçalho fixo no topo */}
+          
+          {/* Cabeçalho fixo */}
           <thead className="sticky top-0 z-30 bg-slate-800/90 backdrop-blur">
             <tr className="text-left text-slate-300 text-sm">
-              {/* Coluna fixa (header) */}
+              
+              {/* Coluna fixa (Ativos) */}
               <th
                 className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-2 font-medium border-b border-white/10"
                 style={{ minWidth: 170, width: 170 }}
@@ -74,7 +81,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
                 Ativos
               </th>
 
-              {/* Meses com lixeira */}
+              {/* Meses + lixeira */}
               {normalizedColumns.map((m) => (
                 <th
                   key={m}
@@ -97,6 +104,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
             </tr>
           </thead>
 
+          {/* Corpo */}
           <tbody>
             {rows.map((row, rowIdx) => {
               const zebra = rowIdx % 2 === 0;
@@ -127,10 +135,11 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
             })}
           </tbody>
 
-          {/* Rodapé fixo no fundo */}
+          {/* Rodapé fixo */}
           <tfoot className="sticky bottom-0 z-30 bg-slate-800/90 backdrop-blur">
             <tr className="text-sm">
-              {/* Célula Total fixa à esquerda */}
+
+              {/* Total fixo à esquerda */}
               <td
                 className="sticky left-0 z-50 bg-slate-800/90 backdrop-blur px-3 py-2 border-t border-white/10 text-slate-100 font-semibold"
                 style={{ minWidth: 170, width: 170 }}
