@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Copy } from "lucide-react";
 
 export default function EditAtivosModal({
   open,
@@ -24,6 +24,8 @@ export default function EditAtivosModal({
   ],
   mesAnoInicial,
   linhasIniciais = [],
+  // ✅ NOVO (opcional): linhas do mês anterior, se quiser duplicar real
+  linhasMesAnterior = null,
 }) {
   const backdropRef = useRef(null);
 
@@ -86,7 +88,6 @@ export default function EditAtivosModal({
         linhasIniciais.map((l) => ({
           id: crypto.randomUUID(),
           nome: String(l?.nome ?? ""),
-          // mantém string formatada sempre
           valor: formatPtBr(toNum(l?.valor ?? 0)),
         }))
       );
@@ -110,7 +111,9 @@ export default function EditAtivosModal({
   const removerLinha = (id) => {
     setLinhas((prev) => {
       const novo = prev.filter((l) => l.id !== id);
-      return novo.length ? novo : [{ id: crypto.randomUUID(), nome: "", valor: "" }];
+      return novo.length
+        ? novo
+        : [{ id: crypto.randomUUID(), nome: "", valor: "" }];
     });
   };
 
@@ -120,11 +123,33 @@ export default function EditAtivosModal({
     );
   };
 
+  // ✅ DUPLICAR MÊS ANTERIOR
+  const duplicarMesAnterior = () => {
+    const fonte =
+      Array.isArray(linhasMesAnterior) && linhasMesAnterior.length
+        ? linhasMesAnterior
+        : Array.isArray(linhasIniciais)
+        ? linhasIniciais
+        : [];
+
+    if (!fonte.length) {
+      setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
+      return;
+    }
+
+    setLinhas(
+      fonte.map((l) => ({
+        id: crypto.randomUUID(),
+        nome: String(l?.nome ?? ""),
+        valor: formatPtBr(toNum(l?.valor ?? 0)),
+      }))
+    );
+  };
+
   // ----- AUTOCOMPLETE -----
   const [focoId, setFocoId] = useState(null);
   const [query, setQuery] = useState("");
 
-  // lista única de ativos
   const uniqAtivos = useMemo(() => {
     return Array.from(
       new Map(
@@ -134,9 +159,7 @@ export default function EditAtivosModal({
   }, [ativosExistentes]);
 
   const sugestoes = useMemo(() => {
-    // ✅ NOVO: se não tem query e está focado, mostra lista base
     if (!query) return uniqAtivos.slice(0, 8);
-
     const q = query.toLowerCase();
     return uniqAtivos.filter((n) => n.toLowerCase().includes(q)).slice(0, 8);
   }, [query, uniqAtivos]);
@@ -147,21 +170,26 @@ export default function EditAtivosModal({
     setQuery("");
   };
 
-  // ----- SALVAR -----
+  // ----- SALVAR (com auto-ordenação por valor) -----
   const salvar = useCallback(() => {
+    const itensLimpos = linhas
+      .filter((l) => String(l.nome).trim() !== "")
+      .map((l) => ({
+        nome: l.nome.trim(),
+        valor: toNum(l.valor),
+      }))
+      // ✅ auto-ordenação (maior valor primeiro)
+      .sort((a, b) => b.valor - a.valor);
+
     const payload = {
       mesAno,
-      itens: linhas
-        .filter((l) => String(l.nome).trim() !== "")
-        .map((l) => ({
-          nome: l.nome.trim(),
-          valor: toNum(l.valor),
-        })),
-      total,
+      itens: itensLimpos,
+      total: itensLimpos.reduce((acc, i) => acc + i.valor, 0),
     };
+
     onSave?.(payload);
     onClose?.();
-  }, [mesAno, linhas, total, onSave, onClose]);
+  }, [mesAno, linhas, onSave, onClose]);
 
   const onBackdropClick = (e) => {
     if (e.target === backdropRef.current) onClose?.();
@@ -192,28 +220,44 @@ export default function EditAtivosModal({
       className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
     >
       <div
-        className="w-[900px] max-w-[95vw] rounded-2xl bg-slate-950/95 border border-white/10 shadow-2xl"
+        className="w-[920px] max-w-[96vw] rounded-2xl bg-slate-950/95 border border-white/10 shadow-2xl"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        {/* Cabeçalho (mais leve) */}
+        {/* Cabeçalho premium */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
             <span className="text-slate-100 text-lg font-semibold">
               Editar Ativos
             </span>
 
-            <select
-              value={mesAno}
-              onChange={(e) => setMesAno(e.target.value)}
-              className="bg-slate-900 text-slate-100 text-sm rounded-lg px-3 py-2 border border-white/10 outline-none focus:ring-2 focus:ring-emerald-500"
-              title="Selecionar mês"
+            {/* Calendário premium */}
+            <div className="flex items-center gap-2 rounded-xl bg-slate-900/70 border border-white/10 px-2 py-1.5">
+              <span className="text-[11px] uppercase tracking-wide text-slate-400 px-2">
+                Mês
+              </span>
+              <select
+                value={mesAno}
+                onChange={(e) => setMesAno(e.target.value)}
+                className="bg-slate-900/0 text-slate-100 text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-emerald-500"
+                title="Selecionar mês"
+              >
+                {opcoesMesAno.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* ✅ Botão duplicar mês anterior */}
+            <button
+              onClick={duplicarMesAnterior}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-slate-900 text-sm text-slate-100 hover:bg-slate-800 transition"
+              title="Duplicar mês anterior"
             >
-              {opcoesMesAno.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
+              <Copy size={14} />
+              Duplicar mês anterior
+            </button>
           </div>
 
           <button
@@ -255,7 +299,7 @@ export default function EditAtivosModal({
                     }}
                     onFocus={(e) => {
                       setFocoId(l.id);
-                      setQuery(e.target.value); // pode ser vazio -> lista aparece
+                      setQuery(e.target.value);
                     }}
                     onBlur={() => {
                       setTimeout(() => {
@@ -282,7 +326,7 @@ export default function EditAtivosModal({
                   )}
                 </div>
 
-                {/* VALOR (máscara leve) */}
+                {/* VALOR */}
                 <div>
                   <input
                     className="w-full text-right bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-emerald-500 tabular-nums"
@@ -301,7 +345,7 @@ export default function EditAtivosModal({
                   />
                 </div>
 
-                {/* AÇÕES (discreto) */}
+                {/* AÇÕES */}
                 <div className="flex justify-center">
                   <button
                     onClick={() => removerLinha(l.id)}
