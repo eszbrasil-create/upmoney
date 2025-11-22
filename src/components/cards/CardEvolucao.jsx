@@ -82,7 +82,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
                 <div className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap">
                   {mes}
                   <br />
-                  <span className="text-[10px] opacity-60">{ano}</span>
+                  <span className="text-[12px] opacity-60">{ano}</span>
                 </div>
 
               </div>
