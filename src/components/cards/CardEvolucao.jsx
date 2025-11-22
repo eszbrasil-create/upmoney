@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useState } from "react";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
-// Normaliza "11/26", "nov/26", "Nov-2026", etc
 function normalizeMesAno(str) {
   if (!str || !str.includes("/")) return str;
 
@@ -24,13 +23,9 @@ function normalizeMesAno(str) {
   return `${mes}/${ano}`;
 }
 
-// Tooltip simples e premium
 function Tooltip({ x, y, mes, ano, valor }) {
   return (
-    <div
-      className="fixed z-50 pointer-events-none"
-      style={{ left: x, top: y }}
-    >
+    <div className="fixed z-50 pointer-events-none" style={{ left: x, top: y }}>
       <div className="rounded-xl bg-slate-950/95 border border-white/10 px-3 py-2 shadow-2xl">
         <div className="text-[11px] text-slate-300 font-medium">
           {mes}/{ano}
@@ -60,14 +55,25 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
 
   const max = Math.max(1, ...totals);
 
-  // ✅ animação: depois do mount, libera alturas reais
+  // ✅ MÉDIA DOS TOTAIS
+  const avg = useMemo(() => {
+    if (!totals.length) return 0;
+    const s = totals.reduce((a, b) => a + b, 0);
+    return s / totals.length;
+  }, [totals]);
+
+  // altura da linha de média dentro do gráfico (0–300px)
+  const avgHeight = useMemo(() => {
+    if (avg <= 0) return 0;
+    return Math.max(4, Math.round((avg / max) * 300));
+  }, [avg, max]);
+
   const [animate, setAnimate] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAnimate(true), 50);
     return () => clearTimeout(t);
   }, []);
 
-  // ✅ tooltip state
   const [tip, setTip] = useState(null);
 
   return (
@@ -79,7 +85,22 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
         </span>
       </div>
 
-      <div className="h-[380px] rounded-2xl border border-white/10 bg-slate-900/80 p-3 overflow-x-auto overflow-y-hidden">
+      {/* Área do gráfico agora é relative p/ linha de média */}
+      <div className="relative h-[380px] rounded-2xl border border-white/10 bg-slate-900/80 p-3 overflow-x-auto overflow-y-hidden">
+        
+        {/* ✅ LINHA DE MÉDIA */}
+        {avg > 0 && (
+          <div
+            className="absolute left-3 right-3 pointer-events-none"
+            style={{ bottom: `${avgHeight}px` }}
+          >
+            <div className="h-[2px] w-full bg-amber-300/80 rounded-full shadow-[0_0_6px_rgba(251,191,36,0.6)]" />
+            <div className="mt-1 text-[10px] text-amber-200/90 font-semibold tracking-wide">
+              Média: {avg.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-end gap-1 min-w-max">
           {totals.map((valor, i) => {
             const alturaReal = Math.max(4, Math.round((valor / max) * 300));
@@ -89,7 +110,6 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
 
             return (
               <div key={i} className="flex flex-col items-center gap-2 w-10">
-                {/* Barra com animação */}
                 <div
                   className="w-full rounded-xl bg-sky-400/80 hover:bg-sky-300 transition-all duration-700 ease-out"
                   style={{ height: `${altura}px` }}
@@ -105,28 +125,21 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
                   }}
                   onMouseMove={(e) => {
                     setTip((prev) =>
-                      prev
-                        ? { ...prev, x: e.clientX, y: e.clientY - 12 }
-                        : prev
+                      prev ? { ...prev, x: e.clientX, y: e.clientY - 12 } : prev
                     );
                   }}
                   onMouseLeave={() => setTip(null)}
                 />
 
-                {/* Labels com sombra suave */}
                 <div
                   className="text-[13px] text-slate-200 text-center leading-tight whitespace-nowrap font-medium"
-                  style={{
-                    textShadow: "0 1px 6px rgba(0,0,0,0.6)",
-                  }}
+                  style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
                 >
                   {mes}
                   <br />
                   <span
                     className="text-[12px] opacity-70 font-normal text-slate-300"
-                    style={{
-                      textShadow: "0 1px 6px rgba(0,0,0,0.6)",
-                    }}
+                    style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
                   >
                     {ano}
                   </span>
@@ -137,7 +150,6 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
         </div>
       </div>
 
-      {/* Tooltip render */}
       {tip && (
         <Tooltip
           x={tip.x}
