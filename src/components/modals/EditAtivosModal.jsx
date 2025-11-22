@@ -8,6 +8,115 @@ import React, {
 } from "react";
 import { Trash2, Copy } from "lucide-react";
 
+/* ---------------------------
+   Month/Year Picker premium
+---------------------------- */
+function MesAnoPicker({ value, onChange }) {
+  const meses = [
+    "Jan","Fev","Mar","Abr","Mai","Jun",
+    "Jul","Ago","Set","Out","Nov","Dez"
+  ];
+
+  const [mesAtual, anoAtualStr] = String(value || "").split("/");
+  const anoInicial = Number(anoAtualStr) || new Date().getFullYear();
+
+  const [open, setOpen] = React.useState(false);
+  const [ano, setAno] = React.useState(anoInicial);
+
+  // sincroniza ano quando value muda
+  React.useEffect(() => {
+    const [, a] = String(value || "").split("/");
+    if (a) setAno(Number(a));
+  }, [value]);
+
+  // fecha clicando fora
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    function onDocClick(e) {
+      if (!ref.current) return;
+      if (!ref.current.contains(e.target)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      {/* Caixa premium */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-2 rounded-xl bg-slate-900/70 border border-white/10 px-3 py-2 text-sm text-slate-100 hover:bg-slate-800 transition shadow-sm"
+        title="Selecionar mês"
+      >
+        <span className="text-[11px] uppercase tracking-wide text-slate-400">
+          Mês
+        </span>
+        <span className="font-semibold">{value}</span>
+        <span className="text-slate-400">▾</span>
+      </button>
+
+      {/* Popover calendário */}
+      {open && (
+        <div className="absolute left-0 mt-2 w-[260px] rounded-2xl border border-white/10 bg-slate-950 shadow-2xl p-3 z-50">
+          {/* Header ano */}
+          <div className="flex items-center justify-between mb-2">
+            <button
+              type="button"
+              onClick={() => setAno((a) => a - 1)}
+              className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 transition"
+              aria-label="Ano anterior"
+            >
+              ←
+            </button>
+
+            <div className="text-slate-100 font-semibold">
+              {ano}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setAno((a) => a + 1)}
+              className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 transition"
+              aria-label="Próximo ano"
+            >
+              →
+            </button>
+          </div>
+
+          {/* Grid meses */}
+          <div className="grid grid-cols-3 gap-2">
+            {meses.map((m) => {
+              const selected = m === mesAtual && ano === anoInicial;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => {
+                    onChange?.(`${m}/${ano}`);
+                    setOpen(false);
+                  }}
+                  className={`rounded-xl px-3 py-2 text-sm font-medium transition
+                    ${
+                      selected
+                        ? "bg-emerald-500 text-white"
+                        : "bg-white/5 text-slate-200 hover:bg-white/10"
+                    }`}
+                >
+                  {m}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------
+      Modal principal
+---------------------------- */
 export default function EditAtivosModal({
   open,
   onClose,
@@ -24,7 +133,7 @@ export default function EditAtivosModal({
   ],
   mesAnoInicial,
   linhasIniciais = [],
-  // ✅ NOVO (opcional): linhas do mês anterior, se quiser duplicar real
+  // opcional: se quiser duplicar real do mês anterior, passe isso
   linhasMesAnterior = null,
 }) {
   const backdropRef = useRef(null);
@@ -74,7 +183,7 @@ export default function EditAtivosModal({
     });
   }
 
-  // ----- TABELA (LINHAS) -----
+  // ----- LINHAS -----
   const [linhas, setLinhas] = useState([
     { id: crypto.randomUUID(), nome: "", valor: "" },
   ]);
@@ -159,6 +268,7 @@ export default function EditAtivosModal({
   }, [ativosExistentes]);
 
   const sugestoes = useMemo(() => {
+    // se não tem query, mostra lista base ao focar
     if (!query) return uniqAtivos.slice(0, 8);
     const q = query.toLowerCase();
     return uniqAtivos.filter((n) => n.toLowerCase().includes(q)).slice(0, 8);
@@ -170,7 +280,7 @@ export default function EditAtivosModal({
     setQuery("");
   };
 
-  // ----- SALVAR (com auto-ordenação por valor) -----
+  // ----- SALVAR (ordenado por valor) -----
   const salvar = useCallback(() => {
     const itensLimpos = linhas
       .filter((l) => String(l.nome).trim() !== "")
@@ -178,7 +288,6 @@ export default function EditAtivosModal({
         nome: l.nome.trim(),
         valor: toNum(l.valor),
       }))
-      // ✅ auto-ordenação (maior valor primeiro)
       .sort((a, b) => b.valor - a.valor);
 
     const payload = {
@@ -195,7 +304,7 @@ export default function EditAtivosModal({
     if (e.target === backdropRef.current) onClose?.();
   };
 
-  // ----- ATALHOS (Esc fecha, Ctrl/Cmd+Enter salva) -----
+  // ----- ATALHOS -----
   useEffect(() => {
     if (!open) return;
 
@@ -223,33 +332,20 @@ export default function EditAtivosModal({
         className="w-[920px] max-w-[96vw] rounded-2xl bg-slate-950/95 border border-white/10 shadow-2xl"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        {/* Cabeçalho premium */}
+        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
             <span className="text-slate-100 text-lg font-semibold">
               Editar Ativos
             </span>
 
-            {/* Calendário premium */}
-            <div className="flex items-center gap-2 rounded-xl bg-slate-900/70 border border-white/10 px-2 py-1.5">
-              <span className="text-[11px] uppercase tracking-wide text-slate-400 px-2">
-                Mês
-              </span>
-              <select
-                value={mesAno}
-                onChange={(e) => setMesAno(e.target.value)}
-                className="bg-slate-900/0 text-slate-100 text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-emerald-500"
-                title="Selecionar mês"
-              >
-                {opcoesMesAno.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* ✅ NOVO calendário premium */}
+            <MesAnoPicker
+              value={mesAno}
+              onChange={(novo) => setMesAno(novo)}
+            />
 
-            {/* ✅ Botão duplicar mês anterior */}
+            {/* Duplicar mês anterior */}
             <button
               onClick={duplicarMesAnterior}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-slate-900 text-sm text-slate-100 hover:bg-slate-800 transition"
@@ -272,21 +368,21 @@ export default function EditAtivosModal({
 
         {/* Conteúdo */}
         <div className="px-6 pt-4 pb-5">
-          {/* Cabeçalho de colunas */}
+          {/* Cabeçalho colunas */}
           <div className="grid grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_auto] gap-3 text-[11px] font-medium uppercase tracking-wide text-slate-400 mb-2 px-1">
             <span>Ativo</span>
             <span className="text-right">Valor</span>
             <span className="text-center">Ações</span>
           </div>
 
-          {/* Linhas (mais alta) */}
+          {/* Linhas */}
           <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1">
             {linhas.map((l) => (
               <div
                 key={l.id}
                 className="grid grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_auto] gap-3 items-center rounded-xl bg-slate-900/70 hover:bg-slate-900 border border-white/10 px-4 py-2.5 transition-colors"
               >
-                {/* ATIVO + lista ao focar */}
+                {/* Ativo */}
                 <div className="relative">
                   <input
                     className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-emerald-500"
@@ -326,7 +422,7 @@ export default function EditAtivosModal({
                   )}
                 </div>
 
-                {/* VALOR */}
+                {/* Valor */}
                 <div>
                   <input
                     className="w-full text-right bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 outline-none focus:ring-2 focus:ring-emerald-500 tabular-nums"
@@ -340,12 +436,16 @@ export default function EditAtivosModal({
                     }}
                     onBlur={(e) => {
                       const num = toNum(e.target.value);
-                      atualizarCampo(l.id, "valor", num > 0 ? formatPtBr(num) : "");
+                      atualizarCampo(
+                        l.id,
+                        "valor",
+                        num > 0 ? formatPtBr(num) : ""
+                      );
                     }}
                   />
                 </div>
 
-                {/* AÇÕES */}
+                {/* Ações */}
                 <div className="flex justify-center">
                   <button
                     onClick={() => removerLinha(l.id)}
