@@ -92,7 +92,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
                 return (
                   <th
                     key={m}
-                    className="px-3 py-2 font-medium border-b border-white/10 text-slate-300 whitespace-nowrap"
+                    className="px-3 py-1 font-medium border-b border-white/10 text-slate-300 whitespace-nowrap"
                   >
                     <div className="flex items-center gap-2">
                       
