@@ -1,27 +1,23 @@
 // src/pages/Dashboard.jsx
+
 import CardResumo from "../components/cards/CardResumo";
 import CardRegistro from "../components/cards/CardRegistro";
 import CardEvolucao from "../components/cards/CardEvolucao";
 import CardEvolucaoPct from "../components/cards/CardEvolucaoPct";
 import CardParticipacao from "../components/cards/CardParticipacao";
-import CardDividendosCash from "../components/cards/CardDividendosCash";
+import CardDividendosCash from "../components/cards/CardDividendosCash"; // ✅ NOVO
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const MES_IDX = { Jan:0,Fev:1,Mar:2,Abr:3,Mai:4,Jun:5,Jul:6,Ago:7,Set:8,Out:9,Nov:10,Dez:11 };
 
 // ---------------------------------------------------------
-// NORMALIZAÇÃO DAS CHAVES (mes/ano escrito de várias formas)
-// ---------------------------------------------------------
 function normalizeMesKey(key) {
   if (!key) return key;
-
   const trimmed = String(key).trim();
 
-  // formato "Nov/2026"
   if (trimmed.includes("/")) {
     let [m, a] = trimmed.split("/").map(s => s.trim());
 
-    // mês número -> texto
     if (/^\d+$/.test(m)) {
       const idx = Number(m) - 1;
       if (idx >= 0 && idx < 12) m = MESES[idx];
@@ -33,29 +29,23 @@ function normalizeMesKey(key) {
       }
     }
 
-    // ano 2 dígitos → 4 dígitos
     if (/^\d{2}$/.test(a)) a = `20${a}`;
-
     return `${m}/${a}`;
   }
 
-  // formato "Nov-2026" ou "Nov 2026"
   const parts = trimmed.split(/[-\s]+/);
   if (parts.length === 2) return normalizeMesKey(parts.join("/"));
 
   return trimmed;
 }
-
 // ---------------------------------------------------------
 
 export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
 
-  // 1) Normaliza as chaves do objeto
   const normalizedRegistros = Object.fromEntries(
     Object.entries(registrosPorMes).map(([k,v]) => [normalizeMesKey(k), v])
   );
 
-  // 2) Ordena corretamente por ano depois por mês
   const columns = Object.keys(normalizedRegistros).sort((a,b)=>{
     const [ma, aa] = a.split("/");
     const [mb, ab] = b.split("/");
@@ -63,13 +53,11 @@ export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
     return Number(aa) - Number(ab) || ia - ib;
   });
 
-  // 3) monta lista única de ativos
   const allAssets = new Set();
   for (const mes of columns) {
     (normalizedRegistros[mes] || []).forEach((i)=> allAssets.add(i.nome));
   }
 
-  // 4) cria matriz rows = [{ativo, valores:[...] }]
   const rows = Array.from(allAssets)
     .sort((a,b)=>a.localeCompare(b,"pt-BR"))
     .map(name => ({
@@ -80,7 +68,6 @@ export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
       })
     }));
 
-  // 5) totais por mês
   const totais = columns.map(mes =>
     (normalizedRegistros[mes]||[])
       .reduce((acc,i)=> acc + Number(i.valor||0), 0)
@@ -91,7 +78,7 @@ export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
   const patrimonioAtual = totais[idx] || 0;
   const totalAntes = (n)=> totais[idx-n] || 0;
 
-  // ✅ distribuicao igual ao CardRegistro (mês atual)
+  // ✅ Distribuição consistente com CardRegistro:
   const distribuicao = rows
     .map(r => ({
       nome: r.ativo,
@@ -121,7 +108,7 @@ export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
         <CardEvolucao columns={columns} rows={rows}/>
       </div>
 
-      {/* Linha do meio: esquerda registros | direita coluna com 2 cards */}
+      {/* Linha do meio */}
       <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
         <CardRegistro
           columns={columns}
@@ -129,14 +116,13 @@ export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
           onDeleteMonth={onDeleteMonth}
         />
 
+        {/* ✅ lado direito em coluna */}
         <div className="flex flex-col gap-3">
           <CardParticipacao
             itens={dadosResumo.distribuicao}
             mesAtual={dadosResumo.mesAtual}
           />
-
-          {/* ✅ NOVO CARD DE DIVIDENDOS CASH */}
-          <CardDividendosCash />
+          <CardDividendosCash /> {/* ✅ aparece aqui */}
         </div>
       </div>
 
