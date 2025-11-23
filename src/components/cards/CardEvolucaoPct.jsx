@@ -69,7 +69,7 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
 
               <th
                 className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-2 font-medium border-b border-white/10"
-                style={{ minWidth: 160, width: 160 }}
+                style={{ minWidth: 130, width: 130 }}
               >
                 Ativos
               </th>
