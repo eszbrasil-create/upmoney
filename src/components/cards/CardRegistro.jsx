@@ -70,7 +70,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
 
       {/* Área da tabela com scroll interno */}
       {/* ✅ pb-0 para linha TOTAL ficar colada na barra de rolagem */}
-      <div className="relative h-[300px] overflow-x-auto overflow-y-auto pb-0 rounded-2xl border border-white/10 bg-slate-900/40">
+      <div className="relative h-[310px] overflow-x-auto overflow-y-auto pb-0 rounded-2xl border border-white/10 bg-slate-900/40">
         <table className="min-w-full border-separate border-spacing-0">
           
           {/* Cabeçalho fixo */}
