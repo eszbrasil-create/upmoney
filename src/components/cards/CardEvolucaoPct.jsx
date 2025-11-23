@@ -72,7 +72,7 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
 
               {/* ✅ Coluna fixa (Ativos) igual ao CardRegistro */}
               <th
-                className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-2 font-medium border-b border-white/10"
+                className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-1 font-medium border-b border-white/10"
                 style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
               >
                 Ativos
@@ -83,7 +83,7 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
                 return (
                   <th
                     key={m}
-                    className="px-4 py-3 font-medium border-b border-white/10 text-slate-300"
+                    className="px-4 py-1 font-medium border-b border-white/10 text-slate-300"
                     style={{ minWidth: 85, width: 85 }}
                   >
                     <div className="leading-tight text-left">
