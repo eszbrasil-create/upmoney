@@ -79,7 +79,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
               
               {/* Coluna fixa (Ativos) — menor */}
               <th
-                className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-2 font-medium border-b border-white/10"
+                className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-1 font-medium border-b border-white/10"
                 style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
               >
                 Ativos
