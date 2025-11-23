@@ -1,10 +1,10 @@
 // src/pages/Dashboard.jsx
-
 import CardResumo from "../components/cards/CardResumo";
 import CardRegistro from "../components/cards/CardRegistro";
 import CardEvolucao from "../components/cards/CardEvolucao";
 import CardEvolucaoPct from "../components/cards/CardEvolucaoPct";
 import CardParticipacao from "../components/cards/CardParticipacao";
+import CardDividendosCash from "../components/cards/CardDividendosCash";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const MES_IDX = { Jan:0,Fev:1,Mar:2,Abr:3,Mai:4,Jun:5,Jul:6,Ago:7,Set:8,Out:9,Nov:10,Dez:11 };
@@ -91,10 +91,7 @@ export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
   const patrimonioAtual = totais[idx] || 0;
   const totalAntes = (n)=> totais[idx-n] || 0;
 
-  // ---------------------------------------------------------
-  // 🚀 **AQUI ESTÁ A CORREÇÃO DO CARD PARTICIPAÇÃO**
-  // Agora ele usa exatamente a mesma fonte do CardRegistro (rows[idx])
-  // ---------------------------------------------------------
+  // ✅ distribuicao igual ao CardRegistro (mês atual)
   const distribuicao = rows
     .map(r => ({
       nome: r.ativo,
@@ -124,17 +121,23 @@ export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
         <CardEvolucao columns={columns} rows={rows}/>
       </div>
 
-      {/* Linha do meio */}
+      {/* Linha do meio: esquerda registros | direita coluna com 2 cards */}
       <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
         <CardRegistro
           columns={columns}
           rows={rows}
           onDeleteMonth={onDeleteMonth}
         />
-        <CardParticipacao
-          itens={dadosResumo.distribuicao}
-          mesAtual={dadosResumo.mesAtual}
-        />
+
+        <div className="flex flex-col gap-3">
+          <CardParticipacao
+            itens={dadosResumo.distribuicao}
+            mesAtual={dadosResumo.mesAtual}
+          />
+
+          {/* ✅ NOVO CARD DE DIVIDENDOS CASH */}
+          <CardDividendosCash />
+        </div>
       </div>
 
       {/* Linha inferior */}
