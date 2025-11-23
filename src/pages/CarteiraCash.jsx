@@ -1,17 +1,5 @@
 // src/pages/CarteiraCash.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-} from "recharts";
 
 const PIE_COLORS = {
   RF: "#22c55e",
@@ -19,7 +7,6 @@ const PIE_COLORS = {
   FII: "#fbbf24",
 };
 
-const BAR_BASE = "#22c55e";
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
 // Carteira base (modelo inicial)
@@ -53,6 +40,30 @@ function toNum(x) {
   return Number.isFinite(n) ? n : 0;
 }
 
+/* ===========================
+   Helpers donut estilo Dash
+=========================== */
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const a = ((angleDeg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+}
+function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
+  const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+
+  const p1 = polarToCartesian(cx, cy, rOuter, endAngle);
+  const p2 = polarToCartesian(cx, cy, rOuter, startAngle);
+  const p3 = polarToCartesian(cx, cy, rInner, startAngle);
+  const p4 = polarToCartesian(cx, cy, rInner, endAngle);
+
+  return [
+    `M ${p1.x} ${p1.y}`,
+    `A ${rOuter} ${rOuter} 0 ${largeArc} 0 ${p2.x} ${p2.y}`,
+    `L ${p3.x} ${p3.y}`,
+    `A ${rInner} ${rInner} 0 ${largeArc} 1 ${p4.x} ${p4.y}`,
+    "Z",
+  ].join(" ");
+}
+
 export default function CarteiraCash() {
   // Estado da carteira (editável)
   const [carteira, setCarteira] = useState(() => {
@@ -84,15 +95,11 @@ export default function CarteiraCash() {
     );
   };
 
-  // Cálculos globais
+  // Cálculos globais (distribuição e DY mensal total por mês)
   const {
-    distAtual,
     totalGeral,
-    pieData,
+    pieParts,     // já pronto pra donut por TIPO (opção B)
     dyBarData,
-    totalDyMensal,
-    mediaDyMensal,
-    maxDyMes,
   } = useMemo(() => {
     const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
     let total = 0;
@@ -116,181 +123,115 @@ export default function CarteiraCash() {
       }
     });
 
-    let dist = { RF: 0, ACOES: 0, FII: 0 };
-    if (total > 0) {
-      dist = {
-        RF: (somaPorTipo.RF / total) * 100 || 0,
-        ACOES: (somaPorTipo.ACOES / total) * 100 || 0,
-        FII: (somaPorTipo.FII / total) * 100 || 0,
-      };
-    }
-
-    const pieData = [
-      { key: "RF", name: "RF", value: somaPorTipo.RF },
-      { key: "ACOES", name: "Ações", value: somaPorTipo.ACOES },
-      { key: "FII", name: "FIIs", value: somaPorTipo.FII },
+    const partsRaw = [
+      { key: "RF", name: "RF", value: somaPorTipo.RF, color: PIE_COLORS.RF },
+      { key: "ACOES", name: "Ações", value: somaPorTipo.ACOES, color: PIE_COLORS.ACOES },
+      { key: "FII", name: "FIIs", value: somaPorTipo.FII, color: PIE_COLORS.FII },
     ].filter((d) => d.value > 0);
+
+    const pieParts = partsRaw.map((p) => ({
+      ...p,
+      pct: total > 0 ? (p.value / total) * 100 : 0,
+    }));
 
     const dyBarData = MESES.map((m, idx) => ({
       name: m,
       dy: dyMesTotal[idx],
     }));
 
-    const totalDyMensal = dyMesTotal.reduce((a, b) => a + b, 0);
-    const mesesComDy = dyMesTotal.filter((v) => v > 0).length || 1;
-    const mediaDyMensal = totalDyMensal / mesesComDy;
-    const maxDyMes = Math.max(0, ...dyMesTotal);
-
-    return {
-      distAtual: dist,
-      totalGeral: total,
-      pieData,
-      dyBarData,
-      totalDyMensal,
-      mediaDyMensal,
-      maxDyMes,
-    };
+    return { totalGeral: total, pieParts, dyBarData };
   }, [carteira]);
 
-  // Tooltip premium do gráfico de pizza
-  const PieTooltip = ({ active, payload }) => {
-    if (!active || !payload || !payload.length) return null;
-    const { name, value } = payload[0];
-    const perc =
-      totalGeral > 0 ? ((value / totalGeral) * 100).toFixed(1) : "0.0";
+  /* ===========================
+     Donut (Participação por tipo)
+  =========================== */
+  const [activeIdx, setActiveIdx] = useState(null);
+  const [hoverIdx, setHoverIdx] = useState(null);
+  const idxShown = hoverIdx ?? activeIdx;
 
-    return (
-      <div className="rounded-lg bg-black/95 border border-amber-300/30 px-3 py-2 text-xs text-slate-100 shadow-xl">
-        <div className="font-semibold text-slate-100">{name}</div>
-        <div className="mt-0.5">
-          {value.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          })}{" "}
-          <span className="text-slate-400">({perc}%)</span>
-        </div>
-      </div>
-    );
-  };
+  const size = 220;
+  const cx = size / 2;
+  const cy = size / 2;
+  const rOuter = 95;
+  const rInner = 58;
 
-  // Tooltip premium do gráfico de barras (DY)
-  const BarTooltip = ({ active, payload, label }) => {
-    if (!active || !payload || !payload.length) return null;
-    const v = payload[0].value || 0;
-    const pctTotal = totalDyMensal > 0 ? (v / totalDyMensal) * 100 : 0;
+  const angles = useMemo(() => {
+    let acc = 0;
+    return pieParts.map((p) => {
+      const start = acc;
+      const end = acc + (p.pct / 100) * 360;
+      acc = end;
+      return { start, end };
+    });
+  }, [pieParts]);
 
-    return (
-      <div className="rounded-lg bg-black/95 border border-emerald-300/30 px-3 py-2 text-xs text-slate-100 shadow-xl">
-        <div className="font-semibold text-slate-100">DY em {label}</div>
-        <div className="mt-0.5">
-          {v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-        </div>
-        <div className="text-slate-400 mt-0.5">
-          {pctTotal.toFixed(1)}% do total anual
-        </div>
-      </div>
-    );
-  };
+  const center = useMemo(() => {
+    if (
+      idxShown == null ||
+      idxShown < 0 ||
+      idxShown >= pieParts.length ||
+      totalGeral <= 0
+    ) {
+      return {
+        title: "Total",
+        line1: totalGeral.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+          maximumFractionDigits: 0,
+        }),
+        line2: "",
+      };
+    }
+    const it = pieParts[idxShown];
+    return {
+      title: it.name,
+      line1: it.value.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        maximumFractionDigits: 0,
+      }),
+      line2: `${it.pct.toFixed(1)}%`,
+    };
+  }, [idxShown, pieParts, totalGeral]);
 
-  // Legenda premium do donut: nome esquerda, % direita
-  const PieLegend = () => {
-    if (!pieData.length) return null;
-
-    return (
-      <div className="mt-1 space-y-1">
-        {pieData.map((p) => {
-          const pct = totalGeral > 0 ? (p.value / totalGeral) * 100 : 0;
-          return (
-            <div
-              key={p.key}
-              className="flex items-center text-[11px] text-slate-200"
-            >
-              <span
-                className="inline-block h-2.5 w-2.5 rounded-full mr-2"
-                style={{ backgroundColor: PIE_COLORS[p.key] || "#64748b" }}
-              />
-              <span className="flex-1 truncate">{p.name}</span>
-              <span className="ml-auto tabular-nums text-slate-300">
-                {pct.toFixed(1)}%
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
+  /* ===========================
+     Barras DY (estilo CardEvolucao)
+  =========================== */
+  const dyTotals = dyBarData.map(d => d.dy || 0);
+  const dyMax = Math.max(1, ...dyTotals);
 
   return (
     <div className="pt-0 pr-3 pl-0 relative">
-      {/* FAIXA DE PRODUTOS / CARTEIRAS MODELO – FIXA NA TELA (reduzida) */}
-      <div className="mb-3">
+      {/* FAIXA FIXA SUPER REDUZIDA (virará botão no futuro) */}
+      <div className="mb-2">
         <div className="fixed left-48 right-6 top-3 z-30">
           <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-sky-500 to-fuchsia-500 p-[1px] shadow-xl">
-            <div className="rounded-2xl bg-slate-950/95 p-2">
-              <div className="grid gap-2 md:grid-cols-3">
-                {/* Carteira Dividendos */}
-                <div className="rounded-xl bg-emerald-500/10 border border-emerald-400/40 px-3 py-1.5 flex items-center justify-between gap-2">
-                  <div>
-                    <h2 className="text-emerald-300 text-xs font-semibold leading-tight">
-                      Carteira Dividendos
-                    </h2>
-                    <p className="text-slate-200/80 text-[10px] leading-tight">
-                      Renda recorrente.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center rounded-lg bg-emerald-400 text-slate-900 text-[10px] font-semibold px-2.5 py-1 hover:bg-emerald-300 transition whitespace-nowrap"
-                  >
-                    Baixar PDF
-                  </button>
+            <button
+              type="button"
+              className="w-full rounded-2xl bg-slate-950/95 px-3 py-2 flex items-center justify-between hover:bg-slate-900/95 transition"
+              title="Futuro acesso às carteiras"
+            >
+              <div className="flex items-center gap-2 text-left">
+                <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
+                <div className="text-[12px] sm:text-[13px] font-semibold text-slate-100">
+                  Carteiras Modelo UpMoney
                 </div>
-
-                {/* Carteira Fundos Imobiliários */}
-                <div className="rounded-xl bg-amber-500/10 border border-amber-400/40 px-3 py-1.5 flex items-center justify-between gap-2">
-                  <div>
-                    <h2 className="text-amber-300 text-xs font-semibold leading-tight">
-                      Carteira FIIs
-                    </h2>
-                    <p className="text-slate-200/80 text-[10px] leading-tight">
-                      Renda mensal.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center rounded-lg bg-amber-400 text-slate-900 text-[10px] font-semibold px-2.5 py-1 hover:bg-amber-300 transition whitespace-nowrap"
-                  >
-                    Baixar PDF
-                  </button>
-                </div>
-
-                {/* Carteira Criptomoedas */}
-                <div className="rounded-xl bg-sky-500/10 border border-sky-400/40 px-3 py-1.5 flex items-center justify-between gap-2">
-                  <div>
-                    <h2 className="text-sky-300 text-xs font-semibold leading-tight">
-                      Carteira Cripto
-                    </h2>
-                    <p className="text-slate-200/80 text-[10px] leading-tight">
-                      Longo prazo.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center rounded-lg bg-sky-400 text-slate-900 text-[10px] font-semibold px-2.5 py-1 hover:bg-sky-300 transition whitespace-nowrap"
-                  >
-                    Baixar PDF
-                  </button>
+                <div className="hidden sm:block text-[11px] text-slate-400">
+                  Em breve: clique para ver meus ativos
                 </div>
               </div>
-            </div>
+              <div className="text-[11px] text-slate-300 bg-slate-800/60 px-2 py-1 rounded-lg">
+                Acesso futuro
+              </div>
+            </button>
           </div>
         </div>
 
-        {/* Espaço reservado menor */}
-        <div className="h-20" />
+        {/* espaço bem menor pra não roubar tela */}
+        <div className="h-16" />
       </div>
 
-      {/* CARD: gráficos premium */}
+      {/* CARD: gráficos premium estilo Dash */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-4">
         {totalGeral <= 0 ? (
           <p className="text-[11px] text-slate-500">
@@ -300,122 +241,142 @@ export default function CarteiraCash() {
           </p>
         ) : (
           <div className="grid gap-4 md:grid-cols-3 items-stretch">
-            {/* Donut premium */}
-            <div className="md:col-span-1 h-48">
-              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 px-2 py-2 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={70}
-                      innerRadius={42}
-                      paddingAngle={3}
-                      isAnimationActive
-                      animationDuration={450}
-                    >
-                      {pieData.map((entry) => (
-                        <Cell
-                          key={entry.key}
-                          fill={PIE_COLORS[entry.key] || "#64748b"}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<PieTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
+            {/* Donut premium (mesmo padrão do Dash) */}
+            <div className="md:col-span-1">
+              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3">
+                <div className="text-slate-100 text-sm font-semibold mb-2">
+                  Distribuição por tipo
+                </div>
 
-                {/* Centro premium */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="text-center leading-tight">
-                    <div className="text-[11px] text-slate-400 font-medium">
-                      Patrimônio atual
-                    </div>
-                    <div className="text-slate-100 text-lg font-extrabold drop-shadow-sm">
-                      {totalGeral.toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                        maximumFractionDigits: 0,
-                      })}
+                <div className="grid grid-cols-[1fr_220px] gap-2 items-center">
+                  {/* legenda */}
+                  <div className="space-y-2 pr-2">
+                    {pieParts.map((it, i) => {
+                      const isActive = i === idxShown;
+                      return (
+                        <div
+                          key={it.key}
+                          onMouseEnter={() => setHoverIdx(i)}
+                          onMouseLeave={() => setHoverIdx(null)}
+                          onClick={() => setActiveIdx(prev => (prev === i ? null : i))}
+                          className={`rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2 cursor-pointer transition
+                            ${isActive ? "ring-1 ring-sky-400/50 bg-slate-900/70" : ""}`}
+                        >
+                          <div className="flex items-center w-full">
+                            <span
+                              className="inline-block h-3 w-3 rounded-full mr-2"
+                              style={{ backgroundColor: it.color }}
+                            />
+                            <span className="text-slate-100 text-sm truncate flex-1">
+                              {it.name}
+                            </span>
+                            <span className="text-slate-300 text-sm ml-auto tabular-nums">
+                              {it.pct.toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* donut */}
+                  <div className="flex items-center justify-center">
+                    <div className="relative" style={{ width: size, height: size }}>
+                      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={(rOuter + rInner) / 2}
+                          stroke="#0b1220"
+                          strokeOpacity="0.5"
+                          strokeWidth={rOuter - rInner}
+                          fill="none"
+                        />
+
+                        {pieParts.map((p, i) => {
+                          const { start, end } = angles[i];
+                          const d = arcPath(cx, cy, rOuter, rInner, start, end);
+                          const selected = i === idxShown;
+
+                          return (
+                            <path
+                              key={p.key}
+                              d={d}
+                              fill={p.color}
+                              fillOpacity={selected ? 1 : 0.85}
+                              className={`transition-all duration-150 cursor-pointer ${
+                                selected ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" : ""
+                              }`}
+                              onMouseEnter={() => setHoverIdx(i)}
+                              onMouseLeave={() => setHoverIdx(null)}
+                              onClick={() => setActiveIdx(prev => (prev === i ? null : i))}
+                            />
+                          );
+                        })}
+
+                        {idxShown != null && (
+                          <circle
+                            cx={cx}
+                            cy={cy}
+                            r={rInner - 6}
+                            fill="none"
+                            stroke="rgba(15,23,42,0.55)"
+                            strokeWidth="12"
+                          />
+                        )}
+                      </svg>
+
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="text-center leading-tight px-3">
+                          <div className="text-slate-200 text-sm font-semibold">
+                            {center.title}
+                          </div>
+                          <div className="text-slate-100 text-xl font-extrabold">
+                            {center.line1}
+                          </div>
+                          {center.line2 ? (
+                            <div className="text-slate-300 text-sm mt-0.5">
+                              {center.line2}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Legenda premium */}
-                <div className="absolute bottom-2 left-2 right-2">
-                  <PieLegend />
-                </div>
               </div>
             </div>
 
-            {/* Barras DY premium */}
-            <div className="md:col-span-2 h-48">
-              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 px-2 py-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dyBarData} barCategoryGap={8}>
-                    <defs>
-                      <linearGradient id="dyGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#34d399" stopOpacity={1} />
-                        <stop offset="100%" stopColor="#15803d" stopOpacity={1} />
-                      </linearGradient>
-                    </defs>
+            {/* Barras DY premium (mesmo padrão Evolução) */}
+            <div className="md:col-span-2">
+              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3">
+                <div className="text-slate-100 text-sm font-semibold mb-2">
+                  DY mensal total
+                </div>
 
-                    <XAxis
-                      dataKey="name"
-                      tick={{ fontSize: 11, fill: "#cbd5f5" }}
-                      axisLine={{ stroke: "rgba(148,163,184,0.25)" }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 11, fill: "#cbd5f5" }}
-                      axisLine={false}
-                      tickLine={false}
-                      tickFormatter={(v) =>
-                        v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })
-                      }
-                    />
-                    <Tooltip content={<BarTooltip />} />
+                <div className="h-[180px] rounded-xl border border-white/10 bg-slate-900/50 p-3 overflow-x-auto overflow-y-hidden">
+                  <div className="flex items-end gap-1 min-w-max">
+                    {dyBarData.map((d, i) => {
+                      const v = d.dy || 0;
+                      const h = Math.max(4, Math.round((v / dyMax) * 140));
 
-                    {/* Linha de média */}
-                    {mediaDyMensal > 0 && (
-                      <ReferenceLine
-                        y={mediaDyMensal}
-                        stroke="rgba(251,191,36,0.9)"
-                        strokeDasharray="4 4"
-                        ifOverflow="extendDomain"
-                        label={{
-                          value: "média",
-                          position: "right",
-                          fill: "rgba(251,191,36,0.95)",
-                          fontSize: 10,
-                        }}
-                      />
-                    )}
-
-                    <Bar
-                      dataKey="dy"
-                      radius={[8, 8, 0, 0]}
-                      fill="url(#dyGrad)"
-                      isAnimationActive
-                      animationDuration={500}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-
-                {/* Pequeno destaque do melhor mês */}
-                {maxDyMes > 0 && (
-                  <div className="mt-1 text-[10px] text-slate-400 text-right pr-1">
-                    Pico:{" "}
-                    {maxDyMes.toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                      maximumFractionDigits: 0,
+                      return (
+                        <div key={i} className="flex flex-col items-center gap-2 w-10">
+                          <div
+                            className="w-full rounded-md bg-emerald-400/80 hover:bg-emerald-300 transition"
+                            style={{ height: `${h}px` }}
+                            title={v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                          />
+                          <div className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap">
+                            {d.name}
+                          </div>
+                        </div>
+                      );
                     })}
                   </div>
-                )}
+                </div>
+
               </div>
             </div>
           </div>
@@ -438,8 +399,12 @@ export default function CarteiraCash() {
             <table className="min-w-[2000px] w-full text-sm">
               <thead className="bg-slate-800/70 text-slate-300">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-medium sticky left-0 bg-slate-800/70 z-20">#</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">Ticker</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium sticky left-0 bg-slate-800/70 z-20">
+                    #
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
+                    Ticker
+                  </th>
                   <th className="px-3 py-2 text-left text-xs font-medium">Relatório</th>
                   <th className="px-3 py-2 text-left text-xs font-medium">Tipo</th>
                   <th className="px-3 py-2 text-left text-xs font-medium w-32">Setor</th>
@@ -466,11 +431,10 @@ export default function CarteiraCash() {
                   const valorAtualNum = toNum(r.valorAtual) || entradaNum;
                   const valorPosicao = qtdNum * valorAtualNum;
 
-                  const totalGeralPos = totalGeral || 0;
                   const partAtual =
-                    totalGeralPos > 0 ? (valorPosicao / totalGeralPos) * 100 : 0;
+                    totalGeral > 0 ? (valorPosicao / totalGeral) * 100 : 0;
                   const partStr =
-                    totalGeralPos > 0 && valorPosicao > 0
+                    totalGeral > 0 && valorPosicao > 0
                       ? `${partAtual.toFixed(2)}%`
                       : "—";
 
@@ -546,7 +510,9 @@ export default function CarteiraCash() {
                           type="date"
                           className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
                           value={r.dataEntrada ?? ""}
-                          onChange={(e) => updateRow(r.id, { dataEntrada: e.target.value })}
+                          onChange={(e) =>
+                            updateRow(r.id, { dataEntrada: e.target.value })
+                          }
                           title="Data de entrada no ativo"
                         />
                       </td>
