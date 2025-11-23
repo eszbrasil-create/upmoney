@@ -232,6 +232,174 @@ export default function Landing({ onNavigate }) {
             </div>
           </div>
         </section>
+
+        {/* ---------------------------- */}
+        {/* FAIXA 2 — O QUE VOCÊ RECEBE  */}
+        {/* texto esquerda | imagem direita */}
+        {/* ---------------------------- */}
+        <section className="bg-white">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
+            {/* Texto */}
+            <div className="order-1 md:order-1">
+              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1f3548]">
+                O Programa Meu Primeiro Dividendo é um caminho completo até sua renda passiva
+              </h2>
+
+              <p className="mt-4 text-lg text-[#1f3548]/80">
+                Você não compra só um curso. Você entra num ecossistema de
+                acompanhamento + ferramenta prática pra transformar conhecimento em resultado real.
+              </p>
+
+              <ul className="mt-6 space-y-3 text-[17px] text-[#1f3548]">
+                <li className="flex gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-[#1f3548]" />
+                  <span>
+                    <strong>Acesso aos cursos completos:</strong> Renda Fixa • Ações • FIIs
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-[#1f3548]" />
+                  <span>
+                    <strong>Material exclusivo e direto ao ponto</strong> (apostila + exemplos guiados)
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-[#1f3548]" />
+                  <span>
+                    <strong>UpControl liberado</strong> para organizar e acompanhar sua evolução
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-[#1f3548]" />
+                  <span>
+                    <strong>Agenda de acompanhamento pessoal</strong> comigo pra ajustar sua rota
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-[#1f3548]" />
+                  <span>
+                    <strong>Grupo exclusivo no WhatsApp</strong> com suporte e comunidade
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-[#1f3548]" />
+                  <span>
+                    <strong>Plano de ação de 30 dias</strong> pra você receber seu primeiro dividendo
+                  </span>
+                </li>
+              </ul>
+
+              <p className="mt-5 text-base text-[#1f3548]/75">
+                Tudo isso pensado pra você sair do zero e chegar no seu primeiro rendimento com clareza e método.
+              </p>
+
+              <div className="mt-7 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="inline-flex items-center rounded-xl bg-[#d6af5f] px-5 py-3 font-semibold text-[#1f3548] shadow-sm hover:brightness-105"
+                >
+                  Quero entrar no programa
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onNavigate?.("cursos")}
+                  className="inline-flex items-center rounded-xl border border-[#1f3548]/20 bg-white px-5 py-3 font-semibold text-[#1f3548] hover:bg-[#cfd6dc]/30"
+                >
+                  Ver detalhes do conteúdo
+                </button>
+              </div>
+            </div>
+
+            {/* Imagem */}
+            <div className="order-2 md:order-2">
+              <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
+                <img
+                  src="/program-ecosystem.png"
+                  alt="Ecossistema do programa com UpControl e trilhas"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ---------------------------- */}
+        {/* FAIXA 3 — COMO FUNCIONA       */}
+        {/* imagem esquerda | texto direita */}
+        {/* ---------------------------- */}
+        <section className="bg-white">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
+            {/* Imagem */}
+            <div className="order-2 md:order-1">
+              <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
+                <img
+                  src="/program-steps.png"
+                  alt="Pessoa organizando finanças e estudando"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Texto */}
+            <div className="order-1 md:order-2">
+              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1f3548]">
+                Como você vai chegar ao seu primeiro dividendo
+              </h2>
+
+              <ol className="mt-6 space-y-4 text-[17px] text-[#1f3548]">
+                <li className="flex gap-3">
+                  <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#1f3548] text-white text-sm font-bold">
+                    1
+                  </div>
+                  <div>
+                    <div className="font-semibold">Organização e clareza financeira</div>
+                    <div className="text-[#1f3548]/80">
+                      Você entende onde está e cria base sólida pra investir sem medo.
+                    </div>
+                  </div>
+                </li>
+
+                <li className="flex gap-3">
+                  <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#1f3548] text-white text-sm font-bold">
+                    2
+                  </div>
+                  <div>
+                    <div className="font-semibold">Aprendizado guiado + UpControl</div>
+                    <div className="text-[#1f3548]/80">
+                      Aulas práticas + app pra acompanhar patrimônio e ver evolução mês a mês.
+                    </div>
+                  </div>
+                </li>
+
+                <li className="flex gap-3">
+                  <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#1f3548] text-white text-sm font-bold">
+                    3
+                  </div>
+                  <div>
+                    <div className="font-semibold">Acompanhamento até o resultado</div>
+                    <div className="text-[#1f3548]/80">
+                      Você não fica sozinho: encontros + WhatsApp + ajustes de rota.
+                    </div>
+                  </div>
+                </li>
+              </ol>
+
+              <p className="mt-6 text-lg font-semibold text-[#1f3548]">
+                O objetivo é simples: <span className="text-[#0a6b52]">fazer você receber o primeiro dividendo e saber repetir o processo.</span>
+              </p>
+
+              <div className="mt-7">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="inline-flex items-center rounded-xl bg-[#d6af5f] px-6 py-3 font-semibold text-[#1f3548] shadow-sm hover:brightness-105"
+                >
+                  Agendar reunião gratuita
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Modal de agendamento */}
