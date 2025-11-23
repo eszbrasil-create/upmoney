@@ -1,16 +1,14 @@
 // src/pages/Dashboard.jsx
-
 import CardResumo from "../components/cards/CardResumo";
 import CardRegistro from "../components/cards/CardRegistro";
 import CardEvolucao from "../components/cards/CardEvolucao";
 import CardEvolucaoPct from "../components/cards/CardEvolucaoPct";
 import CardParticipacao from "../components/cards/CardParticipacao";
-import CardDividendosCash from "../components/cards/CardDividendosCash"; // ✅ NOVO
+import CardDividendosCash from "../components/cards/CardDividendosCash"; // ✅ novo card
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const MES_IDX = { Jan:0,Fev:1,Mar:2,Abr:3,Mai:4,Jun:5,Jul:6,Ago:7,Set:8,Out:9,Nov:10,Dez:11 };
 
-// ---------------------------------------------------------
 function normalizeMesKey(key) {
   if (!key) return key;
   const trimmed = String(key).trim();
@@ -38,10 +36,8 @@ function normalizeMesKey(key) {
 
   return trimmed;
 }
-// ---------------------------------------------------------
 
 export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
-
   const normalizedRegistros = Object.fromEntries(
     Object.entries(registrosPorMes).map(([k,v]) => [normalizeMesKey(k), v])
   );
@@ -78,7 +74,6 @@ export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
   const patrimonioAtual = totais[idx] || 0;
   const totalAntes = (n)=> totais[idx-n] || 0;
 
-  // ✅ Distribuição consistente com CardRegistro:
   const distribuicao = rows
     .map(r => ({
       nome: r.ativo,
@@ -116,13 +111,13 @@ export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
           onDeleteMonth={onDeleteMonth}
         />
 
-        {/* ✅ lado direito em coluna */}
+        {/* ✅ Coluna direita empilhada: Participação + Dividendos Cash */}
         <div className="flex flex-col gap-3">
           <CardParticipacao
             itens={dadosResumo.distribuicao}
             mesAtual={dadosResumo.mesAtual}
           />
-          <CardDividendosCash /> {/* ✅ aparece aqui */}
+          <CardDividendosCash />
         </div>
       </div>
 

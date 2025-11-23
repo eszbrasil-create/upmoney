@@ -1,17 +1,26 @@
 // src/components/cards/CardDividendosCash.jsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ReferenceLine,
+} from "recharts";
 
 const LS_KEY = "cc_carteira_cash_v1";
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
-function toNum(x){
-  if (x === "" || x == null) return 0;
+function toNum(x) {
+  if (x === "" || x === null || x === undefined) return 0;
   const n = Number(String(x).replace(",", "."));
   return Number.isFinite(n) ? n : 0;
 }
 
 export default function CardDividendosCash() {
-  // lê carteira do localStorage
+  // lê a carteira cash direto do localStorage
   const carteira = useMemo(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -22,30 +31,45 @@ export default function CardDividendosCash() {
     }
   }, []);
 
-  // soma DY por mês
-  const { dyMesTotal, totalAnual, maxDy } = useMemo(() => {
-    const dyTot = Array(12).fill(0);
+  const { data, totalAnual, mediaMensal } = useMemo(() => {
+    const dyMesTotal = Array(12).fill(0);
 
     carteira.forEach((r) => {
-      const arr = Array.isArray(r?.dyMeses)
-        ? [...r.dyMeses, ...Array(12 - r.dyMeses.length).fill("")].slice(0,12)
-        : Array(12).fill("");
-
+      const arrMeses = Array.isArray(r.dyMeses) ? r.dyMeses : [];
       for (let i = 0; i < 12; i++) {
-        dyTot[i] += toNum(arr[i]);
+        dyMesTotal[i] += toNum(arrMeses[i]);
       }
     });
 
-    const total = dyTot.reduce((a,b)=>a+b,0);
-    const max = Math.max(1, ...dyTot);
+    const data = MESES.map((m, i) => ({
+      name: m,
+      dy: dyMesTotal[i],
+    }));
 
-    return { dyMesTotal: dyTot, totalAnual: total, maxDy: max };
+    const totalAnual = dyMesTotal.reduce((a, b) => a + b, 0);
+    const mediaMensal = totalAnual / 12;
+
+    return { data, totalAnual, mediaMensal };
   }, [carteira]);
 
-  // tooltip simples
-  const [hoverIdx, setHoverIdx] = useState(null);
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    const v = payload[0].value || 0;
+    return (
+      <div className="rounded-md bg-slate-950/95 border border-white/10 px-2 py-1 text-xs text-slate-100 shadow-lg">
+        <div className="font-semibold">{label}</div>
+        <div>
+          {v.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+            maximumFractionDigits: 2,
+          })}
+        </div>
+      </div>
+    );
+  };
 
-  const anoAtual = new Date().getFullYear();
+  const hasData = totalAnual > 0;
 
   return (
     <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[605px] min-w-[590px] max-w-[605px] h-[360px] p-4 overflow-hidden">
@@ -54,13 +78,57 @@ export default function CardDividendosCash() {
           Dividendos (Carteira Cash)
         </span>
         <span className="text-xs px-2 py-1 rounded bg-slate-700/60 text-slate-200">
-          {anoAtual}
+          Ano atual
         </span>
       </div>
 
-      {/* Topo com total anual */}
-      <div className="mb-3 rounded-xl bg-slate-900/50 border border-white/10 px-3 py-2 flex items-center justify-between">
-        <span className="text-slate-300 text-sm">Total no ano</span>
+      <div className="h-[286px] rounded-xl border border-white/10 bg-slate-900/80 p-3">
+        {!hasData ? (
+          <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+            Preencha os DY mensais na Carteira Cash para ver o gráfico.
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 12, fill: "#cbd5f5" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 11, fill: "#cbd5f5" }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v) =>
+                  v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })
+                }
+              />
+              <Tooltip content={<CustomTooltip />} />
+
+              {/* linha de média (mesmo “ar premium” do dash) */}
+              <ReferenceLine
+                y={mediaMensal}
+                stroke="rgba(148,163,184,0.6)"
+                strokeDasharray="4 4"
+              />
+
+              <Bar
+                dataKey="dy"
+                fill="#38bdf8"
+                radius={[8, 8, 2, 2]}
+                maxBarSize={36}
+                isAnimationActive
+                animationDuration={700}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
+      {/* total anual no rodapé */}
+      <div className="mt-3 flex items-center justify-between text-sm">
+        <span className="text-slate-300">Total anual</span>
         <span className="text-slate-100 font-semibold">
           {totalAnual.toLocaleString("pt-BR", {
             style: "currency",
@@ -68,57 +136,6 @@ export default function CardDividendosCash() {
             maximumFractionDigits: 2,
           })}
         </span>
-      </div>
-
-      {/* Área do gráfico — estilo igual CardEvolução */}
-      <div className="h-[240px] rounded-xl border border-white/10 bg-slate-900/80 p-3 overflow-x-auto overflow-y-hidden relative">
-        <div className="flex items-end gap-2 min-w-max h-full">
-          {dyMesTotal.map((v, i) => {
-            const h = Math.max(4, Math.round((v / maxDy) * 170));
-
-            return (
-              <div
-                key={i}
-                className="flex flex-col items-center gap-2 w-10 relative"
-                onMouseEnter={() => setHoverIdx(i)}
-                onMouseLeave={() => setHoverIdx(null)}
-              >
-                {/* barra */}
-                <div
-                  className="w-full rounded-xl bg-sky-400/90 transition-all duration-700 ease-out"
-                  style={{ height: `${h}px` }}
-                  title={v.toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  })}
-                />
-
-                {/* label mês/ano igual Evolução */}
-                <div className="text-[13px] text-slate-300 text-center leading-tight whitespace-nowrap">
-                  {MESES[i]}
-                  <br />
-                  <span className="text-[12px] opacity-60">{anoAtual}</span>
-                </div>
-
-                {/* tooltip custom */}
-                {hoverIdx === i && (
-                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full z-20 rounded-md bg-slate-950/95 border border-white/10 px-2 py-1 text-[11px] text-slate-100 shadow-lg whitespace-nowrap">
-                    {MESES[i]}:{" "}
-                    {v.toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                      maximumFractionDigits: 2,
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="mt-2 text-[11px] text-slate-400">
-        Soma automática dos DYs registrados na Carteira Cash.
       </div>
     </div>
   );
