@@ -16,8 +16,10 @@ function normalizeMesAno(str) {
   } else {
     // mês texto -> MMM
     mes = mes.charAt(0).toUpperCase() + mes.slice(1,3).toLowerCase();
-    const found = MESES.find(m => m.toLowerCase() === mes.toLowerCase());
-    if (found) mes = found;
+    if (!MESES.includes(mes)) {
+      const found = MESES.find(m => m.toLowerCase() === mes.toLowerCase());
+      if (found) mes = found;
+    }
   }
 
   // ano 2 dígitos -> 4 dígitos
@@ -27,7 +29,7 @@ function normalizeMesAno(str) {
 }
 
 export default function CardRegistro({ columns = [], rows = [], onDeleteMonth }) {
-  // formato numérico sem moeda e sem casas decimais
+  // ✅ formato numérico sem moeda e sem casas decimais (arredondado)
   const fmt = useMemo(
     () =>
       new Intl.NumberFormat("pt-BR", {
@@ -37,24 +39,25 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     []
   );
 
-  // colunas raw + label
-  const colMap = useMemo(
-    () => columns.map((raw) => ({ raw, label: normalizeMesAno(raw) })),
+  // Normaliza colunas para padrão MMM/AAAA
+  const normalizedColumns = useMemo(
+    () => columns.map(normalizeMesAno),
     [columns]
   );
 
-  // totais por coluna
+  // Totais por mês (cada coluna)
   const totaisColuna = useMemo(() => {
-    return colMap.map((_, colIdx) =>
+    return normalizedColumns.map((_, colIdx) =>
       rows.reduce((acc, r) => acc + (r.valores?.[colIdx] || 0), 0)
     );
-  }, [colMap, rows]);
+  }, [normalizedColumns, rows]);
 
-  // ✅ largura menor da coluna fixa
-  const FIXED_W = 140;
+  // largura reduzida para Ativos/Total
+  const LEFT_COL_WIDTH = 130;
 
   return (
-    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[720px] h-[420px] p-4 overflow-hidden">
+    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[640px] h-[360px] p-4 overflow-hidden">
+      
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="text-slate-100 font-semibold text-lg">
@@ -65,40 +68,53 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
         </div>
       </div>
 
-      {/* Tabela com scroll interno */}
-      <div className="relative h-[350px] overflow-x-auto overflow-y-auto pb-2 rounded-2xl border border-white/10 bg-slate-900/40">
+      {/* Área da tabela com scroll interno */}
+      <div className="relative h-[300px] overflow-x-auto overflow-y-auto pb-2 rounded-2xl border border-white/10 bg-slate-900/40">
         <table className="min-w-full border-separate border-spacing-0">
+          
           {/* Cabeçalho fixo */}
           <thead className="sticky top-0 z-30 bg-slate-800/90 backdrop-blur">
             <tr className="text-left text-slate-300 text-sm">
-              {/* Coluna fixa (Ativos) */}
+              
+              {/* Coluna fixa (Ativos) — menor */}
               <th
                 className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-2 font-medium border-b border-white/10"
-                style={{ minWidth: FIXED_W, width: FIXED_W }}
+                style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
               >
                 Ativos
               </th>
 
-              {/* Meses + lixeira */}
-              {colMap.map(({ raw, label }) => (
-                <th
-                  key={raw}
-                  className="px-3 py-2 font-medium border-b border-white/10 text-slate-300 whitespace-nowrap"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-200">{label}</span>
-                    <button
-                      type="button"
-                      onClick={() => onDeleteMonth?.(raw)}
-                      className="p-1 rounded-md hover:bg-white/10 text-slate-400 hover:text-rose-400 transition"
-                      aria-label={`Excluir mês ${label}`}
-                      title={`Excluir mês ${label}`}
-                    >
-                      <Trash2 size={14} strokeWidth={2} />
-                    </button>
-                  </div>
-                </th>
-              ))}
+              {/* Meses + lixeira + layout mês/ano igual Evolução */}
+              {normalizedColumns.map((m) => {
+                const [mes, ano] = m.split("/");
+
+                return (
+                  <th
+                    key={m}
+                    className="px-3 py-2 font-medium border-b border-white/10 text-slate-300 whitespace-nowrap"
+                  >
+                    <div className="flex items-center gap-2">
+                      
+                      {/* MÊS EM CIMA / ANO EMBAIXO */}
+                      <div className="flex flex-col leading-tight text-center">
+                        <span className="text-[13px] text-slate-200">{mes}</span>
+                        <span className="text-[12px] text-slate-400">{ano}</span>
+                      </div>
+
+                      {/* Botão excluir */}
+                      <button
+                        type="button"
+                        onClick={() => onDeleteMonth?.(m)}
+                        className="p-1 rounded-md hover:bg-white/10 text-slate-400 hover:text-rose-400 transition"
+                        aria-label={`Excluir mês ${m}`}
+                        title={`Excluir mês ${m}`}
+                      >
+                        <Trash2 size={14} strokeWidth={2} />
+                      </button>
+                    </div>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
 
@@ -111,16 +127,16 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
                   key={row.ativo}
                   className={`text-sm ${zebra ? "bg-white/[0.02]" : "bg-transparent"} hover:bg-white/[0.04] transition`}
                 >
-                  {/* Primeira coluna fixa */}
+                  {/* Primeira coluna fixa — menor */}
                   <td
                     className="sticky left-0 z-10 bg-slate-950/60 px-3 py-2 border-b border-white/10 text-slate-100 font-medium"
-                    style={{ minWidth: FIXED_W, width: FIXED_W }}
+                    style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
                   >
                     {row.ativo}
                   </td>
 
-                  {/* Valores por mês — ✅ alinhados à esquerda */}
-                  {colMap.map((_, idx) => (
+                  {/* Valores por mês — alinhados à esquerda */}
+                  {normalizedColumns.map((_, idx) => (
                     <td
                       key={idx}
                       className="px-3 py-2 border-b border-white/10 text-slate-200 whitespace-nowrap text-left tabular-nums"
@@ -136,15 +152,16 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
           {/* Rodapé fixo */}
           <tfoot className="sticky bottom-0 z-30 bg-slate-800/90 backdrop-blur">
             <tr className="text-sm">
-              {/* Total fixo à esquerda (mesma largura de Ativos) */}
+
+              {/* Total fixo à esquerda — menor */}
               <td
                 className="sticky left-0 z-50 bg-slate-800/90 backdrop-blur px-3 py-2 border-t border-white/10 text-slate-100 font-semibold"
-                style={{ minWidth: FIXED_W, width: FIXED_W }}
+                style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
               >
                 Total
               </td>
 
-              {/* Totais por coluna — ✅ alinhados à esquerda */}
+              {/* Totais por coluna — alinhados à esquerda */}
               {totaisColuna.map((v, i) => (
                 <td
                   key={i}
