@@ -69,7 +69,8 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
       </div>
 
       {/* Área da tabela com scroll interno */}
-      <div className="relative h-[300px] overflow-x-auto overflow-y-auto pb-2 rounded-2xl border border-white/10 bg-slate-900/40">
+      {/* ✅ pb-0 para linha TOTAL ficar colada na barra de rolagem */}
+      <div className="relative h-[300px] overflow-x-auto overflow-y-auto pb-0 rounded-2xl border border-white/10 bg-slate-900/40">
         <table className="min-w-full border-separate border-spacing-0">
           
           {/* Cabeçalho fixo */}
@@ -149,10 +150,9 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
             })}
           </tbody>
 
-          {/* Rodapé fixo */}
+          {/* Rodapé fixo colado no bottom */}
           <tfoot className="sticky bottom-0 z-30 bg-slate-800/90 backdrop-blur">
             <tr className="text-sm">
-
               {/* Total fixo à esquerda — menor */}
               <td
                 className="sticky left-0 z-50 bg-slate-800/90 backdrop-blur px-3 py-2 border-t border-white/10 text-slate-100 font-semibold"
