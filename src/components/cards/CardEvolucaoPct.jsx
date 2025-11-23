@@ -79,7 +79,7 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
                 return (
                   <th
                     key={m}
-                    className="px-3 py-2 font-medium border-b border-white/10 text-slate-300"
+                    className="px-4 py-3 font-medium border-b border-white/10 text-slate-300"
                     style={{ minWidth: 85, width: 85 }}
                   >
                     <div className="leading-tight text-left">
