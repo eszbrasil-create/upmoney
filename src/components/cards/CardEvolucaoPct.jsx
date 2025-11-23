@@ -87,8 +87,8 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
                     style={{ minWidth: 85, width: 85 }}
                   >
                     <div className="leading-tight text-left">
-                      <div className="text-[11px] text-slate-200">{mes}</div>
-                      <div className="text-[10px] text-slate-400">{ano}</div>
+                      <div className="text-[13px] text-slate-200">{mes}</div>
+                      <div className="text-[12px] text-slate-400">{ano}</div>
                     </div>
                   </th>
                 );
