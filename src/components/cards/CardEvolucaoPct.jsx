@@ -2,7 +2,7 @@
 import React, { useMemo } from "react";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-const LEFT_COL_WIDTH = 130; // ✅ igual ao CardRegistro
+const LEFT_COL_WIDTH = 110; // ✅ igual ao CardRegistro
 
 function normalizeMesAno(str) {
   if (!str || !str.includes("/")) return str;
