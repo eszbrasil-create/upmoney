@@ -33,7 +33,7 @@ export default function Cursos({ onNavigate }) {
             className="font-semibold tracking-tight text-xl cursor-pointer"
             onClick={() => onNavigate?.("landing")}
           >
-            upMoney
+            UpMoney
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-sm">

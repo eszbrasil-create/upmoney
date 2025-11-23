@@ -16,10 +16,8 @@ function normalizeMesAno(str) {
   } else {
     // mês texto -> MMM
     mes = mes.charAt(0).toUpperCase() + mes.slice(1,3).toLowerCase();
-    if (!MESES.includes(mes)) {
-      const found = MESES.find(m => m.toLowerCase() === mes.toLowerCase());
-      if (found) mes = found;
-    }
+    const found = MESES.find(m => m.toLowerCase() === mes.toLowerCase());
+    if (found) mes = found;
   }
 
   // ano 2 dígitos -> 4 dígitos
@@ -29,7 +27,7 @@ function normalizeMesAno(str) {
 }
 
 export default function CardRegistro({ columns = [], rows = [], onDeleteMonth }) {
-  // ✅ formato numérico sem moeda e sem casas decimais (arredondado)
+  // formato numérico sem moeda e sem casas decimais
   const fmt = useMemo(
     () =>
       new Intl.NumberFormat("pt-BR", {
@@ -39,22 +37,24 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     []
   );
 
-  // Normaliza colunas para padrão MMM/AAAA
-  const normalizedColumns = useMemo(
-    () => columns.map(normalizeMesAno),
+  // colunas raw + label
+  const colMap = useMemo(
+    () => columns.map((raw) => ({ raw, label: normalizeMesAno(raw) })),
     [columns]
   );
 
-  // Totais por mês (cada coluna)
+  // totais por coluna
   const totaisColuna = useMemo(() => {
-    return normalizedColumns.map((_, colIdx) =>
+    return colMap.map((_, colIdx) =>
       rows.reduce((acc, r) => acc + (r.valores?.[colIdx] || 0), 0)
     );
-  }, [normalizedColumns, rows]);
+  }, [colMap, rows]);
+
+  // ✅ largura menor da coluna fixa
+  const FIXED_W = 140;
 
   return (
-    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[640px] h-[360px] p-4 overflow-hidden">
-      
+    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[720px] h-[420px] p-4 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="text-slate-100 font-semibold text-lg">
@@ -65,36 +65,34 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
         </div>
       </div>
 
-      {/* Área da tabela com scroll interno */}
-      <div className="relative h-[300px] overflow-x-auto overflow-y-auto pb-2 rounded-2xl border border-white/10 bg-slate-900/40">
+      {/* Tabela com scroll interno */}
+      <div className="relative h-[350px] overflow-x-auto overflow-y-auto pb-2 rounded-2xl border border-white/10 bg-slate-900/40">
         <table className="min-w-full border-separate border-spacing-0">
-          
           {/* Cabeçalho fixo */}
           <thead className="sticky top-0 z-30 bg-slate-800/90 backdrop-blur">
             <tr className="text-left text-slate-300 text-sm">
-              
               {/* Coluna fixa (Ativos) */}
               <th
                 className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-2 font-medium border-b border-white/10"
-                style={{ minWidth: 170, width: 170 }}
+                style={{ minWidth: FIXED_W, width: FIXED_W }}
               >
                 Ativos
               </th>
 
               {/* Meses + lixeira */}
-              {normalizedColumns.map((m) => (
+              {colMap.map(({ raw, label }) => (
                 <th
-                  key={m}
+                  key={raw}
                   className="px-3 py-2 font-medium border-b border-white/10 text-slate-300 whitespace-nowrap"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-200">{m}</span>
+                    <span className="text-slate-200">{label}</span>
                     <button
                       type="button"
-                      onClick={() => onDeleteMonth?.(m)}
+                      onClick={() => onDeleteMonth?.(raw)}
                       className="p-1 rounded-md hover:bg-white/10 text-slate-400 hover:text-rose-400 transition"
-                      aria-label={`Excluir mês ${m}`}
-                      title={`Excluir mês ${m}`}
+                      aria-label={`Excluir mês ${label}`}
+                      title={`Excluir mês ${label}`}
                     >
                       <Trash2 size={14} strokeWidth={2} />
                     </button>
@@ -116,16 +114,16 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
                   {/* Primeira coluna fixa */}
                   <td
                     className="sticky left-0 z-10 bg-slate-950/60 px-3 py-2 border-b border-white/10 text-slate-100 font-medium"
-                    style={{ minWidth: 170, width: 170 }}
+                    style={{ minWidth: FIXED_W, width: FIXED_W }}
                   >
                     {row.ativo}
                   </td>
 
-                  {/* Valores por mês */}
-                  {normalizedColumns.map((_, idx) => (
+                  {/* Valores por mês — ✅ alinhados à esquerda */}
+                  {colMap.map((_, idx) => (
                     <td
                       key={idx}
-                      className="px-3 py-2 border-b border-white/10 text-slate-200 whitespace-nowrap text-right tabular-nums"
+                      className="px-3 py-2 border-b border-white/10 text-slate-200 whitespace-nowrap text-left tabular-nums"
                     >
                       {fmt.format(row.valores?.[idx] ?? 0)}
                     </td>
@@ -138,20 +136,19 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
           {/* Rodapé fixo */}
           <tfoot className="sticky bottom-0 z-30 bg-slate-800/90 backdrop-blur">
             <tr className="text-sm">
-
-              {/* Total fixo à esquerda */}
+              {/* Total fixo à esquerda (mesma largura de Ativos) */}
               <td
                 className="sticky left-0 z-50 bg-slate-800/90 backdrop-blur px-3 py-2 border-t border-white/10 text-slate-100 font-semibold"
-                style={{ minWidth: 170, width: 170 }}
+                style={{ minWidth: FIXED_W, width: FIXED_W }}
               >
                 Total
               </td>
 
-              {/* Totais por coluna */}
+              {/* Totais por coluna — ✅ alinhados à esquerda */}
               {totaisColuna.map((v, i) => (
                 <td
                   key={i}
-                  className="px-3 py-2 border-t border-white/10 text-slate-100 font-semibold whitespace-nowrap text-right tabular-nums"
+                  className="px-3 py-2 border-t border-white/10 text-slate-100 font-semibold whitespace-nowrap text-left tabular-nums"
                 >
                   {fmt.format(v)}
                 </td>
