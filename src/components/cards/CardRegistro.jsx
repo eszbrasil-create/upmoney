@@ -56,7 +56,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
   const LEFT_COL_WIDTH = 130;
 
   return (
-    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[640px] h-[360px] p-4 overflow-hidden">
+    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[650px] h-[360px] p-4 overflow-hidden">
       
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
