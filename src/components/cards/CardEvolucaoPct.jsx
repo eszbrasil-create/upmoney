@@ -2,6 +2,7 @@
 import React, { useMemo } from "react";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const LEFT_COL_WIDTH = 170; // ✅ igual ao CardRegistro
 
 function normalizeMesAno(str) {
   if (!str || !str.includes("/")) return str;
@@ -51,6 +52,7 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
     });
   }, [normalizedColumns, rows]);
 
+  // ✅ sem casas decimais
   const fmtPct = (x) => `${x >= 0 ? "+" : ""}${Math.round(x)}%`;
 
   return (
@@ -64,12 +66,14 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
       <div className="relative h-[300px] overflow-auto rounded-2xl border border-white/10 bg-slate-900/40">
         <table className="min-w-full border-separate border-spacing-0">
 
+          {/* Header */}
           <thead className="sticky top-0 z-40 bg-slate-800/90 backdrop-blur">
             <tr className="text-left text-slate-300 text-sm">
 
+              {/* ✅ Coluna fixa (Ativos) igual ao CardRegistro */}
               <th
                 className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-2 font-medium border-b border-white/10"
-                style={{ minWidth: 130, width: 130 }}
+                style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
               >
                 Ativos
               </th>
@@ -92,6 +96,7 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
             </tr>
           </thead>
 
+          {/* Body */}
           <tbody>
             {pctRows.map((row, rowIdx) => {
               const zebra = rowIdx % 2 === 0;
@@ -100,9 +105,10 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
                   key={row.ativo}
                   className={`${zebra ? "bg-white/[0.02]" : "bg-transparent"} hover:bg-white/[0.05] transition text-sm`}
                 >
+                  {/* ✅ sticky com z menor que header para não sobrepor */}
                   <td
-                    className="sticky left-0 z-30 bg-slate-950/60 px-3 py-2 border-b border-white/10 text-slate-100 font-medium"
-                    style={{ minWidth: 160, width: 160 }}
+                    className="sticky left-0 z-10 bg-slate-950/60 px-3 py-2 border-b border-white/10 text-slate-100 font-medium"
+                    style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
                   >
                     {row.ativo}
                   </td>
@@ -141,12 +147,14 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
             })}
           </tbody>
 
+          {/* Footer */}
           <tfoot className="sticky bottom-0 z-40 bg-slate-800/90 backdrop-blur">
             <tr className="text-sm font-semibold">
 
+              {/* ✅ Total com mesma largura e z alto */}
               <td
-                className="sticky left-0 z-40 bg-slate-800/90 px-3 py-2 border-t border-white/10 text-slate-100"
-                style={{ minWidth: 160, width: 160 }}
+                className="sticky left-0 z-50 bg-slate-800/90 backdrop-blur px-3 py-2 border-t border-white/10 text-slate-100"
+                style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
               >
                 Total
               </td>
