@@ -59,7 +59,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[680px] h-[360px] p-4 overflow-hidden">
       
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-1">
         <div className="text-slate-100 font-semibold text-lg">
           Registros
         </div>
