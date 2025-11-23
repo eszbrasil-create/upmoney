@@ -10,7 +10,7 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Legend,
+  ReferenceLine,
 } from "recharts";
 
 const PIE_COLORS = {
@@ -19,7 +19,7 @@ const PIE_COLORS = {
   FII: "#fbbf24",
 };
 
-const BAR_COLOR = "#22c55e";
+const BAR_BASE = "#22c55e";
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
 // Carteira base (modelo inicial)
@@ -54,6 +54,7 @@ function toNum(x) {
 }
 
 export default function CarteiraCash() {
+  // Estado da carteira (editável)
   const [carteira, setCarteira] = useState(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -70,6 +71,7 @@ export default function CarteiraCash() {
     }
   });
 
+  // Persiste alterações
   useEffect(() => {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(carteira));
@@ -82,29 +84,30 @@ export default function CarteiraCash() {
     );
   };
 
+  // Cálculos globais
   const {
     distAtual,
     totalGeral,
     pieData,
     dyBarData,
     totalDyMensal,
+    mediaDyMensal,
+    maxDyMes,
   } = useMemo(() => {
     const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
     let total = 0;
+
     const dyMesTotal = Array(12).fill(0);
 
     carteira.forEach((r) => {
       const qtd = toNum(r.qtd);
       const entrada = toNum(r.entrada);
-      const valorAtualInformado = toNum(r.valorAtual);
-
-      // ✅ fallback premium: se valorAtual vazio, usa entrada MAS marca depois visualmente
-      const valorAtual = valorAtualInformado > 0 ? valorAtualInformado : entrada;
-
+      const valorAtual = toNum(r.valorAtual) || entrada;
       const valorPosicao = qtd * valorAtual;
       const tipoKey = r.tipo;
 
-      somaPorTipo[tipoKey] = (somaPorTipo[tipoKey] || 0) + valorPosicao;
+      if (!somaPorTipo[tipoKey]) somaPorTipo[tipoKey] = 0;
+      somaPorTipo[tipoKey] += valorPosicao;
       total += valorPosicao;
 
       const arrMeses = Array.isArray(r.dyMeses) ? r.dyMeses : [];
@@ -134,6 +137,9 @@ export default function CarteiraCash() {
     }));
 
     const totalDyMensal = dyMesTotal.reduce((a, b) => a + b, 0);
+    const mesesComDy = dyMesTotal.filter((v) => v > 0).length || 1;
+    const mediaDyMensal = totalDyMensal / mesesComDy;
+    const maxDyMes = Math.max(0, ...dyMesTotal);
 
     return {
       distAtual: dist,
@@ -141,9 +147,12 @@ export default function CarteiraCash() {
       pieData,
       dyBarData,
       totalDyMensal,
+      mediaDyMensal,
+      maxDyMes,
     };
   }, [carteira]);
 
+  // Tooltip premium do gráfico de pizza
   const PieTooltip = ({ active, payload }) => {
     if (!active || !payload || !payload.length) return null;
     const { name, value } = payload[0];
@@ -151,9 +160,9 @@ export default function CarteiraCash() {
       totalGeral > 0 ? ((value / totalGeral) * 100).toFixed(1) : "0.0";
 
     return (
-      <div className="rounded-md bg-slate-900/95 border border-slate-700 px-2 py-1 text-xs text-slate-100">
-        <div className="font-semibold">{name}</div>
-        <div>
+      <div className="rounded-lg bg-black/95 border border-amber-300/30 px-3 py-2 text-xs text-slate-100 shadow-xl">
+        <div className="font-semibold text-slate-100">{name}</div>
+        <div className="mt-0.5">
           {value.toLocaleString("pt-BR", {
             style: "currency",
             currency: "BRL",
@@ -164,83 +173,125 @@ export default function CarteiraCash() {
     );
   };
 
+  // Tooltip premium do gráfico de barras (DY)
+  const BarTooltip = ({ active, payload, label }) => {
+    if (!active || !payload || !payload.length) return null;
+    const v = payload[0].value || 0;
+    const pctTotal = totalDyMensal > 0 ? (v / totalDyMensal) * 100 : 0;
+
+    return (
+      <div className="rounded-lg bg-black/95 border border-emerald-300/30 px-3 py-2 text-xs text-slate-100 shadow-xl">
+        <div className="font-semibold text-slate-100">DY em {label}</div>
+        <div className="mt-0.5">
+          {v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+        </div>
+        <div className="text-slate-400 mt-0.5">
+          {pctTotal.toFixed(1)}% do total anual
+        </div>
+      </div>
+    );
+  };
+
+  // Legenda premium do donut: nome esquerda, % direita
+  const PieLegend = () => {
+    if (!pieData.length) return null;
+
+    return (
+      <div className="mt-1 space-y-1">
+        {pieData.map((p) => {
+          const pct = totalGeral > 0 ? (p.value / totalGeral) * 100 : 0;
+          return (
+            <div
+              key={p.key}
+              className="flex items-center text-[11px] text-slate-200"
+            >
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-full mr-2"
+                style={{ backgroundColor: PIE_COLORS[p.key] || "#64748b" }}
+              />
+              <span className="flex-1 truncate">{p.name}</span>
+              <span className="ml-auto tabular-nums text-slate-300">
+                {pct.toFixed(1)}%
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div className="pt-0 pr-3 pl-0 relative">
-      {/* ✅ FAIXA FIXA SUPER COMPACTA (estilo botão premium) */}
+      {/* FAIXA DE PRODUTOS / CARTEIRAS MODELO – FIXA NA TELA (reduzida) */}
       <div className="mb-3">
         <div className="fixed left-48 right-6 top-3 z-30">
           <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-sky-500 to-fuchsia-500 p-[1px] shadow-xl">
-            <div className="rounded-2xl bg-slate-950/95 px-2 py-2">
+            <div className="rounded-2xl bg-slate-950/95 p-2">
               <div className="grid gap-2 md:grid-cols-3">
-                
-                {/* Dividendos */}
-                <button
-                  type="button"
-                  className="group rounded-xl bg-emerald-500/10 border border-emerald-400/40 px-3 py-2 flex items-center justify-between gap-2 hover:bg-emerald-500/15 transition"
-                  title="Em breve: acessar meus ativos de Dividendos"
-                >
-                  <div className="text-left">
-                    <div className="text-emerald-200 text-[12px] font-semibold leading-none">
+                {/* Carteira Dividendos */}
+                <div className="rounded-xl bg-emerald-500/10 border border-emerald-400/40 px-3 py-1.5 flex items-center justify-between gap-2">
+                  <div>
+                    <h2 className="text-emerald-300 text-xs font-semibold leading-tight">
                       Carteira Dividendos
-                    </div>
-                    <div className="text-slate-300 text-[10px] mt-1 leading-snug line-clamp-1">
-                      Acesso rápido aos ativos e relatórios.
-                    </div>
+                    </h2>
+                    <p className="text-slate-200/80 text-[10px] leading-tight">
+                      Renda recorrente.
+                    </p>
                   </div>
-                  <div className="text-[10px] font-semibold px-2 py-1 rounded-md bg-emerald-400 text-slate-900 group-hover:bg-emerald-300">
-                    PDF
-                  </div>
-                </button>
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-lg bg-emerald-400 text-slate-900 text-[10px] font-semibold px-2.5 py-1 hover:bg-emerald-300 transition whitespace-nowrap"
+                  >
+                    Baixar PDF
+                  </button>
+                </div>
 
-                {/* FIIs */}
-                <button
-                  type="button"
-                  className="group rounded-xl bg-amber-500/10 border border-amber-400/40 px-3 py-2 flex items-center justify-between gap-2 hover:bg-amber-500/15 transition"
-                  title="Em breve: acessar meus ativos de FIIs"
-                >
-                  <div className="text-left">
-                    <div className="text-amber-200 text-[12px] font-semibold leading-none">
+                {/* Carteira Fundos Imobiliários */}
+                <div className="rounded-xl bg-amber-500/10 border border-amber-400/40 px-3 py-1.5 flex items-center justify-between gap-2">
+                  <div>
+                    <h2 className="text-amber-300 text-xs font-semibold leading-tight">
                       Carteira FIIs
-                    </div>
-                    <div className="text-slate-300 text-[10px] mt-1 leading-snug line-clamp-1">
-                      Acesso rápido aos ativos e relatórios.
-                    </div>
+                    </h2>
+                    <p className="text-slate-200/80 text-[10px] leading-tight">
+                      Renda mensal.
+                    </p>
                   </div>
-                  <div className="text-[10px] font-semibold px-2 py-1 rounded-md bg-amber-400 text-slate-900 group-hover:bg-amber-300">
-                    PDF
-                  </div>
-                </button>
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-lg bg-amber-400 text-slate-900 text-[10px] font-semibold px-2.5 py-1 hover:bg-amber-300 transition whitespace-nowrap"
+                  >
+                    Baixar PDF
+                  </button>
+                </div>
 
-                {/* Cripto */}
-                <button
-                  type="button"
-                  className="group rounded-xl bg-sky-500/10 border border-sky-400/40 px-3 py-2 flex items-center justify-between gap-2 hover:bg-sky-500/15 transition"
-                  title="Em breve: acessar meus ativos de Cripto"
-                >
-                  <div className="text-left">
-                    <div className="text-sky-200 text-[12px] font-semibold leading-none">
+                {/* Carteira Criptomoedas */}
+                <div className="rounded-xl bg-sky-500/10 border border-sky-400/40 px-3 py-1.5 flex items-center justify-between gap-2">
+                  <div>
+                    <h2 className="text-sky-300 text-xs font-semibold leading-tight">
                       Carteira Cripto
-                    </div>
-                    <div className="text-slate-300 text-[10px] mt-1 leading-snug line-clamp-1">
-                      Acesso rápido aos ativos e relatórios.
-                    </div>
+                    </h2>
+                    <p className="text-slate-200/80 text-[10px] leading-tight">
+                      Longo prazo.
+                    </p>
                   </div>
-                  <div className="text-[10px] font-semibold px-2 py-1 rounded-md bg-sky-400 text-slate-900 group-hover:bg-sky-300">
-                    PDF
-                  </div>
-                </button>
-
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-lg bg-sky-400 text-slate-900 text-[10px] font-semibold px-2.5 py-1 hover:bg-sky-300 transition whitespace-nowrap"
+                  >
+                    Baixar PDF
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ✅ espaço reservado menor */}
+        {/* Espaço reservado menor */}
         <div className="h-20" />
       </div>
 
-      {/* CARD: gráficos */}
-      <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-4 relative">
+      {/* CARD: gráficos premium */}
+      <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-4">
         {totalGeral <= 0 ? (
           <p className="text-[11px] text-slate-500">
             Preencha <strong>Quantidade</strong>, <strong>Entrada</strong>,{" "}
@@ -248,89 +299,126 @@ export default function CarteiraCash() {
             tabela para visualizar os gráficos.
           </p>
         ) : (
-          <>
-            {/* ✅ badge DY total 12m */}
-            <div className="absolute right-4 top-4 text-[11px] text-slate-200 bg-slate-900/60 border border-white/10 rounded-lg px-2 py-1">
-              DY total 12m:{" "}
-              <span className="text-emerald-300 font-semibold">
-                {totalDyMensal.toLocaleString("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                  maximumFractionDigits: 0,
-                })}
-              </span>
-            </div>
+          <div className="grid gap-4 md:grid-cols-3 items-stretch">
+            {/* Donut premium */}
+            <div className="md:col-span-1 h-48">
+              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 px-2 py-2 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={70}
+                      innerRadius={42}
+                      paddingAngle={3}
+                      isAnimationActive
+                      animationDuration={450}
+                    >
+                      {pieData.map((entry) => (
+                        <Cell
+                          key={entry.key}
+                          fill={PIE_COLORS[entry.key] || "#64748b"}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<PieTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
 
-            <div className="grid gap-4 md:grid-cols-3 items-stretch">
-              {/* Pizza */}
-              <div className="md:col-span-1 h-40">
-                <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 px-2 py-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={50}
-                        innerRadius={26}
-                        paddingAngle={3}
-                      >
-                        {pieData.map((entry) => (
-                          <Cell
-                            key={entry.key}
-                            fill={PIE_COLORS[entry.key] || "#64748b"}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip content={<PieTooltip />} />
-                      <Legend
-                        verticalAlign="bottom"
-                        height={24}
-                        formatter={(value) => (
-                          <span className="text-[11px] text-slate-200">
-                            {value}
-                          </span>
-                        )}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                {/* Centro premium */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center leading-tight">
+                    <div className="text-[11px] text-slate-400 font-medium">
+                      Patrimônio atual
+                    </div>
+                    <div className="text-slate-100 text-lg font-extrabold drop-shadow-sm">
+                      {totalGeral.toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                        maximumFractionDigits: 0,
+                      })}
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Barras */}
-              <div className="md:col-span-2 h-40">
-                <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 px-2 py-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={dyBarData}>
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fontSize: 10, fill: "#cbd5f5" }}
-                      />
-                      <YAxis
-                        tick={{ fontSize: 10, fill: "#cbd5f5" }}
-                        tickFormatter={(v) =>
-                          v.toLocaleString("pt-BR", {
-                            maximumFractionDigits: 0,
-                          })
-                        }
-                      />
-                      <Tooltip
-                        formatter={(v) =>
-                          v.toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          })
-                        }
-                      />
-                      <Bar dataKey="dy" radius={[6, 6, 0, 0]} fill={BAR_COLOR} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                {/* Legenda premium */}
+                <div className="absolute bottom-2 left-2 right-2">
+                  <PieLegend />
                 </div>
               </div>
             </div>
-          </>
+
+            {/* Barras DY premium */}
+            <div className="md:col-span-2 h-48">
+              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 px-2 py-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dyBarData} barCategoryGap={8}>
+                    <defs>
+                      <linearGradient id="dyGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#34d399" stopOpacity={1} />
+                        <stop offset="100%" stopColor="#15803d" stopOpacity={1} />
+                      </linearGradient>
+                    </defs>
+
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 11, fill: "#cbd5f5" }}
+                      axisLine={{ stroke: "rgba(148,163,184,0.25)" }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 11, fill: "#cbd5f5" }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(v) =>
+                        v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })
+                      }
+                    />
+                    <Tooltip content={<BarTooltip />} />
+
+                    {/* Linha de média */}
+                    {mediaDyMensal > 0 && (
+                      <ReferenceLine
+                        y={mediaDyMensal}
+                        stroke="rgba(251,191,36,0.9)"
+                        strokeDasharray="4 4"
+                        ifOverflow="extendDomain"
+                        label={{
+                          value: "média",
+                          position: "right",
+                          fill: "rgba(251,191,36,0.95)",
+                          fontSize: 10,
+                        }}
+                      />
+                    )}
+
+                    <Bar
+                      dataKey="dy"
+                      radius={[8, 8, 0, 0]}
+                      fill="url(#dyGrad)"
+                      isAnimationActive
+                      animationDuration={500}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+
+                {/* Pequeno destaque do melhor mês */}
+                {maxDyMes > 0 && (
+                  <div className="mt-1 text-[10px] text-slate-400 text-right pr-1">
+                    Pico:{" "}
+                    {maxDyMes.toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                      maximumFractionDigits: 0,
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
@@ -375,10 +463,7 @@ export default function CarteiraCash() {
                 {carteira.map((r, i) => {
                   const qtdNum = toNum(r.qtd);
                   const entradaNum = toNum(r.entrada);
-                  const valorAtualInformado = toNum(r.valorAtual);
-                  const valorAtualNum = valorAtualInformado > 0 ? valorAtualInformado : entradaNum;
-                  const usandoEntradaComoAtual = valorAtualInformado <= 0 && entradaNum > 0;
-
+                  const valorAtualNum = toNum(r.valorAtual) || entradaNum;
                   const valorPosicao = qtdNum * valorAtualNum;
 
                   const totalGeralPos = totalGeral || 0;
@@ -438,9 +523,7 @@ export default function CarteiraCash() {
                         <select
                           className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
                           value={r.tipo}
-                          onChange={(e) =>
-                            updateRow(r.id, { tipo: e.target.value })
-                          }
+                          onChange={(e) => updateRow(r.id, { tipo: e.target.value })}
                         >
                           <option value="RF">RF</option>
                           <option value="ACOES">Ações</option>
@@ -452,9 +535,7 @@ export default function CarteiraCash() {
                         <input
                           className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-600 text-sm"
                           value={r.nome ?? ""}
-                          onChange={(e) =>
-                            updateRow(r.id, { nome: e.target.value })
-                          }
+                          onChange={(e) => updateRow(r.id, { nome: e.target.value })}
                           placeholder="Setor"
                           title="Setor ou categoria do ativo"
                         />
@@ -465,9 +546,7 @@ export default function CarteiraCash() {
                           type="date"
                           className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
                           value={r.dataEntrada ?? ""}
-                          onChange={(e) =>
-                            updateRow(r.id, { dataEntrada: e.target.value })
-                          }
+                          onChange={(e) => updateRow(r.id, { dataEntrada: e.target.value })}
                           title="Data de entrada no ativo"
                         />
                       </td>
@@ -478,9 +557,7 @@ export default function CarteiraCash() {
                           inputMode="decimal"
                           placeholder="0"
                           value={r.qtd ?? ""}
-                          onChange={(e) =>
-                            updateRow(r.id, { qtd: e.target.value })
-                          }
+                          onChange={(e) => updateRow(r.id, { qtd: e.target.value })}
                           onBlur={(e) => {
                             const n = toNum(e.target.value);
                             updateRow(r.id, { qtd: n === 0 ? "" : String(n) });
@@ -495,9 +572,7 @@ export default function CarteiraCash() {
                           inputMode="decimal"
                           placeholder="0,00"
                           value={r.entrada ?? ""}
-                          onChange={(e) =>
-                            updateRow(r.id, { entrada: e.target.value })
-                          }
+                          onChange={(e) => updateRow(r.id, { entrada: e.target.value })}
                           onBlur={(e) => {
                             const n = toNum(e.target.value);
                             updateRow(r.id, { entrada: n === 0 ? "" : String(n) });
@@ -506,38 +581,19 @@ export default function CarteiraCash() {
                         />
                       </td>
 
-                      {/* ✅ Valor atual com indicador sutil quando usando entrada */}
                       <td className="px-3 py-2 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <input
-                            className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                            inputMode="decimal"
-                            placeholder="0,00"
-                            value={r.valorAtual ?? ""}
-                            onChange={(e) =>
-                              updateRow(r.id, { valorAtual: e.target.value })
-                            }
-                            onBlur={(e) => {
-                              const n = toNum(e.target.value);
-                              updateRow(r.id, {
-                                valorAtual: n === 0 ? "" : String(n),
-                              });
-                            }}
-                            title={
-                              usandoEntradaComoAtual
-                                ? "Valor atual vazio — usando Entrada para cálculo"
-                                : "Preço atual estimado"
-                            }
-                          />
-                          {usandoEntradaComoAtual && (
-                            <span
-                              className="text-[10px] text-amber-300"
-                              title="Valor atual vazio — usando Entrada para cálculo"
-                            >
-                              •
-                            </span>
-                          )}
-                        </div>
+                        <input
+                          className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                          inputMode="decimal"
+                          placeholder="0,00"
+                          value={r.valorAtual ?? ""}
+                          onChange={(e) => updateRow(r.id, { valorAtual: e.target.value })}
+                          onBlur={(e) => {
+                            const n = toNum(e.target.value);
+                            updateRow(r.id, { valorAtual: n === 0 ? "" : String(n) });
+                          }}
+                          title="Preço atual estimado"
+                        />
                       </td>
 
                       <td className="px-3 py-2 text-right text-slate-200">
