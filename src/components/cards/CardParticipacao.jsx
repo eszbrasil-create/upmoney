@@ -5,7 +5,7 @@ const PALETTE = [
   "#8538f8ff", // sky
   "#22d3ee", // cyan
   "#f5bb0bff", // amber
-  "#a78bfa", // violet
+  "#e80707ff", // violet
   "#34d399", // emerald
   "#71fb78ff", // rose
   "#9d72f4ff", // pink
