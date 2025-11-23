@@ -2,13 +2,13 @@
 import React, { useMemo, useState } from "react";
 
 const PALETTE = [
-  "#38bdf8", // sky
+  "#f8388bff", // sky
   "#22d3ee", // cyan
-  "#f59e0b", // amber
+  "#1bf50bff", // amber
   "#a78bfa", // violet
   "#34d399", // emerald
   "#fb7185", // rose
-  "#f472b6", // pink
+  "#9d72f4ff", // pink
   "#60a5fa", // blue
 ];
 
