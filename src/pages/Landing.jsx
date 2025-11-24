@@ -1,7 +1,7 @@
 // src/pages/Landing.jsx
 // Página inicial completa do ecossistema "Meu Patrimônio"
 
-import React, { useState } from "react";
+import React from "react";
 
 const IconWhatsApp = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
@@ -32,41 +32,10 @@ const SectionDivider = () => (
 );
 
 export default function Landing({ onNavigate }) {
-  // ✅ seus contatos reais
   const WHATSAPP_NUMBER = "393517380919";
 
-  // ✅ senha simples de MVP (opção 1)
-  const DASH_USER = "aluno17";
-  const DASH_PASS = "upmoney2025";
-
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [authForm, setAuthForm] = useState({ usuario: "", senha: "" });
-  const [authError, setAuthError] = useState("");
-
-  const onAuthChange = (e) => {
-    const { name, value } = e.target;
-    setAuthForm((f) => ({ ...f, [name]: value }));
-  };
-
-  const handleAuthSubmit = (e) => {
-    e.preventDefault();
-    setAuthError("");
-
-    if (
-      authForm.usuario.trim() === DASH_USER &&
-      authForm.senha === DASH_PASS
-    ) {
-      setIsAuthOpen(false);
-      setAuthForm({ usuario: "", senha: "" });
-      onNavigate?.("login"); // libera a entrada do dash
-      return;
-    }
-
-    setAuthError("Usuário ou senha incorretos.");
-  };
-
   const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-    "Olá! Quero agendar minha avaliação gratuita para conquistar meu primeiro dividendo."
+    "Olá! Vi sua página e quero agendar minha avaliação gratuita para o programa Meu Primeiro Dividendo."
   )}`;
 
   return (
@@ -140,15 +109,8 @@ export default function Landing({ onNavigate }) {
             </a>
           </nav>
 
-          {/* Lado direito: Meu Plano + ícones sociais */}
+          {/* Ícones sociais */}
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsAuthOpen(true)}
-              className="rounded-xl bg-[#d6af5f] px-4 py-2 font-medium text-[#1f3548] hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-white/40"
-            >
-              Meu Plano
-            </button>
-
             <a
               href="https://youtube.com"
               target="_blank"
@@ -172,13 +134,13 @@ export default function Landing({ onNavigate }) {
         </div>
       </header>
 
-      {/* Hero 1 */}
+      {/* Hero 1 — só ela, com mais respiro */}
       <main className="flex-1">
         <section className="bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 grid md:grid-cols-2 gap-16 items-center">
             {/* Imagem */}
-            <div className="order-2 md:order-1">
-              <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
+            <div className="order-2 md:order-1 flex justify-center">
+              <div className="aspect-[4/3] w-full max-w-md overflow-hidden rounded-2xl bg-[#cfd6dc]/30 shadow-sm flex items-center justify-center">
                 <img
                   src="/hero-hand-tree.png"
                   alt="Mão com moedas e uma pequena árvore"
@@ -187,27 +149,27 @@ export default function Landing({ onNavigate }) {
               </div>
             </div>
 
-            {/* Texto e CTA */}
+            {/* Texto */}
             <div className="order-1 md:order-2">
-              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#1f3548]">
+              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#1f3548] leading-tight">
                 Conquiste seu Primeiro Dividendo em 30 dias
               </h1>
-              <p className="mt-4 text-lg text-[#1f3548]/80">
+
+              <p className="mt-6 text-lg sm:text-xl text-[#1f3548]/80 leading-relaxed max-w-lg">
                 Nada de complicação, termos difíceis ou teoria sem prática.
-                Aqui você aprende fazendo: passo a passo, no seu ritmo,
-                com suporte real e a orientação que faltava para finalmente entrar
-                no mundo dos investimentos.
+                Aqui você aprende fazendo: passo a passo, no seu ritmo, com suporte real
+                e a orientação que faltava para finalmente entrar no mundo dos investimentos.
               </p>
 
-              {/* ✅ APENAS BOTÃO WHATS */}
-              <div className="mt-8">
+              {/* Botão WhatsApp único */}
+              <div className="mt-10">
                 <a
                   href={whatsappLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#00e59b] px-6 py-3 font-semibold text-[#073b2c] hover:brightness-105"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#00e59b] px-8 py-4 font-semibold text-[#073b2c] text-lg shadow hover:brightness-105 transition"
                 >
-                  <IconWhatsApp className="h-5 w-5" />
+                  <IconWhatsApp className="h-6 w-6" />
                   Agende sua avaliação gratuita
                 </a>
               </div>
@@ -217,45 +179,47 @@ export default function Landing({ onNavigate }) {
 
         <SectionDivider />
 
-        {/* Hero 2 — Programa */}
+        {/* Hero 2 — Programa (fica só aqui) */}
         <section className="bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 grid md:grid-cols-2 gap-12 items-center">
             {/* Texto à esquerda */}
             <div className="order-1">
-              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1f3548]">
+              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1f3548] leading-tight">
                 O Programa Completo para Viver seu Primeiro Dividendo
               </h2>
 
-              <p className="mt-4 text-lg text-[#1f3548]/80">
-                Você terá acesso ao método que já ajudou muitas pessoas a saírem do zero
+              <p className="mt-4 text-lg text-[#1f3548]/80 leading-relaxed">
+                Você terá acesso ao método que já ajudou pessoas a saírem do zero
                 e conquistarem renda passiva real com segurança e estratégia.
               </p>
 
-              <ul className="mt-6 space-y-3 text-[#1f3548]/90">
+              <ul className="mt-6 space-y-3 text-[#1f3548]/90 text-lg">
                 <li>📘 Curso completo de <strong>Renda Fixa</strong></li>
-                <li>📗 Curso de <strong>Ações</strong> — como escolher empresas boas pagadoras</li>
+                <li>📗 Curso de <strong>Ações</strong> — como escolher boas pagadoras</li>
                 <li>📙 Curso de <strong>FIIs</strong> — renda mensal na prática</li>
                 <li>📂 Material exclusivo (PDFs, resumos e roteiros)</li>
-                <li>📊 Acesso ao <strong>UpControl</strong> (controle patrimonial)</li>
-                <li>📅 Agenda de <strong>acompanhamento pessoal</strong> comigo</li>
+                <li>📊 Acesso ao <strong>UpControl</strong></li>
+                <li>📅 Agenda de <strong>acompanhamento pessoal</strong></li>
                 <li>💬 Grupo exclusivo no WhatsApp</li>
               </ul>
 
-              {/* ✅ APENAS BOTÃO WHATS */}
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#00e59b] px-6 py-3 font-semibold text-[#073b2c] hover:brightness-105"
-              >
-                <IconWhatsApp className="h-5 w-5" />
-                Agende sua avaliação gratuita
-              </a>
+              {/* Mesmo botão WhatsApp */}
+              <div className="mt-8">
+                <a
+                  href={whatsappLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#00e59b] px-7 py-3 font-semibold text-[#073b2c] text-base shadow hover:brightness-105 transition"
+                >
+                  <IconWhatsApp className="h-5 w-5" />
+                  Agende sua avaliação gratuita
+                </a>
+              </div>
             </div>
 
             {/* Imagem à direita */}
             <div className="order-2">
-              <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
+              <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 shadow-sm flex items-center justify-center">
                 <img
                   src="/hero-dividendo.png"
                   alt="Benefícios do programa"
@@ -266,80 +230,6 @@ export default function Landing({ onNavigate }) {
           </div>
         </section>
       </main>
-
-      {/* Modal de autenticação simples do Dash */}
-      {isAuthOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <div className="flex items-start justify-between">
-              <h2 className="text-lg font-bold text-[#1f3548]">
-                Acesso ao Dashboard
-              </h2>
-              <button
-                onClick={() => {
-                  setIsAuthOpen(false);
-                  setAuthError("");
-                }}
-                className="ml-4 rounded-lg px-2 py-1 text-[#1f3548]/70 hover:bg-[#cfd6dc]/40"
-                aria-label="Fechar"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleAuthSubmit} className="mt-4 space-y-3">
-              <input
-                name="usuario"
-                value={authForm.usuario}
-                onChange={onAuthChange}
-                placeholder="Usuário"
-                className="w-full border rounded-xl px-3 py-2"
-                required
-              />
-              <input
-                name="senha"
-                type="password"
-                value={authForm.senha}
-                onChange={onAuthChange}
-                placeholder="Senha"
-                className="w-full border rounded-xl px-3 py-2"
-                required
-              />
-
-              {authError && (
-                <p className="text-sm text-red-600">{authError}</p>
-              )}
-
-              <div className="flex justify-end gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAuthOpen(false);
-                    setAuthError("");
-                  }}
-                  className="border px-4 py-2 rounded-xl"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="bg-[#1f3548] px-5 py-2 rounded-xl font-semibold text-white hover:brightness-110"
-                >
-                  Entrar
-                </button>
-              </div>
-            </form>
-
-            <p className="mt-3 text-xs text-[#1f3548]/60">
-              Acesso restrito (trava simples de MVP).
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Footer */}
       <footer className="mt-10 bg-[#1f3548] text-white/95">
