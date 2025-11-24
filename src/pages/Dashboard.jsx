@@ -1,129 +1,93 @@
-// src/pages/Dashboard.jsx
-import CardResumo from "../components/cards/CardResumo";
-import CardRegistro from "../components/cards/CardRegistro";
-import CardEvolucao from "../components/cards/CardEvolucao";
-import CardEvolucaoPct from "../components/cards/CardEvolucaoPct";
-import CardParticipacao from "../components/cards/CardParticipacao";
-import CardDividendosCash from "../components/cards/CardDividendosCash"; // ✅ novo card
+// src/components/cards/CardDividendosCash.jsx
+import React, { useMemo } from "react";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-const MES_IDX = { Jan:0,Fev:1,Mar:2,Abr:3,Mai:4,Jun:5,Jul:6,Ago:7,Set:8,Out:9,Nov:10,Dez:11 };
 
-function normalizeMesKey(key) {
-  if (!key) return key;
-  const trimmed = String(key).trim();
+export default function CardDividendosCash({ rows = [], columns = [] }) {
 
-  if (trimmed.includes("/")) {
-    let [m, a] = trimmed.split("/").map(s => s.trim());
-
-    if (/^\d+$/.test(m)) {
-      const idx = Number(m) - 1;
-      if (idx >= 0 && idx < 12) m = MESES[idx];
-    } else {
-      m = m.charAt(0).toUpperCase() + m.slice(1,3).toLowerCase();
-      if (!MES_IDX[m]) {
-        const found = MESES.find(x => x.toLowerCase() === m.toLowerCase());
-        if (found) m = found;
-      }
-    }
-
-    if (/^\d{2}$/.test(a)) a = `20${a}`;
-    return `${m}/${a}`;
-  }
-
-  const parts = trimmed.split(/[-\s]+/);
-  if (parts.length === 2) return normalizeMesKey(parts.join("/"));
-
-  return trimmed;
-}
-
-export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
-  const normalizedRegistros = Object.fromEntries(
-    Object.entries(registrosPorMes).map(([k,v]) => [normalizeMesKey(k), v])
-  );
-
-  const columns = Object.keys(normalizedRegistros).sort((a,b)=>{
-    const [ma, aa] = a.split("/");
-    const [mb, ab] = b.split("/");
-    const ia = MES_IDX[ma], ib = MES_IDX[mb];
-    return Number(aa) - Number(ab) || ia - ib;
-  });
-
-  const allAssets = new Set();
-  for (const mes of columns) {
-    (normalizedRegistros[mes] || []).forEach((i)=> allAssets.add(i.nome));
-  }
-
-  const rows = Array.from(allAssets)
-    .sort((a,b)=>a.localeCompare(b,"pt-BR"))
-    .map(name => ({
-      ativo: name,
-      valores: columns.map(mes => {
-        const item = (normalizedRegistros[mes]||[]).find(i=>i.nome===name);
-        return item ? Number(item.valor) : 0;
-      })
+  // 🔹 Soma os dividendos mensais totalizados igual ao Registro/Evolução
+  const dados = useMemo(() => {
+    return columns.map((col, idxCol) => ({
+      mes: col,
+      total: rows.reduce((acc, r) => acc + (Number(r.valores?.[idxCol] || 0)), 0)
     }));
-
-  const totais = columns.map(mes =>
-    (normalizedRegistros[mes]||[])
-      .reduce((acc,i)=> acc + Number(i.valor||0), 0)
-  );
-
-  const idx = columns.length - 1;
-  const mesAtual = columns[idx] || "-";
-  const patrimonioAtual = totais[idx] || 0;
-  const totalAntes = (n)=> totais[idx-n] || 0;
-
-  const distribuicao = rows
-    .map(r => ({
-      nome: r.ativo,
-      valor: Number(r.valores[idx] || 0)
-    }))
-    .filter(i => Number.isFinite(i.valor) && i.valor > 0)
-    .sort((a,b)=> b.valor - a.valor);
-
-  const dadosResumo = {
-    mesAtual,
-    patrimonioAtual,
-    comparativos: {
-      mesAnterior: totalAntes(1),
-      m3: totalAntes(3),
-      m6: totalAntes(6),
-      m12: totalAntes(12)
-    },
-    distribuicao
-  };
+  }, [rows, columns]);
 
   return (
-    <div className="pt-3 pr-6">
+    <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[605px] h-[360px] p-4 overflow-hidden">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-slate-100 font-semibold text-lg">
+          Dividendos — Cash
+        </span>
 
-      {/* Linha superior */}
-      <div className="flex items-start gap-3 flex-wrap md:flex-nowrap">
-        <CardResumo data={dadosResumo}/>
-        <CardEvolucao columns={columns} rows={rows}/>
+        {columns.length > 0 && (
+          <span className="text-xs px-2 py-1 rounded bg-slate-700/60 text-slate-200">
+            {columns[columns.length - 1]}
+          </span>
+        )}
       </div>
 
-      {/* Linha do meio */}
-      <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
-        <CardRegistro
-          columns={columns}
-          rows={rows}
-          onDeleteMonth={onDeleteMonth}
-        />
+      {/* Conteúdo interno */}
+      <div className="h-[290px] overflow-x-auto pr-2">
+        
+        <table className="min-w-full border-separate border-spacing-0">
+          <thead className="bg-slate-800/90 sticky top-0 z-20">
+            <tr className="text-left text-slate-300 text-sm">
+              <th className="px-3 py-2 font-medium border-b border-white/10">
+                Mês
+              </th>
+              <th className="px-3 py-2 font-medium border-b border-white/10">
+                Total (R$)
+              </th>
+            </tr>
+          </thead>
 
-        {/* ✅ Coluna direita empilhada: Participação + Dividendos Cash */}
-        <div className="flex flex-col gap-3">
-          <CardParticipacao
-            itens={dadosResumo.distribuicao}
-            mesAtual={dadosResumo.mesAtual}
-          />
-          <CardDividendosCash />
-        </div>
-      </div>
+          <tbody>
+            {dados.map((d, i) => {
+              const zebra = i % 2 === 0;
+              const [mes, ano] = d.mes.split("/");
 
-      {/* Linha inferior */}
-      <div className="mt-3">
-        <CardEvolucaoPct columns={columns} rows={rows}/>
+              return (
+                <tr key={i} className={`${zebra ? "bg-white/[0.02]" : ""} hover:bg-white/[0.05] transition text-sm`}>
+                  <td className="px-3 py-2 text-slate-100">
+                    <div className="leading-tight">
+                      <div className="text-[13px]">{mes}</div>
+                      <div className="text-[11px] text-slate-400">{ano}</div>
+                    </div>
+                  </td>
+
+                  <td className="px-3 py-2 text-left text-slate-200 tabular-nums">
+                    {d.total.toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0,
+                    })}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+
+          <tfoot className="sticky bottom-0 bg-slate-800/90 z-20">
+            <tr className="text-sm font-semibold">
+              <td className="px-3 py-2 border-t border-white/10 text-slate-100">
+                Total
+              </td>
+              <td className="px-3 py-2 border-t border-white/10 text-slate-100">
+                {dados.reduce((a,b)=>a+b.total,0).toLocaleString("pt-BR",{
+                  style:"currency",
+                  currency:"BRL",
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })}
+              </td>
+            </tr>
+          </tfoot>
+
+        </table>
       </div>
 
     </div>
