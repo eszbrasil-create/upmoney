@@ -1,5 +1,11 @@
 // src/components/cards/CardDividendosCash.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useLayoutEffect,
+} from "react";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const LS_KEY_CARTEIRA = "cc_carteira_cash_v1";
@@ -104,11 +110,32 @@ export default function CardDividendosCash({ columns = [] }) {
 
   const [tip, setTip] = useState(null);
 
-  // altura-base das barras (menor pra acompanhar cards mais baixos)
-  const BAR_MAX_HEIGHT = 260;
+  // ✅ NOVO: altura dinâmica das barras baseada no espaço real do gráfico
+  const chartRef = useRef(null);
+  const [barMaxHeight, setBarMaxHeight] = useState(200);
+
+  useLayoutEffect(() => {
+    if (!chartRef.current) return;
+
+    const el = chartRef.current;
+
+    const compute = () => {
+      const h = el.clientHeight || 0;
+      // reserva para labels (mes/ano) + gap
+      const reservedForLabels = 52;
+      const usable = Math.max(100, h - reservedForLabels);
+      setBarMaxHeight(usable);
+    };
+
+    compute();
+
+    const ro = new ResizeObserver(() => compute());
+    ro.observe(el);
+
+    return () => ro.disconnect();
+  }, []);
 
   return (
-    // ✅ agora o card é flex e a altura pode ser a que você quiser no layout
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] h-[360px] overflow-hidden shrink-0 flex flex-col">
       {/* header fixo */}
       <div className="flex items-center justify-between mb-3">
@@ -120,13 +147,16 @@ export default function CardDividendosCash({ columns = [] }) {
         </span>
       </div>
 
-      {/* ✅ área interna agora ocupa o restante do card automaticamente */}
-      <div className="flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/80 p-3 overflow-x-auto overflow-y-hidden">
+      {/* ✅ área interna com ref pra medir altura */}
+      <div
+        ref={chartRef}
+        className="flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/80 p-3 overflow-x-auto overflow-y-hidden"
+      >
         <div className="flex items-end gap-1 min-w-max h-full">
           {totals.map((valor, i) => {
             const alturaReal = Math.max(
               4,
-              Math.round((valor / max) * BAR_MAX_HEIGHT)
+              Math.round((valor / max) * barMaxHeight)
             );
             const altura = animate ? alturaReal : 4;
 
