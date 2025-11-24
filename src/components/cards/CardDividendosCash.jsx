@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useState } from "react";
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const LS_KEY_CARTEIRA = "cc_carteira_cash_v1";
 
-// Normaliza "11/26", "nov/26", "Nov-2026", etc
 function normalizeMesAno(str) {
   if (!str || !str.includes("/")) return str;
 
@@ -23,7 +22,6 @@ function normalizeMesAno(str) {
   return `${mes}/${ano}`;
 }
 
-// Tooltip igual ao Evolução
 function Tooltip({ x, y, mes, ano, valor }) {
   return (
     <div className="fixed z-50 pointer-events-none" style={{ left: x, top: y }}>
@@ -42,7 +40,6 @@ function Tooltip({ x, y, mes, ano, valor }) {
   );
 }
 
-// Helper para converter texto em número
 function toNum(x) {
   if (x === "" || x === null || x === undefined) return 0;
   const n = Number(String(x).replace(",", "."));
@@ -50,16 +47,14 @@ function toNum(x) {
 }
 
 export default function CardDividendosCash({ columns = [] }) {
-  // normaliza colunas
   const normalizedColumns = useMemo(
     () => columns.map(normalizeMesAno),
     [columns]
   );
 
-  // ✅ ordena de Jan → Dez dentro de cada ano
+  // ordena Jan->Dez dentro de cada ano
   const sortedColumns = useMemo(() => {
     const cols = [...normalizedColumns];
-
     cols.sort((a, b) => {
       const [ma, ya] = a.split("/");
       const [mb, yb] = b.split("/");
@@ -70,14 +65,12 @@ export default function CardDividendosCash({ columns = [] }) {
       const idxA = MESES.indexOf(ma);
       const idxB = MESES.indexOf(mb);
 
-      if (yearA !== yearB) return yearA - yearB;  // primeiro ano
-      return idxA - idxB;                         // depois mês Jan..Dez
+      if (yearA !== yearB) return yearA - yearB;
+      return idxA - idxB;
     });
-
     return cols;
   }, [normalizedColumns]);
 
-  // carrega carteira do localStorage (cc_carteira_cash_v1)
   const carteira = useMemo(() => {
     try {
       const raw = localStorage.getItem(LS_KEY_CARTEIRA);
@@ -87,10 +80,8 @@ export default function CardDividendosCash({ columns = [] }) {
     }
   }, []);
 
-  // ✅ soma DY mensal total baseado no mês da coluna
   const totals = useMemo(() => {
     if (!sortedColumns.length) return [];
-
     return sortedColumns.map((col) => {
       const [mesStr] = col.split("/");
       const idxMes = MESES.indexOf(mesStr);
@@ -105,19 +96,21 @@ export default function CardDividendosCash({ columns = [] }) {
 
   const max = Math.max(1, ...totals);
 
-  // animação igual ao Evolução
   const [animate, setAnimate] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAnimate(true), 50);
     return () => clearTimeout(t);
   }, []);
 
-  // tooltip state
   const [tip, setTip] = useState(null);
 
+  // altura-base das barras (menor pra acompanhar cards mais baixos)
+  const BAR_MAX_HEIGHT = 260;
+
   return (
-    // ✅ altura igual ao card Evolução/PCT (padrão 460)
-    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] h-[360px] overflow-hidden shrink-0">
+    // ✅ agora o card é flex e a altura pode ser a que você quiser no layout
+    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] h-[460px] overflow-hidden shrink-0 flex flex-col">
+      {/* header fixo */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-slate-100 font-semibold text-lg">
           Meus Dividendos
@@ -127,17 +120,20 @@ export default function CardDividendosCash({ columns = [] }) {
         </span>
       </div>
 
-      <div className="h-[380px] rounded-2xl border border-white/10 bg-slate-900/80 p-3 overflow-x-auto overflow-y-hidden">
-        <div className="flex items-end gap-1 min-w-max">
+      {/* ✅ área interna agora ocupa o restante do card automaticamente */}
+      <div className="flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/80 p-3 overflow-x-auto overflow-y-hidden">
+        <div className="flex items-end gap-1 min-w-max h-full">
           {totals.map((valor, i) => {
-            const alturaReal = Math.max(4, Math.round((valor / max) * 300));
+            const alturaReal = Math.max(
+              4,
+              Math.round((valor / max) * BAR_MAX_HEIGHT)
+            );
             const altura = animate ? alturaReal : 4;
 
             const [mes, ano] = sortedColumns[i].split("/");
 
             return (
               <div key={i} className="flex flex-col items-center gap-2 w-10">
-                {/* ✅ Barra verde dólar */}
                 <div
                   className="w-full rounded-xl bg-emerald-400/80 hover:bg-emerald-300 transition-all duration-700 ease-out"
                   style={{ height: `${altura}px` }}
@@ -161,7 +157,6 @@ export default function CardDividendosCash({ columns = [] }) {
                   onMouseLeave={() => setTip(null)}
                 />
 
-                {/* Labels */}
                 <div
                   className="text-[13px] text-slate-200 text-center leading-tight whitespace-nowrap font-medium"
                   style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
