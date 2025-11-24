@@ -1,5 +1,5 @@
 // src/components/cards/CardDividendosCash.jsx
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -11,7 +11,10 @@ import {
 } from "recharts";
 
 const LS_KEY = "cc_carteira_cash_v1";
-const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const MESES = [
+  "Jan","Fev","Mar","Abr","Mai","Jun",
+  "Jul","Ago","Set","Out","Nov","Dez"
+];
 
 function toNum(x) {
   if (x === "" || x === null || x === undefined) return 0;
@@ -20,15 +23,37 @@ function toNum(x) {
 }
 
 export default function CardDividendosCash() {
-  // lê a carteira cash direto do localStorage
-  const carteira = useMemo(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
+  const [carteira, setCarteira] = useState([]);
+
+  // ✅ Leitura segura do localStorage (não quebra SSR/preview)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const readLS = () => {
+      try {
+        const raw = window.localStorage.getItem(LS_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        setCarteira(Array.isArray(parsed) ? parsed : []);
+      } catch {
+        setCarteira([]);
+      }
+    };
+
+    readLS();
+
+    // ✅ Atualiza se mudar em outra aba/janela
+    const onStorage = (e) => {
+      if (e.key === LS_KEY) readLS();
+    };
+    window.addEventListener("storage", onStorage);
+
+    // ✅ Atualiza também na mesma aba (leve, evita wiring agora)
+    const iv = setInterval(readLS, 1500);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      clearInterval(iv);
+    };
   }, []);
 
   const { data, totalAnual, mediaMensal } = useMemo(() => {
@@ -89,7 +114,10 @@ export default function CardDividendosCash() {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <BarChart
+              data={data}
+              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+            >
               <XAxis
                 dataKey="name"
                 tick={{ fontSize: 12, fill: "#cbd5f5" }}
@@ -106,7 +134,7 @@ export default function CardDividendosCash() {
               />
               <Tooltip content={<CustomTooltip />} />
 
-              {/* linha de média (mesmo “ar premium” do dash) */}
+              {/* linha de média premium */}
               <ReferenceLine
                 y={mediaMensal}
                 stroke="rgba(148,163,184,0.6)"
@@ -126,7 +154,7 @@ export default function CardDividendosCash() {
         )}
       </div>
 
-      {/* total anual no rodapé */}
+      {/* total anual */}
       <div className="mt-3 flex items-center justify-between text-sm">
         <span className="text-slate-300">Total anual</span>
         <span className="text-slate-100 font-semibold">
