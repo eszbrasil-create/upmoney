@@ -117,7 +117,7 @@ export default function CardDividendosCash({ columns = [] }) {
 
   return (
     // ✅ altura igual ao card Evolução/PCT (padrão 460)
-    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] h-[380px] overflow-hidden shrink-0">
+    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] h-[360px] overflow-hidden shrink-0">
       <div className="flex items-center justify-between mb-3">
         <span className="text-slate-100 font-semibold text-lg">
           Meus Dividendos
