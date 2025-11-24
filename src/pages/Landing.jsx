@@ -17,7 +17,7 @@ const IconYouTube = (props) => (
 
 const IconInstagram = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-    <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.24.42.56.22.96.49 1.38.9.41.41.67.82.9 1.38.17.43.37 1.07.42 2.24.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.42 2.24a3.6 3.6 0 0 1-.9 1.38 3.6 3.6 0 0 1-1.38.9c-.43.17-1.07.37-2.24.42-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.24-.42a3.6 3.6 0 0 1-1.38-.9 3.6 3.6 0 0 1-.9-1.38c-.17-.43-.37-1.07-.42-2.24C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.42-2.24.22-.56.49-.96.9-1.38.41-.41.82-.67 1.38-.9.43-.17 1.07-.37 2.24-.42C8.42 2.17 8.8 2.16 12 2.16Zm0 3.4c-3.16 0-3.53.01-4.77.07-.98.05-1.52.21-1.87.35-.47.18-.8.4-1.15.75-.35.35-.57.68-.75 1.15-.14.35-.3.89-.35 1.87-.06 1.24-.07 1.61-.07 4.77s.01 3.53.07 4.77c.05.98.21 1.52.35 1.87.18.47.4.8.75 1.15.35.35.68.57 1.15.75.35.14.89.3 1.87.35 1.24.06 1.61.07 4.77.07s3.53-.01 4.77-.07c.98-.05 1.52-.21 1.87-.35.47-.18.8-.4 1.15-1.15.35-.35.57-.68.75-1.15.14-.35.3-.89.35-1.87.06-1.24.07-1.61.07-4.77s-.01-3.53-.07-4.77c-.05-.98-.21-1.52-.35-1.87a2.62 2.62 0 0 0-.75-1.15c-.35-.35-.68-.57-1.15-.75-.35-.14-.89-.3-1.87-.35-1.24-.06-1.61-.07-4.77-.07Zm0 2.7a4.64 4.64 0 1 1 0 9.28 4.64 4.64 0 0 1 0-9.28Zm0 1.8a2.84 2.84 0 1 0 0 5.68 2.84 2.84 0 0 0 0-5.68Zm5.93-2.18a1.09 1.09 0 1 1 0 2.18 1.09 1.09 0 0 1 0-2.18Z" />
+    <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.24.42.56.22.96.49 1.38.9.41.41.67.82.9 1.38.17.43.37 1.07.42 2.24.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.42 2.24a3.6 3.6 0 0 1-.9 1.38 3.6 3.6 0 0 1-1.38.9c-.43.17-1.07.37-2.24.42-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.24-.42a3.6 3.6 0 0 1-1.38-.9 3.6 3.6 0 0 1-.9-1.38c-.17-.43-.37-1.07-.42-2.24C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.42-2.24.22-.56.49-.96.9-1.38.41-.41.82-.67 1.38-.9.43-.17 1.07-.37 2.24-.42C8.42 2.17 8.8 2.16 12 2.16Zm0 3.4c-3.16 0-3.53.01-4.77.07-.98.05-1.52.21-1.87.35-.47.18-.8.4-1.15.75-.35.35-.57.68-.75 1.15-.14.35-.3.89-.35 1.87-.06 1.24-.07 1.61-.07 4.77s.01 3.53.07 4.77c.05.98.21 1.52.35 1.87.18.47.4.8.75 1.15.35.35.68.57 1.15.75.35.14.89.3 1.87.35 1.24.06 1.61.07 4.77.07s3.53-.01 4.77-.07c.98-.05 1.52-.21 1.87-.35.47-.18.8-.4 1.15-1.15.35-.35.57-.68.75-1.15.14-.35.3-.89.35-1.87.06-1.24.07-1.61.07-4.77s-.01-3.53-.07-4.77c-.05-.98.21-1.52.35-1.87a2.62 2.62 0 0 0-.75-1.15c-.35-.35-.68-.57-1.15-.75-.35-.14-.89-.3-1.87-.35-1.24-.06-1.61-.07-4.77-.07Zm0 2.7a4.64 4.64 0 1 1 0 9.28 4.64 4.64 0 0 1 0-9.28Zm0 1.8a2.84 2.84 0 1 0 0 5.68 2.84 2.84 0 0 0 0-5.68Zm5.93-2.18a1.09 1.09 0 1 1 0 2.18 1.09 1.09 0 0 1 0-2.18Z" />
   </svg>
 );
 
@@ -95,6 +95,18 @@ export default function Landing({ onNavigate }) {
               Cursos
             </a>
 
+            {/* ✅ UpControl logo após Cursos */}
+            <a
+              href="#upcontrol"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate?.("cashcontrol-home"); // rota confirmada por você
+              }}
+              className="hover:text-white font-semibold"
+            >
+              UpControl
+            </a>
+
             <a
               href="#saida-fiscal"
               onClick={(e) => {
@@ -127,25 +139,13 @@ export default function Landing({ onNavigate }) {
             >
               Últimas notícias
             </a>
-
-            <a
-              href="#cashcontrol"
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigate?.("cashcontrol-home");
-              }}
-              className="hover:text-white"
-            >
-              CashControl
-            </a>
           </nav>
 
-          {/* Lado direito: botão Meu Plano + ícones sociais */}
+          {/* Lado direito: Meu Plano + ícones */}
           <div className="flex items-center gap-3">
-            {/* ✅ Meu Plano (recolocado) */}
             <button
               type="button"
-              onClick={() => onNavigate?.("plano")} // se sua rota tiver outro nome, troca aqui
+              onClick={() => onNavigate?.("plano")}
               className="hidden sm:inline-flex items-center rounded-xl bg-[#F5B60A] px-4 py-2 text-sm font-bold text-[#1f3548] shadow-sm hover:brightness-105 transition"
             >
               Meu Plano
@@ -201,23 +201,23 @@ export default function Landing({ onNavigate }) {
                 e o suporte que faltava para finalmente entrar no mundo dos investimentos.
               </p>
 
-              {/* ✅ CTAs com cores finais */}
-              <div className="mt-8 flex flex-wrap items-center gap-3">
+              {/* ✅ CTAs maiores */}
+              <div className="mt-8 flex flex-wrap items-center gap-4">
                 {/* Primário dourado */}
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#F5B60A] px-6 py-3 font-semibold text-[#1f3548] shadow-sm hover:brightness-105 transition"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#F5B60A] px-8 py-4 text-lg font-bold text-[#1f3548] shadow-sm hover:brightness-105 transition"
                 >
-                  <IconWhatsApp className="h-5 w-5" />
+                  <IconWhatsApp className="h-6 w-6" />
                   Agende sua avaliação gratuita
                 </button>
 
                 {/* Secundário verde WhatsApp */}
                 <button
                   onClick={openWhatsAppDirect}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 font-semibold text-white shadow-sm hover:brightness-105 transition"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-8 py-4 text-lg font-bold text-white shadow-sm hover:brightness-105 transition"
                 >
-                  <IconWhatsApp className="h-5 w-5" />
+                  <IconWhatsApp className="h-6 w-6" />
                   Falar no WhatsApp
                 </button>
               </div>
@@ -226,7 +226,7 @@ export default function Landing({ onNavigate }) {
               <div className="mt-4 flex flex-wrap gap-3 text-sm text-[#1f3548]/70">
                 <span>✔ Ideal para iniciantes</span>
                 <span>✔ Acompanhamento individual</span>
-                <span>✔ App CashControl incluído</span>
+                <span>✔ App UpControl incluído</span>
               </div>
             </div>
           </div>
@@ -256,7 +256,7 @@ export default function Landing({ onNavigate }) {
                 <li>📗 Curso de <strong>Ações</strong> — como escolher empresas boas pagadoras</li>
                 <li>📙 Curso de <strong>FIIs</strong> — renda mensal na prática</li>
                 <li>📂 Material exclusivo (PDFs, resumos e roteiros)</li>
-                <li>📊 Acesso ao <strong>CashControl</strong> (controle patrimonial)</li>
+                <li>📊 Acesso ao <strong>UpControl</strong> (controle patrimonial)</li>
                 <li>📅 Agenda de <strong>acompanhamento pessoal</strong> comigo</li>
                 <li>💬 Grupo exclusivo no WhatsApp</li>
               </ul>
