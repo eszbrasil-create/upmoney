@@ -95,15 +95,18 @@ export default function CarteiraCash() {
     );
   };
 
-  // Cálculos globais (distribuição e DY mensal total por mês)
+  // ✅ Cálculos globais (participação por ATIVO + DY mensal total)
   const {
     totalGeral,
-    pieParts,     // já pronto pra donut por TIPO (opção B)
+    piePartsAtivos,
     dyBarData,
   } = useMemo(() => {
-    const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
     let total = 0;
 
+    // soma posição por ativo (ticker/nome)
+    const somaPorAtivo = {};
+
+    // DY mensal total (Jan..Dez)
     const dyMesTotal = Array(12).fill(0);
 
     carteira.forEach((r) => {
@@ -111,11 +114,12 @@ export default function CarteiraCash() {
       const entrada = toNum(r.entrada);
       const valorAtual = toNum(r.valorAtual) || entrada;
       const valorPosicao = qtd * valorAtual;
-      const tipoKey = r.tipo;
 
-      if (!somaPorTipo[tipoKey]) somaPorTipo[tipoKey] = 0;
-      somaPorTipo[tipoKey] += valorPosicao;
       total += valorPosicao;
+
+      const ativoKey = (r.ticker || r.nome || "Ativo").toUpperCase();
+      if (!somaPorAtivo[ativoKey]) somaPorAtivo[ativoKey] = 0;
+      somaPorAtivo[ativoKey] += valorPosicao;
 
       const arrMeses = Array.isArray(r.dyMeses) ? r.dyMeses : [];
       for (let i = 0; i < 12; i++) {
@@ -123,14 +127,19 @@ export default function CarteiraCash() {
       }
     });
 
-    const partsRaw = [
-      { key: "RF", name: "RF", value: somaPorTipo.RF, color: PIE_COLORS.RF },
-      { key: "ACOES", name: "Ações", value: somaPorTipo.ACOES, color: PIE_COLORS.ACOES },
-      { key: "FII", name: "FIIs", value: somaPorTipo.FII, color: PIE_COLORS.FII },
-    ].filter((d) => d.value > 0);
+    const ativosRaw = Object.entries(somaPorAtivo)
+      .map(([key, value]) => ({ key, name: key, value }))
+      .filter((d) => d.value > 0)
+      .sort((a, b) => b.value - a.value);
 
-    const pieParts = partsRaw.map((p) => ({
+    const getColor = (i) => {
+      const hue = (i * 47) % 360;
+      return `hsl(${hue} 70% 55%)`;
+    };
+
+    const piePartsAtivos = ativosRaw.map((p, i) => ({
       ...p,
+      color: getColor(i),
       pct: total > 0 ? (p.value / total) * 100 : 0,
     }));
 
@@ -139,11 +148,11 @@ export default function CarteiraCash() {
       dy: dyMesTotal[idx],
     }));
 
-    return { totalGeral: total, pieParts, dyBarData };
+    return { totalGeral: total, piePartsAtivos, dyBarData };
   }, [carteira]);
 
   /* ===========================
-     Donut (Participação por tipo)
+     Donut (Participação por ATIVO)
   =========================== */
   const [activeIdx, setActiveIdx] = useState(null);
   const [hoverIdx, setHoverIdx] = useState(null);
@@ -157,19 +166,19 @@ export default function CarteiraCash() {
 
   const angles = useMemo(() => {
     let acc = 0;
-    return pieParts.map((p) => {
+    return piePartsAtivos.map((p) => {
       const start = acc;
       const end = acc + (p.pct / 100) * 360;
       acc = end;
       return { start, end };
     });
-  }, [pieParts]);
+  }, [piePartsAtivos]);
 
   const center = useMemo(() => {
     if (
       idxShown == null ||
       idxShown < 0 ||
-      idxShown >= pieParts.length ||
+      idxShown >= piePartsAtivos.length ||
       totalGeral <= 0
     ) {
       return {
@@ -182,7 +191,7 @@ export default function CarteiraCash() {
         line2: "",
       };
     }
-    const it = pieParts[idxShown];
+    const it = piePartsAtivos[idxShown];
     return {
       title: it.name,
       line1: it.value.toLocaleString("pt-BR", {
@@ -192,10 +201,10 @@ export default function CarteiraCash() {
       }),
       line2: `${it.pct.toFixed(1)}%`,
     };
-  }, [idxShown, pieParts, totalGeral]);
+  }, [idxShown, piePartsAtivos, totalGeral]);
 
   /* ===========================
-     Barras DY (estilo CardEvolucao)
+     Barras DY (compacto estilo "Meus Dividendos")
   =========================== */
   const dyTotals = dyBarData.map(d => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
@@ -241,26 +250,29 @@ export default function CarteiraCash() {
           </p>
         ) : (
           <div className="grid gap-4 md:grid-cols-3 items-stretch">
-            {/* Donut premium (mesmo padrão do Dash) */}
+
+            {/* ✅ Donut PARTICIPAÇÃO POR ATIVO */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
-                  Distribuição por tipo
+                  Participação por ativo
                 </div>
 
                 <div className="grid grid-cols-[1fr_220px] gap-2 items-center">
                   {/* legenda */}
-                  <div className="space-y-2 pr-2">
-                    {pieParts.map((it, i) => {
+                  <div className="space-y-2 pr-2 max-h-[220px] overflow-y-auto">
+                    {piePartsAtivos.map((it, i) => {
                       const isActive = i === idxShown;
                       return (
                         <div
                           key={it.key}
                           onMouseEnter={() => setHoverIdx(i)}
                           onMouseLeave={() => setHoverIdx(null)}
-                          onClick={() => setActiveIdx(prev => (prev === i ? null : i))}
+                          onClick={() =>
+                            setActiveIdx((prev) => (prev === i ? null : i))
+                          }
                           className={`rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2 cursor-pointer transition
-                            ${isActive ? "ring-1 ring-sky-400/50 bg-slate-900/70" : ""}`}
+                            ${isActive ? "ring-1 ring-emerald-400/50 bg-slate-900/70" : ""}`}
                         >
                           <div className="flex items-center w-full">
                             <span
@@ -293,7 +305,7 @@ export default function CarteiraCash() {
                           fill="none"
                         />
 
-                        {pieParts.map((p, i) => {
+                        {piePartsAtivos.map((p, i) => {
                           const { start, end } = angles[i];
                           const d = arcPath(cx, cy, rOuter, rInner, start, end);
                           const selected = i === idxShown;
@@ -305,11 +317,15 @@ export default function CarteiraCash() {
                               fill={p.color}
                               fillOpacity={selected ? 1 : 0.85}
                               className={`transition-all duration-150 cursor-pointer ${
-                                selected ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" : ""
+                                selected
+                                  ? "drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+                                  : ""
                               }`}
                               onMouseEnter={() => setHoverIdx(i)}
                               onMouseLeave={() => setHoverIdx(null)}
-                              onClick={() => setActiveIdx(prev => (prev === i ? null : i))}
+                              onClick={() =>
+                                setActiveIdx((prev) => (prev === i ? null : i))
+                              }
                             />
                           );
                         })}
@@ -348,25 +364,28 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Barras DY premium (mesmo padrão Evolução) */}
+            {/* ✅ DY mensal menor no modelo "Meus Dividendos" */}
             <div className="md:col-span-2">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
                   DY mensal total
                 </div>
 
-                <div className="h-[180px] rounded-xl border border-white/10 bg-slate-900/50 p-3 overflow-x-auto overflow-y-hidden">
-                  <div className="flex items-end gap-1 min-w-max">
+                <div className="h-[140px] rounded-2xl border border-white/10 bg-slate-900/80 p-3 pt-2 overflow-x-auto overflow-y-hidden">
+                  <div className="flex items-end gap-1 min-w-max h-full">
                     {dyBarData.map((d, i) => {
                       const v = d.dy || 0;
-                      const h = Math.max(4, Math.round((v / dyMax) * 140));
+                      const h = Math.max(4, Math.round((v / dyMax) * 90));
 
                       return (
                         <div key={i} className="flex flex-col items-center gap-2 w-10">
                           <div
-                            className="w-full rounded-md bg-emerald-400/80 hover:bg-emerald-300 transition"
+                            className="w-full rounded-xl bg-emerald-400/80 hover:bg-emerald-300 transition-all duration-500"
                             style={{ height: `${h}px` }}
-                            title={v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                            title={v.toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })}
                           />
                           <div className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap">
                             {d.name}
@@ -379,6 +398,7 @@ export default function CarteiraCash() {
 
               </div>
             </div>
+
           </div>
         )}
       </div>
