@@ -60,6 +60,15 @@ export default function Landing({ onNavigate }) {
     setIsModalOpen(false);
   };
 
+  const openWhatsAppDirect = () => {
+    const text =
+      "Olá! Quero conquistar meu primeiro dividendo. Podemos falar sobre a avaliação gratuita de 15 minutos?";
+    window.open(
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`,
+      "_blank"
+    );
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white text-[#1f3548]">
       {/* Header */}
@@ -159,7 +168,7 @@ export default function Landing({ onNavigate }) {
       {/* Hero 1 — isolado */}
       <main className="flex-1">
         <section className="bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 grid md:grid-cols-2 gap-12 items-center">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-12 items-center">
             {/* Imagem */}
             <div className="order-2 md:order-1">
               <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
@@ -179,13 +188,12 @@ export default function Landing({ onNavigate }) {
 
               <p className="mt-5 text-lg text-[#1f3548]/80 leading-relaxed">
                 Nada de complicação, termos difíceis ou teoria sem prática.
-                Aqui você aprende fazendo: passo a passo, no seu ritmo,
-                com suporte real e a orientação que faltava para finalmente
-                entrar no mundo dos investimentos.
+                Aqui você aprende fazendo: passo a passo, no seu ritmo, com orientação real
+                e o suporte que faltava para finalmente entrar no mundo dos investimentos.
               </p>
 
-              {/* CTA único */}
-              <div className="mt-9 flex flex-wrap items-center gap-3">
+              {/* CTAs */}
+              <div className="mt-8 flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => setIsModalOpen(true)}
                   className="inline-flex items-center gap-2 rounded-xl bg-[#00e59b] px-6 py-3 font-semibold text-[#073b2c] shadow-sm hover:brightness-105 transition"
@@ -193,17 +201,32 @@ export default function Landing({ onNavigate }) {
                   <IconWhatsApp className="h-5 w-5" />
                   Agende sua avaliação gratuita
                 </button>
+
+                <button
+                  onClick={openWhatsAppDirect}
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#1f3548]/25 bg-white px-6 py-3 font-semibold text-[#1f3548] hover:bg-[#1f3548]/5 transition"
+                >
+                  <IconWhatsApp className="h-5 w-5" />
+                  Falar no WhatsApp
+                </button>
+              </div>
+
+              {/* Microprovas */}
+              <div className="mt-4 flex flex-wrap gap-3 text-sm text-[#1f3548]/70">
+                <span>✔ Ideal para iniciantes</span>
+                <span>✔ Acompanhamento individual</span>
+                <span>✔ App CashControl incluído</span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ✅ RESPIRO GRANDE (Opção A) */}
-        <div className="h-20 md:h-28" />
+        {/* Respiro entre faixas */}
+        <div className="h-16 md:h-24" />
 
         <SectionDivider />
 
-        {/* Hero 2 — Programa (começa bem abaixo, sem invadir Hero 1) */}
+        {/* Hero 2 — Programa */}
         <section className="bg-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
             {/* Texto à esquerda */}
@@ -222,7 +245,7 @@ export default function Landing({ onNavigate }) {
                 <li>📗 Curso de <strong>Ações</strong> — como escolher empresas boas pagadoras</li>
                 <li>📙 Curso de <strong>FIIs</strong> — renda mensal na prática</li>
                 <li>📂 Material exclusivo (PDFs, resumos e roteiros)</li>
-                <li>📊 Acesso ao <strong>UpControl</strong> (controle patrimonial)</li>
+                <li>📊 Acesso ao <strong>CashControl</strong> (controle patrimonial)</li>
                 <li>📅 Agenda de <strong>acompanhamento pessoal</strong> comigo</li>
                 <li>💬 Grupo exclusivo no WhatsApp</li>
               </ul>
