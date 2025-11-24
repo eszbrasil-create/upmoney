@@ -190,7 +190,7 @@ export default function CarteiraCash() {
   const [hoverIdxTipo, setHoverIdxTipo] = useState(null);
   const idxShownTipo = hoverIdxTipo ?? activeIdxTipo;
 
-  // ✅ donuts mais compactos pra dar espaço pro DY
+  // donuts compactos
   const size = 180;
   const cx = size / 2;
   const cy = size / 2;
@@ -276,7 +276,7 @@ export default function CarteiraCash() {
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
   /* ===========================
-     DY mensal (ocupando todo o chart)
+     DY mensal (ocupa todo o chart)
   =========================== */
   const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
@@ -305,7 +305,7 @@ export default function CarteiraCash() {
 
   return (
     <div className="pt-0 pr-3 pl-0 relative">
-      {/* FAIXA FIXA SUPER REDUZIDA (virará botão no futuro) */}
+      {/* FAIXA FIXA */}
       <div className="mb-2">
         <div className="fixed left-48 right-6 top-3 z-30">
           <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-sky-500 to-fuchsia-500 p-[1px] shadow-xl">
@@ -333,7 +333,7 @@ export default function CarteiraCash() {
         <div className="h-16" />
       </div>
 
-      {/* BALÃO: 2 pizzas menores + 1 barra maior */}
+      {/* BALÃO: 2 pizzas + 1 barra */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-4">
         {totalGeral <= 0 ? (
           <p className="text-[11px] text-slate-500">
@@ -344,7 +344,7 @@ export default function CarteiraCash() {
         ) : (
           <div className="grid gap-4 md:grid-cols-4 items-stretch">
 
-            {/* Pizza 1: participação por ATIVO */}
+            {/* Pizza 1: por ATIVO */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -455,15 +455,16 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Pizza 2: participação por TIPO */}
+            {/* Pizza 2: por TIPO (FIX: flex responsivo) */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
                   Participação por tipo
                 </div>
 
-                <div className="grid grid-cols-[1fr_180px] gap-2 items-center">
-                  <div className="space-y-2 pr-2">
+                <div className="flex flex-col lg:flex-row gap-3 items-center lg:items-start">
+                  {/* legenda */}
+                  <div className="w-full lg:flex-1 space-y-2 pr-0 lg:pr-2">
                     {piePartsTipos.map((it, i) => {
                       const isActive = i === idxShownTipo;
                       return (
@@ -494,7 +495,8 @@ export default function CarteiraCash() {
                     })}
                   </div>
 
-                  <div className="flex items-center justify-center">
+                  {/* donut */}
+                  <div className="shrink-0 flex items-center justify-center lg:justify-end w-full lg:w-auto">
                     <div className="relative" style={{ width: size, height: size }}>
                       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
                         <circle
@@ -566,7 +568,7 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Barra: DY mensal com mais espaço */}
+            {/* Barras DY com mais espaço */}
             <div className="md:col-span-2">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -630,7 +632,7 @@ export default function CarteiraCash() {
                   <th className="px-3 py-2 text-left text-xs font-medium sticky left-0 bg-slate-800/70 z-20">
                     #
                   </th>
-                  
+
                   <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
                     Ticker
                   </th>
