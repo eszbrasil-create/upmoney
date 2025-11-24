@@ -33,45 +33,19 @@ const SectionDivider = () => (
 
 export default function Landing({ onNavigate }) {
   // ✅ seus contatos reais
-  const RECEIVER_EMAIL = "eszbrasil@gmail.com";
   const WHATSAPP_NUMBER = "393517380919";
 
   // ✅ senha simples de MVP (opção 1)
   const DASH_USER = "aluno17";
   const DASH_PASS = "upmoney2025";
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form, setForm] = useState({ nome: "", email: "", telefone: "" });
-
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authForm, setAuthForm] = useState({ usuario: "", senha: "" });
   const [authError, setAuthError] = useState("");
 
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
-  };
-
   const onAuthChange = (e) => {
     const { name, value } = e.target;
     setAuthForm((f) => ({ ...f, [name]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const subject = "Novo agendamento — Meu Primeiro Dividendo";
-    const body = `Nome: ${form.nome}\nE-mail: ${form.email}\nTelefone: ${form.telefone}\nOrigem: Landing > Agendar reunião`;
-
-    window.location.href = `mailto:${RECEIVER_EMAIL}?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(body)}`;
-
-    window.open(
-      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(body)}`,
-      "_blank"
-    );
-
-    setIsModalOpen(false);
   };
 
   const handleAuthSubmit = (e) => {
@@ -90,6 +64,10 @@ export default function Landing({ onNavigate }) {
 
     setAuthError("Usuário ou senha incorretos.");
   };
+
+  const whatsappLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+    "Olá! Quero agendar minha avaliação gratuita para conquistar meu primeiro dividendo."
+  )}`;
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-[#1f3548]">
@@ -216,28 +194,21 @@ export default function Landing({ onNavigate }) {
               </h1>
               <p className="mt-4 text-lg text-[#1f3548]/80">
                 Nada de complicação, termos difíceis ou teoria sem prática.
-Aqui você aprende fazendo: passo a passo, no seu ritmo, com suporte real e a orientação que faltava para finalmente entrar no mundo dos investimentos.
-            
+                Aqui você aprende fazendo: passo a passo, no seu ritmo,
+                com suporte real e a orientação que faltava para finalmente entrar
+                no mundo dos investimentos.
               </p>
 
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center rounded-xl bg-[#d6af5f] px-5 py-3 font-semibold text-[#1f3548] shadow-sm hover:brightness-105"
-                >
-                  Quero começar
-                </button>
-
+              {/* ✅ APENAS BOTÃO WHATS */}
+              <div className="mt-8">
                 <a
-                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-                    "Olá! Vi sua página e quero saber mais sobre o programa Meu Primeiro Dividendo."
-                  )}`}
+                  href={whatsappLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#00e59b] px-5 py-3 font-semibold text-[#073b2c] hover:brightness-105"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#00e59b] px-6 py-3 font-semibold text-[#073b2c] hover:brightness-105"
                 >
                   <IconWhatsApp className="h-5 w-5" />
-                  Falar no WhatsApp
+                  Agende sua avaliação gratuita
                 </a>
               </div>
             </div>
@@ -270,12 +241,16 @@ Aqui você aprende fazendo: passo a passo, no seu ritmo, com suporte real e a or
                 <li>💬 Grupo exclusivo no WhatsApp</li>
               </ul>
 
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="mt-7 inline-flex items-center rounded-xl bg-[#d6af5f] px-6 py-3 font-semibold text-[#1f3548] shadow hover:brightness-105"
+              {/* ✅ APENAS BOTÃO WHATS */}
+              <a
+                href={whatsappLink}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#00e59b] px-6 py-3 font-semibold text-[#073b2c] hover:brightness-105"
               >
-                Quero fazer parte
-              </button>
+                <IconWhatsApp className="h-5 w-5" />
+                Agende sua avaliação gratuita
+              </a>
             </div>
 
             {/* Imagem à direita */}
@@ -291,77 +266,6 @@ Aqui você aprende fazendo: passo a passo, no seu ritmo, com suporte real e a or
           </div>
         </section>
       </main>
-
-      {/* Modal de agendamento */}
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <div className="flex items-start justify-between">
-              <h2 className="text-xl font-bold text-[#1f3548]">
-                Agendar reunião gratuita
-              </h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="ml-4 rounded-lg px-2 py-1 text-[#1f3548]/70 hover:bg-[#cfd6dc]/40"
-                aria-label="Fechar"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-              <input
-                name="nome"
-                value={form.nome}
-                onChange={onChange}
-                placeholder="Seu nome"
-                className="w-full border rounded-xl px-3 py-2"
-                required
-              />
-              <input
-                name="email"
-                value={form.email}
-                onChange={onChange}
-                placeholder="seu@email.com"
-                className="w-full border rounded-xl px-3 py-2"
-                required
-              />
-              <input
-                name="telefone"
-                value={form.telefone}
-                onChange={onChange}
-                placeholder="(DDD) 90000-0000"
-                className="w-full border rounded-xl px-3 py-2"
-                required
-              />
-
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="border px-4 py-2 rounded-xl"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="bg-[#d6af5f] px-5 py-2 rounded-xl font-semibold text-[#1f3548] hover:brightness-105"
-                >
-                  Agendar minha análise
-                </button>
-              </div>
-            </form>
-
-            <p className="mt-4 text-xs text-[#1f3548]/60">
-              Os dados serão enviados por e-mail e WhatsApp.
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Modal de autenticação simples do Dash */}
       {isAuthOpen && (
