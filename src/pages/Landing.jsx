@@ -215,8 +215,10 @@ export default function Landing({ onNavigate }) {
                 Conquiste seu Primeiro Dividendo
               </h1>
               <p className="mt-4 text-lg text-[#1f3548]/80">
-                O passo a passo para começar a investir e conquistar sua
-                primeira renda passiva com acompanhamento educacional individual.
+                Seu primeiro dividendo em 30 dias - mesmo começando do Zero 
+                Acompanhamento educacional individual
+                Controle suas finaças do UpControl
+            
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
