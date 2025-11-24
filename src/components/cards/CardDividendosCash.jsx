@@ -15,23 +15,18 @@ function normalizeMesAno(str) {
     if (idx >= 0 && idx < 12) mes = MESES[idx];
   } else {
     mes = mes.charAt(0).toUpperCase() + mes.slice(1,3).toLowerCase();
-    if (!MESES.includes(mes)) {
-      const found = MESES.find(m => m.toLowerCase() === mes.toLowerCase());
-      if (found) mes = found;
-    }
+    const found = MESES.find(m => m.toLowerCase() === mes.toLowerCase());
+    if (found) mes = found;
   }
 
   if (/^\d{2}$/.test(ano)) ano = `20${ano}`;
   return `${mes}/${ano}`;
 }
 
-// Tooltip simples e premium (igual ao CardEvolucao)
+// Tooltip igual ao Evolução
 function Tooltip({ x, y, mes, ano, valor }) {
   return (
-    <div
-      className="fixed z-50 pointer-events-none"
-      style={{ left: x, top: y }}
-    >
+    <div className="fixed z-50 pointer-events-none" style={{ left: x, top: y }}>
       <div className="rounded-xl bg-slate-950/95 border border-white/10 px-3 py-2 shadow-2xl">
         <div className="text-[11px] text-slate-300 font-medium">
           {mes}/{ano}
@@ -55,12 +50,34 @@ function toNum(x) {
 }
 
 export default function CardDividendosCash({ columns = [] }) {
+  // normaliza colunas
   const normalizedColumns = useMemo(
     () => columns.map(normalizeMesAno),
     [columns]
   );
 
-  // ✅ carrega carteira do localStorage (cc_carteira_cash_v1)
+  // ✅ ordena de Jan → Dez dentro de cada ano
+  const sortedColumns = useMemo(() => {
+    const cols = [...normalizedColumns];
+
+    cols.sort((a, b) => {
+      const [ma, ya] = a.split("/");
+      const [mb, yb] = b.split("/");
+
+      const yearA = parseInt(ya, 10) || 0;
+      const yearB = parseInt(yb, 10) || 0;
+
+      const idxA = MESES.indexOf(ma);
+      const idxB = MESES.indexOf(mb);
+
+      if (yearA !== yearB) return yearA - yearB;  // primeiro ano
+      return idxA - idxB;                         // depois mês Jan..Dez
+    });
+
+    return cols;
+  }, [normalizedColumns]);
+
+  // carrega carteira do localStorage (cc_carteira_cash_v1)
   const carteira = useMemo(() => {
     try {
       const raw = localStorage.getItem(LS_KEY_CARTEIRA);
@@ -70,15 +87,11 @@ export default function CardDividendosCash({ columns = [] }) {
     }
   }, []);
 
-  /**
-   * ✅ Soma DY mensal por mês no dashboard
-   * dyMeses é array fixo: Jan..Dez.
-   * Pra cada coluna "Mes/Ano", usamos só o índice do mês.
-   */
+  // ✅ soma DY mensal total baseado no mês da coluna
   const totals = useMemo(() => {
-    if (!normalizedColumns.length) return [];
+    if (!sortedColumns.length) return [];
 
-    return normalizedColumns.map((col) => {
+    return sortedColumns.map((col) => {
       const [mesStr] = col.split("/");
       const idxMes = MESES.indexOf(mesStr);
       if (idxMes < 0) return 0;
@@ -88,21 +101,22 @@ export default function CardDividendosCash({ columns = [] }) {
         return acc + toNum(arr[idxMes]);
       }, 0);
     });
-  }, [normalizedColumns, carteira]);
+  }, [sortedColumns, carteira]);
 
   const max = Math.max(1, ...totals);
 
-  // ✅ animação igual ao Evolução
+  // animação igual ao Evolução
   const [animate, setAnimate] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAnimate(true), 50);
     return () => clearTimeout(t);
   }, []);
 
-  // ✅ tooltip state
+  // tooltip state
   const [tip, setTip] = useState(null);
 
   return (
+    // ✅ altura igual ao card Evolução/PCT (padrão 460)
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] h-[460px] overflow-hidden shrink-0">
       <div className="flex items-center justify-between mb-3">
         <span className="text-slate-100 font-semibold text-lg">
@@ -119,13 +133,13 @@ export default function CardDividendosCash({ columns = [] }) {
             const alturaReal = Math.max(4, Math.round((valor / max) * 300));
             const altura = animate ? alturaReal : 4;
 
-            const [mes, ano] = normalizedColumns[i].split("/");
+            const [mes, ano] = sortedColumns[i].split("/");
 
             return (
               <div key={i} className="flex flex-col items-center gap-2 w-10">
-                {/* Barra com animação */}
+                {/* ✅ Barra verde dólar */}
                 <div
-                  className="w-full rounded-xl bg-sky-400/80 hover:bg-sky-300 transition-all duration-700 ease-out"
+                  className="w-full rounded-xl bg-emerald-400/80 hover:bg-emerald-300 transition-all duration-700 ease-out"
                   style={{ height: `${altura}px` }}
                   onMouseEnter={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
@@ -147,20 +161,16 @@ export default function CardDividendosCash({ columns = [] }) {
                   onMouseLeave={() => setTip(null)}
                 />
 
-                {/* Labels com sombra suave */}
+                {/* Labels */}
                 <div
                   className="text-[13px] text-slate-200 text-center leading-tight whitespace-nowrap font-medium"
-                  style={{
-                    textShadow: "0 1px 6px rgba(0,0,0,0.6)",
-                  }}
+                  style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
                 >
                   {mes}
                   <br />
                   <span
                     className="text-[12px] opacity-70 font-normal text-slate-300"
-                    style={{
-                      textShadow: "0 1px 6px rgba(0,0,0,0.6)",
-                    }}
+                    style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
                   >
                     {ano}
                   </span>
@@ -171,7 +181,6 @@ export default function CardDividendosCash({ columns = [] }) {
         </div>
       </div>
 
-      {/* Tooltip render */}
       {tip && (
         <Tooltip
           x={tip.x}
