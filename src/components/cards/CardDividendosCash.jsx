@@ -109,7 +109,7 @@ export default function CardDividendosCash({ columns = [] }) {
 
   return (
     // ✅ agora o card é flex e a altura pode ser a que você quiser no layout
-    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] h-[460px] overflow-hidden shrink-0 flex flex-col">
+    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] h-[280px] overflow-hidden shrink-0 flex flex-col">
       {/* header fixo */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-slate-100 font-semibold text-lg">
