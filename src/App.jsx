@@ -7,6 +7,7 @@ import CardRegistro from "./components/cards/CardRegistro";
 import CardEvolucao from "./components/cards/CardEvolucao";
 import CardEvolucaoPct from "./components/cards/CardEvolucaoPct";
 import CardParticipacao from "./components/cards/CardParticipacao";
+import CardDividendosCash from "./components/cards/CardDividendosCash"; // ✅ NOVO
 
 // páginas internas do painel (com sidebar)
 import CarteiraCash from "./pages/CarteiraCash";
@@ -26,18 +27,8 @@ import CashControlHome from "./pages/CashControlHome";
 
 // ---- Mapa dos meses
 const MES_IDX = {
-  Jan: 0,
-  Fev: 1,
-  Mar: 2,
-  Abr: 3,
-  Mai: 4,
-  Jun: 5,
-  Jul: 6,
-  Ago: 7,
-  Set: 8,
-  Out: 9,
-  Nov: 10,
-  Dez: 11,
+  Jan: 0, Fev: 1, Mar: 2, Abr: 3, Mai: 4, Jun: 5,
+  Jul: 6, Ago: 7, Set: 8, Out: 9, Nov: 10, Dez: 11,
 };
 
 // ------------------ Dashboard ------------------
@@ -120,8 +111,10 @@ function DashboardMain({ registrosPorMes = {}, onDeleteMonth }) {
         />
       </div>
 
-      <div className="mt-3">
+      {/* ✅ AQUI FICAM LADO A LADO */}
+      <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
         <CardEvolucaoPct columns={columns} rows={rows} />
+        <CardDividendosCash columns={columns} />
       </div>
     </div>
   );
@@ -148,19 +141,18 @@ export default function App() {
     landing: <Landing onNavigate={setView} />,
     "saida-fiscal": <SaidaFiscal onNavigate={setView} />,
     "invista-exterior": <InvistaExterior onNavigate={setView} />,
-    cursos: <Cursos onNavigate={setView} />, // página escura de cursos
+    cursos: <Cursos onNavigate={setView} />,
     noticias: <Noticias onNavigate={setView} />,
     "cashcontrol-home": <CashControlHome onNavigate={setView} />,
 
     // PAINEL COM SIDEBAR
     dashboard: <DashboardMain />,
-    "cursos-dashboard": <CursosPage />, // cursos dentro do dashboard
+    "cursos-dashboard": <CursosPage />,
     carteira: <CarteiraCash />,
     despesas: <Despesas />,
     relatorios: <Relatorios />,
     mercado: <Mercado />,
 
-    // por enquanto login leva pro dashboard
     login: <DashboardMain />,
   };
 
@@ -170,15 +162,13 @@ export default function App() {
     "invista-exterior",
     "cursos",
     "noticias",
-    "cashcontrol-home", // <- corrigido aqui
+    "cashcontrol-home",
   ];
 
-  // telas sem sidebar
   if (FULLSCREEN_VIEWS.includes(view)) {
     return SCREEN[view] ?? SCREEN.landing;
   }
 
-  // telas com sidebar
   return (
     <AppLayout onNavigate={setView}>
       {SCREEN[view] ?? <DashboardMain />}

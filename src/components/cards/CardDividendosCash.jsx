@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const LS_KEY_CARTEIRA = "cc_carteira_cash_v1";
 
 // Normaliza "11/26", "nov/26", "Nov-2026", etc
 function normalizeMesAno(str) {
@@ -24,7 +25,7 @@ function normalizeMesAno(str) {
   return `${mes}/${ano}`;
 }
 
-// Tooltip simples e premium (copiado 1:1 do Evolução)
+// Tooltip simples e premium (igual ao CardEvolucao)
 function Tooltip({ x, y, mes, ano, valor }) {
   return (
     <div
@@ -46,35 +47,52 @@ function Tooltip({ x, y, mes, ano, valor }) {
   );
 }
 
-/**
- * rows esperado no mesmo formato do CashControl:
- * [
- *   { nome: "BCFF11", tipo: "dividendo", valores: [..por mes..] },
- *   { nome: "MXRF11", tipo: "dividendo", valores: [..] },
- *   ...
- * ]
- *
- * Se seus dividendos ficam com outro "tipo",
- * troque o filtro abaixo.
- */
-export default function CardDividendosCash({ columns = [], rows = [] }) {
+// Helper para converter texto em número
+function toNum(x) {
+  if (x === "" || x === null || x === undefined) return 0;
+  const n = Number(String(x).replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+}
+
+export default function CardDividendosCash({ columns = [] }) {
   const normalizedColumns = useMemo(
     () => columns.map(normalizeMesAno),
     [columns]
   );
 
-  // ✅ soma SÓ dividendos por mês
+  // ✅ carrega carteira do localStorage (cc_carteira_cash_v1)
+  const carteira = useMemo(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY_CARTEIRA);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  }, []);
+
+  /**
+   * ✅ Soma DY mensal por mês no dashboard
+   * dyMeses é array fixo: Jan..Dez.
+   * Pra cada coluna "Mes/Ano", usamos só o índice do mês.
+   */
   const totals = useMemo(() => {
-    return normalizedColumns.map((_, colIdx) =>
-      rows
-        .filter(r => (r.tipo || "").toLowerCase() === "dividendo")
-        .reduce((acc, r) => acc + (r.valores?.[colIdx] || 0), 0)
-    );
-  }, [normalizedColumns, rows]);
+    if (!normalizedColumns.length) return [];
+
+    return normalizedColumns.map((col) => {
+      const [mesStr] = col.split("/");
+      const idxMes = MESES.indexOf(mesStr);
+      if (idxMes < 0) return 0;
+
+      return carteira.reduce((acc, r) => {
+        const arr = Array.isArray(r.dyMeses) ? r.dyMeses : [];
+        return acc + toNum(arr[idxMes]);
+      }, 0);
+    });
+  }, [normalizedColumns, carteira]);
 
   const max = Math.max(1, ...totals);
 
-  // ✅ animação
+  // ✅ animação igual ao Evolução
   const [animate, setAnimate] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAnimate(true), 50);
@@ -87,7 +105,9 @@ export default function CardDividendosCash({ columns = [], rows = [] }) {
   return (
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] h-[460px] overflow-hidden shrink-0">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-slate-100 font-semibold text-lg">Meus Dividendos</span>
+        <span className="text-slate-100 font-semibold text-lg">
+          Meus Dividendos
+        </span>
         <span className="text-xs px-2 py-1 rounded-lg bg-slate-700/60 text-slate-200">
           Mensal
         </span>
@@ -127,16 +147,20 @@ export default function CardDividendosCash({ columns = [], rows = [] }) {
                   onMouseLeave={() => setTip(null)}
                 />
 
-                {/* Labels */}
+                {/* Labels com sombra suave */}
                 <div
                   className="text-[13px] text-slate-200 text-center leading-tight whitespace-nowrap font-medium"
-                  style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
+                  style={{
+                    textShadow: "0 1px 6px rgba(0,0,0,0.6)",
+                  }}
                 >
                   {mes}
                   <br />
                   <span
                     className="text-[12px] opacity-70 font-normal text-slate-300"
-                    style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
+                    style={{
+                      textShadow: "0 1px 6px rgba(0,0,0,0.6)",
+                    }}
                   >
                     {ano}
                   </span>
