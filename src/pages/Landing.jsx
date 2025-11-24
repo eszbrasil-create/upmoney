@@ -21,7 +21,7 @@ const IconInstagram = (props) => (
   </svg>
 );
 
-// 🌟 DIVISOR PREMIUM ENTRE SEÇÕES
+// divisor premium entre faixas
 const SectionDivider = () => (
   <div className="w-full">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -32,9 +32,11 @@ const SectionDivider = () => (
 );
 
 export default function Landing({ onNavigate }) {
-  // CONFIGURAÇÕES
+  // ✅ seus contatos reais
   const RECEIVER_EMAIL = "eszbrasil@gmail.com";
   const WHATSAPP_NUMBER = "393517380919";
+
+  // ✅ senha simples de MVP (opção 1)
   const DASH_USER = "aluno17";
   const DASH_PASS = "upmoney2025";
 
@@ -45,11 +47,15 @@ export default function Landing({ onNavigate }) {
   const [authForm, setAuthForm] = useState({ usuario: "", senha: "" });
   const [authError, setAuthError] = useState("");
 
-  const onChange = (e) =>
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setForm((f) => ({ ...f, [name]: value }));
+  };
 
-  const onAuthChange = (e) =>
-    setAuthForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const onAuthChange = (e) => {
+    const { name, value } = e.target;
+    setAuthForm((f) => ({ ...f, [name]: value }));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -78,7 +84,7 @@ export default function Landing({ onNavigate }) {
     ) {
       setIsAuthOpen(false);
       setAuthForm({ usuario: "", senha: "" });
-      onNavigate?.("login");
+      onNavigate?.("login"); // libera a entrada do dash
       return;
     }
 
@@ -87,12 +93,9 @@ export default function Landing({ onNavigate }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-[#1f3548]">
-      {/* ------------------------------- */}
-      {/* HEADER */}
-      {/* ------------------------------- */}
+      {/* Header */}
       <header className="sticky top-0 z-40 bg-[#1f3548] text-white/95">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-
           <button
             type="button"
             onClick={() => onNavigate?.("landing")}
@@ -101,14 +104,65 @@ export default function Landing({ onNavigate }) {
             UpMoney
           </button>
 
+          {/* Navegação principal */}
           <nav className="hidden md:flex items-center gap-8 text-sm">
-            <a href="#cursos" onClick={(e)=>{e.preventDefault();onNavigate?.("cursos");}} className="hover:text-white">Cursos</a>
-            <a href="#saida-fiscal" onClick={(e)=>{e.preventDefault();onNavigate?.("saida-fiscal");}} className="hover:text-white">Saída Fiscal</a>
-            <a href="#invista-exterior" onClick={(e)=>{e.preventDefault();onNavigate?.("invista-exterior");}} className="hover:text-white">Invista no Exterior</a>
-            <a href="#ultimas-noticias" onClick={(e)=>{e.preventDefault();onNavigate?.("noticias");}} className="hover:text-white">Últimas notícias</a>
-            <a href="#cashcontrol" onClick={(e)=>{e.preventDefault();onNavigate?.("cashcontrol-home");}} className="hover:text-white">CashControl</a>
+            <a
+              href="#cursos"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate?.("cursos");
+              }}
+              className="hover:text-white"
+            >
+              Cursos
+            </a>
+
+            <a
+              href="#saida-fiscal"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate?.("saida-fiscal");
+              }}
+              className="hover:text-white"
+            >
+              Saída Fiscal
+            </a>
+
+            <a
+              href="#invista-exterior"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate?.("invista-exterior");
+              }}
+              className="hover:text-white"
+            >
+              Invista no Exterior
+            </a>
+
+            <a
+              href="#ultimas-noticias"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate?.("noticias");
+              }}
+              className="hover:text-white"
+            >
+              Últimas notícias
+            </a>
+
+            <a
+              href="#cashcontrol"
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigate?.("cashcontrol-home");
+              }}
+              className="hover:text-white"
+            >
+              CashControl
+            </a>
           </nav>
 
+          {/* Lado direito: Meu Plano + ícones sociais */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsAuthOpen(true)}
@@ -116,17 +170,34 @@ export default function Landing({ onNavigate }) {
             >
               Meu Plano
             </button>
+
+            <a
+              href="https://youtube.com"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
+              aria-label="YouTube"
+            >
+              <IconYouTube className="h-4 w-4" />
+            </a>
+
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
+              aria-label="Instagram"
+            >
+              <IconInstagram className="h-4 w-4" />
+            </a>
           </div>
         </div>
       </header>
 
-      {/* ------------------------------- */}
-      {/* SEÇÃO 1 — HERO ORIGINAL */}
-      {/* ------------------------------- */}
+      {/* Hero 1 */}
       <main className="flex-1">
         <section className="bg-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
-            
             {/* Imagem */}
             <div className="order-2 md:order-1">
               <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
@@ -138,14 +209,14 @@ export default function Landing({ onNavigate }) {
               </div>
             </div>
 
-            {/* Texto */}
+            {/* Texto e CTA */}
             <div className="order-1 md:order-2">
               <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#1f3548]">
                 Conquiste seu Primeiro Dividendo
               </h1>
-
               <p className="mt-4 text-lg text-[#1f3548]/80">
-                O passo a passo para começar a investir e construir sua primeira renda passiva com acompanhamento educacional individual.
+                O passo a passo para começar a investir e conquistar sua
+                primeira renda passiva com acompanhamento educacional individual.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -169,37 +240,33 @@ export default function Landing({ onNavigate }) {
                 </a>
               </div>
             </div>
-
           </div>
         </section>
 
-        {/* DIVISOR */}
         <SectionDivider />
 
-        {/* ------------------------------- */}
-        {/* SEÇÃO 2 — O PROGRAMA COMPLETO */}
-        {/* ------------------------------- */}
+        {/* Hero 2 — Programa */}
         <section className="bg-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
-
-            {/* Texto (inverte o lado nesta seção) */}
+            {/* Texto à esquerda */}
             <div className="order-1">
               <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1f3548]">
                 O Programa Completo para Viver seu Primeiro Dividendo
               </h2>
 
               <p className="mt-4 text-lg text-[#1f3548]/80">
-                Você terá acesso ao método que já ajudou muitas pessoas a saírem do zero e conquistarem sua primeira renda passiva real.
+                Você terá acesso ao método que já ajudou muitas pessoas a saírem do zero
+                e conquistarem renda passiva real com segurança e estratégia.
               </p>
 
               <ul className="mt-6 space-y-3 text-[#1f3548]/90">
                 <li>📘 Curso completo de <strong>Renda Fixa</strong></li>
-                <li>📗 Curso de <strong>Ações</strong> — como analisar e escolher empresas</li>
+                <li>📗 Curso de <strong>Ações</strong> — como escolher empresas boas pagadoras</li>
                 <li>📙 Curso de <strong>FIIs</strong> — renda mensal na prática</li>
                 <li>📂 Material exclusivo (PDFs, resumos e roteiros)</li>
-                <li>📊 Acesso total ao <strong>UpControl</strong> (controle patrimonial)</li>
-                <li>📅 <strong>Agenda de acompanhamento pessoal</strong> comigo</li>
-                <li>💬 Acesso ao <strong>Grupo exclusivo no WhatsApp</strong></li>
+                <li>📊 Acesso ao <strong>UpControl</strong> (controle patrimonial)</li>
+                <li>📅 Agenda de <strong>acompanhamento pessoal</strong> comigo</li>
+                <li>💬 Grupo exclusivo no WhatsApp</li>
               </ul>
 
               <button
@@ -210,33 +277,179 @@ export default function Landing({ onNavigate }) {
               </button>
             </div>
 
-            {/* Imagem do lado direito */}
+            {/* Imagem à direita */}
             <div className="order-2">
               <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
                 <img
                   src="/hero-dividendo.png"
-                  alt="Educadora explicando finanças"
+                  alt="Benefícios do programa"
                   className="h-full w-full object-cover"
                 />
               </div>
             </div>
-
           </div>
         </section>
-
-        {/* DIVISOR */}
-        <SectionDivider />
-
-        {/* ------------------------------- */}
-        {/* AQUI VOCÊ PODE ADICIONAR OUTRAS SEÇÕES */}
-        {/* ------------------------------- */}
-
       </main>
-      
-      {/* FOOTER */}
+
+      {/* Modal de agendamento */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-start justify-between">
+              <h2 className="text-xl font-bold text-[#1f3548]">
+                Agendar reunião gratuita
+              </h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="ml-4 rounded-lg px-2 py-1 text-[#1f3548]/70 hover:bg-[#cfd6dc]/40"
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+              <input
+                name="nome"
+                value={form.nome}
+                onChange={onChange}
+                placeholder="Seu nome"
+                className="w-full border rounded-xl px-3 py-2"
+                required
+              />
+              <input
+                name="email"
+                value={form.email}
+                onChange={onChange}
+                placeholder="seu@email.com"
+                className="w-full border rounded-xl px-3 py-2"
+                required
+              />
+              <input
+                name="telefone"
+                value={form.telefone}
+                onChange={onChange}
+                placeholder="(DDD) 90000-0000"
+                className="w-full border rounded-xl px-3 py-2"
+                required
+              />
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="border px-4 py-2 rounded-xl"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="bg-[#d6af5f] px-5 py-2 rounded-xl font-semibold text-[#1f3548] hover:brightness-105"
+                >
+                  Agendar minha análise
+                </button>
+              </div>
+            </form>
+
+            <p className="mt-4 text-xs text-[#1f3548]/60">
+              Os dados serão enviados por e-mail e WhatsApp.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de autenticação simples do Dash */}
+      {isAuthOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-start justify-between">
+              <h2 className="text-lg font-bold text-[#1f3548]">
+                Acesso ao Dashboard
+              </h2>
+              <button
+                onClick={() => {
+                  setIsAuthOpen(false);
+                  setAuthError("");
+                }}
+                className="ml-4 rounded-lg px-2 py-1 text-[#1f3548]/70 hover:bg-[#cfd6dc]/40"
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleAuthSubmit} className="mt-4 space-y-3">
+              <input
+                name="usuario"
+                value={authForm.usuario}
+                onChange={onAuthChange}
+                placeholder="Usuário"
+                className="w-full border rounded-xl px-3 py-2"
+                required
+              />
+              <input
+                name="senha"
+                type="password"
+                value={authForm.senha}
+                onChange={onAuthChange}
+                placeholder="Senha"
+                className="w-full border rounded-xl px-3 py-2"
+                required
+              />
+
+              {authError && (
+                <p className="text-sm text-red-600">{authError}</p>
+              )}
+
+              <div className="flex justify-end gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAuthOpen(false);
+                    setAuthError("");
+                  }}
+                  className="border px-4 py-2 rounded-xl"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="bg-[#1f3548] px-5 py-2 rounded-xl font-semibold text-white hover:brightness-110"
+                >
+                  Entrar
+                </button>
+              </div>
+            </form>
+
+            <p className="mt-3 text-xs text-[#1f3548]/60">
+              Acesso restrito (trava simples de MVP).
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
       <footer className="mt-10 bg-[#1f3548] text-white/95">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-          <p className="text-sm opacity-80">UpMoney — Educação e controle financeiro para uma vida com liberdade.</p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <nav className="flex items-center gap-6">
+              <a href="#sobre" className="hover:text-white">Sobre</a>
+              <a href="#contato" className="hover:text-white">Contato</a>
+              <a href="#privacidade" className="hover:text-white">Política de Privacidade</a>
+            </nav>
+          </div>
+
+          <p className="mt-8 text-sm text-white/75">
+            UpMoney — Educação e controle financeiro para uma vida com liberdade.
+          </p>
         </div>
       </footer>
     </div>
