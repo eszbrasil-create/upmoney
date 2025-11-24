@@ -35,8 +35,17 @@ export default function Landing({ onNavigate }) {
   const RECEIVER_EMAIL = "eszbrasil@gmail.com";
   const WHATSAPP_NUMBER = "393517380919";
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // ✅ credenciais simples (troque quando quiser)
+  const PLANO_USER = "admin";
+  const PLANO_PASS = "1234";
+
+  const [isModalOpen, setIsModalOpen] = useState(false); // modal avaliação
   const [form, setForm] = useState({ nome: "", email: "", telefone: "" });
+
+  // ✅ modal do Meu Plano (login)
+  const [isPlanoModalOpen, setIsPlanoModalOpen] = useState(false);
+  const [planoForm, setPlanoForm] = useState({ usuario: "", senha: "" });
+  const [planoError, setPlanoError] = useState("");
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -69,6 +78,34 @@ export default function Landing({ onNavigate }) {
     );
   };
 
+  // ✅ login do Meu Plano
+  const handlePlanoChange = (e) => {
+    const { name, value } = e.target;
+    setPlanoForm((p) => ({ ...p, [name]: value }));
+  };
+
+  const handlePlanoLoginSuccess = () => {
+    // aqui você decide a rota final do "Meu Plano"
+    onNavigate?.("login"); // hoje login joga pro dashboard
+  };
+
+  const handlePlanoSubmit = (e) => {
+    e.preventDefault();
+    setPlanoError("");
+
+    const u = planoForm.usuario.trim();
+    const s = planoForm.senha;
+
+    if (u === PLANO_USER && s === PLANO_PASS) {
+      setIsPlanoModalOpen(false);
+      setPlanoForm({ usuario: "", senha: "" });
+      handlePlanoLoginSuccess();
+      return;
+    }
+
+    setPlanoError("Usuário ou senha inválidos.");
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white text-[#1f3548]">
       {/* Header */}
@@ -77,7 +114,7 @@ export default function Landing({ onNavigate }) {
           <button
             type="button"
             onClick={() => onNavigate?.("landing")}
-            className="font-semibold tracking-tight text-xl hover:opacity-90 transition-opacity"
+            className="font-semibold tracking-tight text-lg hover:opacity-90 transition-opacity"
           >
             UpMoney
           </button>
@@ -95,12 +132,11 @@ export default function Landing({ onNavigate }) {
               Cursos
             </a>
 
-            {/* ✅ UpControl logo após Cursos */}
             <a
               href="#upcontrol"
               onClick={(e) => {
                 e.preventDefault();
-                onNavigate?.("cashcontrol-home"); // rota confirmada por você
+                onNavigate?.("cashcontrol-home");
               }}
               className="hover:text-white font-semibold"
             >
@@ -145,8 +181,8 @@ export default function Landing({ onNavigate }) {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => onNavigate?.("plano")}
-              className="hidden sm:inline-flex items-center rounded-xl bg-[#F5B60A] px-4 py-2 text-sm font-bold text-[#1f3548] shadow-sm hover:brightness-105 transition"
+              onClick={() => setIsPlanoModalOpen(true)}
+              className="hidden sm:inline-flex items-center rounded-xl bg-[#F5B60A] px-3 py-2 text-sm font-bold text-[#1f3548] shadow-sm hover:brightness-105 transition"
             >
               Meu Plano
             </button>
@@ -177,7 +213,7 @@ export default function Landing({ onNavigate }) {
       {/* Hero 1 */}
       <main className="flex-1">
         <section className="bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-12 items-center">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 grid md:grid-cols-2 gap-10 items-center">
             {/* Imagem */}
             <div className="order-2 md:order-1">
               <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
@@ -191,38 +227,35 @@ export default function Landing({ onNavigate }) {
 
             {/* Texto e CTA */}
             <div className="order-1 md:order-2">
-              <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#1f3548] leading-tight">
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1f3548] leading-tight">
                 Conquiste seu Primeiro Dividendo em 30 dias
               </h1>
 
-              <p className="mt-5 text-lg text-[#1f3548]/80 leading-relaxed">
+              <p className="mt-4 text-base sm:text-lg text-[#1f3548]/80 leading-relaxed">
                 Nada de complicação, termos difíceis ou teoria sem prática.
                 Aqui você aprende fazendo: passo a passo, no seu ritmo, com orientação real
                 e o suporte que faltava para finalmente entrar no mundo dos investimentos.
               </p>
 
-              {/* ✅ CTAs maiores */}
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                {/* Primário dourado */}
+              {/* ✅ CTAs menores e lado a lado */}
+              <div className="mt-7 flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#F5B60A] px-8 py-4 text-lg font-bold text-[#1f3548] shadow-sm hover:brightness-105 transition"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#F5B60A] px-6 py-3 text-base font-bold text-[#1f3548] shadow-sm hover:brightness-105 transition"
                 >
-                  <IconWhatsApp className="h-6 w-6" />
+                  <IconWhatsApp className="h-5 w-5" />
                   Agende sua avaliação gratuita
                 </button>
 
-                {/* Secundário verde WhatsApp */}
                 <button
                   onClick={openWhatsAppDirect}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-8 py-4 text-lg font-bold text-white shadow-sm hover:brightness-105 transition"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-6 py-3 text-base font-bold text-white shadow-sm hover:brightness-105 transition"
                 >
-                  <IconWhatsApp className="h-6 w-6" />
+                  <IconWhatsApp className="h-5 w-5" />
                   Falar no WhatsApp
                 </button>
               </div>
 
-              {/* Microprovas */}
               <div className="mt-4 flex flex-wrap gap-3 text-sm text-[#1f3548]/70">
                 <span>✔ Ideal para iniciantes</span>
                 <span>✔ Acompanhamento individual</span>
@@ -232,26 +265,24 @@ export default function Landing({ onNavigate }) {
           </div>
         </section>
 
-        {/* Respiro entre faixas */}
-        <div className="h-16 md:h-24" />
+        <div className="h-14 md:h-20" />
 
         <SectionDivider />
 
         {/* Hero 2 — Programa */}
         <section className="bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
-            {/* Texto à esquerda */}
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 grid md:grid-cols-2 gap-10 items-center">
             <div className="order-1">
-              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1f3548]">
+              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1f3548]">
                 O Programa Completo para Viver seu Primeiro Dividendo
               </h2>
 
-              <p className="mt-4 text-lg text-[#1f3548]/80">
+              <p className="mt-3 text-base sm:text-lg text-[#1f3548]/80">
                 Você terá acesso ao método que já ajudou muitas pessoas a saírem do zero
                 e conquistarem renda passiva real com segurança e estratégia.
               </p>
 
-              <ul className="mt-6 space-y-3 text-[#1f3548]/90">
+              <ul className="mt-5 space-y-2 text-[#1f3548]/90 text-sm sm:text-base">
                 <li>📘 Curso completo de <strong>Renda Fixa</strong></li>
                 <li>📗 Curso de <strong>Ações</strong> — como escolher empresas boas pagadoras</li>
                 <li>📙 Curso de <strong>FIIs</strong> — renda mensal na prática</li>
@@ -263,14 +294,13 @@ export default function Landing({ onNavigate }) {
 
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#F5B60A] px-6 py-3 font-semibold text-[#1f3548] shadow hover:brightness-105 transition"
+                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#F5B60A] px-5 py-2.5 text-sm font-semibold text-[#1f3548] shadow hover:brightness-105 transition"
               >
-                <IconWhatsApp className="h-5 w-5" />
+                <IconWhatsApp className="h-4 w-4" />
                 Agende sua avaliação gratuita
               </button>
             </div>
 
-            {/* Imagem à direita */}
             <div className="order-2">
               <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
                 <img
@@ -293,7 +323,7 @@ export default function Landing({ onNavigate }) {
         >
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
             <div className="flex items-start justify-between">
-              <h2 className="text-xl font-bold text-[#1f3548]">
+              <h2 className="text-lg font-bold text-[#1f3548]">
                 Agendar avaliação gratuita
               </h2>
               <button
@@ -305,13 +335,13 @@ export default function Landing({ onNavigate }) {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+            <form onSubmit={handleSubmit} className="mt-4 space-y-3">
               <input
                 name="nome"
                 value={form.nome}
                 onChange={onChange}
                 placeholder="Seu nome"
-                className="w-full border rounded-xl px-3 py-2"
+                className="w-full border rounded-xl px-3 py-2 text-sm"
                 required
               />
               <input
@@ -319,7 +349,7 @@ export default function Landing({ onNavigate }) {
                 value={form.email}
                 onChange={onChange}
                 placeholder="seu@email.com"
-                className="w-full border rounded-xl px-3 py-2"
+                className="w-full border rounded-xl px-3 py-2 text-sm"
                 required
               />
               <input
@@ -327,7 +357,7 @@ export default function Landing({ onNavigate }) {
                 value={form.telefone}
                 onChange={onChange}
                 placeholder="(DDD) 90000-0000"
-                className="w-full border rounded-xl px-3 py-2"
+                className="w-full border rounded-xl px-3 py-2 text-sm"
                 required
               />
 
@@ -335,13 +365,13 @@ export default function Landing({ onNavigate }) {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="border px-4 py-2 rounded-xl"
+                  className="border px-4 py-2 rounded-xl text-sm"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#1f3548] px-5 py-2 rounded-xl font-semibold text-white hover:brightness-110"
+                  className="bg-[#1f3548] px-5 py-2 rounded-xl font-semibold text-white hover:brightness-110 text-sm"
                 >
                   Enviar pelo WhatsApp
                 </button>
@@ -355,11 +385,87 @@ export default function Landing({ onNavigate }) {
         </div>
       )}
 
+      {/* ✅ Modal do Meu Plano (login) */}
+      {isPlanoModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-start justify-between">
+              <h2 className="text-lg font-bold text-[#1f3548]">
+                Acessar Meu Plano
+              </h2>
+              <button
+                onClick={() => {
+                  setIsPlanoModalOpen(false);
+                  setPlanoError("");
+                }}
+                className="ml-4 rounded-lg px-2 py-1 text-[#1f3548]/70 hover:bg-[#cfd6dc]/40"
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handlePlanoSubmit} className="mt-4 space-y-3">
+              <input
+                name="usuario"
+                value={planoForm.usuario}
+                onChange={handlePlanoChange}
+                placeholder="Usuário"
+                className="w-full border rounded-xl px-3 py-2 text-sm"
+                required
+              />
+              <input
+                name="senha"
+                type="password"
+                value={planoForm.senha}
+                onChange={handlePlanoChange}
+                placeholder="Senha"
+                className="w-full border rounded-xl px-3 py-2 text-sm"
+                required
+              />
+
+              {planoError && (
+                <div className="text-sm text-red-600 font-medium">
+                  {planoError}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsPlanoModalOpen(false);
+                    setPlanoError("");
+                  }}
+                  className="border px-4 py-2 rounded-xl text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="bg-[#1f3548] px-5 py-2 rounded-xl font-semibold text-white hover:brightness-110 text-sm"
+                >
+                  Entrar
+                </button>
+              </div>
+            </form>
+
+            <p className="mt-3 text-xs text-[#1f3548]/60">
+              Acesso restrito. Se quiser mudar usuário/senha, me avisa.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
       <footer className="mt-10 bg-[#1f3548] text-white/95">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <nav className="flex items-center gap-6">
+            <nav className="flex items-center gap-6 text-sm">
               <a href="#sobre" className="hover:text-white">Sobre</a>
               <a href="#contato" className="hover:text-white">Contato</a>
               <a href="#privacidade" className="hover:text-white">Política de Privacidade</a>
