@@ -190,11 +190,12 @@ export default function CarteiraCash() {
   const [hoverIdxTipo, setHoverIdxTipo] = useState(null);
   const idxShownTipo = hoverIdxTipo ?? activeIdxTipo;
 
-  const size = 220;
+  // ✅ donuts mais compactos pra dar espaço pro DY
+  const size = 180;
   const cx = size / 2;
   const cy = size / 2;
-  const rOuter = 95;
-  const rInner = 58;
+  const rOuter = 78;
+  const rInner = 48;
 
   const anglesAtivo = useMemo(() => {
     let acc = 0;
@@ -290,8 +291,8 @@ export default function CarteiraCash() {
 
     const compute = () => {
       const h = el.clientHeight || 0;
-      const reservedForLabels = 42; // texto embaixo
-      const topGap = 8;            // respiro no topo
+      const reservedForLabels = 42;
+      const topGap = 8;
       const usable = Math.max(60, h - reservedForLabels - topGap);
       setDyBarMaxHeight(usable);
     };
@@ -332,7 +333,7 @@ export default function CarteiraCash() {
         <div className="h-16" />
       </div>
 
-      {/* BALÃO: 2 pizzas + 1 barra */}
+      {/* BALÃO: 2 pizzas menores + 1 barra maior */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-4">
         {totalGeral <= 0 ? (
           <p className="text-[11px] text-slate-500">
@@ -341,7 +342,7 @@ export default function CarteiraCash() {
             tabela para visualizar os gráficos.
           </p>
         ) : (
-          <div className="grid gap-4 md:grid-cols-3 items-stretch">
+          <div className="grid gap-4 md:grid-cols-4 items-stretch">
 
             {/* Pizza 1: participação por ATIVO */}
             <div className="md:col-span-1">
@@ -350,8 +351,8 @@ export default function CarteiraCash() {
                   Participação por ativo
                 </div>
 
-                <div className="grid grid-cols-[1fr_220px] gap-2 items-center">
-                  <div className="space-y-2 pr-2 max-h-[220px] overflow-y-auto">
+                <div className="grid grid-cols-[1fr_180px] gap-2 items-center">
+                  <div className="space-y-2 pr-2 max-h-[200px] overflow-y-auto">
                     {piePartsAtivos.map((it, i) => {
                       const isActive = i === idxShownAtivo;
                       return (
@@ -437,7 +438,7 @@ export default function CarteiraCash() {
                           <div className="text-slate-200 text-sm font-semibold">
                             {centerAtivo.title}
                           </div>
-                          <div className="text-slate-100 text-xl font-extrabold">
+                          <div className="text-slate-100 text-lg font-extrabold">
                             {centerAtivo.line1}
                           </div>
                           {centerAtivo.line2 ? (
@@ -461,7 +462,7 @@ export default function CarteiraCash() {
                   Participação por tipo
                 </div>
 
-                <div className="grid grid-cols-[1fr_220px] gap-2 items-center">
+                <div className="grid grid-cols-[1fr_180px] gap-2 items-center">
                   <div className="space-y-2 pr-2">
                     {piePartsTipos.map((it, i) => {
                       const isActive = i === idxShownTipo;
@@ -548,7 +549,7 @@ export default function CarteiraCash() {
                           <div className="text-slate-200 text-sm font-semibold">
                             {centerTipo.title}
                           </div>
-                          <div className="text-slate-100 text-xl font-extrabold">
+                          <div className="text-slate-100 text-lg font-extrabold">
                             {centerTipo.line1}
                           </div>
                           {centerTipo.line2 ? (
@@ -565,8 +566,8 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Barra: DY mensal ocupando todo o chart */}
-            <div className="md:col-span-1">
+            {/* Barra: DY mensal com mais espaço */}
+            <div className="md:col-span-2">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
                   DY mensal total
@@ -610,7 +611,7 @@ export default function CarteiraCash() {
         )}
       </div>
 
-      {/* Tabela de ativos */}
+      {/* ======= Tabela de ativos (inalterada) ======= */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-slate-200 text-sm font-medium">
@@ -629,6 +630,7 @@ export default function CarteiraCash() {
                   <th className="px-3 py-2 text-left text-xs font-medium sticky left-0 bg-slate-800/70 z-20">
                     #
                   </th>
+                  
                   <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
                     Ticker
                   </th>
