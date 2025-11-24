@@ -17,7 +17,7 @@ const IconYouTube = (props) => (
 
 const IconInstagram = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-    <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.24.42.56.22.96.49 1.38.9.41.41.67.82.9 1.38.17.43.37 1.07.42 2.24.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.42 2.24a3.6 3.6 0 0 1-.9 1.38 3.6 3.6 0 0 1-1.38.9c-.43.17-1.07.37-2.24.42-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.24-.42a3.6 3.6 0 0 1-1.38-.9 3.6 3.6 0 0 1-.9-1.38c-.17-.43-.37-1.07-.42-2.24C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.42-2.24.22-.56.49-.96.9-1.38.41-.41.82-.67 1.38-.9.43-.17 1.07-.37 2.24-.42C8.42 2.17 8.8 2.16 12 2.16Z" />
+    <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.24.42.56.22.96.49 1.38.9.41.41.67.82.9 1.38.17.43.37 1.07.42 2.24.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.42 2.24a3.6 3.6 0 0 1-.9 1.38 3.6 3.6 0 0 1-1.38.9c-.43.17-1.07.37-2.24.42-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.24-.42a3.6 3.6 0 0 1-1.38-.9 3.6 3.6 0 0 1-.9-1.38c-.17-.43-.37-1.07-.42-2.24C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.42-2.24.22-.56.49-.96.9-1.38.41-.41.82-.67 1.38-.9.43-.17 1.07-.37 2.24-.42C8.42 2.17 8.8 2.16 12 2.16Zm0 3.4c-3.16 0-3.53.01-4.77.07-.98.05-1.52.21-1.87.35-.47.18-.8.4-1.15.75-.35.35-.57.68-.75 1.15-.14.35-.3.89-.35 1.87-.06 1.24-.07 1.61-.07 4.77s.01 3.53.07 4.77c.05.98.21 1.52.35 1.87.18.47.4.8.75 1.15.35.35.68.57 1.15.75.35.14.89.3 1.87.35 1.24.06 1.61.07 4.77.07s3.53-.01 4.77-.07c.98-.05 1.52-.21 1.87-.35.47-.18.8-.4 1.15-1.15.35-.35.57-.68.75-1.15.14-.35.3-.89.35-1.87.06-1.24.07-1.61.07-4.77s-.01-3.53-.07-4.77c-.05-.98.21-1.52.35-1.87a2.62 2.62 0 0 0-.75-1.15c-.35-.35-.68-.57-1.15-.75-.35-.14-.89-.3-1.87-.35-1.24-.06-1.61-.07-4.77-.07Zm0 2.7a4.64 4.64 0 1 1 0 9.28 4.64 4.64 0 0 1 0-9.28Zm0 1.8a2.84 2.84 0 1 0 0 5.68 2.84 2.84 0 0 0 0-5.68Zm5.93-2.18a1.09 1.09 0 1 1 0 2.18 1.09 1.09 0 0 1 0-2.18Z" />
   </svg>
 );
 
@@ -95,14 +95,14 @@ export default function Landing({ onNavigate }) {
               Cursos
             </a>
 
-            {/* ✅ UpControl logo após Cursos (mesmo estilo dos outros) */}
+            {/* ✅ UpControl logo após Cursos */}
             <a
               href="#upcontrol"
               onClick={(e) => {
                 e.preventDefault();
-                onNavigate?.("cashcontrol-home");
+                onNavigate?.("cashcontrol-home"); // rota confirmada por você
               }}
-              className="hover:text-white"
+              className="hover:text-white font-semibold"
             >
               UpControl
             </a>
@@ -141,7 +141,7 @@ export default function Landing({ onNavigate }) {
             </a>
           </nav>
 
-          {/* Lado direito: Meu Plano + ícones sociais */}
+          {/* Lado direito: Meu Plano + ícones */}
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -201,21 +201,23 @@ export default function Landing({ onNavigate }) {
                 e o suporte que faltava para finalmente entrar no mundo dos investimentos.
               </p>
 
-              {/* ✅ Botões com fonte maior (Hero 1) */}
+              {/* ✅ CTAs maiores */}
               <div className="mt-8 flex flex-wrap items-center gap-4">
+                {/* Primário dourado */}
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-3 rounded-2xl bg-[#F5B60A] px-9 py-5 text-xl font-extrabold text-[#1f3548] shadow-sm hover:brightness-105 transition"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#F5B60A] px-8 py-4 text-lg font-bold text-[#1f3548] shadow-sm hover:brightness-105 transition"
                 >
-                  <IconWhatsApp className="h-7 w-7" />
+                  <IconWhatsApp className="h-6 w-6" />
                   Agende sua avaliação gratuita
                 </button>
 
+                {/* Secundário verde WhatsApp */}
                 <button
                   onClick={openWhatsAppDirect}
-                  className="inline-flex items-center gap-3 rounded-2xl bg-[#25D366] px-9 py-5 text-xl font-extrabold text-white shadow-sm hover:brightness-105 transition"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-8 py-4 text-lg font-bold text-white shadow-sm hover:brightness-105 transition"
                 >
-                  <IconWhatsApp className="h-7 w-7" />
+                  <IconWhatsApp className="h-6 w-6" />
                   Falar no WhatsApp
                 </button>
               </div>
@@ -232,11 +234,13 @@ export default function Landing({ onNavigate }) {
 
         {/* Respiro entre faixas */}
         <div className="h-16 md:h-24" />
+
         <SectionDivider />
 
         {/* Hero 2 — Programa */}
         <section className="bg-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
+            {/* Texto à esquerda */}
             <div className="order-1">
               <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1f3548]">
                 O Programa Completo para Viver seu Primeiro Dividendo
@@ -266,6 +270,7 @@ export default function Landing({ onNavigate }) {
               </button>
             </div>
 
+            {/* Imagem à direita */}
             <div className="order-2">
               <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
                 <img
@@ -281,7 +286,11 @@ export default function Landing({ onNavigate }) {
 
       {/* Modal de agendamento */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+        >
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
             <div className="flex items-start justify-between">
               <h2 className="text-xl font-bold text-[#1f3548]">
@@ -290,6 +299,7 @@ export default function Landing({ onNavigate }) {
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="ml-4 rounded-lg px-2 py-1 text-[#1f3548]/70 hover:bg-[#cfd6dc]/40"
+                aria-label="Fechar"
               >
                 ✕
               </button>
@@ -348,7 +358,15 @@ export default function Landing({ onNavigate }) {
       {/* Footer */}
       <footer className="mt-10 bg-[#1f3548] text-white/95">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-          <p className="text-sm text-white/75">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <nav className="flex items-center gap-6">
+              <a href="#sobre" className="hover:text-white">Sobre</a>
+              <a href="#contato" className="hover:text-white">Contato</a>
+              <a href="#privacidade" className="hover:text-white">Política de Privacidade</a>
+            </nav>
+          </div>
+
+          <p className="mt-8 text-sm text-white/75">
             UpMoney — Educação e controle financeiro para uma vida com liberdade.
           </p>
         </div>
