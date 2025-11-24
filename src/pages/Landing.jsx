@@ -140,8 +140,17 @@ export default function Landing({ onNavigate }) {
             </a>
           </nav>
 
-          {/* Ícones sociais */}
+          {/* Lado direito: botão Meu Plano + ícones sociais */}
           <div className="flex items-center gap-3">
+            {/* ✅ Meu Plano (recolocado) */}
+            <button
+              type="button"
+              onClick={() => onNavigate?.("plano")} // se sua rota tiver outro nome, troca aqui
+              className="hidden sm:inline-flex items-center rounded-xl bg-[#F5B60A] px-4 py-2 text-sm font-bold text-[#1f3548] shadow-sm hover:brightness-105 transition"
+            >
+              Meu Plano
+            </button>
+
             <a
               href="https://youtube.com"
               target="_blank"
@@ -165,7 +174,7 @@ export default function Landing({ onNavigate }) {
         </div>
       </header>
 
-      {/* Hero 1 — isolado */}
+      {/* Hero 1 */}
       <main className="flex-1">
         <section className="bg-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-12 items-center">
@@ -192,19 +201,21 @@ export default function Landing({ onNavigate }) {
                 e o suporte que faltava para finalmente entrar no mundo dos investimentos.
               </p>
 
-              {/* CTAs */}
+              {/* ✅ CTAs com cores finais */}
               <div className="mt-8 flex flex-wrap items-center gap-3">
+                {/* Primário dourado */}
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#00e59b] px-6 py-3 font-semibold text-[#073b2c] shadow-sm hover:brightness-105 transition"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#F5B60A] px-6 py-3 font-semibold text-[#1f3548] shadow-sm hover:brightness-105 transition"
                 >
                   <IconWhatsApp className="h-5 w-5" />
                   Agende sua avaliação gratuita
                 </button>
 
+                {/* Secundário verde WhatsApp */}
                 <button
                   onClick={openWhatsAppDirect}
-                  className="inline-flex items-center gap-2 rounded-xl border border-[#1f3548]/25 bg-white px-6 py-3 font-semibold text-[#1f3548] hover:bg-[#1f3548]/5 transition"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-6 py-3 font-semibold text-white shadow-sm hover:brightness-105 transition"
                 >
                   <IconWhatsApp className="h-5 w-5" />
                   Falar no WhatsApp
@@ -252,7 +263,7 @@ export default function Landing({ onNavigate }) {
 
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#00e59b] px-6 py-3 font-semibold text-[#073b2c] shadow hover:brightness-105 transition"
+                className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#F5B60A] px-6 py-3 font-semibold text-[#1f3548] shadow hover:brightness-105 transition"
               >
                 <IconWhatsApp className="h-5 w-5" />
                 Agende sua avaliação gratuita
