@@ -1,5 +1,11 @@
 // src/pages/CarteiraCash.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useLayoutEffect,
+} from "react";
 
 const PIE_COLORS = {
   RF: "#22c55e",
@@ -95,18 +101,17 @@ export default function CarteiraCash() {
     );
   };
 
-  // ✅ Cálculos globais (participação por ATIVO + DY mensal total)
+  // ✅ Cálculos globais (2 donuts + DY)
   const {
     totalGeral,
     piePartsAtivos,
+    piePartsTipos,
     dyBarData,
   } = useMemo(() => {
     let total = 0;
 
-    // soma posição por ativo (ticker/nome)
     const somaPorAtivo = {};
-
-    // DY mensal total (Jan..Dez)
+    const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
     const dyMesTotal = Array(12).fill(0);
 
     carteira.forEach((r) => {
@@ -117,16 +122,24 @@ export default function CarteiraCash() {
 
       total += valorPosicao;
 
+      // por ativo
       const ativoKey = (r.ticker || r.nome || "Ativo").toUpperCase();
       if (!somaPorAtivo[ativoKey]) somaPorAtivo[ativoKey] = 0;
       somaPorAtivo[ativoKey] += valorPosicao;
 
+      // por tipo
+      const tipoKey = r.tipo;
+      if (!somaPorTipo[tipoKey]) somaPorTipo[tipoKey] = 0;
+      somaPorTipo[tipoKey] += valorPosicao;
+
+      // DY mensal total
       const arrMeses = Array.isArray(r.dyMeses) ? r.dyMeses : [];
       for (let i = 0; i < 12; i++) {
         dyMesTotal[i] += toNum(arrMeses[i]);
       }
     });
 
+    // ==== donut por ATIVO ====
     const ativosRaw = Object.entries(somaPorAtivo)
       .map(([key, value]) => ({ key, name: key, value }))
       .filter((d) => d.value > 0)
@@ -143,20 +156,39 @@ export default function CarteiraCash() {
       pct: total > 0 ? (p.value / total) * 100 : 0,
     }));
 
+    // ==== donut por TIPO ====
+    const tiposRaw = [
+      { key: "RF", name: "RF", value: somaPorTipo.RF, color: PIE_COLORS.RF },
+      { key: "ACOES", name: "Ações", value: somaPorTipo.ACOES, color: PIE_COLORS.ACOES },
+      { key: "FII", name: "FIIs", value: somaPorTipo.FII, color: PIE_COLORS.FII },
+    ].filter((d) => d.value > 0);
+
+    const piePartsTipos = tiposRaw.map((p) => ({
+      ...p,
+      pct: total > 0 ? (p.value / total) * 100 : 0,
+    }));
+
     const dyBarData = MESES.map((m, idx) => ({
       name: m,
       dy: dyMesTotal[idx],
     }));
 
-    return { totalGeral: total, piePartsAtivos, dyBarData };
+    return { totalGeral: total, piePartsAtivos, piePartsTipos, dyBarData };
   }, [carteira]);
 
   /* ===========================
-     Donut (Participação por ATIVO)
+     Donut por ATIVO
   =========================== */
-  const [activeIdx, setActiveIdx] = useState(null);
-  const [hoverIdx, setHoverIdx] = useState(null);
-  const idxShown = hoverIdx ?? activeIdx;
+  const [activeIdxAtivo, setActiveIdxAtivo] = useState(null);
+  const [hoverIdxAtivo, setHoverIdxAtivo] = useState(null);
+  const idxShownAtivo = hoverIdxAtivo ?? activeIdxAtivo;
+
+  /* ===========================
+     Donut por TIPO
+  =========================== */
+  const [activeIdxTipo, setActiveIdxTipo] = useState(null);
+  const [hoverIdxTipo, setHoverIdxTipo] = useState(null);
+  const idxShownTipo = hoverIdxTipo ?? activeIdxTipo;
 
   const size = 220;
   const cx = size / 2;
@@ -164,7 +196,7 @@ export default function CarteiraCash() {
   const rOuter = 95;
   const rInner = 58;
 
-  const angles = useMemo(() => {
+  const anglesAtivo = useMemo(() => {
     let acc = 0;
     return piePartsAtivos.map((p) => {
       const start = acc;
@@ -174,11 +206,21 @@ export default function CarteiraCash() {
     });
   }, [piePartsAtivos]);
 
-  const center = useMemo(() => {
+  const anglesTipo = useMemo(() => {
+    let acc = 0;
+    return piePartsTipos.map((p) => {
+      const start = acc;
+      const end = acc + (p.pct / 100) * 360;
+      acc = end;
+      return { start, end };
+    });
+  }, [piePartsTipos]);
+
+  const centerAtivo = useMemo(() => {
     if (
-      idxShown == null ||
-      idxShown < 0 ||
-      idxShown >= piePartsAtivos.length ||
+      idxShownAtivo == null ||
+      idxShownAtivo < 0 ||
+      idxShownAtivo >= piePartsAtivos.length ||
       totalGeral <= 0
     ) {
       return {
@@ -191,7 +233,7 @@ export default function CarteiraCash() {
         line2: "",
       };
     }
-    const it = piePartsAtivos[idxShown];
+    const it = piePartsAtivos[idxShownAtivo];
     return {
       title: it.name,
       line1: it.value.toLocaleString("pt-BR", {
@@ -201,13 +243,64 @@ export default function CarteiraCash() {
       }),
       line2: `${it.pct.toFixed(1)}%`,
     };
-  }, [idxShown, piePartsAtivos, totalGeral]);
+  }, [idxShownAtivo, piePartsAtivos, totalGeral]);
+
+  const centerTipo = useMemo(() => {
+    if (
+      idxShownTipo == null ||
+      idxShownTipo < 0 ||
+      idxShownTipo >= piePartsTipos.length ||
+      totalGeral <= 0
+    ) {
+      return {
+        title: "Total",
+        line1: totalGeral.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+          maximumFractionDigits: 0,
+        }),
+        line2: "",
+      };
+    }
+    const it = piePartsTipos[idxShownTipo];
+    return {
+      title: it.name,
+      line1: it.value.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        maximumFractionDigits: 0,
+      }),
+      line2: `${it.pct.toFixed(1)}%`,
+    };
+  }, [idxShownTipo, piePartsTipos, totalGeral]);
 
   /* ===========================
-     Barras DY (compacto estilo "Meus Dividendos")
+     DY mensal (ocupando todo o chart)
   =========================== */
-  const dyTotals = dyBarData.map(d => d.dy || 0);
+  const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
+
+  const dyChartRef = useRef(null);
+  const [dyBarMaxHeight, setDyBarMaxHeight] = useState(90);
+
+  useLayoutEffect(() => {
+    if (!dyChartRef.current) return;
+
+    const el = dyChartRef.current;
+
+    const compute = () => {
+      const h = el.clientHeight || 0;
+      const reservedForLabels = 42; // texto embaixo
+      const topGap = 8;            // respiro no topo
+      const usable = Math.max(60, h - reservedForLabels - topGap);
+      setDyBarMaxHeight(usable);
+    };
+
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   return (
     <div className="pt-0 pr-3 pl-0 relative">
@@ -236,11 +329,10 @@ export default function CarteiraCash() {
           </div>
         </div>
 
-        {/* espaço bem menor pra não roubar tela */}
         <div className="h-16" />
       </div>
 
-      {/* CARD: gráficos premium estilo Dash */}
+      {/* BALÃO: 2 pizzas + 1 barra */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-4">
         {totalGeral <= 0 ? (
           <p className="text-[11px] text-slate-500">
@@ -251,7 +343,7 @@ export default function CarteiraCash() {
         ) : (
           <div className="grid gap-4 md:grid-cols-3 items-stretch">
 
-            {/* ✅ Donut PARTICIPAÇÃO POR ATIVO */}
+            {/* Pizza 1: participação por ATIVO */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -259,17 +351,16 @@ export default function CarteiraCash() {
                 </div>
 
                 <div className="grid grid-cols-[1fr_220px] gap-2 items-center">
-                  {/* legenda */}
                   <div className="space-y-2 pr-2 max-h-[220px] overflow-y-auto">
                     {piePartsAtivos.map((it, i) => {
-                      const isActive = i === idxShown;
+                      const isActive = i === idxShownAtivo;
                       return (
                         <div
                           key={it.key}
-                          onMouseEnter={() => setHoverIdx(i)}
-                          onMouseLeave={() => setHoverIdx(null)}
+                          onMouseEnter={() => setHoverIdxAtivo(i)}
+                          onMouseLeave={() => setHoverIdxAtivo(null)}
                           onClick={() =>
-                            setActiveIdx((prev) => (prev === i ? null : i))
+                            setActiveIdxAtivo((prev) => (prev === i ? null : i))
                           }
                           className={`rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2 cursor-pointer transition
                             ${isActive ? "ring-1 ring-emerald-400/50 bg-slate-900/70" : ""}`}
@@ -291,7 +382,6 @@ export default function CarteiraCash() {
                     })}
                   </div>
 
-                  {/* donut */}
                   <div className="flex items-center justify-center">
                     <div className="relative" style={{ width: size, height: size }}>
                       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
@@ -306,9 +396,9 @@ export default function CarteiraCash() {
                         />
 
                         {piePartsAtivos.map((p, i) => {
-                          const { start, end } = angles[i];
+                          const { start, end } = anglesAtivo[i];
                           const d = arcPath(cx, cy, rOuter, rInner, start, end);
-                          const selected = i === idxShown;
+                          const selected = i === idxShownAtivo;
 
                           return (
                             <path
@@ -321,16 +411,16 @@ export default function CarteiraCash() {
                                   ? "drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]"
                                   : ""
                               }`}
-                              onMouseEnter={() => setHoverIdx(i)}
-                              onMouseLeave={() => setHoverIdx(null)}
+                              onMouseEnter={() => setHoverIdxAtivo(i)}
+                              onMouseLeave={() => setHoverIdxAtivo(null)}
                               onClick={() =>
-                                setActiveIdx((prev) => (prev === i ? null : i))
+                                setActiveIdxAtivo((prev) => (prev === i ? null : i))
                               }
                             />
                           );
                         })}
 
-                        {idxShown != null && (
+                        {idxShownAtivo != null && (
                           <circle
                             cx={cx}
                             cy={cy}
@@ -345,14 +435,14 @@ export default function CarteiraCash() {
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="text-center leading-tight px-3">
                           <div className="text-slate-200 text-sm font-semibold">
-                            {center.title}
+                            {centerAtivo.title}
                           </div>
                           <div className="text-slate-100 text-xl font-extrabold">
-                            {center.line1}
+                            {centerAtivo.line1}
                           </div>
-                          {center.line2 ? (
+                          {centerAtivo.line2 ? (
                             <div className="text-slate-300 text-sm mt-0.5">
-                              {center.line2}
+                              {centerAtivo.line2}
                             </div>
                           ) : null}
                         </div>
@@ -364,18 +454,135 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* ✅ DY mensal menor no modelo "Meus Dividendos" */}
-            <div className="md:col-span-2">
+            {/* Pizza 2: participação por TIPO */}
+            <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3">
+                <div className="text-slate-100 text-sm font-semibold mb-2">
+                  Participação por tipo
+                </div>
+
+                <div className="grid grid-cols-[1fr_220px] gap-2 items-center">
+                  <div className="space-y-2 pr-2">
+                    {piePartsTipos.map((it, i) => {
+                      const isActive = i === idxShownTipo;
+                      return (
+                        <div
+                          key={it.key}
+                          onMouseEnter={() => setHoverIdxTipo(i)}
+                          onMouseLeave={() => setHoverIdxTipo(null)}
+                          onClick={() =>
+                            setActiveIdxTipo((prev) => (prev === i ? null : i))
+                          }
+                          className={`rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2 cursor-pointer transition
+                            ${isActive ? "ring-1 ring-sky-400/50 bg-slate-900/70" : ""}`}
+                        >
+                          <div className="flex items-center w-full">
+                            <span
+                              className="inline-block h-3 w-3 rounded-full mr-2"
+                              style={{ backgroundColor: it.color }}
+                            />
+                            <span className="text-slate-100 text-sm truncate flex-1">
+                              {it.name}
+                            </span>
+                            <span className="text-slate-300 text-sm ml-auto tabular-nums">
+                              {it.pct.toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center justify-center">
+                    <div className="relative" style={{ width: size, height: size }}>
+                      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={(rOuter + rInner) / 2}
+                          stroke="#0b1220"
+                          strokeOpacity="0.5"
+                          strokeWidth={rOuter - rInner}
+                          fill="none"
+                        />
+
+                        {piePartsTipos.map((p, i) => {
+                          const { start, end } = anglesTipo[i];
+                          const d = arcPath(cx, cy, rOuter, rInner, start, end);
+                          const selected = i === idxShownTipo;
+
+                          return (
+                            <path
+                              key={p.key}
+                              d={d}
+                              fill={p.color}
+                              fillOpacity={selected ? 1 : 0.85}
+                              className={`transition-all duration-150 cursor-pointer ${
+                                selected
+                                  ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]"
+                                  : ""
+                              }`}
+                              onMouseEnter={() => setHoverIdxTipo(i)}
+                              onMouseLeave={() => setHoverIdxTipo(null)}
+                              onClick={() =>
+                                setActiveIdxTipo((prev) => (prev === i ? null : i))
+                              }
+                            />
+                          );
+                        })}
+
+                        {idxShownTipo != null && (
+                          <circle
+                            cx={cx}
+                            cy={cy}
+                            r={rInner - 6}
+                            fill="none"
+                            stroke="rgba(15,23,42,0.55)"
+                            strokeWidth="12"
+                          />
+                        )}
+                      </svg>
+
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="text-center leading-tight px-3">
+                          <div className="text-slate-200 text-sm font-semibold">
+                            {centerTipo.title}
+                          </div>
+                          <div className="text-slate-100 text-xl font-extrabold">
+                            {centerTipo.line1}
+                          </div>
+                          {centerTipo.line2 ? (
+                            <div className="text-slate-300 text-sm mt-0.5">
+                              {centerTipo.line2}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Barra: DY mensal ocupando todo o chart */}
+            <div className="md:col-span-1">
+              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
                   DY mensal total
                 </div>
 
-                <div className="h-[140px] rounded-2xl border border-white/10 bg-slate-900/80 p-3 pt-2 overflow-x-auto overflow-y-hidden">
+                <div
+                  ref={dyChartRef}
+                  className="flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/80 p-3 pt-2 overflow-x-auto overflow-y-hidden"
+                >
                   <div className="flex items-end gap-1 min-w-max h-full">
                     {dyBarData.map((d, i) => {
                       const v = d.dy || 0;
-                      const h = Math.max(4, Math.round((v / dyMax) * 90));
+                      const h = Math.max(
+                        4,
+                        Math.round((v / dyMax) * dyBarMaxHeight)
+                      );
 
                       return (
                         <div key={i} className="flex flex-col items-center gap-2 w-10">
