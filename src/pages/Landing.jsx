@@ -212,12 +212,11 @@ export default function Landing({ onNavigate }) {
             {/* Texto e CTA */}
             <div className="order-1 md:order-2">
               <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#1f3548]">
-                Conquiste seu Primeiro Dividendo
+                Conquiste seu Primeiro Dividendo em 30 dias
               </h1>
               <p className="mt-4 text-lg text-[#1f3548]/80">
-                Seu primeiro dividendo em 30 dias - mesmo começando do Zero 
-                Acompanhamento educacional individual
-                Controle suas finaças do UpControl
+                Nada de complicação, termos difíceis ou teoria sem prática.
+Aqui você aprende fazendo: passo a passo, no seu ritmo, com suporte real e a orientação que faltava para finalmente entrar no mundo dos investimentos.
             
               </p>
 
