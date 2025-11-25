@@ -91,6 +91,9 @@ export default function CarteiraCash() {
     }
   });
 
+  // ✅ estado do balão "Carteiras Modelo UpMoney"
+  const [openCarteiras, setOpenCarteiras] = useState(false);
+
   // Persiste alterações
   useEffect(() => {
     try {
@@ -193,7 +196,7 @@ export default function CarteiraCash() {
   const [hoverIdxTipo, setHoverIdxTipo] = useState(null);
   const idxShownTipo = hoverIdxTipo ?? activeIdxTipo;
 
-  // donuts compactos (cabem certinho no balão full width)
+  // donuts compactos
   const size = 180;
   const cx = size / 2;
   const cy = size / 2;
@@ -279,18 +282,20 @@ export default function CarteiraCash() {
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
   /* ===========================
-     DY mensal total — estilo CardDividendos
-     verde dólar + tooltip premium + gap topo + animação + gradiente vertical leve
+     DY mensal total — Fase B (idêntico CardDividendos)
+     verde dólar + tooltip premium + gap topo + animação
   =========================== */
   const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
 
+  // animação igual Evolução / CardDividendos
   const [animateDy, setAnimateDy] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAnimateDy(true), 50);
     return () => clearTimeout(t);
   }, []);
 
+  // tooltip premium
   const [dyTip, setDyTip] = useState(null);
 
   const TooltipDy = ({ x, y, mes, valor }) => (
@@ -299,7 +304,9 @@ export default function CarteiraCash() {
       style={{ left: x, top: y }}
     >
       <div className="rounded-xl bg-slate-950/95 border border-white/10 px-3 py-2 shadow-2xl">
-        <div className="text-[11px] text-slate-300 font-medium">{mes}</div>
+        <div className="text-[11px] text-slate-300 font-medium">
+          {mes}
+        </div>
         <div className="text-sm text-slate-100 font-semibold">
           {valor.toLocaleString("pt-BR", {
             style: "currency",
@@ -310,6 +317,7 @@ export default function CarteiraCash() {
     </div>
   );
 
+  // calcula altura máxima real usando o tamanho do chart
   const dyChartRef = useRef(null);
   const [dyBarMaxHeight, setDyBarMaxHeight] = useState(110);
 
@@ -319,8 +327,8 @@ export default function CarteiraCash() {
 
     const compute = () => {
       const h = el.clientHeight || 0;
-      const reservedForLabels = 44;
-      const topGap = 16;
+      const reservedForLabels = 44; // labels dos meses
+      const topGap = 16;           // ✅ GAP NO TOPO
       const usable = Math.max(60, h - reservedForLabels - topGap);
       setDyBarMaxHeight(usable);
     };
@@ -331,38 +339,127 @@ export default function CarteiraCash() {
     return () => ro.disconnect();
   }, []);
 
+  // (futuro) handler para clicar nos modelos
+  const handleModeloClick = (tipo) => {
+    // por enquanto só loga – depois podemos preencher a carteira automaticamente
+    console.log("Modelo selecionado:", tipo);
+  };
+
   return (
     <div className="pt-0 pr-3 pl-0 relative">
-      {/* FAIXA FIXA */}
+      {/* FAIXA FIXA COM BALÃO EXPANSÍVEL */}
       <div className="mb-2">
         <div className="fixed left-48 right-6 top-3 z-30">
           <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-sky-500 to-fuchsia-500 p-[1px] shadow-xl">
-            <button
-              type="button"
-              className="w-full rounded-2xl bg-slate-950/95 px-3 py-2 flex items-center justify-between hover:bg-slate-900/95 transition"
-              title="Futuro acesso às carteiras"
+            <div
+              className={`
+                w-full rounded-2xl bg-slate-950/95 px-3 pt-2 pb-2
+                flex flex-col gap-2
+                transition-all duration-300
+                ${openCarteiras ? "pb-3" : ""}
+              `}
             >
-              <div className="flex items-center gap-2 text-left">
-                <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
-                <div className="text-[12px] sm:text-[13px] font-semibold text-slate-100">
-                  Carteiras Modelo UpMoney
+              {/* Cabeçalho clicável */}
+              <button
+                type="button"
+                onClick={() => setOpenCarteiras((prev) => !prev)}
+                className="w-full flex items-center justify-between hover:bg-slate-900/95 rounded-xl px-2 py-1 transition"
+                title="Sugestões de carteiras modelo"
+              >
+                <div className="flex items-center gap-2 text-left">
+                  <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
+                  <div className="flex flex-col">
+                    <span className="text-[12px] sm:text-[13px] font-semibold text-slate-100">
+                      Carteiras Modelo UpMoney
+                    </span>
+                    <span className="hidden sm:block text-[11px] text-slate-400">
+                      Clique para ver sugestões de carteiras temáticas
+                    </span>
+                  </div>
                 </div>
-                <div className="hidden sm:block text-[11px] text-slate-400">
-                  Em breve: clique para ver meus ativos
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-slate-300 bg-slate-800/60 px-2 py-1 rounded-lg">
+                    {openCarteiras ? "Ocultar modelos" : "Ver modelos"}
+                  </span>
+                  <span className="text-xs text-slate-200">
+                    {openCarteiras ? "▲" : "▼"}
+                  </span>
                 </div>
-              </div>
-              <div className="text-[11px] text-slate-300 bg-slate-800/60 px-2 py-1 rounded-lg">
-                Acesso futuro
-              </div>
-            </button>
+              </button>
+
+              {/* Conteúdo expandido: sugestões de carteiras */}
+              {openCarteiras && (
+                <div
+                  className="
+                    mt-1 grid grid-cols-1 sm:grid-cols-3 gap-2
+                    text-[12px]
+                  "
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleModeloClick("dividendos")}
+                    className="
+                      rounded-xl border border-emerald-500/50
+                      bg-slate-900/90 px-3 py-2 text-left
+                      hover:border-emerald-400 hover:bg-slate-900
+                      transition
+                    "
+                  >
+                    <div className="font-semibold text-slate-100">
+                      Carteira de Dividendos
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">
+                      Foco em renda recorrente com empresas e FIIs pagadores.
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleModeloClick("cripto")}
+                    className="
+                      rounded-xl border border-sky-500/50
+                      bg-slate-900/90 px-3 py-2 text-left
+                      hover:border-sky-400 hover:bg-slate-900
+                      transition
+                    "
+                  >
+                    <div className="font-semibold text-slate-100">
+                      Carteira de Criptomoedas
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">
+                      Exposição a ativos digitais de forma equilibrada.
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleModeloClick("fiis")}
+                    className="
+                      rounded-xl border border-amber-400/60
+                      bg-slate-900/90 px-3 py-2 text-left
+                      hover:border-amber-300 hover:bg-slate-900
+                      transition
+                    "
+                  >
+                    <div className="font-semibold text-slate-100">
+                      Carteira de Fundos Imobiliários
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">
+                      Renda mensal com fundos de tijolo e papel.
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="h-16" />
+        {/* Espaço para não sobrepor o conteúdo do dashboard */}
+        <div className="h-24" />
       </div>
 
-      {/* ✅ BALÃO FULL WIDTH (corrigido) */}
-      <div className="w-full rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-4">
+      {/* BALÃO: 2 donuts + 1 barra */}
+      <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-4">
         {totalGeral <= 0 ? (
           <p className="text-[11px] text-slate-500">
             Preencha <strong>Quantidade</strong>, <strong>Entrada</strong>,{" "}
@@ -370,9 +467,9 @@ export default function CarteiraCash() {
             tabela para visualizar os gráficos.
           </p>
         ) : (
-          <div className="grid gap-4 md:grid-cols-4 items-stretch w-full">
+          <div className="grid gap-4 md:grid-cols-4 items-stretch">
 
-            {/* Donut 1: por ATIVO */}
+            {/* Donut 1: por ATIVO (sem legenda) */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -449,7 +546,7 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Donut 2: por TIPO */}
+            {/* Donut 2: por TIPO (sem legenda) */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -526,7 +623,7 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Barras DY */}
+            {/* Barras DY — Fase B */}
             <div className="md:col-span-2">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col relative">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -556,8 +653,8 @@ export default function CarteiraCash() {
                           <div
                             className="
                               w-full rounded-xl
-                              bg-gradient-to-t from-emerald-700 via-emerald-500 to-emerald-300
-                              hover:brightness-110
+                              bg-emerald-500/90
+                              hover:bg-emerald-400
                               transition-all duration-700 ease-out
                               hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
                             "
@@ -627,6 +724,7 @@ export default function CarteiraCash() {
                   <th className="px-3 py-2 text-left text-xs font-medium sticky left-0 bg-slate-800/70 z-20">
                     #
                   </th>
+
                   <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
                     Ticker
                   </th>
