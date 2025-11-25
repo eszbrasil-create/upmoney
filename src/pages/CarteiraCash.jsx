@@ -180,25 +180,25 @@ export default function CarteiraCash() {
   }, [carteira]);
 
   /* ===========================
-     Donut por ATIVO
+     Donut por ATIVO (sem legenda)
   =========================== */
   const [activeIdxAtivo, setActiveIdxAtivo] = useState(null);
   const [hoverIdxAtivo, setHoverIdxAtivo] = useState(null);
   const idxShownAtivo = hoverIdxAtivo ?? activeIdxAtivo;
 
   /* ===========================
-     Donut por TIPO
+     Donut por TIPO (sem legenda)
   =========================== */
   const [activeIdxTipo, setActiveIdxTipo] = useState(null);
   const [hoverIdxTipo, setHoverIdxTipo] = useState(null);
   const idxShownTipo = hoverIdxTipo ?? activeIdxTipo;
 
-  // donuts compactos e seguros dentro da caixa
-  const size = 160;
+  // donuts compactos
+  const size = 180;
   const cx = size / 2;
   const cy = size / 2;
-  const rOuter = 70;
-  const rInner = 44;
+  const rOuter = 78;
+  const rInner = 48;
 
   const anglesAtivo = useMemo(() => {
     let acc = 0;
@@ -279,23 +279,51 @@ export default function CarteiraCash() {
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
   /* ===========================
-     DY mensal (ocupa todo o chart)
+     DY mensal (ocupa todo o chart) + animação + tooltip
   =========================== */
   const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
+
+  // animação igual CardEvolucao
+  const [animateDy, setAnimateDy] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setAnimateDy(true), 50);
+    return () => clearTimeout(t);
+  }, []);
+
+  // tooltip DY
+  const [dyTip, setDyTip] = useState(null);
+
+  const TooltipDy = ({ x, y, mes, valor }) => (
+    <div
+      className="fixed z-[9999] pointer-events-none"
+      style={{ left: x, top: y }}
+    >
+      <div className="rounded-xl bg-slate-950/95 border border-white/10 px-3 py-2 shadow-2xl">
+        <div className="text-[11px] text-slate-300 font-medium">
+          {mes}
+        </div>
+        <div className="text-sm text-slate-100 font-semibold">
+          {valor.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          })}
+        </div>
+      </div>
+    </div>
+  );
 
   const dyChartRef = useRef(null);
   const [dyBarMaxHeight, setDyBarMaxHeight] = useState(90);
 
   useLayoutEffect(() => {
     if (!dyChartRef.current) return;
-
     const el = dyChartRef.current;
 
     const compute = () => {
       const h = el.clientHeight || 0;
-      const reservedForLabels = 42;
-      const topGap = 8;
+      const reservedForLabels = 42; // labels dos meses
+      const topGap = 10;            // espaço no topo
       const usable = Math.max(60, h - reservedForLabels - topGap);
       setDyBarMaxHeight(usable);
     };
@@ -336,7 +364,7 @@ export default function CarteiraCash() {
         <div className="h-16" />
       </div>
 
-      {/* BALÃO: 2 pizzas + 1 barra */}
+      {/* BALÃO: 2 donuts + 1 barra */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-4">
         {totalGeral <= 0 ? (
           <p className="text-[11px] text-slate-500">
@@ -347,14 +375,14 @@ export default function CarteiraCash() {
         ) : (
           <div className="grid gap-4 md:grid-cols-4 items-stretch">
 
-            {/* Pizza 1: por ATIVO (sem legenda) */}
+            {/* Donut 1: por ATIVO (sem legenda) */}
             <div className="md:col-span-1">
-              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 overflow-hidden flex flex-col">
+              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
                   Participação por ativo
                 </div>
 
-                <div className="flex-1 min-h-0 flex items-center justify-center">
+                <div className="flex-1 flex items-center justify-center">
                   <div className="relative" style={{ width: size, height: size }}>
                     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
                       <circle
@@ -406,14 +434,14 @@ export default function CarteiraCash() {
 
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="text-center leading-tight px-3">
-                        <div className="text-slate-200 text-[12px] font-semibold truncate max-w-[120px]">
+                        <div className="text-slate-200 text-sm font-semibold">
                           {centerAtivo.title}
                         </div>
-                        <div className="text-slate-100 text-base font-extrabold">
+                        <div className="text-slate-100 text-lg font-extrabold">
                           {centerAtivo.line1}
                         </div>
                         {centerAtivo.line2 ? (
-                          <div className="text-slate-300 text-[12px] mt-0.5">
+                          <div className="text-slate-300 text-sm mt-0.5">
                             {centerAtivo.line2}
                           </div>
                         ) : null}
@@ -421,18 +449,17 @@ export default function CarteiraCash() {
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
 
-            {/* Pizza 2: por TIPO (sem legenda) */}
+            {/* Donut 2: por TIPO (sem legenda) */}
             <div className="md:col-span-1">
-              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 overflow-hidden flex flex-col">
+              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
                   Participação por tipo
                 </div>
 
-                <div className="flex-1 min-h-0 flex items-center justify-center">
+                <div className="flex-1 flex items-center justify-center">
                   <div className="relative" style={{ width: size, height: size }}>
                     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
                       <circle
@@ -484,14 +511,14 @@ export default function CarteiraCash() {
 
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="text-center leading-tight px-3">
-                        <div className="text-slate-200 text-[12px] font-semibold">
+                        <div className="text-slate-200 text-sm font-semibold">
                           {centerTipo.title}
                         </div>
-                        <div className="text-slate-100 text-base font-extrabold">
+                        <div className="text-slate-100 text-lg font-extrabold">
                           {centerTipo.line1}
                         </div>
                         {centerTipo.line2 ? (
-                          <div className="text-slate-300 text-[12px] mt-0.5">
+                          <div className="text-slate-300 text-sm mt-0.5">
                             {centerTipo.line2}
                           </div>
                         ) : null}
@@ -499,13 +526,12 @@ export default function CarteiraCash() {
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
 
-            {/* Barras DY com mais espaço */}
+            {/* Barras DY com animação + tooltip */}
             <div className="md:col-span-2">
-              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
+              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col relative">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
                   DY mensal total
                 </div>
@@ -517,20 +543,35 @@ export default function CarteiraCash() {
                   <div className="flex items-end gap-1 min-w-max h-full">
                     {dyBarData.map((d, i) => {
                       const v = d.dy || 0;
-                      const h = Math.max(
+
+                      const alturaReal = Math.max(
                         4,
                         Math.round((v / dyMax) * dyBarMaxHeight)
                       );
+                      const altura = animateDy ? alturaReal : 4;
 
                       return (
                         <div key={i} className="flex flex-col items-center gap-2 w-10">
                           <div
-                            className="w-full rounded-xl bg-emerald-400/80 hover:bg-emerald-300 transition-all duration-500"
-                            style={{ height: `${h}px` }}
-                            title={v.toLocaleString("pt-BR", {
-                              style: "currency",
-                              currency: "BRL",
-                            })}
+                            className="w-full rounded-xl bg-emerald-400/80 hover:bg-emerald-300 transition-all duration-700 ease-out"
+                            style={{ height: `${altura}px` }}
+                            onMouseEnter={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setDyTip({
+                                x: rect.left + rect.width / 2,
+                                y: rect.top - 8,
+                                mes: d.name,
+                                valor: v,
+                              });
+                            }}
+                            onMouseMove={(e) => {
+                              setDyTip((prev) =>
+                                prev
+                                  ? { ...prev, x: e.clientX, y: e.clientY - 12 }
+                                  : prev
+                              );
+                            }}
+                            onMouseLeave={() => setDyTip(null)}
                           />
                           <div className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap">
                             {d.name}
@@ -541,6 +582,14 @@ export default function CarteiraCash() {
                   </div>
                 </div>
 
+                {dyTip && (
+                  <TooltipDy
+                    x={dyTip.x}
+                    y={dyTip.y}
+                    mes={dyTip.mes}
+                    valor={dyTip.valor}
+                  />
+                )}
               </div>
             </div>
 
