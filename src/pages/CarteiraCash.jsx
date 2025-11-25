@@ -531,10 +531,10 @@ export default function CarteiraCash() {
       line1: it.value.toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL",
-          maximumFractionDigits: 0,
-        }),
-        line2: `${it.pct.toFixed(1)}%`,
-      };
+        maximumFractionDigits: 0,
+      }),
+      line2: `${it.pct.toFixed(1)}%`,
+    };
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
   /* ===========================
@@ -633,7 +633,14 @@ export default function CarteiraCash() {
     };
 
     setLancamentos((prev) => [...prev, novo]);
-    setIsAddModalOpen(false);
+
+    // ✅ mantém o modal aberto e limpa os campos principais para o próximo lançamento
+    setNovoLanc((prev) => ({
+      ...prev,
+      ticker: "",
+      qtd: "",
+      preco: "",
+    }));
   };
 
   // 🔥 Deletar lançamento
@@ -1282,8 +1289,8 @@ export default function CarteiraCash() {
       {/* Modal Adicionar Ativos */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
-          {/* 🔄 Modal 70% largura, 90% altura, com scroll interno */}
-          <div className="w-[70vw] h-[90vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 overflow-auto">
+          {/* 🔄 Modal 70% largura, 90% altura, com layout em coluna */}
+          <div className="w-[70vw] h-[90vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-slate-100 font-semibold text-lg">
                 Adicionar ativo à base
@@ -1396,7 +1403,7 @@ export default function CarteiraCash() {
             </form>
 
             {/* 🧾 Lista de lançamentos cadastrados */}
-            <div className="mt-6 border-t border-slate-700 pt-4">
+            <div className="mt-6 border-t border-slate-700 pt-4 flex-1 min-h-0 flex flex-col">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-slate-100 text-sm font-semibold">
                   Lançamentos cadastrados
@@ -1412,8 +1419,9 @@ export default function CarteiraCash() {
                   clique em <strong>Salvar lançamento</strong>.
                 </p>
               ) : (
-                <div className="rounded-xl border border-slate-700 bg-slate-950/60 overflow-hidden max-h-[40vh]">
-                  <div className="overflow-auto">
+                // 🔽 Esta caixa cresce até o limite do modal e depois ganha scroll vertical
+                <div className="rounded-xl border border-slate-700 bg-slate-950/60 overflow-hidden flex-1 min-h-0">
+                  <div className="w-full h-full overflow-y-auto">
                     <table className="w-full text-xs">
                       <thead className="bg-slate-800/80 text-slate-300">
                         <tr>
@@ -1424,7 +1432,7 @@ export default function CarteiraCash() {
                             Data
                           </th>
                           <th className="px-1 py-2 text-center font-medium">
-                            {/* coluna da lixeira (sem título) */}
+                            {/* lixeira */}
                           </th>
                           <th className="px-3 py-2 text-left font-medium">
                             Ticker
