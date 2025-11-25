@@ -56,6 +56,7 @@ function polarToCartesian(cx, cy, r, angleDeg) {
   const a = ((angleDeg - 90) * Math.PI) / 180;
   return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
 }
+
 function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
   const largeArc = endAngle - startAngle > 180 ? 1 : 0;
 
@@ -142,20 +143,29 @@ export default function CarteiraCash() {
       }
     });
 
-    // ==== donut por ATIVO ====
+    // ==== donut por ATIVO (Top 6 + Outros) ====
     const ativosRaw = Object.entries(somaPorAtivo)
       .map(([key, value]) => ({ key, name: key, value }))
       .filter((d) => d.value > 0)
       .sort((a, b) => b.value - a.value);
+
+    const TOP_N = 6;
+    const top = ativosRaw.slice(0, TOP_N);
+    const rest = ativosRaw.slice(TOP_N);
+    const outrosValue = rest.reduce((acc, x) => acc + x.value, 0);
+
+    const ativosFinal = outrosValue > 0
+      ? [...top, { key: "OUTROS", name: "Outros", value: outrosValue }]
+      : top;
 
     const getColor = (i) => {
       const hue = (i * 47) % 360;
       return `hsl(${hue} 70% 55%)`;
     };
 
-    const piePartsAtivos = ativosRaw.map((p, i) => ({
+    const piePartsAtivos = ativosFinal.map((p, i) => ({
       ...p,
-      color: getColor(i),
+      color: p.key === "OUTROS" ? "hsl(210 10% 55%)" : getColor(i),
       pct: total > 0 ? (p.value / total) * 100 : 0,
     }));
 
@@ -185,6 +195,7 @@ export default function CarteiraCash() {
   const [activeIdxAtivo, setActiveIdxAtivo] = useState(null);
   const [hoverIdxAtivo, setHoverIdxAtivo] = useState(null);
   const idxShownAtivo = hoverIdxAtivo ?? activeIdxAtivo;
+  const hasHoverAtivo = idxShownAtivo != null;
 
   /* ===========================
      Donut por TIPO (sem legenda)
@@ -192,6 +203,7 @@ export default function CarteiraCash() {
   const [activeIdxTipo, setActiveIdxTipo] = useState(null);
   const [hoverIdxTipo, setHoverIdxTipo] = useState(null);
   const idxShownTipo = hoverIdxTipo ?? activeIdxTipo;
+  const hasHoverTipo = idxShownTipo != null;
 
   // donuts compactos
   const size = 180;
@@ -280,20 +292,16 @@ export default function CarteiraCash() {
 
   /* ===========================
      DY mensal total — Fase B (idêntico CardDividendos)
-     verde dólar + tooltip premium + gap topo + animação
-     + ✅ GRADIENTE VERTICAL LEVE NAS BARRAS
   =========================== */
   const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
 
-  // animação igual Evolução / CardDividendos
   const [animateDy, setAnimateDy] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAnimateDy(true), 50);
     return () => clearTimeout(t);
   }, []);
 
-  // tooltip premium
   const [dyTip, setDyTip] = useState(null);
 
   const TooltipDy = ({ x, y, mes, valor }) => (
@@ -302,9 +310,7 @@ export default function CarteiraCash() {
       style={{ left: x, top: y }}
     >
       <div className="rounded-xl bg-slate-950/95 border border-white/10 px-3 py-2 shadow-2xl">
-        <div className="text-[11px] text-slate-300 font-medium">
-          {mes}
-        </div>
+        <div className="text-[11px] text-slate-300 font-medium">{mes}</div>
         <div className="text-sm text-slate-100 font-semibold">
           {valor.toLocaleString("pt-BR", {
             style: "currency",
@@ -315,7 +321,6 @@ export default function CarteiraCash() {
     </div>
   );
 
-  // calcula altura máxima real usando o tamanho do chart
   const dyChartRef = useRef(null);
   const [dyBarMaxHeight, setDyBarMaxHeight] = useState(110);
 
@@ -325,8 +330,8 @@ export default function CarteiraCash() {
 
     const compute = () => {
       const h = el.clientHeight || 0;
-      const reservedForLabels = 44; // labels dos meses
-      const topGap = 16;           // ✅ GAP NO TOPO
+      const reservedForLabels = 44;
+      const topGap = 16;
       const usable = Math.max(60, h - reservedForLabels - topGap);
       setDyBarMaxHeight(usable);
     };
@@ -378,7 +383,7 @@ export default function CarteiraCash() {
         ) : (
           <div className="grid gap-4 md:grid-cols-4 items-stretch">
 
-            {/* Donut 1: por ATIVO (sem legenda) */}
+            {/* Donut 1: por ATIVO */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -393,25 +398,35 @@ export default function CarteiraCash() {
                         cy={cy}
                         r={(rOuter + rInner) / 2}
                         stroke="#0b1220"
-                        strokeOpacity="0.5"
+                        strokeOpacity="0.45"
                         strokeWidth={rOuter - rInner}
                         fill="none"
                       />
 
                       {piePartsAtivos.map((p, i) => {
-                        const { start, end } = anglesAtivo[i];
-                        const d = arcPath(cx, cy, rOuter, rInner, start, end);
                         const selected = i === idxShownAtivo;
+
+                        // ✅ C2: hover expande raio
+                        const ro = selected ? rOuter + 3 : rOuter;
+                        const ri = selected ? rInner - 1 : rInner;
+
+                        const { start, end } = anglesAtivo[i];
+                        const d = arcPath(cx, cy, ro, ri, start, end);
+
+                        // ✅ C2: resto opaco quando hover
+                        const opacity = selected ? 1 : (hasHoverAtivo ? 0.35 : 0.85);
 
                         return (
                           <path
                             key={p.key}
                             d={d}
                             fill={p.color}
-                            fillOpacity={selected ? 1 : 0.85}
-                            className={`transition-all duration-150 cursor-pointer ${
+                            fillOpacity={opacity}
+                            stroke="rgba(15,23,42,0.85)"   // ✅ C1 separador
+                            strokeWidth="1.5"
+                            className={`transition-all duration-200 cursor-pointer ${
                               selected
-                                ? "drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+                                ? "drop-shadow-[0_0_10px_rgba(34,197,94,0.55)]"
                                 : ""
                             }`}
                             onMouseEnter={() => setHoverIdxAtivo(i)}
@@ -435,12 +450,13 @@ export default function CarteiraCash() {
                       )}
                     </svg>
 
+                    {/* ✅ C3 centro mais legível */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="text-center leading-tight px-3">
-                        <div className="text-slate-200 text-sm font-semibold">
+                      <div className="text-center leading-tight px-3 max-w-[120px]">
+                        <div className="text-slate-200 text-[11px] font-semibold whitespace-normal break-words">
                           {centerAtivo.title}
                         </div>
-                        <div className="text-slate-100 text-lg font-extrabold">
+                        <div className="text-slate-100 text-lg font-extrabold mt-0.5">
                           {centerAtivo.line1}
                         </div>
                         {centerAtivo.line2 ? (
@@ -455,7 +471,7 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Donut 2: por TIPO (sem legenda) */}
+            {/* Donut 2: por TIPO */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -470,25 +486,33 @@ export default function CarteiraCash() {
                         cy={cy}
                         r={(rOuter + rInner) / 2}
                         stroke="#0b1220"
-                        strokeOpacity="0.5"
+                        strokeOpacity="0.45"
                         strokeWidth={rOuter - rInner}
                         fill="none"
                       />
 
                       {piePartsTipos.map((p, i) => {
-                        const { start, end } = anglesTipo[i];
-                        const d = arcPath(cx, cy, rOuter, rInner, start, end);
                         const selected = i === idxShownTipo;
+
+                        const ro = selected ? rOuter + 3 : rOuter;
+                        const ri = selected ? rInner - 1 : rInner;
+
+                        const { start, end } = anglesTipo[i];
+                        const d = arcPath(cx, cy, ro, ri, start, end);
+
+                        const opacity = selected ? 1 : (hasHoverTipo ? 0.35 : 0.85);
 
                         return (
                           <path
                             key={p.key}
                             d={d}
                             fill={p.color}
-                            fillOpacity={selected ? 1 : 0.85}
-                            className={`transition-all duration-150 cursor-pointer ${
+                            fillOpacity={opacity}
+                            stroke="rgba(15,23,42,0.85)"  // ✅ C1 separador
+                            strokeWidth="1.5"
+                            className={`transition-all duration-200 cursor-pointer ${
                               selected
-                                ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]"
+                                ? "drop-shadow-[0_0_10px_rgba(56,189,248,0.55)]"
                                 : ""
                             }`}
                             onMouseEnter={() => setHoverIdxTipo(i)}
@@ -513,11 +537,11 @@ export default function CarteiraCash() {
                     </svg>
 
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="text-center leading-tight px-3">
-                        <div className="text-slate-200 text-sm font-semibold">
+                      <div className="text-center leading-tight px-3 max-w-[120px]">
+                        <div className="text-slate-200 text-[11px] font-semibold whitespace-normal break-words">
                           {centerTipo.title}
                         </div>
-                        <div className="text-slate-100 text-lg font-extrabold">
+                        <div className="text-slate-100 text-lg font-extrabold mt-0.5">
                           {centerTipo.line1}
                         </div>
                         {centerTipo.line2 ? (
@@ -532,7 +556,7 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Barras DY — Fase B + gradiente */}
+            {/* Barras DY — Fase B */}
             <div className="md:col-span-2">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col relative">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -562,10 +586,10 @@ export default function CarteiraCash() {
                           <div
                             className="
                               w-full rounded-xl
-                              bg-gradient-to-t from-emerald-600/95 via-emerald-500/90 to-emerald-300/90
-                              hover:from-emerald-500 hover:via-emerald-400 hover:to-emerald-200
+                              bg-emerald-500/90
+                              hover:bg-emerald-400
                               transition-all duration-700 ease-out
-                              hover:shadow-[0_0_14px_rgba(16,185,129,0.65)]
+                              hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
                             "
                             style={{ height: `${altura}px` }}
                             onMouseEnter={(e) => {
