@@ -83,7 +83,7 @@ export default function CarteiraCash() {
         ...r,
         dataEntrada: r.dataEntrada ?? "",
         dyMeses: Array.isArray(r.dyMeses)
-          ? [...r.dyMeses, ...Array(12 - r.dyMeses.length).fill("")].slice(0, 12)
+          ? [...r.dyMeses, ...Array(12 - r.dyMeses.length).fill("").slice(0, 12)]
           : Array(12).fill(""),
       }));
     } catch {
@@ -282,13 +282,12 @@ export default function CarteiraCash() {
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
   /* ===========================
-     DY mensal total — Fase B (idêntico CardDividendos)
-     verde dólar + tooltip premium + gap topo + animação
+     DY mensal total — estilo CardDividendos
   =========================== */
   const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
 
-  // animação igual Evolução / CardDividendos
+  // animação
   const [animateDy, setAnimateDy] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAnimateDy(true), 50);
@@ -328,7 +327,7 @@ export default function CarteiraCash() {
     const compute = () => {
       const h = el.clientHeight || 0;
       const reservedForLabels = 44; // labels dos meses
-      const topGap = 16;           // ✅ GAP NO TOPO
+      const topGap = 16;
       const usable = Math.max(60, h - reservedForLabels - topGap);
       setDyBarMaxHeight(usable);
     };
@@ -341,7 +340,6 @@ export default function CarteiraCash() {
 
   // (futuro) handler para clicar nos modelos
   const handleModeloClick = (tipo) => {
-    // por enquanto só loga – depois podemos preencher a carteira automaticamente
     console.log("Modelo selecionado:", tipo);
   };
 
@@ -377,9 +375,39 @@ export default function CarteiraCash() {
                     </span>
                   </div>
                 </div>
+
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-slate-300 bg-slate-800/60 px-2 py-1 rounded-lg">
-                    {openCarteiras ? "Ocultar modelos" : "Ver modelos"}
+                  {/* Botão Dividendos + Cripto chamativo */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOpenCarteiras(true);
+                      handleModeloClick("dividendos_cripto");
+                    }}
+                    className="
+                      hidden sm:inline-flex items-center
+                      px-2.5 py-1 rounded-full
+                      bg-gradient-to-r from-emerald-400 via-emerald-500 to-sky-400
+                      text-[11px] font-semibold text-slate-950
+                      shadow-sm hover:brightness-110 hover:shadow-emerald-400/50
+                      transition
+                    "
+                  >
+                    Dividendos + Cripto
+                  </button>
+
+                  {/* Pill Ver modelos em laranja, com animação */}
+                  <span
+                    className="
+                      text-[11px] font-semibold
+                      px-2 py-1 rounded-lg
+                      bg-amber-400 text-slate-950
+                      shadow-sm
+                      animate-pulse
+                    "
+                  >
+                    {openCarteiras ? "Escolher agora" : "Ver modelos"}
                   </span>
                   <span className="text-xs text-slate-200">
                     {openCarteiras ? "▲" : "▼"}
@@ -395,56 +423,67 @@ export default function CarteiraCash() {
                     text-[12px]
                   "
                 >
+                  {/* CTA principal: Dividendos */}
                   <button
                     type="button"
                     onClick={() => handleModeloClick("dividendos")}
                     className="
-                      rounded-xl border border-emerald-500/50
-                      bg-slate-900/90 px-3 py-2 text-left
-                      hover:border-emerald-400 hover:bg-slate-900
+                      rounded-xl px-3 py-3 text-left
+                      bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600
+                      shadow-lg shadow-emerald-500/30
+                      hover:brightness-110 hover:shadow-emerald-400/40
                       transition
                     "
                   >
-                    <div className="font-semibold text-slate-100">
-                      Carteira de Dividendos
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold text-slate-950 text-[13px]">
+                        Carteira de Dividendos
+                      </div>
+                      <span className="text-[10px] font-bold uppercase bg-emerald-900/20 text-emerald-50 px-2 py-0.5 rounded-full">
+                        Mais indicada
+                      </span>
                     </div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">
+                    <div className="text-[11px] text-emerald-50/90 mt-1.5">
                       Foco em renda recorrente com empresas e FIIs pagadores.
                     </div>
                   </button>
 
+                  {/* CTA Criptomoedas */}
                   <button
                     type="button"
                     onClick={() => handleModeloClick("cripto")}
                     className="
-                      rounded-xl border border-sky-500/50
-                      bg-slate-900/90 px-3 py-2 text-left
-                      hover:border-sky-400 hover:bg-slate-900
+                      rounded-xl px-3 py-3 text-left
+                      bg-gradient-to-br from-violet-500 via-fuchsia-500 to-sky-500
+                      shadow-lg shadow-fuchsia-500/30
+                      hover:brightness-110 hover:shadow-fuchsia-400/40
                       transition
                     "
                   >
-                    <div className="font-semibold text-slate-100">
+                    <div className="font-semibold text-white text-[13px]">
                       Carteira de Criptomoedas
                     </div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">
-                      Exposição a ativos digitais de forma equilibrada.
+                    <div className="text-[11px] text-white/90 mt-1.5">
+                      Exposição a ativos digitais com visão de longo prazo.
                     </div>
                   </button>
 
+                  {/* CTA FIIs */}
                   <button
                     type="button"
                     onClick={() => handleModeloClick("fiis")}
                     className="
-                      rounded-xl border border-amber-400/60
-                      bg-slate-900/90 px-3 py-2 text-left
-                      hover:border-amber-300 hover:bg-slate-900
+                      rounded-xl px-3 py-3 text-left
+                      bg-gradient-to-br from-amber-300 via-amber-500 to-orange-500
+                      shadow-lg shadow-amber-500/30
+                      hover:brightness-110 hover:shadow-amber-400/40
                       transition
                     "
                   >
-                    <div className="font-semibold text-slate-100">
+                    <div className="font-semibold text-slate-950 text-[13px]">
                       Carteira de Fundos Imobiliários
                     </div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">
+                    <div className="text-[11px] text-slate-950/80 mt-1.5">
                       Renda mensal com fundos de tijolo e papel.
                     </div>
                   </button>
@@ -623,7 +662,7 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Barras DY — Fase B */}
+            {/* Barras DY */}
             <div className="md:col-span-2">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col relative">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -705,7 +744,7 @@ export default function CarteiraCash() {
         )}
       </div>
 
-      {/* ======= Tabela de ativos (inalterada) ======= */}
+      {/* ======= Tabela de ativos ======= */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-slate-200 text-sm font-medium">
@@ -775,7 +814,7 @@ export default function CarteiraCash() {
                       : "text-rose-300 font-semibold";
 
                   const dyMeses = Array.isArray(r.dyMeses)
-                    ? [...r.dyMeses, ...Array(12 - r.dyMeses.length).fill("")].slice(0, 12)
+                    ? [...r.dyMeses, ...Array(12 - r.dyMeses.length).fill("").slice(0, 12)]
                     : Array(12).fill("");
 
                   const dy12mValor = dyMeses.reduce((acc, v) => acc + toNum(v), 0);
