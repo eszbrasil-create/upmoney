@@ -542,7 +542,7 @@ export default function CarteiraCash() {
         currency: "BRL",
         maximumFractionDigits: 0,
       }),
-      line2: `${it.pct.toFixed(1)}%`,
+        line2: `${it.pct.toFixed(1)}%`,
     };
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
@@ -1068,7 +1068,7 @@ export default function CarteiraCash() {
 
         <div className="rounded-xl border border-white/10 bg-slate-900/40 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-[2000px] w-full text-sm">
+            <table className="min-w-[1700px] w-full text-sm">
               <thead className="bg-slate-800/70 text-slate-300">
                 <tr>
                   <th className="px-3 py-2 text-left text-xs font-medium sticky left-0 bg-slate-800/70 z-20">
@@ -1077,9 +1077,7 @@ export default function CarteiraCash() {
                   <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
                     Ticker
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium">
-                    Relatório
-                  </th>
+                  {/* Coluna Relatório removida */}
                   <th className="px-3 py-2 text-left text-xs font-medium">
                     Tipo
                   </th>
@@ -1173,15 +1171,6 @@ export default function CarteiraCash() {
                         <span className="text-slate-100 text-sm">
                           {r.ticker || "—"}
                         </span>
-                      </td>
-
-                      <td className="px-3 py-2">
-                        <button
-                          className="px-3 py-1.5 rounded-lg border border-white/10 bg-slate-800 text-slate-100 text-xs hover:bg-slate-700"
-                          type="button"
-                        >
-                          Ver
-                        </button>
                       </td>
 
                       {/* Tipo (somente leitura) */}
@@ -1300,7 +1289,7 @@ export default function CarteiraCash() {
       {/* Modal Adicionar Ativos */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6">
+          <div className="w-[70vw] max-w-4xl rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-slate-100 font-semibold text-lg">
                 Adicionar ativo à base
