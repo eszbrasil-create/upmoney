@@ -41,6 +41,7 @@ const BASE_ROWS = [
 ];
 
 const LS_KEY = "cc_carteira_cash_v1";
+const LS_KEY_LANC = "cc_lancamentos_v1";
 
 // Helper para converter texto em número
 function toNum(x) {
@@ -74,7 +75,7 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
 }
 
 export default function CarteiraCash() {
-  // Estado da carteira (editável)
+  // Estado da carteira (tabela grande + gráficos)
   const [carteira, setCarteira] = useState(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -91,8 +92,37 @@ export default function CarteiraCash() {
     }
   });
 
-  // ✅ estado do balão "Carteiras Modelo UpMoney"
-  const [openCarteiras, setOpenCarteiras] = useState(false);
+  // ✅ Nova base de lançamentos (planilha estilo Excel)
+  const [lancamentos, setLancamentos] = useState(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY_LANC);
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (!parsed.length) {
+        return [
+          {
+            id: Date.now(),
+            data: "",
+            ticker: "",
+            tipo: "ACOES",
+            qtd: "",
+            preco: "",
+          },
+        ];
+      }
+      return parsed;
+    } catch {
+      return [
+        {
+          id: Date.now(),
+          data: "",
+          ticker: "",
+          tipo: "ACOES",
+          qtd: "",
+          preco: "",
+        },
+      ];
+    }
+  });
 
   // Persiste alterações
   useEffect(() => {
@@ -101,13 +131,59 @@ export default function CarteiraCash() {
     } catch {}
   }, [carteira]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEY_LANC, JSON.stringify(lancamentos));
+    } catch {}
+  }, [lancamentos]);
+
   const updateRow = (id, patch) => {
     setCarteira((prev) =>
       prev.map((r) => (r.id === id ? { ...r, ...patch } : r))
     );
   };
 
-  // ✅ Cálculos globais (2 donuts + DY)
+  const updateLancamento = (id, patch) => {
+    setLancamentos((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, ...patch } : l))
+    );
+  };
+
+  const addLancamento = () => {
+    setLancamentos((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        data: "",
+        ticker: "",
+        tipo: "ACOES",
+        qtd: "",
+        preco: "",
+      },
+    ]);
+  };
+
+  const removeLancamento = (id) => {
+    setLancamentos((prev) => {
+      const filtered = prev.filter((l) => l.id !== id);
+      // nunca deixa zerar tudo: sempre mantém pelo menos uma linha vazia
+      if (!filtered.length) {
+        return [
+          {
+            id: Date.now(),
+            data: "",
+            ticker: "",
+            tipo: "ACOES",
+            qtd: "",
+            preco: "",
+          },
+        ];
+      }
+      return filtered;
+    });
+  };
+
+  // ✅ Cálculos globais (2 donuts + DY) – ainda baseados na carteira atual
   const {
     totalGeral,
     piePartsAtivos,
@@ -282,12 +358,13 @@ export default function CarteiraCash() {
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
   /* ===========================
-     DY mensal total — estilo CardDividendos
+     DY mensal total — Fase B (idêntico CardDividendos)
+     verde dólar + tooltip premium + gap topo + animação
   =========================== */
   const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
 
-  // animação
+  // animação igual Evolução / CardDividendos
   const [animateDy, setAnimateDy] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAnimateDy(true), 50);
@@ -327,7 +404,7 @@ export default function CarteiraCash() {
     const compute = () => {
       const h = el.clientHeight || 0;
       const reservedForLabels = 44; // labels dos meses
-      const topGap = 16;
+      const topGap = 16;           // GAP NO TOPO
       const usable = Math.max(60, h - reservedForLabels - topGap);
       setDyBarMaxHeight(usable);
     };
@@ -338,143 +415,34 @@ export default function CarteiraCash() {
     return () => ro.disconnect();
   }, []);
 
-  // (futuro) handler para clicar nos modelos
-  const handleModeloClick = (tipo) => {
-    console.log("Modelo selecionado:", tipo);
-  };
-
   return (
     <div className="pt-0 pr-3 pl-0 relative">
-      {/* FAIXA FIXA COM BALÃO EXPANSÍVEL */}
+      {/* FAIXA FIXA */}
       <div className="mb-2">
         <div className="fixed left-48 right-6 top-3 z-30">
           <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-sky-500 to-fuchsia-500 p-[1px] shadow-xl">
-            <div
-              className={`
-                w-full rounded-2xl bg-slate-950/95 px-3 pt-2 pb-2
-                flex flex-col gap-2
-                transition-all duration-300
-                ${openCarteiras ? "pb-3" : ""}
-              `}
+            <button
+              type="button"
+              className="w-full rounded-2xl bg-slate-950/95 px-3 py-2 flex items-center justify-between hover:bg-slate-900/95 transition"
+              title="Futuro acesso às carteiras"
             >
-              {/* Cabeçalho clicável */}
-              <button
-                type="button"
-                onClick={() => setOpenCarteiras((prev) => !prev)}
-                className="w-full flex items-center justify-between hover:bg-slate-900/95 rounded-xl px-2 py-1 transition"
-                title="Sugestões de carteiras modelo"
-              >
-                <div className="flex items-center gap-2 text-left">
-                  <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
-                  <div className="flex flex-col">
-                    <span className="text-[12px] sm:text-[13px] font-semibold text-slate-100">
-                      Carteiras Modelo UpMoney
-                    </span>
-                    <span className="hidden sm:block text-[11px] text-slate-400">
-                      Clique para ver sugestões de carteiras temáticas
-                    </span>
-                  </div>
+              <div className="flex items-center gap-2 text-left">
+                <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
+                <div className="text-[12px] sm:text-[13px] font-semibold text-slate-100">
+                  Carteiras Modelo UpMoney
                 </div>
-
-                <div className="flex items-center gap-2">
-                  {/* Pill Ver modelos em laranja, com animação */}
-                  <span
-                    className="
-                      text-[11px] font-semibold
-                      px-2 py-1 rounded-lg
-                      bg-amber-400 text-slate-950
-                      shadow-sm
-                      animate-pulse
-                    "
-                  >
-                    {openCarteiras ? "Escolher agora" : "Ver modelos"}
-                  </span>
-                  <span className="text-xs text-slate-200">
-                    {openCarteiras ? "▲" : "▼"}
-                  </span>
+                <div className="hidden sm:block text-[11px] text-slate-400">
+                  Em breve: clique para ver meus ativos
                 </div>
-              </button>
-
-              {/* Conteúdo expandido: sugestões de carteiras */}
-              {openCarteiras && (
-                <div
-                  className="
-                    mt-1 grid grid-cols-1 sm:grid-cols-3 gap-2
-                    text-[12px]
-                  "
-                >
-                  {/* CTA principal: Dividendos */}
-                  <button
-                    type="button"
-                    onClick={() => handleModeloClick("dividendos")}
-                    className="
-                      rounded-xl px-3 py-3 text-left
-                      bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600
-                      shadow-lg shadow-emerald-500/30
-                      hover:brightness-110 hover:shadow-emerald-400/40
-                      transition
-                    "
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="font-semibold text-slate-950 text-[13px]">
-                        Carteira de Dividendos
-                      </div>
-                      <span className="text-[10px] font-bold uppercase bg-emerald-900/20 text-emerald-50 px-2 py-0.5 rounded-full">
-                        Mais indicada
-                      </span>
-                    </div>
-                    <div className="text-[11px] text-emerald-50/90 mt-1.5">
-                      Foco em renda recorrente com empresas e FIIs pagadores.
-                    </div>
-                  </button>
-
-                  {/* CTA Criptomoedas */}
-                  <button
-                    type="button"
-                    onClick={() => handleModeloClick("cripto")}
-                    className="
-                      rounded-xl px-3 py-3 text-left
-                      bg-gradient-to-br from-violet-500 via-fuchsia-500 to-sky-500
-                      shadow-lg shadow-fuchsia-500/30
-                      hover:brightness-110 hover:shadow-fuchsia-400/40
-                      transition
-                    "
-                  >
-                    <div className="font-semibold text-white text-[13px]">
-                      Carteira de Criptomoedas
-                    </div>
-                    <div className="text-[11px] text-white/90 mt-1.5">
-                      Exposição a ativos digitais com visão de longo prazo.
-                    </div>
-                  </button>
-
-                  {/* CTA FIIs */}
-                  <button
-                    type="button"
-                    onClick={() => handleModeloClick("fiis")}
-                    className="
-                      rounded-xl px-3 py-3 text-left
-                      bg-gradient-to-br from-amber-300 via-amber-500 to-orange-500
-                      shadow-lg shadow-amber-500/30
-                      hover:brightness-110 hover:shadow-amber-400/40
-                      transition
-                    "
-                  >
-                    <div className="font-semibold text-slate-950 text-[13px]">
-                      Carteira de Fundos Imobiliários
-                    </div>
-                    <div className="text-[11px] text-slate-950/80 mt-1.5">
-                      Renda mensal com fundos de tijolo e papel.
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
+              </div>
+              <div className="text-[11px] text-slate-300 bg-slate-800/60 px-2 py-1 rounded-lg">
+                Acesso futuro
+              </div>
+            </button>
           </div>
         </div>
 
-        {/* Espaço para não sobrepor o conteúdo do dashboard */}
-        <div className="h-24" />
+        <div className="h-16" />
       </div>
 
       {/* BALÃO: 2 donuts + 1 barra */}
@@ -642,7 +610,7 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Barras DY */}
+            {/* Barras DY — Fase B */}
             <div className="md:col-span-2">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col relative">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -724,246 +692,404 @@ export default function CarteiraCash() {
         )}
       </div>
 
-      {/* ======= Tabela de ativos ======= */}
+      {/* ======= Bloco inferior ======= */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4">
+        {/* Nova planilha de lançamentos (base para dividendos) */}
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-slate-200 text-sm font-medium">
-            Detalhamento da carteira modelo
+            Base de lançamentos de ativos
           </h2>
-        <span className="text-[11px] text-slate-400">
-          Edite tipo, setor, data de entrada, quantidade, entrada, valor atual e todos os DYs.
-        </span>
-      </div>
+          <button
+            type="button"
+            onClick={addLancamento}
+            className="text-[11px] px-3 py-1.5 rounded-lg bg-emerald-500/90 text-slate-900 font-semibold hover:bg-emerald-400 transition"
+          >
+            + Nova linha
+          </button>
+        </div>
 
-      <div className="rounded-xl border border-white/10 bg-slate-900/40 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-[2000px] w-full text-sm">
-            <thead className="bg-slate-800/70 text-slate-300">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium sticky left-0 bg-slate-800/70 z-20">
-                  #
-                </th>
-
-                <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
-                  Ticker
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-medium">Relatório</th>
-                <th className="px-3 py-2 text-left text-xs font-medium">Tipo</th>
-                <th className="px-3 py-2 text-left text-xs font-medium w-32">Setor</th>
-                <th className="px-3 py-2 text-left text-xs font-medium">Data entrada</th>
-                <th className="px-3 py-2 text-right text-xs font-medium">Quantidade</th>
-                <th className="px-3 py-2 text-right text-xs font-medium">Entrada (R$)</th>
-                <th className="px-3 py-2 text-right text-xs font-medium">Valor atual (R$)</th>
-                <th className="px-3 py-2 text-right text-xs font-medium">Posição (R$)</th>
-                <th className="px-3 py-2 text-right text-xs font-medium">% Var</th>
-                <th className="px-3 py-2 text-right text-xs font-medium">Part. %</th>
-                <th className="px-3 py-2 text-right text-xs font-medium">DY (12m)</th>
-                {MESES.map((m) => (
-                  <th key={m} className="px-3 py-2 text-right text-xs font-medium">
-                    DY {m}
+        <div className="rounded-xl border border-white/10 bg-slate-900/60 overflow-hidden mb-6">
+          <div className="overflow-x-auto">
+            <table className="min-w-[900px] w-full text-sm">
+              <thead className="bg-slate-800/80 text-slate-300">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-medium">
+                    Data
                   </th>
-                ))}
-              </tr>
-            </thead>
+                  <th className="px-3 py-2 text-left text-xs font-medium">
+                    Ticker
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium">
+                    Tipo
+                  </th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">
+                    Quantidade
+                  </th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">
+                    Preço (R$)
+                  </th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">
+                    Custo (R$)
+                  </th>
+                  <th className="px-3 py-2 text-center text-xs font-medium w-12">
+                    {/* Lixeira */}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {lancamentos.map((l) => {
+                  const qtdNum = toNum(l.qtd);
+                  const precoNum = toNum(l.preco);
+                  const custo = qtdNum * precoNum;
 
-            <tbody>
-              {carteira.map((r, i) => {
-                const qtdNum = toNum(r.qtd);
-                const entradaNum = toNum(r.entrada);
-                const valorAtualNum = toNum(r.valorAtual) || entradaNum;
-                const valorPosicao = qtdNum * valorAtualNum;
+                  return (
+                    <tr
+                      key={l.id}
+                      className="border-t border-white/5 hover:bg-slate-800/40"
+                    >
+                      <td className="px-3 py-2">
+                        <input
+                          type="date"
+                          className="bg-transparent border border-slate-700/70 rounded-md px-2 py-1 text-xs text-slate-100 w-full focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                          value={l.data ?? ""}
+                          onChange={(e) =>
+                            updateLancamento(l.id, { data: e.target.value })
+                          }
+                          title="Data da compra"
+                        />
+                      </td>
 
-                const partAtual =
-                  totalGeral > 0 ? (valorPosicao / totalGeral) * 100 : 0;
-                const partStr =
-                  totalGeral > 0 && valorPosicao > 0
-                    ? `${partAtual.toFixed(2)}%`
-                    : "—";
+                      <td className="px-3 py-2">
+                        <input
+                          className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                          value={l.ticker ?? ""}
+                          onChange={(e) =>
+                            updateLancamento(l.id, {
+                              ticker: e.target.value.toUpperCase(),
+                            })
+                          }
+                          placeholder="PETR4, HGLG11..."
+                        />
+                      </td>
 
-                let varPerc = 0;
-                let hasVar = false;
-                if (entradaNum > 0 && valorAtualNum > 0) {
-                  varPerc = (valorAtualNum / entradaNum - 1) * 100;
-                  hasVar = true;
-                }
-                const varClass =
-                  !hasVar
-                    ? "text-slate-400"
-                    : varPerc >= 0
-                    ? "text-emerald-300 font-semibold"
-                    : "text-rose-300 font-semibold";
+                      <td className="px-3 py-2">
+                        <select
+                          className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                          value={l.tipo ?? "ACOES"}
+                          onChange={(e) =>
+                            updateLancamento(l.id, { tipo: e.target.value })
+                          }
+                        >
+                          <option value="RF">RF</option>
+                          <option value="ACOES">Ações</option>
+                          <option value="FII">FII</option>
+                        </select>
+                      </td>
 
-                const dyMeses = Array.isArray(r.dyMeses)
-                  ? [...r.dyMeses, ...Array(12 - r.dyMeses.length).fill("")].slice(0, 12)
-                  : Array(12).fill("");
+                      <td className="px-3 py-2 text-right">
+                        <input
+                          className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                          inputMode="decimal"
+                          placeholder="0"
+                          value={l.qtd ?? ""}
+                          onChange={(e) =>
+                            updateLancamento(l.id, { qtd: e.target.value })
+                          }
+                          onBlur={(e) => {
+                            const n = toNum(e.target.value);
+                            updateLancamento(l.id, {
+                              qtd: n === 0 ? "" : String(n),
+                            });
+                          }}
+                          title="Quantidade de cotas/ações"
+                        />
+                      </td>
 
-                const dy12mValor = dyMeses.reduce((acc, v) => acc + toNum(v), 0);
-
-                return (
-                  <tr key={r.id} className="border-t border-white/5 hover:bg-slate-800/30">
-                    <td className="px-3 py-2 text-slate-500 text-xs sticky left-0 bg-slate-900/90 z-10">
-                      {i + 1}
-                    </td>
-
-                    <td className="px-3 py-2 text-left sticky left-[2.5rem] bg-slate-900/90 z-10">
-                      <input
-                        className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                        value={r.ticker ?? ""}
-                        onChange={(e) =>
-                          updateRow(r.id, { ticker: e.target.value.toUpperCase() })
-                        }
-                        title="Ticker do ativo"
-                      />
-                    </td>
-
-                    <td className="px-3 py-2">
-                      <button
-                        className="px-3 py-1.5 rounded-lg border border-white/10 bg-slate-800 text-slate-100 text-xs hover:bg-slate-700"
-                        type="button"
-                      >
-                        Ver
-                      </button>
-                    </td>
-
-                    <td className="px-3 py-2">
-                      <select
-                        className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
-                        value={r.tipo}
-                        onChange={(e) => updateRow(r.id, { tipo: e.target.value })}
-                      >
-                        <option value="RF">RF</option>
-                        <option value="ACOES">Ações</option>
-                        <option value="FII">FII</option>
-                      </select>
-                    </td>
-
-                    <td className="px-3 py-2 text-slate-200 w-32 truncate">
-                      <input
-                        className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                        value={r.nome ?? ""}
-                        onChange={(e) => updateRow(r.id, { nome: e.target.value })}
-                        placeholder="Setor"
-                        title="Setor ou categoria do ativo"
-                      />
-                    </td>
-
-                    <td className="px-3 py-2 text-left">
-                      <input
-                        type="date"
-                        className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
-                        value={r.dataEntrada ?? ""}
-                        onChange={(e) =>
-                          updateRow(r.id, { dataEntrada: e.target.value })
-                        }
-                        title="Data de entrada no ativo"
-                      />
-                    </td>
-
-                    <td className="px-3 py-2 text-right">
-                      <input
-                        className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                        inputMode="decimal"
-                        placeholder="0"
-                        value={r.qtd ?? ""}
-                        onChange={(e) => updateRow(r.id, { qtd: e.target.value })}
-                        onBlur={(e) => {
-                          const n = toNum(e.target.value);
-                          updateRow(r.id, { qtd: n === 0 ? "" : String(n) });
-                        }}
-                        title="Quantidade de cotas/ações"
-                      />
-                    </td>
-
-                    <td className="px-3 py-2 text-right">
-                      <input
-                        className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                        inputMode="decimal"
-                        placeholder="0,00"
-                        value={r.entrada ?? ""}
-                        onChange={(e) => updateRow(r.id, { entrada: e.target.value })}
-                        onBlur={(e) => {
-                          const n = toNum(e.target.value);
-                          updateRow(r.id, { entrada: n === 0 ? "" : String(n) });
-                        }}
-                        title="Preço médio de entrada"
-                      />
-                    </td>
-
-                    <td className="px-3 py-2 text-right">
-                      <input
-                        className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                        inputMode="decimal"
-                        placeholder="0,00"
-                        value={r.valorAtual ?? ""}
-                        onChange={(e) => updateRow(r.id, { valorAtual: e.target.value })}
-                        onBlur={(e) => {
-                          const n = toNum(e.target.value);
-                          updateRow(r.id, { valorAtual: n === 0 ? "" : String(n) });
-                        }}
-                        title="Preço atual estimado"
-                      />
-                    </td>
-
-                    <td className="px-3 py-2 text-right text-slate-200">
-                      {valorPosicao > 0
-                        ? valorPosicao.toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          })
-                        : "—"}
-                    </td>
-
-                    <td className={`px-3 py-2 text-right ${varClass}`}>
-                      {hasVar ? `${varPerc.toFixed(2)}%` : "—"}
-                    </td>
-
-                    <td className="px-3 py-2 text-right text-slate-200">
-                      {partStr}
-                    </td>
-
-                    <td className="px-3 py-2 text-right text-slate-200 font-semibold">
-                      {dy12mValor > 0
-                        ? dy12mValor.toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          })
-                        : "—"}
-                    </td>
-
-                    {MESES.map((_, idx) => (
-                      <td key={idx} className="px-3 py-2 text-right">
+                      <td className="px-3 py-2 text-right">
                         <input
                           className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
                           inputMode="decimal"
                           placeholder="0,00"
-                          value={dyMeses[idx] ?? ""}
-                          onChange={(e) => {
-                            const novo = [...dyMeses];
-                            novo[idx] = e.target.value;
-                            updateRow(r.id, { dyMeses: novo });
-                          }}
+                          value={l.preco ?? ""}
+                          onChange={(e) =>
+                            updateLancamento(l.id, { preco: e.target.value })
+                          }
                           onBlur={(e) => {
                             const n = toNum(e.target.value);
-                            const novo = [...dyMeses];
-                            novo[idx] = n === 0 ? "" : String(n);
-                            updateRow(r.id, { dyMeses: novo });
+                            updateLancamento(l.id, {
+                              preco: n === 0 ? "" : String(n),
+                            });
                           }}
-                          title={`DY em ${MESES[idx]} (R$)`}
+                          title="Preço por ação/cota"
                         />
                       </td>
-                    ))}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
 
-      <p className="mt-3 text-[11px] text-slate-500">
-        Esta carteira é um modelo educacional e não constitui recomendação de investimento.
-      </p>
+                      <td className="px-3 py-2 text-right text-slate-200">
+                        {custo > 0
+                          ? custo.toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })
+                          : "—"}
+                      </td>
+
+                      <td className="px-3 py-2 text-center">
+                        <button
+                          type="button"
+                          onClick={() => removeLancamento(l.id)}
+                          className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-slate-800 hover:bg-rose-500/80 hover:text-white text-slate-300 text-xs transition"
+                          title="Excluir linha"
+                        >
+                          🗑️
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Tabela de ativos original (mantida) */}
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-slate-200 text-sm font-medium">
+            Detalhamento da carteira modelo
+          </h2>
+          <span className="text-[11px] text-slate-400">
+            Edite tipo, setor, data de entrada, quantidade, entrada, valor atual e todos os DYs.
+          </span>
+        </div>
+
+        <div className="rounded-xl border border-white/10 bg-slate-900/40 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-[2000px] w-full text-sm">
+              <thead className="bg-slate-800/70 text-slate-300">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-medium sticky left-0 bg-slate-800/70 z-20">
+                    #
+                  </th>
+
+                  <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
+                    Ticker
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium">Relatório</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium">Tipo</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium w-32">Setor</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium">Data entrada</th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">Quantidade</th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">Entrada (R$)</th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">Valor atual (R$)</th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">Posição (R$)</th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">% Var</th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">Part. %</th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">DY (12m)</th>
+                  {MESES.map((m) => (
+                    <th key={m} className="px-3 py-2 text-right text-xs font-medium">
+                      DY {m}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {carteira.map((r, i) => {
+                  const qtdNum = toNum(r.qtd);
+                  const entradaNum = toNum(r.entrada);
+                  const valorAtualNum = toNum(r.valorAtual) || entradaNum;
+                  const valorPosicao = qtdNum * valorAtualNum;
+
+                  const partAtual =
+                    totalGeral > 0 ? (valorPosicao / totalGeral) * 100 : 0;
+                  const partStr =
+                    totalGeral > 0 && valorPosicao > 0
+                      ? `${partAtual.toFixed(2)}%`
+                      : "—";
+
+                  let varPerc = 0;
+                  let hasVar = false;
+                  if (entradaNum > 0 && valorAtualNum > 0) {
+                    varPerc = (valorAtualNum / entradaNum - 1) * 100;
+                    hasVar = true;
+                  }
+                  const varClass =
+                    !hasVar
+                      ? "text-slate-400"
+                      : varPerc >= 0
+                      ? "text-emerald-300 font-semibold"
+                      : "text-rose-300 font-semibold";
+
+                  const dyMeses = Array.isArray(r.dyMeses)
+                    ? [...r.dyMeses, ...Array(12 - r.dyMeses.length).fill("")].slice(0, 12)
+                    : Array(12).fill("");
+
+                  const dy12mValor = dyMeses.reduce((acc, v) => acc + toNum(v), 0);
+
+                  return (
+                    <tr key={r.id} className="border-t border-white/5 hover:bg-slate-800/30">
+                      <td className="px-3 py-2 text-slate-500 text-xs sticky left-0 bg-slate-900/90 z-10">
+                        {i + 1}
+                      </td>
+
+                      <td className="px-3 py-2 text-left sticky left-[2.5rem] bg-slate-900/90 z-10">
+                        <input
+                          className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                          value={r.ticker ?? ""}
+                          onChange={(e) =>
+                            updateRow(r.id, { ticker: e.target.value.toUpperCase() })
+                          }
+                          title="Ticker do ativo"
+                        />
+                      </td>
+
+                      <td className="px-3 py-2">
+                        <button
+                          className="px-3 py-1.5 rounded-lg border border-white/10 bg-slate-800 text-slate-100 text-xs hover:bg-slate-700"
+                          type="button"
+                        >
+                          Ver
+                        </button>
+                      </td>
+
+                      <td className="px-3 py-2">
+                        <select
+                          className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                          value={r.tipo}
+                          onChange={(e) => updateRow(r.id, { tipo: e.target.value })}
+                        >
+                          <option value="RF">RF</option>
+                          <option value="ACOES">Ações</option>
+                          <option value="FII">FII</option>
+                        </select>
+                      </td>
+
+                      <td className="px-3 py-2 text-slate-200 w-32 truncate">
+                        <input
+                          className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                          value={r.nome ?? ""}
+                          onChange={(e) => updateRow(r.id, { nome: e.target.value })}
+                          placeholder="Setor"
+                          title="Setor ou categoria do ativo"
+                        />
+                      </td>
+
+                      <td className="px-3 py-2 text-left">
+                        <input
+                          type="date"
+                          className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                          value={r.dataEntrada ?? ""}
+                          onChange={(e) =>
+                            updateRow(r.id, { dataEntrada: e.target.value })
+                          }
+                          title="Data de entrada no ativo"
+                        />
+                      </td>
+
+                      <td className="px-3 py-2 text-right">
+                        <input
+                          className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                          inputMode="decimal"
+                          placeholder="0"
+                          value={r.qtd ?? ""}
+                          onChange={(e) => updateRow(r.id, { qtd: e.target.value })}
+                          onBlur={(e) => {
+                            const n = toNum(e.target.value);
+                            updateRow(r.id, { qtd: n === 0 ? "" : String(n) });
+                          }}
+                          title="Quantidade de cotas/ações"
+                        />
+                      </td>
+
+                      <td className="px-3 py-2 text-right">
+                        <input
+                          className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                          inputMode="decimal"
+                          placeholder="0,00"
+                          value={r.entrada ?? ""}
+                          onChange={(e) => updateRow(r.id, { entrada: e.target.value })}
+                          onBlur={(e) => {
+                            const n = toNum(e.target.value);
+                            updateRow(r.id, { entrada: n === 0 ? "" : String(n) });
+                          }}
+                          title="Preço médio de entrada"
+                        />
+                      </td>
+
+                      <td className="px-3 py-2 text-right">
+                        <input
+                          className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                          inputMode="decimal"
+                          placeholder="0,00"
+                          value={r.valorAtual ?? ""}
+                          onChange={(e) => updateRow(r.id, { valorAtual: e.target.value })}
+                          onBlur={(e) => {
+                            const n = toNum(e.target.value);
+                            updateRow(r.id, { valorAtual: n === 0 ? "" : String(n) });
+                          }}
+                          title="Preço atual estimado"
+                        />
+                      </td>
+
+                      <td className="px-3 py-2 text-right text-slate-200">
+                        {valorPosicao > 0
+                          ? valorPosicao.toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })
+                          : "—"}
+                      </td>
+
+                      <td className={`px-3 py-2 text-right ${varClass}`}>
+                        {hasVar ? `${varPerc.toFixed(2)}%` : "—"}
+                      </td>
+
+                      <td className="px-3 py-2 text-right text-slate-200">
+                        {partStr}
+                      </td>
+
+                      <td className="px-3 py-2 text-right text-slate-200 font-semibold">
+                        {dy12mValor > 0
+                          ? dy12mValor.toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })
+                          : "—"}
+                      </td>
+
+                      {MESES.map((_, idx) => (
+                        <td key={idx} className="px-3 py-2 text-right">
+                          <input
+                            className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                            inputMode="decimal"
+                            placeholder="0,00"
+                            value={dyMeses[idx] ?? ""}
+                            onChange={(e) => {
+                              const novo = [...dyMeses];
+                              novo[idx] = e.target.value;
+                              updateRow(r.id, { dyMeses: novo });
+                            }}
+                            onBlur={(e) => {
+                              const n = toNum(e.target.value);
+                              const novo = [...dyMeses];
+                              novo[idx] = n === 0 ? "" : String(n);
+                              updateRow(r.id, { dyMeses: novo });
+                            }}
+                            title={`DY em ${MESES[idx]} (R$)`}
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <p className="mt-3 text-[11px] text-slate-500">
+          Esta carteira é um modelo educacional e não constitui recomendação de investimento.
+        </p>
+      </div>
     </div>
-  </div>
   );
 }
