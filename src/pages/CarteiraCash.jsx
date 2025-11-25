@@ -193,7 +193,7 @@ export default function CarteiraCash() {
   const [hoverIdxTipo, setHoverIdxTipo] = useState(null);
   const idxShownTipo = hoverIdxTipo ?? activeIdxTipo;
 
-  // donuts compactos
+  // donuts compactos (cabem certinho no balão full width)
   const size = 180;
   const cx = size / 2;
   const cy = size / 2;
@@ -279,7 +279,8 @@ export default function CarteiraCash() {
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
   /* ===========================
-     DY mensal total — Fase B (idêntico CardDividendos)
+     DY mensal total — estilo CardDividendos
+     verde dólar + tooltip premium + gap topo + animação + gradiente vertical leve
   =========================== */
   const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
@@ -360,7 +361,7 @@ export default function CarteiraCash() {
         <div className="h-16" />
       </div>
 
-      {/* BALÃO — largura normal (FULL) */}
+      {/* ✅ BALÃO FULL WIDTH (corrigido) */}
       <div className="w-full rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-4">
         {totalGeral <= 0 ? (
           <p className="text-[11px] text-slate-500">
@@ -369,7 +370,7 @@ export default function CarteiraCash() {
             tabela para visualizar os gráficos.
           </p>
         ) : (
-          <div className="w-full grid gap-4 md:grid-cols-4 items-stretch">
+          <div className="grid gap-4 md:grid-cols-4 items-stretch w-full">
 
             {/* Donut 1: por ATIVO */}
             <div className="md:col-span-1">
@@ -415,6 +416,17 @@ export default function CarteiraCash() {
                           />
                         );
                       })}
+
+                      {idxShownAtivo != null && (
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={rInner - 6}
+                          fill="none"
+                          stroke="rgba(15,23,42,0.55)"
+                          strokeWidth="12"
+                        />
+                      )}
                     </svg>
 
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -481,6 +493,17 @@ export default function CarteiraCash() {
                           />
                         );
                       })}
+
+                      {idxShownTipo != null && (
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={rInner - 6}
+                          fill="none"
+                          stroke="rgba(15,23,42,0.55)"
+                          strokeWidth="12"
+                        />
+                      )}
                     </svg>
 
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -512,11 +535,16 @@ export default function CarteiraCash() {
 
                 <div
                   ref={dyChartRef}
-                  className="flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/80 p-3 pt-2 overflow-x-auto overflow-y-hidden"
+                  className="
+                    flex-1 min-h-0 rounded-2xl border border-white/10
+                    bg-slate-900/80 p-3 pt-2
+                    overflow-x-auto overflow-y-hidden
+                  "
                 >
                   <div className="flex items-end gap-1 min-w-max h-full">
                     {dyBarData.map((d, i) => {
                       const v = d.dy || 0;
+
                       const alturaReal = Math.max(
                         4,
                         Math.round((v / dyMax) * dyBarMaxHeight)
@@ -526,7 +554,13 @@ export default function CarteiraCash() {
                       return (
                         <div key={i} className="flex flex-col items-center gap-2 w-10">
                           <div
-                            className="w-full rounded-xl bg-emerald-500/90 hover:bg-emerald-400 transition-all duration-700 ease-out hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]"
+                            className="
+                              w-full rounded-xl
+                              bg-gradient-to-t from-emerald-700 via-emerald-500 to-emerald-300
+                              hover:brightness-110
+                              transition-all duration-700 ease-out
+                              hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
+                            "
                             style={{ height: `${altura}px` }}
                             onMouseEnter={(e) => {
                               const rect = e.currentTarget.getBoundingClientRect();
@@ -546,7 +580,11 @@ export default function CarteiraCash() {
                             }}
                             onMouseLeave={() => setDyTip(null)}
                           />
-                          <div className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap font-medium">
+
+                          <div
+                            className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap font-medium"
+                            style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
+                          >
                             {d.name}
                           </div>
                         </div>
@@ -570,7 +608,7 @@ export default function CarteiraCash() {
         )}
       </div>
 
-      {/* ======= Tabela (inalterada) ======= */}
+      {/* ======= Tabela de ativos (inalterada) ======= */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-slate-200 text-sm font-medium">
