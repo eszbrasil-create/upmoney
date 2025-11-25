@@ -13,20 +13,6 @@ const PIE_COLORS = {
   FII: "#fbbf24",
 };
 
-// Paleta estável para ATIVOS (D5)
-const ATIVO_COLORS = [
-  "#22c55e", // verde
-  "#0ea5e9", // azul claro
-  "#6366f1", // índigo
-  "#f97316", // laranja
-  "#ec4899", // rosa
-  "#eab308", // amarelo
-  "#14b8a6", // teal
-  "#8b5cf6", // roxo
-  "#f59e0b", // amber
-  "#10b981", // emerald
-];
-
 const MESES = [
   "Jan","Fev","Mar","Abr","Mai","Jun",
   "Jul","Ago","Set","Out","Nov","Dez"
@@ -162,7 +148,10 @@ export default function CarteiraCash() {
       .filter((d) => d.value > 0)
       .sort((a, b) => b.value - a.value);
 
-    const getColor = (i) => ATIVO_COLORS[i % ATIVO_COLORS.length];
+    const getColor = (i) => {
+      const hue = (i * 47) % 360;
+      return `hsl(${hue} 70% 55%)`;
+    };
 
     const piePartsAtivos = ativosRaw.map((p, i) => ({
       ...p,
@@ -191,22 +180,25 @@ export default function CarteiraCash() {
   }, [carteira]);
 
   /* ===========================
-     Donuts (sem legenda) + estados
+     Donut por ATIVO (sem legenda)
   =========================== */
   const [activeIdxAtivo, setActiveIdxAtivo] = useState(null);
   const [hoverIdxAtivo, setHoverIdxAtivo] = useState(null);
   const idxShownAtivo = hoverIdxAtivo ?? activeIdxAtivo;
 
+  /* ===========================
+     Donut por TIPO (sem legenda)
+  =========================== */
   const [activeIdxTipo, setActiveIdxTipo] = useState(null);
   const [hoverIdxTipo, setHoverIdxTipo] = useState(null);
   const idxShownTipo = hoverIdxTipo ?? activeIdxTipo;
 
-  // donuts compactos
-  const size = 180;
+  // donuts mais baixos/compactos (balão menor)
+  const size = 145;
   const cx = size / 2;
   const cy = size / 2;
-  const rOuter = 78;
-  const rInner = 48;
+  const rOuter = 62;
+  const rInner = 38;
 
   const anglesAtivo = useMemo(() => {
     let acc = 0;
@@ -286,35 +278,21 @@ export default function CarteiraCash() {
     };
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
-  // 🧠 D4 — mini insights abaixo dos donuts
-  const maiorAtivo = useMemo(() => {
-    if (!piePartsAtivos.length) return null;
-    return piePartsAtivos.reduce((max, item) =>
-      !max || item.value > max.value ? item : max,
-      null
-    );
-  }, [piePartsAtivos]);
-
-  const maiorTipo = useMemo(() => {
-    if (!piePartsTipos.length) return null;
-    return piePartsTipos.reduce((max, item) =>
-      !max || item.value > max.value ? item : max,
-      null
-    );
-  }, [piePartsTipos]);
-
   /* ===========================
-     DY mensal total (como no seu código)
+     DY mensal total — idêntico CardDividendos
+     verde dólar + tooltip premium + gap topo + animação + gradiente leve
   =========================== */
   const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
 
+  // animação igual Evolução / CardDividendos
   const [animateDy, setAnimateDy] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAnimateDy(true), 50);
     return () => clearTimeout(t);
   }, []);
 
+  // tooltip premium
   const [dyTip, setDyTip] = useState(null);
 
   const TooltipDy = ({ x, y, mes, valor }) => (
@@ -336,31 +314,6 @@ export default function CarteiraCash() {
     </div>
   );
 
-  // 🟢 D1 — tooltip premium também para os donuts
-  const [pieTip, setPieTip] = useState(null);
-
-  const TooltipPie = ({ x, y, nome, valor, pct }) => (
-    <div
-      className="fixed z-[9999] pointer-events-none"
-      style={{ left: x, top: y }}
-    >
-      <div className="rounded-xl bg-slate-950/95 border border-white/10 px-3 py-2 shadow-2xl">
-        <div className="text-[11px] text-slate-300 font-medium">
-          {nome}
-        </div>
-        <div className="text-sm text-slate-100 font-semibold">
-          {valor.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          })}
-        </div>
-        <div className="text-[11px] text-emerald-300 font-medium mt-0.5">
-          {pct.toFixed(1)}%
-        </div>
-      </div>
-    </div>
-  );
-
   // calcula altura máxima real usando o tamanho do chart
   const dyChartRef = useRef(null);
   const [dyBarMaxHeight, setDyBarMaxHeight] = useState(110);
@@ -371,9 +324,9 @@ export default function CarteiraCash() {
 
     const compute = () => {
       const h = el.clientHeight || 0;
-      const reservedForLabels = 44; // labels dos meses
-      const topGap = 16;           // gap no topo
-      const usable = Math.max(60, h - reservedForLabels - topGap);
+      const reservedForLabels = 38; // labels dos meses
+      const topGap = 16;           // GAP NO TOPO
+      const usable = Math.max(55, h - reservedForLabels - topGap);
       setDyBarMaxHeight(usable);
     };
 
@@ -413,8 +366,8 @@ export default function CarteiraCash() {
         <div className="h-16" />
       </div>
 
-      {/* BALÃO: 2 donuts + 1 barra */}
-      <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-4">
+      {/* BALÃO (ESPREMIDO H+V): 2 donuts + 1 barra */}
+      <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-3 mb-3 max-w-[980px] mx-auto w-full">
         {totalGeral <= 0 ? (
           <p className="text-[11px] text-slate-500">
             Preencha <strong>Quantidade</strong>, <strong>Entrada</strong>,{" "}
@@ -422,12 +375,12 @@ export default function CarteiraCash() {
             tabela para visualizar os gráficos.
           </p>
         ) : (
-          <div className="grid gap-4 md:grid-cols-4 items-stretch">
+          <div className="grid gap-3 md:grid-cols-5 items-stretch">
 
-            {/* Donut 1: por ATIVO (sem legenda) */}
+            {/* Donut 1: por ATIVO */}
             <div className="md:col-span-1">
-              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
-                <div className="text-slate-100 text-sm font-semibold mb-2">
+              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-2 flex flex-col">
+                <div className="text-slate-100 text-sm font-semibold mb-1">
                   Participação por ativo
                 </div>
 
@@ -460,28 +413,8 @@ export default function CarteiraCash() {
                                 ? "drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]"
                                 : ""
                             }`}
-                            onMouseEnter={(e) => {
-                              setHoverIdxAtivo(i);
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setPieTip({
-                                x: rect.left + rect.width / 2,
-                                y: rect.top - 8,
-                                nome: p.name,
-                                valor: p.value,
-                                pct: p.pct,
-                              });
-                            }}
-                            onMouseMove={(e) => {
-                              setPieTip((prev) =>
-                                prev
-                                  ? { ...prev, x: e.clientX, y: e.clientY - 12 }
-                                  : prev
-                              );
-                            }}
-                            onMouseLeave={() => {
-                              setHoverIdxAtivo(null);
-                              setPieTip(null);
-                            }}
+                            onMouseEnter={() => setHoverIdxAtivo(i)}
+                            onMouseLeave={() => setHoverIdxAtivo(null)}
                             onClick={() =>
                               setActiveIdxAtivo((prev) => (prev === i ? null : i))
                             }
@@ -496,21 +429,21 @@ export default function CarteiraCash() {
                           r={rInner - 6}
                           fill="none"
                           stroke="rgba(15,23,42,0.55)"
-                          strokeWidth="12"
+                          strokeWidth="10"
                         />
                       )}
                     </svg>
 
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="text-center leading-tight px-3">
-                        <div className="text-slate-200 text-sm font-semibold">
+                      <div className="text-center leading-tight px-2">
+                        <div className="text-slate-200 text-[11px] font-semibold">
                           {centerAtivo.title}
                         </div>
-                        <div className="text-slate-100 text-lg font-extrabold">
+                        <div className="text-slate-100 text-[15px] font-extrabold">
                           {centerAtivo.line1}
                         </div>
                         {centerAtivo.line2 ? (
-                          <div className="text-slate-300 text-sm mt-0.5">
+                          <div className="text-slate-300 text-[11px] mt-0.5">
                             {centerAtivo.line2}
                           </div>
                         ) : null}
@@ -518,23 +451,13 @@ export default function CarteiraCash() {
                     </div>
                   </div>
                 </div>
-
-                {maiorAtivo && (
-                  <div className="mt-2 text-[11px] text-slate-400 text-center">
-                    Maior posição:{" "}
-                    <span className="text-slate-200 font-semibold">
-                      {maiorAtivo.name}
-                    </span>{" "}
-                    ({maiorAtivo.pct.toFixed(1)}%)
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* Donut 2: por TIPO (sem legenda) */}
+            {/* Donut 2: por TIPO */}
             <div className="md:col-span-1">
-              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
-                <div className="text-slate-100 text-sm font-semibold mb-2">
+              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-2 flex flex-col">
+                <div className="text-slate-100 text-sm font-semibold mb-1">
                   Participação por tipo
                 </div>
 
@@ -567,28 +490,8 @@ export default function CarteiraCash() {
                                 ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]"
                                 : ""
                             }`}
-                            onMouseEnter={(e) => {
-                              setHoverIdxTipo(i);
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setPieTip({
-                                x: rect.left + rect.width / 2,
-                                y: rect.top - 8,
-                                nome: p.name,
-                                valor: p.value,
-                                pct: p.pct,
-                              });
-                            }}
-                            onMouseMove={(e) => {
-                              setPieTip((prev) =>
-                                prev
-                                  ? { ...prev, x: e.clientX, y: e.clientY - 12 }
-                                  : prev
-                              );
-                            }}
-                            onMouseLeave={() => {
-                              setHoverIdxTipo(null);
-                              setPieTip(null);
-                            }}
+                            onMouseEnter={() => setHoverIdxTipo(i)}
+                            onMouseLeave={() => setHoverIdxTipo(null)}
                             onClick={() =>
                               setActiveIdxTipo((prev) => (prev === i ? null : i))
                             }
@@ -603,21 +506,21 @@ export default function CarteiraCash() {
                           r={rInner - 6}
                           fill="none"
                           stroke="rgba(15,23,42,0.55)"
-                          strokeWidth="12"
+                          strokeWidth="10"
                         />
                       )}
                     </svg>
 
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="text-center leading-tight px-3">
-                        <div className="text-slate-200 text-sm font-semibold">
+                      <div className="text-center leading-tight px-2">
+                        <div className="text-slate-200 text-[11px] font-semibold">
                           {centerTipo.title}
                         </div>
-                        <div className="text-slate-100 text-lg font-extrabold">
+                        <div className="text-slate-100 text-[15px] font-extrabold">
                           {centerTipo.line1}
                         </div>
                         {centerTipo.line2 ? (
-                          <div className="text-slate-300 text-sm mt-0.5">
+                          <div className="text-slate-300 text-[11px] mt-0.5">
                             {centerTipo.line2}
                           </div>
                         ) : null}
@@ -625,31 +528,21 @@ export default function CarteiraCash() {
                     </div>
                   </div>
                 </div>
-
-                {maiorTipo && (
-                  <div className="mt-2 text-[11px] text-slate-400 text-center">
-                    Maior tipo:{" "}
-                    <span className="text-slate-200 font-semibold">
-                      {maiorTipo.name}
-                    </span>{" "}
-                    ({maiorTipo.pct.toFixed(1)}%)
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* Barras DY — mesma base que você mandou */}
-            <div className="md:col-span-2">
-              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col relative">
-                <div className="text-slate-100 text-sm font-semibold mb-2">
+            {/* Barras DY — ocupa mais colunas */}
+            <div className="md:col-span-3">
+              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-2 flex flex-col relative">
+                <div className="text-slate-100 text-sm font-semibold mb-1">
                   DY mensal total
                 </div>
 
                 <div
                   ref={dyChartRef}
                   className="
-                    flex-1 min-h-0 rounded-2xl border border-white/10
-                    bg-slate-900/80 p-3 pt-2
+                    flex-1 min-h-[140px] rounded-2xl border border-white/10
+                    bg-slate-900/80 p-2 pt-2
                     overflow-x-auto overflow-y-hidden
                   "
                 >
@@ -664,12 +557,12 @@ export default function CarteiraCash() {
                       const altura = animateDy ? alturaReal : 4;
 
                       return (
-                        <div key={i} className="flex flex-col items-center gap-2 w-10">
+                        <div key={i} className="flex flex-col items-center gap-1.5 w-9">
                           <div
                             className="
-                              w-full rounded-xl
-                              bg-emerald-500/90
-                              hover:bg-emerald-400
+                              w-full rounded-lg
+                              bg-gradient-to-t from-emerald-700 via-emerald-500 to-emerald-300
+                              hover:brightness-110
                               transition-all duration-700 ease-out
                               hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
                             "
@@ -694,7 +587,7 @@ export default function CarteiraCash() {
                           />
 
                           <div
-                            className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap font-medium"
+                            className="text-[11px] text-slate-300 text-center leading-tight whitespace-nowrap font-medium"
                             style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
                           >
                             {d.name}
@@ -719,16 +612,6 @@ export default function CarteiraCash() {
           </div>
         )}
       </div>
-
-      {pieTip && (
-        <TooltipPie
-          x={pieTip.x}
-          y={pieTip.y}
-          nome={pieTip.nome}
-          valor={pieTip.valor}
-          pct={pieTip.pct}
-        />
-      )}
 
       {/* ======= Tabela de ativos (inalterada) ======= */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4">
