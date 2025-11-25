@@ -1266,7 +1266,7 @@ export default function CarteiraCash() {
       {/* Modal Adicionar Ativos */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
-          <div className="w-[70vw] max-w-4xl rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6">
+          <div className="w-[80vw] h-[80vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 overflow-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-slate-100 font-semibold text-lg">
                 Adicionar ativo à base
@@ -1383,4 +1383,3 @@ export default function CarteiraCash() {
     </div>
   );
 }
-
