@@ -293,11 +293,9 @@ export default function CarteiraCash() {
 
   // Sempre que a base escondida muda, recalcula a tabela agregada
   useEffect(() => {
-    // Se ainda não existem lançamentos, mantemos a carteira atual (BASE_ROWS / dados antigos)
     if (!lancamentos || lancamentos.length === 0) return;
 
     setCarteira((prevCarteira) => {
-      // guarda DY por ticker para reaproveitar os valores já digitados
       const dyPorTicker = new Map();
       prevCarteira.forEach((r) => {
         const t = (r.ticker || "").toUpperCase();
@@ -308,7 +306,6 @@ export default function CarteiraCash() {
         });
       });
 
-      // agrega lançamentos por ticker+tipo
       const grupos = new Map(); // key = `${ticker}__${tipo}`
 
       lancamentos.forEach((l) => {
@@ -337,7 +334,6 @@ export default function CarteiraCash() {
         if (!atual.dataEntradaMaisAntiga) {
           atual.dataEntradaMaisAntiga = data;
         } else if (data && data < atual.dataEntradaMaisAntiga) {
-          // compara string "YYYY-MM-DD" funciona para datas
           atual.dataEntradaMaisAntiga = data;
         }
 
@@ -392,24 +388,20 @@ export default function CarteiraCash() {
 
       total += valorPosicao;
 
-      // por ativo
       const ativoKey = (r.ticker || r.nome || "Ativo").toUpperCase();
       if (!somaPorAtivo[ativoKey]) somaPorAtivo[ativoKey] = 0;
       somaPorAtivo[ativoKey] += valorPosicao;
 
-      // por tipo
       const tipoKey = r.tipo;
       if (!somaPorTipo[tipoKey]) somaPorTipo[tipoKey] = 0;
       somaPorTipo[tipoKey] += valorPosicao;
 
-      // DY mensal total (ainda manual por enquanto)
       const arrMeses = Array.isArray(r.dyMeses) ? r.dyMeses : [];
       for (let i = 0; i < 12; i++) {
         dyMesTotal[i] += toNum(arrMeses[i]);
       }
     });
 
-    // donut por ATIVO
     const ativosRaw = Object.entries(somaPorAtivo)
       .map(([key, value]) => ({ key, name: key, value }))
       .filter((d) => d.value > 0)
@@ -426,7 +418,6 @@ export default function CarteiraCash() {
       pct: total > 0 ? (p.value / total) * 100 : 0,
     }));
 
-    // donut por TIPO
     const tiposRaw = [
       { key: "RF", name: "RF", value: somaPorTipo.RF, color: PIE_COLORS.RF },
       {
@@ -542,7 +533,7 @@ export default function CarteiraCash() {
         currency: "BRL",
         maximumFractionDigits: 0,
       }),
-        line2: `${it.pct.toFixed(1)}%`,
+      line2: `${it.pct.toFixed(1)}%`,
     };
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
@@ -552,14 +543,12 @@ export default function CarteiraCash() {
   const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
 
-  // animação
   const [animateDy, setAnimateDy] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAnimateDy(true), 50);
     return () => clearTimeout(t);
   }, []);
 
-  // tooltip premium
   const [dyTip, setDyTip] = useState(null);
 
   const TooltipDy = ({ x, y, mes, valor }) => (
@@ -631,7 +620,6 @@ export default function CarteiraCash() {
     const preco = novoLanc.preco || "";
 
     if (!ticker || !qtd || !preco) {
-      // validação simples
       return;
     }
 
@@ -662,7 +650,6 @@ export default function CarteiraCash() {
                 ${openCarteiras ? "pb-3" : ""}
               `}
             >
-              {/* Cabeçalho clicável */}
               <button
                 type="button"
                 onClick={() => setOpenCarteiras((prev) => !prev)}
@@ -699,15 +686,8 @@ export default function CarteiraCash() {
                 </div>
               </button>
 
-              {/* Conteúdo expandido: sugestões de carteiras */}
               {openCarteiras && (
-                <div
-                  className="
-                    mt-1 grid grid-cols-1 sm:grid-cols-3 gap-2
-                    text-[12px]
-                  "
-                >
-                  {/* CTA Dividendos */}
+                <div className="mt-1 grid grid-cols-1 sm:grid-cols-3 gap-2 text-[12px]">
                   <button
                     type="button"
                     onClick={() => handleModeloClick("dividendos")}
@@ -732,7 +712,6 @@ export default function CarteiraCash() {
                     </div>
                   </button>
 
-                  {/* CTA Criptomoedas */}
                   <button
                     type="button"
                     onClick={() => handleModeloClick("cripto")}
@@ -752,7 +731,6 @@ export default function CarteiraCash() {
                     </div>
                   </button>
 
-                  {/* CTA FIIs */}
                   <button
                     type="button"
                     onClick={() => handleModeloClick("fiis")}
@@ -1077,7 +1055,6 @@ export default function CarteiraCash() {
                   <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
                     Ticker
                   </th>
-                  {/* Coluna Relatório removida */}
                   <th className="px-3 py-2 text-left text-xs font-medium">
                     Tipo
                   </th>
@@ -1184,7 +1161,7 @@ export default function CarteiraCash() {
                         </span>
                       </td>
 
-                      {/* Setor (ainda não alimentado pela base, só exibe) */}
+                      {/* Setor (exibição simples) */}
                       <td className="px-3 py-2 text-slate-200 w-32 truncate">
                         <span className="text-slate-100 text-sm">
                           {r.nome || "—"}
@@ -1249,7 +1226,7 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
-                      {/* DY meses — ainda editáveis manualmente */}
+                      {/* DY meses — editáveis manualmente */}
                       {MESES.map((_, idx) => (
                         <td key={idx} className="px-3 py-2 text-right">
                           <input
@@ -1303,10 +1280,11 @@ export default function CarteiraCash() {
               </button>
             </div>
 
-            <form onSubmit={handleSalvarLanc} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-slate-300 mb-1">
+            {/* LINHA ÚNICA: Ativo | Tipo | Data | Quantidade | Preço | Salvar */}
+            <form onSubmit={handleSalvarLanc} className="space-y-3">
+              <div className="flex flex-nowrap items-end gap-3 overflow-x-auto">
+                <div className="flex flex-col flex-[0_0_130px]">
+                  <label className="block text-[11px] text-slate-300 mb-1">
                     Ativo (ticker)
                   </label>
                   <input
@@ -1319,8 +1297,8 @@ export default function CarteiraCash() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs text-slate-300 mb-1">
+                <div className="flex flex-col flex-[0_0_110px]">
+                  <label className="block text-[11px] text-slate-300 mb-1">
                     Tipo
                   </label>
                   <select
@@ -1334,11 +1312,9 @@ export default function CarteiraCash() {
                     <option value="RF">Renda Fixa</option>
                   </select>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs text-slate-300 mb-1">
+                <div className="flex flex-col flex-[0_0_150px]">
+                  <label className="block text-[11px] text-slate-300 mb-1">
                     Data de entrada
                   </label>
                   <input
@@ -1350,8 +1326,8 @@ export default function CarteiraCash() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs text-slate-300 mb-1">
+                <div className="flex flex-col flex-[0_0_120px]">
+                  <label className="block text-[11px] text-slate-300 mb-1">
                     Quantidade
                   </label>
                   <input
@@ -1364,8 +1340,8 @@ export default function CarteiraCash() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs text-slate-300 mb-1">
+                <div className="flex flex-col flex-[0_0_160px]">
+                  <label className="block text-[11px] text-slate-300 mb-1">
                     Preço de compra (R$)
                   </label>
                   <input
@@ -1377,31 +1353,29 @@ export default function CarteiraCash() {
                     className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
                   />
                 </div>
-              </div>
 
-              <div className="flex items-center justify-between pt-2">
-                <p className="text-[11px] text-slate-400 max-w-xs">
-                  Cada lançamento é guardado na base escondida. A tabela abaixo
-                  mostra o consolidado por ativo (quantidade total, preço médio
-                  e data mais antiga).
-                </p>
-
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsAddModalOpen(false)}
-                    className="px-4 py-2 rounded-xl border border-slate-600 text-xs text-slate-200 hover:bg-slate-800"
-                  >
-                    Cancelar
-                  </button>
+                <div className="flex flex-col flex-[0_0_auto]">
+                  <span className="block text-[11px] text-transparent mb-1">
+                    &nbsp;
+                  </span>
                   <button
                     type="submit"
-                    className="px-4 py-2 rounded-xl bg-emerald-500 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
+                    className="
+                      px-4 py-2 rounded-xl
+                      bg-emerald-500 text-xs sm:text-sm font-semibold text-slate-950
+                      hover:bg-emerald-400 whitespace-nowrap
+                    "
                   >
                     Salvar lançamento
                   </button>
                 </div>
               </div>
+
+              <p className="text-[11px] text-slate-400 max-w-xl">
+                Cada lançamento é guardado na base escondida. A tabela principal
+                abaixo mostra o consolidado por ativo (quantidade total, preço
+                médio e data de entrada mais antiga).
+              </p>
             </form>
           </div>
         </div>
