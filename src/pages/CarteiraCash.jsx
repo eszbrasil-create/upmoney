@@ -41,7 +41,6 @@ const BASE_ROWS = [
 ];
 
 const LS_KEY = "cc_carteira_cash_v1";
-const LS_KEY_LANC = "cc_carteira_cash_lancamentos_v1";
 
 // Helper para converter texto em número
 function toNum(x) {
@@ -74,18 +73,6 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
   ].join(" ");
 }
 
-// helper para criar lançamento vazio
-function createEmptyLancamento(id) {
-  return {
-    id,
-    dataEntrada: "",
-    ticker: "",
-    tipo: "ACOES",
-    quantidade: "",
-    preco: "",
-  };
-}
-
 export default function CarteiraCash() {
   // Estado da carteira (editável)
   const [carteira, setCarteira] = useState(() => {
@@ -104,30 +91,8 @@ export default function CarteiraCash() {
     }
   });
 
-  // ✅ lançamentos (planilha simples tipo Excel)
-  const [lancamentos, setLancamentos] = useState(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY_LANC);
-      if (!raw) return [createEmptyLancamento(1)];
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed) || parsed.length === 0) {
-        return [createEmptyLancamento(1)];
-      }
-      return parsed.map((l, idx) => ({
-        id: l.id ?? idx + 1,
-        dataEntrada: l.dataEntrada ?? "",
-        ticker: l.ticker ?? "",
-        tipo: l.tipo ?? "ACOES",
-        quantidade: l.quantidade ?? "",
-        preco: l.preco ?? "",
-      }));
-    } catch {
-      return [createEmptyLancamento(1)];
-    }
-  });
-
-  // exibir/ocultar quadro de lançamentos
-  const [showLancamentos, setShowLancamentos] = useState(false);
+  // ✅ estado do balão "Carteiras Modelo UpMoney"
+  const [openCarteiras, setOpenCarteiras] = useState(false);
 
   // Persiste alterações
   useEffect(() => {
@@ -136,41 +101,10 @@ export default function CarteiraCash() {
     } catch {}
   }, [carteira]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(LS_KEY_LANC, JSON.stringify(lancamentos));
-    } catch {}
-  }, [lancamentos]);
-
   const updateRow = (id, patch) => {
     setCarteira((prev) =>
       prev.map((r) => (r.id === id ? { ...r, ...patch } : r))
     );
-  };
-
-  const updateLancamento = (id, patch) => {
-    setLancamentos((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, ...patch } : l))
-    );
-  };
-
-  const addLancamento = () => {
-    setLancamentos((prev) => {
-      const nextId =
-        prev.reduce((max, l) => Math.max(max, l.id || 0), 0) + 1;
-      return [...prev, createEmptyLancamento(nextId)];
-    });
-  };
-
-  const removeLancamento = (id) => {
-    setLancamentos((prev) => {
-      if (prev.length === 1) {
-        const only = prev[0];
-        if (only.id !== id) return prev;
-        return [createEmptyLancamento(only.id)];
-      }
-      return prev.filter((l) => l.id !== id);
-    });
   };
 
   // ✅ Cálculos globais (2 donuts + DY)
@@ -790,475 +724,246 @@ export default function CarteiraCash() {
         )}
       </div>
 
-      {/* ======= Bloco inferior: Lançamentos + Tabela de carteira ======= */}
+      {/* ======= Tabela de ativos ======= */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4">
-        {/* Header: botão para abrir lançamentos */}
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-slate-200 text-sm font-medium">
-            Lançamentos de ativos
-          </h2>
-          <button
-            type="button"
-            onClick={() => setShowLancamentos((v) => !v)}
-            className="
-              inline-flex items-center gap-1
-              rounded-lg border border-emerald-400/60 bg-emerald-500/10
-              px-3 py-1.5 text-[12px] font-semibold
-              text-emerald-100 hover:bg-emerald-500/20 transition
-            "
-          >
-            {showLancamentos ? "Fechar lançamentos" : "Adicionar ativos"}
-          </button>
-        </div>
-
-        {/* Quadro de lançamentos (tipo Excel) */}
-        {showLancamentos && (
-          <div className="mb-4 rounded-xl border border-white/10 bg-slate-900/60 p-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] text-slate-200 font-medium">
-                Base de operações (compras ao longo do tempo)
-              </span>
-              <button
-                type="button"
-                onClick={addLancamento}
-                className="
-                  text-[11px] px-2 py-1 rounded-lg
-                  border border-slate-500 bg-slate-800
-                  text-slate-100 hover:bg-slate-700 transition
-                "
-              >
-                + Nova linha
-              </button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="min-w-[720px] w-full text-xs">
-                <thead className="text-slate-300">
-                  <tr className="border-b border-slate-700/70">
-                    <th className="px-2 py-1 text-left font-medium w-32">
-                      Data entrada
-                    </th>
-                    <th className="px-2 py-1 text-left font-medium w-28">
-                      Ticker
-                    </th>
-                    <th className="px-2 py-1 text-left font-medium w-28">
-                      Tipo
-                    </th>
-                    <th className="px-2 py-1 text-right font-medium w-24">
-                      Quantidade
-                    </th>
-                    <th className="px-2 py-1 text-right font-medium w-28">
-                      Preço (R$)
-                    </th>
-                    <th className="px-2 py-1 text-right font-medium w-32">
-                      Custo total (R$)
-                    </th>
-                    <th className="px-2 py-1 text-center font-medium w-10">
-                      {/* lixeira */}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lancamentos.map((l) => {
-                    const qtdNum = toNum(l.quantidade);
-                    const precoNum = toNum(l.preco);
-                    const custo = qtdNum * precoNum;
-
-                    return (
-                      <tr
-                        key={l.id}
-                        className="border-b border-slate-800/60 hover:bg-slate-800/40"
-                      >
-                        <td className="px-2 py-1">
-                          <input
-                            type="date"
-                            className="
-                              w-full bg-slate-900 border border-slate-700
-                              rounded-md px-2 py-1
-                              text-[11px] text-slate-100
-                              focus:outline-none focus:ring-1 focus:ring-emerald-400
-                            "
-                            value={l.dataEntrada}
-                            onChange={(e) =>
-                              updateLancamento(l.id, {
-                                dataEntrada: e.target.value,
-                              })
-                            }
-                          />
-                        </td>
-
-                        <td className="px-2 py-1">
-                          <input
-                            className="
-                              w-full bg-transparent outline-none
-                              text-slate-100 placeholder:text-slate-600
-                              text-[12px]
-                            "
-                            placeholder="VALE3"
-                            value={l.ticker}
-                            onChange={(e) =>
-                              updateLancamento(l.id, {
-                                ticker: e.target.value.toUpperCase(),
-                              })
-                            }
-                          />
-                        </td>
-
-                        <td className="px-2 py-1">
-                          <select
-                            className="
-                              w-full bg-slate-900 border border-slate-700
-                              rounded-md px-2 py-1
-                              text-[11px] text-slate-100
-                              focus:outline-none focus:ring-1 focus:ring-emerald-400
-                            "
-                            value={l.tipo}
-                            onChange={(e) =>
-                              updateLancamento(l.id, { tipo: e.target.value })
-                            }
-                          >
-                            <option value="RF">RF</option>
-                            <option value="ACOES">Ações</option>
-                            <option value="FII">FII</option>
-                          </select>
-                        </td>
-
-                        <td className="px-2 py-1 text-right">
-                          <input
-                            className="
-                              w-full bg-transparent text-right outline-none
-                              text-slate-100 placeholder:text-slate-600
-                              text-[12px]
-                            "
-                            inputMode="decimal"
-                            placeholder="0"
-                            value={l.quantidade}
-                            onChange={(e) =>
-                              updateLancamento(l.id, {
-                                quantidade: e.target.value,
-                              })
-                            }
-                            onBlur={(e) => {
-                              const n = toNum(e.target.value);
-                              updateLancamento(l.id, {
-                                quantidade: n === 0 ? "" : String(n),
-                              });
-                            }}
-                          />
-                        </td>
-
-                        <td className="px-2 py-1 text-right">
-                          <input
-                            className="
-                              w-full bg-transparent text-right outline-none
-                              text-slate-100 placeholder:text-slate-600
-                              text-[12px]
-                            "
-                            inputMode="decimal"
-                            placeholder="0,00"
-                            value={l.preco}
-                            onChange={(e) =>
-                              updateLancamento(l.id, {
-                                preco: e.target.value,
-                              })
-                            }
-                            onBlur={(e) => {
-                              const n = toNum(e.target.value);
-                              updateLancamento(l.id, {
-                                preco: n === 0 ? "" : String(n),
-                              });
-                            }}
-                          />
-                        </td>
-
-                        <td className="px-2 py-1 text-right text-slate-100">
-                          {custo > 0
-                            ? custo.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                              })
-                            : "—"}
-                        </td>
-
-                        <td className="px-2 py-1 text-center">
-                          <button
-                            type="button"
-                            onClick={() => removeLancamento(l.id)}
-                            className="
-                              inline-flex items-center justify-center
-                              h-7 w-7 rounded-full
-                              bg-slate-800 text-slate-300
-                              hover:bg-rose-600 hover:text-white
-                              transition
-                            "
-                            title="Excluir linha"
-                          >
-                            🗑️
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-3 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setShowLancamentos(false)}
-                className="
-                  text-[12px] px-3 py-1.5 rounded-lg
-                  border border-slate-500 bg-slate-800
-                  text-slate-100 hover:bg-slate-700 transition
-                "
-              >
-                Concluir
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Título e legenda da tabela de carteira */}
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-slate-200 text-sm font-medium">
             Detalhamento da carteira modelo
           </h2>
-          <span className="text-[11px] text-slate-400">
-            Edite tipo, setor, data de entrada, quantidade, entrada, valor atual e todos os DYs.
-          </span>
-        </div>
-
-        {/* Tabela de ativos (inalterada) */}
-        <div className="rounded-xl border border-white/10 bg-slate-900/40 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-[2000px] w-full text-sm">
-              <thead className="bg-slate-800/70 text-slate-300">
-                <tr>
-                  <th className="px-3 py-2 text-left text-xs font-medium sticky left-0 bg-slate-800/70 z-20">
-                    #
-                  </th>
-
-                  <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
-                    Ticker
-                  </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium">Relatório</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium">Tipo</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium w-32">Setor</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium">Data entrada</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">Quantidade</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">Entrada (R$)</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">Valor atual (R$)</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">Posição (R$)</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">% Var</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">Part. %</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">DY (12m)</th>
-                  {MESES.map((m) => (
-                    <th key={m} className="px-3 py-2 text-right text-xs font-medium">
-                      DY {m}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody>
-                {carteira.map((r, i) => {
-                  const qtdNum = toNum(r.qtd);
-                  const entradaNum = toNum(r.entrada);
-                  const valorAtualNum = toNum(r.valorAtual) || entradaNum;
-                  const valorPosicao = qtdNum * valorAtualNum;
-
-                  const partAtual =
-                    totalGeral > 0 ? (valorPosicao / totalGeral) * 100 : 0;
-                  const partStr =
-                    totalGeral > 0 && valorPosicao > 0
-                      ? `${partAtual.toFixed(2)}%`
-                      : "—";
-
-                  let varPerc = 0;
-                  let hasVar = false;
-                  if (entradaNum > 0 && valorAtualNum > 0) {
-                    varPerc = (valorAtualNum / entradaNum - 1) * 100;
-                    hasVar = true;
-                  }
-                  const varClass =
-                    !hasVar
-                      ? "text-slate-400"
-                      : varPerc >= 0
-                      ? "text-emerald-300 font-semibold"
-                      : "text-rose-300 font-semibold";
-
-                  const dyMeses = Array.isArray(r.dyMeses)
-                    ? [...r.dyMeses, ...Array(12 - r.dyMeses.length).fill("")].slice(0, 12)
-                    : Array(12).fill("");
-
-                  const dy12mValor = dyMeses.reduce((acc, v) => acc + toNum(v), 0);
-
-                  return (
-                    <tr key={r.id} className="border-t border-white/5 hover:bg-slate-800/30">
-                      <td className="px-3 py-2 text-slate-500 text-xs sticky left-0 bg-slate-900/90 z-10">
-                        {i + 1}
-                      </td>
-
-                      <td className="px-3 py-2 text-left sticky left-[2.5rem] bg-slate-900/90 z-10">
-                        <input
-                          className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                          value={r.ticker ?? ""}
-                          onChange={(e) =>
-                            updateRow(r.id, { ticker: e.target.value.toUpperCase() })
-                          }
-                          title="Ticker do ativo"
-                        />
-                      </td>
-
-                      <td className="px-3 py-2">
-                        <button
-                          className="px-3 py-1.5 rounded-lg border border-white/10 bg-slate-800 text-slate-100 text-xs hover:bg-slate-700"
-                          type="button"
-                        >
-                          Ver
-                        </button>
-                      </td>
-
-                      <td className="px-3 py-2">
-                        <select
-                          className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
-                          value={r.tipo}
-                          onChange={(e) => updateRow(r.id, { tipo: e.target.value })}
-                        >
-                          <option value="RF">RF</option>
-                          <option value="ACOES">Ações</option>
-                          <option value="FII">FII</option>
-                        </select>
-                      </td>
-
-                      <td className="px-3 py-2 text-slate-200 w-32 truncate">
-                        <input
-                          className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                          value={r.nome ?? ""}
-                          onChange={(e) => updateRow(r.id, { nome: e.target.value })}
-                          placeholder="Setor"
-                          title="Setor ou categoria do ativo"
-                        />
-                      </td>
-
-                      <td className="px-3 py-2 text-left">
-                        <input
-                          type="date"
-                          className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
-                          value={r.dataEntrada ?? ""}
-                          onChange={(e) =>
-                            updateRow(r.id, { dataEntrada: e.target.value })
-                          }
-                          title="Data de entrada no ativo"
-                        />
-                      </td>
-
-                      <td className="px-3 py-2 text-right">
-                        <input
-                          className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                          inputMode="decimal"
-                          placeholder="0"
-                          value={r.qtd ?? ""}
-                          onChange={(e) => updateRow(r.id, { qtd: e.target.value })}
-                          onBlur={(e) => {
-                            const n = toNum(e.target.value);
-                            updateRow(r.id, { qtd: n === 0 ? "" : String(n) });
-                          }}
-                          title="Quantidade de cotas/ações"
-                        />
-                      </td>
-
-                      <td className="px-3 py-2 text-right">
-                        <input
-                          className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                          inputMode="decimal"
-                          placeholder="0,00"
-                          value={r.entrada ?? ""}
-                          onChange={(e) => updateRow(r.id, { entrada: e.target.value })}
-                          onBlur={(e) => {
-                            const n = toNum(e.target.value);
-                            updateRow(r.id, { entrada: n === 0 ? "" : String(n) });
-                          }}
-                          title="Preço médio de entrada"
-                        />
-                      </td>
-
-                      <td className="px-3 py-2 text-right">
-                        <input
-                          className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                          inputMode="decimal"
-                          placeholder="0,00"
-                          value={r.valorAtual ?? ""}
-                          onChange={(e) => updateRow(r.id, { valorAtual: e.target.value })}
-                          onBlur={(e) => {
-                            const n = toNum(e.target.value);
-                            updateRow(r.id, { valorAtual: n === 0 ? "" : String(n) });
-                          }}
-                          title="Preço atual estimado"
-                        />
-                      </td>
-
-                      <td className="px-3 py-2 text-right text-slate-200">
-                        {valorPosicao > 0
-                          ? valorPosicao.toLocaleString("pt-BR", {
-                              style: "currency",
-                              currency: "BRL",
-                            })
-                          : "—"}
-                      </td>
-
-                      <td className={`px-3 py-2 text-right ${varClass}`}>
-                        {hasVar ? `${varPerc.toFixed(2)}%` : "—"}
-                      </td>
-
-                      <td className="px-3 py-2 text-right text-slate-200">
-                        {partStr}
-                      </td>
-
-                      <td className="px-3 py-2 text-right text-slate-200 font-semibold">
-                        {dy12mValor > 0
-                          ? dy12mValor.toLocaleString("pt-BR", {
-                              style: "currency",
-                              currency: "BRL",
-                            })
-                          : "—"}
-                      </td>
-
-                      {MESES.map((_, idx) => (
-                        <td key={idx} className="px-3 py-2 text-right">
-                          <input
-                            className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                            inputMode="decimal"
-                            placeholder="0,00"
-                            value={dyMeses[idx] ?? ""}
-                            onChange={(e) => {
-                              const novo = [...dyMeses];
-                              novo[idx] = e.target.value;
-                              updateRow(r.id, { dyMeses: novo });
-                            }}
-                            onBlur={(e) => {
-                              const n = toNum(e.target.value);
-                              const novo = [...dyMeses];
-                              novo[idx] = n === 0 ? "" : String(n);
-                              updateRow(r.id, { dyMeses: novo });
-                            }}
-                            title={`DY em ${MESES[idx]} (R$)`}
-                          />
-                        </td>
-                      ))}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <p className="mt-3 text-[11px] text-slate-500">
-          Esta carteira é um modelo educacional e não constitui recomendação de investimento.
-        </p>
+        <span className="text-[11px] text-slate-400">
+          Edite tipo, setor, data de entrada, quantidade, entrada, valor atual e todos os DYs.
+        </span>
       </div>
+
+      <div className="rounded-xl border border-white/10 bg-slate-900/40 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-[2000px] w-full text-sm">
+            <thead className="bg-slate-800/70 text-slate-300">
+              <tr>
+                <th className="px-3 py-2 text-left text-xs font-medium sticky left-0 bg-slate-800/70 z-20">
+                  #
+                </th>
+
+                <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
+                  Ticker
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium">Relatório</th>
+                <th className="px-3 py-2 text-left text-xs font-medium">Tipo</th>
+                <th className="px-3 py-2 text-left text-xs font-medium w-32">Setor</th>
+                <th className="px-3 py-2 text-left text-xs font-medium">Data entrada</th>
+                <th className="px-3 py-2 text-right text-xs font-medium">Quantidade</th>
+                <th className="px-3 py-2 text-right text-xs font-medium">Entrada (R$)</th>
+                <th className="px-3 py-2 text-right text-xs font-medium">Valor atual (R$)</th>
+                <th className="px-3 py-2 text-right text-xs font-medium">Posição (R$)</th>
+                <th className="px-3 py-2 text-right text-xs font-medium">% Var</th>
+                <th className="px-3 py-2 text-right text-xs font-medium">Part. %</th>
+                <th className="px-3 py-2 text-right text-xs font-medium">DY (12m)</th>
+                {MESES.map((m) => (
+                  <th key={m} className="px-3 py-2 text-right text-xs font-medium">
+                    DY {m}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {carteira.map((r, i) => {
+                const qtdNum = toNum(r.qtd);
+                const entradaNum = toNum(r.entrada);
+                const valorAtualNum = toNum(r.valorAtual) || entradaNum;
+                const valorPosicao = qtdNum * valorAtualNum;
+
+                const partAtual =
+                  totalGeral > 0 ? (valorPosicao / totalGeral) * 100 : 0;
+                const partStr =
+                  totalGeral > 0 && valorPosicao > 0
+                    ? `${partAtual.toFixed(2)}%`
+                    : "—";
+
+                let varPerc = 0;
+                let hasVar = false;
+                if (entradaNum > 0 && valorAtualNum > 0) {
+                  varPerc = (valorAtualNum / entradaNum - 1) * 100;
+                  hasVar = true;
+                }
+                const varClass =
+                  !hasVar
+                    ? "text-slate-400"
+                    : varPerc >= 0
+                    ? "text-emerald-300 font-semibold"
+                    : "text-rose-300 font-semibold";
+
+                const dyMeses = Array.isArray(r.dyMeses)
+                  ? [...r.dyMeses, ...Array(12 - r.dyMeses.length).fill("")].slice(0, 12)
+                  : Array(12).fill("");
+
+                const dy12mValor = dyMeses.reduce((acc, v) => acc + toNum(v), 0);
+
+                return (
+                  <tr key={r.id} className="border-t border-white/5 hover:bg-slate-800/30">
+                    <td className="px-3 py-2 text-slate-500 text-xs sticky left-0 bg-slate-900/90 z-10">
+                      {i + 1}
+                    </td>
+
+                    <td className="px-3 py-2 text-left sticky left-[2.5rem] bg-slate-900/90 z-10">
+                      <input
+                        className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                        value={r.ticker ?? ""}
+                        onChange={(e) =>
+                          updateRow(r.id, { ticker: e.target.value.toUpperCase() })
+                        }
+                        title="Ticker do ativo"
+                      />
+                    </td>
+
+                    <td className="px-3 py-2">
+                      <button
+                        className="px-3 py-1.5 rounded-lg border border-white/10 bg-slate-800 text-slate-100 text-xs hover:bg-slate-700"
+                        type="button"
+                      >
+                        Ver
+                      </button>
+                    </td>
+
+                    <td className="px-3 py-2">
+                      <select
+                        className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                        value={r.tipo}
+                        onChange={(e) => updateRow(r.id, { tipo: e.target.value })}
+                      >
+                        <option value="RF">RF</option>
+                        <option value="ACOES">Ações</option>
+                        <option value="FII">FII</option>
+                      </select>
+                    </td>
+
+                    <td className="px-3 py-2 text-slate-200 w-32 truncate">
+                      <input
+                        className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                        value={r.nome ?? ""}
+                        onChange={(e) => updateRow(r.id, { nome: e.target.value })}
+                        placeholder="Setor"
+                        title="Setor ou categoria do ativo"
+                      />
+                    </td>
+
+                    <td className="px-3 py-2 text-left">
+                      <input
+                        type="date"
+                        className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
+                        value={r.dataEntrada ?? ""}
+                        onChange={(e) =>
+                          updateRow(r.id, { dataEntrada: e.target.value })
+                        }
+                        title="Data de entrada no ativo"
+                      />
+                    </td>
+
+                    <td className="px-3 py-2 text-right">
+                      <input
+                        className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                        inputMode="decimal"
+                        placeholder="0"
+                        value={r.qtd ?? ""}
+                        onChange={(e) => updateRow(r.id, { qtd: e.target.value })}
+                        onBlur={(e) => {
+                          const n = toNum(e.target.value);
+                          updateRow(r.id, { qtd: n === 0 ? "" : String(n) });
+                        }}
+                        title="Quantidade de cotas/ações"
+                      />
+                    </td>
+
+                    <td className="px-3 py-2 text-right">
+                      <input
+                        className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                        inputMode="decimal"
+                        placeholder="0,00"
+                        value={r.entrada ?? ""}
+                        onChange={(e) => updateRow(r.id, { entrada: e.target.value })}
+                        onBlur={(e) => {
+                          const n = toNum(e.target.value);
+                          updateRow(r.id, { entrada: n === 0 ? "" : String(n) });
+                        }}
+                        title="Preço médio de entrada"
+                      />
+                    </td>
+
+                    <td className="px-3 py-2 text-right">
+                      <input
+                        className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                        inputMode="decimal"
+                        placeholder="0,00"
+                        value={r.valorAtual ?? ""}
+                        onChange={(e) => updateRow(r.id, { valorAtual: e.target.value })}
+                        onBlur={(e) => {
+                          const n = toNum(e.target.value);
+                          updateRow(r.id, { valorAtual: n === 0 ? "" : String(n) });
+                        }}
+                        title="Preço atual estimado"
+                      />
+                    </td>
+
+                    <td className="px-3 py-2 text-right text-slate-200">
+                      {valorPosicao > 0
+                        ? valorPosicao.toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })
+                        : "—"}
+                    </td>
+
+                    <td className={`px-3 py-2 text-right ${varClass}`}>
+                      {hasVar ? `${varPerc.toFixed(2)}%` : "—"}
+                    </td>
+
+                    <td className="px-3 py-2 text-right text-slate-200">
+                      {partStr}
+                    </td>
+
+                    <td className="px-3 py-2 text-right text-slate-200 font-semibold">
+                      {dy12mValor > 0
+                        ? dy12mValor.toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })
+                        : "—"}
+                    </td>
+
+                    {MESES.map((_, idx) => (
+                      <td key={idx} className="px-3 py-2 text-right">
+                        <input
+                          className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                          inputMode="decimal"
+                          placeholder="0,00"
+                          value={dyMeses[idx] ?? ""}
+                          onChange={(e) => {
+                            const novo = [...dyMeses];
+                            novo[idx] = e.target.value;
+                            updateRow(r.id, { dyMeses: novo });
+                          }}
+                          onBlur={(e) => {
+                            const n = toNum(e.target.value);
+                            const novo = [...dyMeses];
+                            novo[idx] = n === 0 ? "" : String(n);
+                            updateRow(r.id, { dyMeses: novo });
+                          }}
+                          title={`DY em ${MESES[idx]} (R$)`}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p className="mt-3 text-[11px] text-slate-500">
+        Esta carteira é um modelo educacional e não constitui recomendação de investimento.
+      </p>
     </div>
+  </div>
   );
 }
