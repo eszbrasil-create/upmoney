@@ -13,6 +13,20 @@ const PIE_COLORS = {
   FII: "#fbbf24",
 };
 
+// Paleta estável para ATIVOS (D5)
+const ATIVO_COLORS = [
+  "#22c55e", // verde
+  "#0ea5e9", // azul claro
+  "#6366f1", // índigo
+  "#f97316", // laranja
+  "#ec4899", // rosa
+  "#eab308", // amarelo
+  "#14b8a6", // teal
+  "#8b5cf6", // roxo
+  "#f59e0b", // amber
+  "#10b981", // emerald
+];
+
 const MESES = [
   "Jan","Fev","Mar","Abr","Mai","Jun",
   "Jul","Ago","Set","Out","Nov","Dez"
@@ -56,7 +70,6 @@ function polarToCartesian(cx, cy, r, angleDeg) {
   const a = ((angleDeg - 90) * Math.PI) / 180;
   return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
 }
-
 function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
   const largeArc = endAngle - startAngle > 180 ? 1 : 0;
 
@@ -143,29 +156,17 @@ export default function CarteiraCash() {
       }
     });
 
-    // ==== donut por ATIVO (Top 6 + Outros) ====
+    // ==== donut por ATIVO ====
     const ativosRaw = Object.entries(somaPorAtivo)
       .map(([key, value]) => ({ key, name: key, value }))
       .filter((d) => d.value > 0)
       .sort((a, b) => b.value - a.value);
 
-    const TOP_N = 6;
-    const top = ativosRaw.slice(0, TOP_N);
-    const rest = ativosRaw.slice(TOP_N);
-    const outrosValue = rest.reduce((acc, x) => acc + x.value, 0);
+    const getColor = (i) => ATIVO_COLORS[i % ATIVO_COLORS.length];
 
-    const ativosFinal = outrosValue > 0
-      ? [...top, { key: "OUTROS", name: "Outros", value: outrosValue }]
-      : top;
-
-    const getColor = (i) => {
-      const hue = (i * 47) % 360;
-      return `hsl(${hue} 70% 55%)`;
-    };
-
-    const piePartsAtivos = ativosFinal.map((p, i) => ({
+    const piePartsAtivos = ativosRaw.map((p, i) => ({
       ...p,
-      color: p.key === "OUTROS" ? "hsl(210 10% 55%)" : getColor(i),
+      color: getColor(i),
       pct: total > 0 ? (p.value / total) * 100 : 0,
     }));
 
@@ -190,20 +191,15 @@ export default function CarteiraCash() {
   }, [carteira]);
 
   /* ===========================
-     Donut por ATIVO (sem legenda)
+     Donuts (sem legenda) + estados
   =========================== */
   const [activeIdxAtivo, setActiveIdxAtivo] = useState(null);
   const [hoverIdxAtivo, setHoverIdxAtivo] = useState(null);
   const idxShownAtivo = hoverIdxAtivo ?? activeIdxAtivo;
-  const hasHoverAtivo = idxShownAtivo != null;
 
-  /* ===========================
-     Donut por TIPO (sem legenda)
-  =========================== */
   const [activeIdxTipo, setActiveIdxTipo] = useState(null);
   const [hoverIdxTipo, setHoverIdxTipo] = useState(null);
   const idxShownTipo = hoverIdxTipo ?? activeIdxTipo;
-  const hasHoverTipo = idxShownTipo != null;
 
   // donuts compactos
   const size = 180;
@@ -290,8 +286,25 @@ export default function CarteiraCash() {
     };
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
+  // 🧠 D4 — mini insights abaixo dos donuts
+  const maiorAtivo = useMemo(() => {
+    if (!piePartsAtivos.length) return null;
+    return piePartsAtivos.reduce((max, item) =>
+      !max || item.value > max.value ? item : max,
+      null
+    );
+  }, [piePartsAtivos]);
+
+  const maiorTipo = useMemo(() => {
+    if (!piePartsTipos.length) return null;
+    return piePartsTipos.reduce((max, item) =>
+      !max || item.value > max.value ? item : max,
+      null
+    );
+  }, [piePartsTipos]);
+
   /* ===========================
-     DY mensal total — Fase B (idêntico CardDividendos)
+     DY mensal total (como no seu código)
   =========================== */
   const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
@@ -310,7 +323,9 @@ export default function CarteiraCash() {
       style={{ left: x, top: y }}
     >
       <div className="rounded-xl bg-slate-950/95 border border-white/10 px-3 py-2 shadow-2xl">
-        <div className="text-[11px] text-slate-300 font-medium">{mes}</div>
+        <div className="text-[11px] text-slate-300 font-medium">
+          {mes}
+        </div>
         <div className="text-sm text-slate-100 font-semibold">
           {valor.toLocaleString("pt-BR", {
             style: "currency",
@@ -321,6 +336,32 @@ export default function CarteiraCash() {
     </div>
   );
 
+  // 🟢 D1 — tooltip premium também para os donuts
+  const [pieTip, setPieTip] = useState(null);
+
+  const TooltipPie = ({ x, y, nome, valor, pct }) => (
+    <div
+      className="fixed z-[9999] pointer-events-none"
+      style={{ left: x, top: y }}
+    >
+      <div className="rounded-xl bg-slate-950/95 border border-white/10 px-3 py-2 shadow-2xl">
+        <div className="text-[11px] text-slate-300 font-medium">
+          {nome}
+        </div>
+        <div className="text-sm text-slate-100 font-semibold">
+          {valor.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          })}
+        </div>
+        <div className="text-[11px] text-emerald-300 font-medium mt-0.5">
+          {pct.toFixed(1)}%
+        </div>
+      </div>
+    </div>
+  );
+
+  // calcula altura máxima real usando o tamanho do chart
   const dyChartRef = useRef(null);
   const [dyBarMaxHeight, setDyBarMaxHeight] = useState(110);
 
@@ -330,8 +371,8 @@ export default function CarteiraCash() {
 
     const compute = () => {
       const h = el.clientHeight || 0;
-      const reservedForLabels = 44;
-      const topGap = 16;
+      const reservedForLabels = 44; // labels dos meses
+      const topGap = 16;           // gap no topo
       const usable = Math.max(60, h - reservedForLabels - topGap);
       setDyBarMaxHeight(usable);
     };
@@ -383,7 +424,7 @@ export default function CarteiraCash() {
         ) : (
           <div className="grid gap-4 md:grid-cols-4 items-stretch">
 
-            {/* Donut 1: por ATIVO */}
+            {/* Donut 1: por ATIVO (sem legenda) */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -398,39 +439,49 @@ export default function CarteiraCash() {
                         cy={cy}
                         r={(rOuter + rInner) / 2}
                         stroke="#0b1220"
-                        strokeOpacity="0.45"
+                        strokeOpacity="0.5"
                         strokeWidth={rOuter - rInner}
                         fill="none"
                       />
 
                       {piePartsAtivos.map((p, i) => {
-                        const selected = i === idxShownAtivo;
-
-                        // ✅ C2: hover expande raio
-                        const ro = selected ? rOuter + 3 : rOuter;
-                        const ri = selected ? rInner - 1 : rInner;
-
                         const { start, end } = anglesAtivo[i];
-                        const d = arcPath(cx, cy, ro, ri, start, end);
-
-                        // ✅ C2: resto opaco quando hover
-                        const opacity = selected ? 1 : (hasHoverAtivo ? 0.35 : 0.85);
+                        const d = arcPath(cx, cy, rOuter, rInner, start, end);
+                        const selected = i === idxShownAtivo;
 
                         return (
                           <path
                             key={p.key}
                             d={d}
                             fill={p.color}
-                            fillOpacity={opacity}
-                            stroke="rgba(15,23,42,0.85)"   // ✅ C1 separador
-                            strokeWidth="1.5"
-                            className={`transition-all duration-200 cursor-pointer ${
+                            fillOpacity={selected ? 1 : 0.85}
+                            className={`transition-all duration-150 cursor-pointer ${
                               selected
-                                ? "drop-shadow-[0_0_10px_rgba(34,197,94,0.55)]"
+                                ? "drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]"
                                 : ""
                             }`}
-                            onMouseEnter={() => setHoverIdxAtivo(i)}
-                            onMouseLeave={() => setHoverIdxAtivo(null)}
+                            onMouseEnter={(e) => {
+                              setHoverIdxAtivo(i);
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setPieTip({
+                                x: rect.left + rect.width / 2,
+                                y: rect.top - 8,
+                                nome: p.name,
+                                valor: p.value,
+                                pct: p.pct,
+                              });
+                            }}
+                            onMouseMove={(e) => {
+                              setPieTip((prev) =>
+                                prev
+                                  ? { ...prev, x: e.clientX, y: e.clientY - 12 }
+                                  : prev
+                              );
+                            }}
+                            onMouseLeave={() => {
+                              setHoverIdxAtivo(null);
+                              setPieTip(null);
+                            }}
                             onClick={() =>
                               setActiveIdxAtivo((prev) => (prev === i ? null : i))
                             }
@@ -450,13 +501,12 @@ export default function CarteiraCash() {
                       )}
                     </svg>
 
-                    {/* ✅ C3 centro mais legível */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="text-center leading-tight px-3 max-w-[120px]">
-                        <div className="text-slate-200 text-[11px] font-semibold whitespace-normal break-words">
+                      <div className="text-center leading-tight px-3">
+                        <div className="text-slate-200 text-sm font-semibold">
                           {centerAtivo.title}
                         </div>
-                        <div className="text-slate-100 text-lg font-extrabold mt-0.5">
+                        <div className="text-slate-100 text-lg font-extrabold">
                           {centerAtivo.line1}
                         </div>
                         {centerAtivo.line2 ? (
@@ -468,10 +518,20 @@ export default function CarteiraCash() {
                     </div>
                   </div>
                 </div>
+
+                {maiorAtivo && (
+                  <div className="mt-2 text-[11px] text-slate-400 text-center">
+                    Maior posição:{" "}
+                    <span className="text-slate-200 font-semibold">
+                      {maiorAtivo.name}
+                    </span>{" "}
+                    ({maiorAtivo.pct.toFixed(1)}%)
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Donut 2: por TIPO */}
+            {/* Donut 2: por TIPO (sem legenda) */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -486,37 +546,49 @@ export default function CarteiraCash() {
                         cy={cy}
                         r={(rOuter + rInner) / 2}
                         stroke="#0b1220"
-                        strokeOpacity="0.45"
+                        strokeOpacity="0.5"
                         strokeWidth={rOuter - rInner}
                         fill="none"
                       />
 
                       {piePartsTipos.map((p, i) => {
-                        const selected = i === idxShownTipo;
-
-                        const ro = selected ? rOuter + 3 : rOuter;
-                        const ri = selected ? rInner - 1 : rInner;
-
                         const { start, end } = anglesTipo[i];
-                        const d = arcPath(cx, cy, ro, ri, start, end);
-
-                        const opacity = selected ? 1 : (hasHoverTipo ? 0.35 : 0.85);
+                        const d = arcPath(cx, cy, rOuter, rInner, start, end);
+                        const selected = i === idxShownTipo;
 
                         return (
                           <path
                             key={p.key}
                             d={d}
                             fill={p.color}
-                            fillOpacity={opacity}
-                            stroke="rgba(15,23,42,0.85)"  // ✅ C1 separador
-                            strokeWidth="1.5"
-                            className={`transition-all duration-200 cursor-pointer ${
+                            fillOpacity={selected ? 1 : 0.85}
+                            className={`transition-all duration-150 cursor-pointer ${
                               selected
-                                ? "drop-shadow-[0_0_10px_rgba(56,189,248,0.55)]"
+                                ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]"
                                 : ""
                             }`}
-                            onMouseEnter={() => setHoverIdxTipo(i)}
-                            onMouseLeave={() => setHoverIdxTipo(null)}
+                            onMouseEnter={(e) => {
+                              setHoverIdxTipo(i);
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setPieTip({
+                                x: rect.left + rect.width / 2,
+                                y: rect.top - 8,
+                                nome: p.name,
+                                valor: p.value,
+                                pct: p.pct,
+                              });
+                            }}
+                            onMouseMove={(e) => {
+                              setPieTip((prev) =>
+                                prev
+                                  ? { ...prev, x: e.clientX, y: e.clientY - 12 }
+                                  : prev
+                              );
+                            }}
+                            onMouseLeave={() => {
+                              setHoverIdxTipo(null);
+                              setPieTip(null);
+                            }}
                             onClick={() =>
                               setActiveIdxTipo((prev) => (prev === i ? null : i))
                             }
@@ -537,11 +609,11 @@ export default function CarteiraCash() {
                     </svg>
 
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="text-center leading-tight px-3 max-w-[120px]">
-                        <div className="text-slate-200 text-[11px] font-semibold whitespace-normal break-words">
+                      <div className="text-center leading-tight px-3">
+                        <div className="text-slate-200 text-sm font-semibold">
                           {centerTipo.title}
                         </div>
-                        <div className="text-slate-100 text-lg font-extrabold mt-0.5">
+                        <div className="text-slate-100 text-lg font-extrabold">
                           {centerTipo.line1}
                         </div>
                         {centerTipo.line2 ? (
@@ -553,10 +625,20 @@ export default function CarteiraCash() {
                     </div>
                   </div>
                 </div>
+
+                {maiorTipo && (
+                  <div className="mt-2 text-[11px] text-slate-400 text-center">
+                    Maior tipo:{" "}
+                    <span className="text-slate-200 font-semibold">
+                      {maiorTipo.name}
+                    </span>{" "}
+                    ({maiorTipo.pct.toFixed(1)}%)
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Barras DY — Fase B */}
+            {/* Barras DY — mesma base que você mandou */}
             <div className="md:col-span-2">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col relative">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -637,6 +719,16 @@ export default function CarteiraCash() {
           </div>
         )}
       </div>
+
+      {pieTip && (
+        <TooltipPie
+          x={pieTip.x}
+          y={pieTip.y}
+          nome={pieTip.nome}
+          valor={pieTip.valor}
+          pct={pieTip.pct}
+        />
+      )}
 
       {/* ======= Tabela de ativos (inalterada) ======= */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4">
