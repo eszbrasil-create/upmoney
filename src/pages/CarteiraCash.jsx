@@ -531,10 +531,10 @@ export default function CarteiraCash() {
       line1: it.value.toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL",
-        maximumFractionDigits: 0,
-      }),
-      line2: `${it.pct.toFixed(1)}%`,
-    };
+          maximumFractionDigits: 0,
+        }),
+        line2: `${it.pct.toFixed(1)}%`,
+      };
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
   /* ===========================
@@ -634,6 +634,11 @@ export default function CarteiraCash() {
 
     setLancamentos((prev) => [...prev, novo]);
     setIsAddModalOpen(false);
+  };
+
+  // 🔥 Deletar lançamento
+  const handleDeleteLanc = (id) => {
+    setLancamentos((prev) => prev.filter((l) => l.id !== id));
   };
 
   // 🔎 Lista de lançamentos ordenada (mais recente por data / id)
@@ -1277,7 +1282,8 @@ export default function CarteiraCash() {
       {/* Modal Adicionar Ativos */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
-          <div className="w-[80vw] h-[80vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 overflow-auto">
+          {/* 🔄 Modal 70% largura, 90% altura, com scroll interno */}
+          <div className="w-[70vw] h-[90vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 overflow-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-slate-100 font-semibold text-lg">
                 Adicionar ativo à base
@@ -1417,6 +1423,9 @@ export default function CarteiraCash() {
                           <th className="px-3 py-2 text-left font-medium">
                             Data
                           </th>
+                          <th className="px-1 py-2 text-center font-medium">
+                            {/* coluna da lixeira (sem título) */}
+                          </th>
                           <th className="px-3 py-2 text-left font-medium">
                             Ticker
                           </th>
@@ -1448,11 +1457,33 @@ export default function CarteiraCash() {
                               <td className="px-3 py-1.5 text-slate-400">
                                 {idx + 1}
                               </td>
+
+                              {/* Data */}
                               <td className="px-3 py-1.5 text-slate-100">
                                 {l.dataEntrada
                                   ? formatDateBR(l.dataEntrada)
                                   : "—"}
                               </td>
+
+                              {/* Lixeira ao lado da data */}
+                              <td className="px-1 py-1.5 text-center align-middle">
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteLanc(l.id)}
+                                  className="
+                                    inline-flex items-center justify-center
+                                    h-6 w-6 rounded-full
+                                    text-slate-400 hover:text-rose-100
+                                    hover:bg-rose-500/70
+                                    text-[11px]
+                                    transition
+                                  "
+                                  title="Excluir lançamento"
+                                >
+                                  🗑️
+                                </button>
+                              </td>
+
                               <td className="px-3 py-1.5 text-slate-100">
                                 {(l.ticker || "").toUpperCase()}
                               </td>
