@@ -636,6 +636,17 @@ export default function CarteiraCash() {
     setIsAddModalOpen(false);
   };
 
+  // 🔎 Lista de lançamentos ordenada (mais recente por data / id)
+  const lancOrdenados = useMemo(() => {
+    const arr = [...lancamentos];
+    return arr.sort((a, b) => {
+      if (a.dataEntrada && b.dataEntrada && a.dataEntrada !== b.dataEntrada) {
+        return a.dataEntrada < b.dataEntrada ? 1 : -1; // data mais recente primeiro
+      }
+      return (b.id || 0) - (a.id || 0); // fallback pelo id (Date.now)
+    });
+  }, [lancamentos]);
+
   return (
     <div className="pt-0 pr-3 pl-0 relative">
       {/* FAIXA FIXA COM BALÃO EXPANSÍVEL */}
@@ -1377,6 +1388,109 @@ export default function CarteiraCash() {
                 médio e data de entrada mais antiga).
               </p>
             </form>
+
+            {/* 🧾 Lista de lançamentos cadastrados */}
+            <div className="mt-6 border-t border-slate-700 pt-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-slate-100 text-sm font-semibold">
+                  Lançamentos cadastrados
+                </h3>
+                <span className="text-[11px] text-slate-400">
+                  Total: {lancOrdenados.length} lançamento(s)
+                </span>
+              </div>
+
+              {lancOrdenados.length === 0 ? (
+                <p className="text-[11px] text-slate-500">
+                  Nenhum lançamento cadastrado ainda. Preencha os campos acima e
+                  clique em <strong>Salvar lançamento</strong>.
+                </p>
+              ) : (
+                <div className="rounded-xl border border-slate-700 bg-slate-950/60 overflow-hidden max-h-[40vh]">
+                  <div className="overflow-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-slate-800/80 text-slate-300">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium">
+                            #
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium">
+                            Data
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium">
+                            Ticker
+                          </th>
+                          <th className="px-3 py-2 text-left font-medium">
+                            Tipo
+                          </th>
+                          <th className="px-3 py-2 text-right font-medium">
+                            Quantidade
+                          </th>
+                          <th className="px-3 py-2 text-right font-medium">
+                            Preço (R$)
+                          </th>
+                          <th className="px-3 py-2 text-right font-medium">
+                            Valor (R$)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lancOrdenados.map((l, idx) => {
+                          const qtd = toNum(l.qtd);
+                          const preco = toNum(l.preco);
+                          const valor = qtd * preco;
+
+                          return (
+                            <tr
+                              key={l.id}
+                              className="border-t border-slate-800 hover:bg-slate-800/40"
+                            >
+                              <td className="px-3 py-1.5 text-slate-400">
+                                {idx + 1}
+                              </td>
+                              <td className="px-3 py-1.5 text-slate-100">
+                                {l.dataEntrada
+                                  ? formatDateBR(l.dataEntrada)
+                                  : "—"}
+                              </td>
+                              <td className="px-3 py-1.5 text-slate-100">
+                                {(l.ticker || "").toUpperCase()}
+                              </td>
+                              <td className="px-3 py-1.5 text-slate-200">
+                                {l.tipo === "RF"
+                                  ? "RF"
+                                  : l.tipo === "FII"
+                                  ? "FII"
+                                  : "Ações"}
+                              </td>
+                              <td className="px-3 py-1.5 text-right text-slate-100">
+                                {l.qtd || "—"}
+                              </td>
+                              <td className="px-3 py-1.5 text-right text-slate-100">
+                                {preco > 0
+                                  ? preco.toLocaleString("pt-BR", {
+                                      style: "currency",
+                                      currency: "BRL",
+                                    })
+                                  : "—"}
+                              </td>
+                              <td className="px-3 py-1.5 text-right text-slate-100">
+                                {valor > 0
+                                  ? valor.toLocaleString("pt-BR", {
+                                      style: "currency",
+                                      currency: "BRL",
+                                    })
+                                  : "—"}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
