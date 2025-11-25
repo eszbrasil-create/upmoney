@@ -213,9 +213,9 @@ export default function Landing({ onNavigate }) {
       <main className="flex-1">
         <section className="bg-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-12 items-center">
-            {/* Imagem */}
+            {/* ✅ Imagem MAIOR */}
             <div className="order-2 md:order-1">
-              <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
+              <div className="aspect-[3/2] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
                 <img
                   src="/hero-hand-tree.png"
                   alt="Mão com moedas e uma pequena árvore"
@@ -226,7 +226,6 @@ export default function Landing({ onNavigate }) {
 
             {/* Texto e CTA */}
             <div className="order-1 md:order-2">
-              {/* ✅ fonte um pouco menor */}
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1f3548] leading-tight">
                 Conquiste seu Primeiro Dividendo em 30 dias
               </h1>
@@ -237,8 +236,8 @@ export default function Landing({ onNavigate }) {
                 e o suporte que faltava para finalmente entrar no mundo dos investimentos.
               </p>
 
-              {/* ✅ CTAs lado a lado + fontes menores */}
-              <div className="mt-7 flex flex-wrap items-center gap-3">
+              {/* ✅ MAIS ESPAÇO antes dos botões */}
+              <div className="mt-10 flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => setIsModalOpen(true)}
                   className="inline-flex items-center gap-2 rounded-2xl bg-[#F5B60A] px-6 py-3 text-base font-bold text-[#1f3548] shadow-sm hover:brightness-105 transition"
@@ -304,9 +303,9 @@ export default function Landing({ onNavigate }) {
               </button>
             </div>
 
-            {/* Imagem à direita */}
+            {/* ✅ Imagem MAIOR na seção 2 */}
             <div className="order-2">
-              <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
+              <div className="aspect-[3/2] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
                 <img
                   src="/hero-dividendo.png"
                   alt="Benefícios do programa"
