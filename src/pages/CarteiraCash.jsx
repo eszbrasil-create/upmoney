@@ -13,7 +13,10 @@ const PIE_COLORS = {
   FII: "#fbbf24",
 };
 
-const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const MESES = [
+  "Jan","Fev","Mar","Abr","Mai","Jun",
+  "Jul","Ago","Set","Out","Nov","Dez"
+];
 
 // Carteira base (modelo inicial)
 const BASE_ROWS = [
@@ -101,7 +104,7 @@ export default function CarteiraCash() {
     );
   };
 
-  // ✅ Cálculos globais (2 donuts + DY) com Top 6 + Outros
+  // ✅ Cálculos globais (2 donuts + DY)
   const {
     totalGeral,
     piePartsAtivos,
@@ -145,30 +148,16 @@ export default function CarteiraCash() {
       .filter((d) => d.value > 0)
       .sort((a, b) => b.value - a.value);
 
-    const TOP_N = 6;
-    const topAtivos = ativosRaw.slice(0, TOP_N);
-    const restoAtivos = ativosRaw.slice(TOP_N);
-
-    const somaOutros = restoAtivos.reduce((acc, it) => acc + it.value, 0);
-
-    const ativosComOutros =
-      somaOutros > 0
-        ? [...topAtivos, { key: "OUTROS", name: "Outros", value: somaOutros }]
-        : topAtivos;
-
     const getColor = (i) => {
       const hue = (i * 47) % 360;
       return `hsl(${hue} 70% 55%)`;
     };
 
-    const piePartsAtivos = ativosComOutros.map((p, i) => {
-      const isOutros = p.key === "OUTROS";
-      return {
-        ...p,
-        color: isOutros ? "rgba(148,163,184,0.9)" : getColor(i), // slate-400 vibe
-        pct: total > 0 ? (p.value / total) * 100 : 0,
-      };
-    });
+    const piePartsAtivos = ativosRaw.map((p, i) => ({
+      ...p,
+      color: getColor(i),
+      pct: total > 0 ? (p.value / total) * 100 : 0,
+    }));
 
     // ==== donut por TIPO ====
     const tiposRaw = [
@@ -204,7 +193,7 @@ export default function CarteiraCash() {
   const [hoverIdxTipo, setHoverIdxTipo] = useState(null);
   const idxShownTipo = hoverIdxTipo ?? activeIdxTipo;
 
-  // ✅ donuts MAIS compactos
+  // donuts compactos e seguros dentro da caixa
   const size = 160;
   const cx = size / 2;
   const cy = size / 2;
@@ -356,112 +345,78 @@ export default function CarteiraCash() {
             tabela para visualizar os gráficos.
           </p>
         ) : (
-          // ✅ mais espaço pro DY: 5 colunas (1 + 1 + 3)
-          <div className="grid gap-4 md:grid-cols-5 items-stretch">
+          <div className="grid gap-4 md:grid-cols-4 items-stretch">
 
-            {/* Pizza 1: por ATIVO */}
+            {/* Pizza 1: por ATIVO (sem legenda) */}
             <div className="md:col-span-1">
-              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3">
+              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 overflow-hidden flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
                   Participação por ativo
                 </div>
 
-                <div className="grid grid-cols-[1fr_160px] gap-2 items-center">
-                  <div className="space-y-2 pr-2 max-h-[200px] overflow-y-auto">
-                    {piePartsAtivos.map((it, i) => {
-                      const isActive = i === idxShownAtivo;
-                      return (
-                        <div
-                          key={it.key}
-                          onMouseEnter={() => setHoverIdxAtivo(i)}
-                          onMouseLeave={() => setHoverIdxAtivo(null)}
-                          onClick={() =>
-                            setActiveIdxAtivo((prev) => (prev === i ? null : i))
-                          }
-                          className={`rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2 cursor-pointer transition
-                            ${isActive ? "ring-1 ring-emerald-400/50 bg-slate-900/70" : ""}`}
-                        >
-                          <div className="flex items-center w-full">
-                            <span
-                              className="inline-block h-3 w-3 rounded-full mr-2"
-                              style={{ backgroundColor: it.color }}
-                            />
-                            <span className="text-slate-100 text-sm truncate flex-1">
-                              {it.name}
-                            </span>
-                            <span className="text-slate-300 text-sm ml-auto tabular-nums">
-                              {it.pct.toFixed(1)}%
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                <div className="flex-1 min-h-0 flex items-center justify-center">
+                  <div className="relative" style={{ width: size, height: size }}>
+                    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={(rOuter + rInner) / 2}
+                        stroke="#0b1220"
+                        strokeOpacity="0.5"
+                        strokeWidth={rOuter - rInner}
+                        fill="none"
+                      />
 
-                  <div className="flex items-center justify-center">
-                    <div className="relative" style={{ width: size, height: size }}>
-                      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                      {piePartsAtivos.map((p, i) => {
+                        const { start, end } = anglesAtivo[i];
+                        const d = arcPath(cx, cy, rOuter, rInner, start, end);
+                        const selected = i === idxShownAtivo;
+
+                        return (
+                          <path
+                            key={p.key}
+                            d={d}
+                            fill={p.color}
+                            fillOpacity={selected ? 1 : 0.85}
+                            className={`transition-all duration-150 cursor-pointer ${
+                              selected
+                                ? "drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+                                : ""
+                            }`}
+                            onMouseEnter={() => setHoverIdxAtivo(i)}
+                            onMouseLeave={() => setHoverIdxAtivo(null)}
+                            onClick={() =>
+                              setActiveIdxAtivo((prev) => (prev === i ? null : i))
+                            }
+                          />
+                        );
+                      })}
+
+                      {idxShownAtivo != null && (
                         <circle
                           cx={cx}
                           cy={cy}
-                          r={(rOuter + rInner) / 2}
-                          stroke="#0b1220"
-                          strokeOpacity="0.5"
-                          strokeWidth={rOuter - rInner}
+                          r={rInner - 6}
                           fill="none"
+                          stroke="rgba(15,23,42,0.55)"
+                          strokeWidth="12"
                         />
+                      )}
+                    </svg>
 
-                        {piePartsAtivos.map((p, i) => {
-                          const { start, end } = anglesAtivo[i];
-                          const d = arcPath(cx, cy, rOuter, rInner, start, end);
-                          const selected = i === idxShownAtivo;
-
-                          return (
-                            <path
-                              key={p.key}
-                              d={d}
-                              fill={p.color}
-                              fillOpacity={selected ? 1 : 0.85}
-                              className={`transition-all duration-150 cursor-pointer ${
-                                selected
-                                  ? "drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]"
-                                  : ""
-                              }`}
-                              onMouseEnter={() => setHoverIdxAtivo(i)}
-                              onMouseLeave={() => setHoverIdxAtivo(null)}
-                              onClick={() =>
-                                setActiveIdxAtivo((prev) => (prev === i ? null : i))
-                              }
-                            />
-                          );
-                        })}
-
-                        {idxShownAtivo != null && (
-                          <circle
-                            cx={cx}
-                            cy={cy}
-                            r={rInner - 6}
-                            fill="none"
-                            stroke="rgba(15,23,42,0.55)"
-                            strokeWidth="12"
-                          />
-                        )}
-                      </svg>
-
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="text-center leading-tight px-2">
-                          <div className="text-slate-200 text-xs font-semibold truncate max-w-[120px]">
-                            {centerAtivo.title}
-                          </div>
-                          <div className="text-slate-100 text-base font-extrabold">
-                            {centerAtivo.line1}
-                          </div>
-                          {centerAtivo.line2 ? (
-                            <div className="text-slate-300 text-xs mt-0.5">
-                              {centerAtivo.line2}
-                            </div>
-                          ) : null}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="text-center leading-tight px-3">
+                        <div className="text-slate-200 text-[12px] font-semibold truncate max-w-[120px]">
+                          {centerAtivo.title}
                         </div>
+                        <div className="text-slate-100 text-base font-extrabold">
+                          {centerAtivo.line1}
+                        </div>
+                        {centerAtivo.line2 ? (
+                          <div className="text-slate-300 text-[12px] mt-0.5">
+                            {centerAtivo.line2}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -470,111 +425,76 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Pizza 2: por TIPO */}
+            {/* Pizza 2: por TIPO (sem legenda) */}
             <div className="md:col-span-1">
-              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3">
+              <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 overflow-hidden flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
                   Participação por tipo
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-3 items-center lg:items-start">
-                  {/* legenda */}
-                  <div className="w-full lg:flex-1 space-y-2 pr-0 lg:pr-2">
-                    {piePartsTipos.map((it, i) => {
-                      const isActive = i === idxShownTipo;
-                      return (
-                        <div
-                          key={it.key}
-                          onMouseEnter={() => setHoverIdxTipo(i)}
-                          onMouseLeave={() => setHoverIdxTipo(null)}
-                          onClick={() =>
-                            setActiveIdxTipo((prev) => (prev === i ? null : i))
-                          }
-                          className={`rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2 cursor-pointer transition
-                            ${isActive ? "ring-1 ring-sky-400/50 bg-slate-900/70" : ""}`}
-                        >
-                          <div className="flex items-center w-full">
-                            <span
-                              className="inline-block h-3 w-3 rounded-full mr-2"
-                              style={{ backgroundColor: it.color }}
-                            />
-                            <span className="text-slate-100 text-sm truncate flex-1">
-                              {it.name}
-                            </span>
-                            <span className="text-slate-300 text-sm ml-auto tabular-nums">
-                              {it.pct.toFixed(1)}%
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                <div className="flex-1 min-h-0 flex items-center justify-center">
+                  <div className="relative" style={{ width: size, height: size }}>
+                    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={(rOuter + rInner) / 2}
+                        stroke="#0b1220"
+                        strokeOpacity="0.5"
+                        strokeWidth={rOuter - rInner}
+                        fill="none"
+                      />
 
-                  {/* donut */}
-                  <div className="shrink-0 flex items-center justify-center lg:justify-end w-full lg:w-auto">
-                    <div className="relative" style={{ width: size, height: size }}>
-                      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                      {piePartsTipos.map((p, i) => {
+                        const { start, end } = anglesTipo[i];
+                        const d = arcPath(cx, cy, rOuter, rInner, start, end);
+                        const selected = i === idxShownTipo;
+
+                        return (
+                          <path
+                            key={p.key}
+                            d={d}
+                            fill={p.color}
+                            fillOpacity={selected ? 1 : 0.85}
+                            className={`transition-all duration-150 cursor-pointer ${
+                              selected
+                                ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]"
+                                : ""
+                            }`}
+                            onMouseEnter={() => setHoverIdxTipo(i)}
+                            onMouseLeave={() => setHoverIdxTipo(null)}
+                            onClick={() =>
+                              setActiveIdxTipo((prev) => (prev === i ? null : i))
+                            }
+                          />
+                        );
+                      })}
+
+                      {idxShownTipo != null && (
                         <circle
                           cx={cx}
                           cy={cy}
-                          r={(rOuter + rInner) / 2}
-                          stroke="#0b1220"
-                          strokeOpacity="0.5"
-                          strokeWidth={rOuter - rInner}
+                          r={rInner - 6}
                           fill="none"
+                          stroke="rgba(15,23,42,0.55)"
+                          strokeWidth="12"
                         />
+                      )}
+                    </svg>
 
-                        {piePartsTipos.map((p, i) => {
-                          const { start, end } = anglesTipo[i];
-                          const d = arcPath(cx, cy, rOuter, rInner, start, end);
-                          const selected = i === idxShownTipo;
-
-                          return (
-                            <path
-                              key={p.key}
-                              d={d}
-                              fill={p.color}
-                              fillOpacity={selected ? 1 : 0.85}
-                              className={`transition-all duration-150 cursor-pointer ${
-                                selected
-                                  ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]"
-                                  : ""
-                              }`}
-                              onMouseEnter={() => setHoverIdxTipo(i)}
-                              onMouseLeave={() => setHoverIdxTipo(null)}
-                              onClick={() =>
-                                setActiveIdxTipo((prev) => (prev === i ? null : i))
-                              }
-                            />
-                          );
-                        })}
-
-                        {idxShownTipo != null && (
-                          <circle
-                            cx={cx}
-                            cy={cy}
-                            r={rInner - 6}
-                            fill="none"
-                            stroke="rgba(15,23,42,0.55)"
-                            strokeWidth="12"
-                          />
-                        )}
-                      </svg>
-
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="text-center leading-tight px-2">
-                          <div className="text-slate-200 text-xs font-semibold">
-                            {centerTipo.title}
-                          </div>
-                          <div className="text-slate-100 text-base font-extrabold">
-                            {centerTipo.line1}
-                          </div>
-                          {centerTipo.line2 ? (
-                            <div className="text-slate-300 text-xs mt-0.5">
-                              {centerTipo.line2}
-                            </div>
-                          ) : null}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="text-center leading-tight px-3">
+                        <div className="text-slate-200 text-[12px] font-semibold">
+                          {centerTipo.title}
                         </div>
+                        <div className="text-slate-100 text-base font-extrabold">
+                          {centerTipo.line1}
+                        </div>
+                        {centerTipo.line2 ? (
+                          <div className="text-slate-300 text-[12px] mt-0.5">
+                            {centerTipo.line2}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -584,7 +504,7 @@ export default function CarteiraCash() {
             </div>
 
             {/* Barras DY com mais espaço */}
-            <div className="md:col-span-3">
+            <div className="md:col-span-2">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
                   DY mensal total
