@@ -14,8 +14,8 @@ const PIE_COLORS = {
 };
 
 const MESES = [
-  "Jan","Fev","Mar","Abr","Mai","Jun",
-  "Jul","Ago","Set","Out","Nov","Dez"
+  "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+  "Jul", "Ago", "Set", "Out", "Nov", "Dez",
 ];
 
 // Carteira base (modelo inicial)
@@ -41,7 +41,6 @@ const BASE_ROWS = [
 ];
 
 const LS_KEY = "cc_carteira_cash_v1";
-const LS_KEY_LANC = "cc_carteira_cash_lancamentos_v1";
 
 // Helper para converter texto em número
 function toNum(x) {
@@ -74,18 +73,6 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
   ].join(" ");
 }
 
-// helper para criar lançamento vazio
-function createEmptyLancamento(id) {
-  return {
-    id,
-    dataEntrada: "",
-    ticker: "",
-    tipo: "ACOES",
-    quantidade: "",
-    preco: "",
-  };
-}
-
 export default function CarteiraCash() {
   // Estado da carteira (editável)
   const [carteira, setCarteira] = useState(() => {
@@ -104,30 +91,8 @@ export default function CarteiraCash() {
     }
   });
 
-  // ✅ lançamentos (planilha simples tipo Excel)
-  const [lancamentos, setLancamentos] = useState(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY_LANC);
-      if (!raw) return [createEmptyLancamento(1)];
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed) || parsed.length === 0) {
-        return [createEmptyLancamento(1)];
-      }
-      return parsed.map((l, idx) => ({
-        id: l.id ?? idx + 1,
-        dataEntrada: l.dataEntrada ?? "",
-        ticker: l.ticker ?? "",
-        tipo: l.tipo ?? "ACOES",
-        quantidade: l.quantidade ?? "",
-        preco: l.preco ?? "",
-      }));
-    } catch {
-      return [createEmptyLancamento(1)];
-    }
-  });
-
-  // exibir/ocultar quadro de lançamentos
-  const [showLancamentos, setShowLancamentos] = useState(false);
+  // ✅ estado do balão "Carteiras Modelo UpMoney"
+  const [openCarteiras, setOpenCarteiras] = useState(false);
 
   // Persiste alterações
   useEffect(() => {
@@ -136,41 +101,10 @@ export default function CarteiraCash() {
     } catch {}
   }, [carteira]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(LS_KEY_LANC, JSON.stringify(lancamentos));
-    } catch {}
-  }, [lancamentos]);
-
   const updateRow = (id, patch) => {
     setCarteira((prev) =>
       prev.map((r) => (r.id === id ? { ...r, ...patch } : r))
     );
-  };
-
-  const updateLancamento = (id, patch) => {
-    setLancamentos((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, ...patch } : l))
-    );
-  };
-
-  const addLancamento = () => {
-    setLancamentos((prev) => {
-      const nextId =
-        prev.reduce((max, l) => Math.max(max, l.id || 0), 0) + 1;
-      return [...prev, createEmptyLancamento(nextId)];
-    });
-  };
-
-  const removeLancamento = (id) => {
-    setLancamentos((prev) => {
-      if (prev.length === 1) {
-        const only = prev[0];
-        if (only.id !== id) return prev;
-        return [createEmptyLancamento(only.id)];
-      }
-      return prev.filter((l) => l.id !== id);
-    });
   };
 
   // ✅ Cálculos globais (2 donuts + DY)
@@ -553,7 +487,6 @@ export default function CarteiraCash() {
           </p>
         ) : (
           <div className="grid gap-4 md:grid-cols-4 items-stretch">
-
             {/* Donut 1: por ATIVO (sem legenda) */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
@@ -563,7 +496,7 @@ export default function CarteiraCash() {
 
                 <div className="flex-1 flex items-center justify-center">
                   <div className="relative" style={{ width: size, height: size }}>
-                    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                    <svg width={size} height={size} viewBox={`0 0 {size} {size}`}>
                       <circle
                         cx={cx}
                         cy={cy}
@@ -726,7 +659,6 @@ export default function CarteiraCash() {
                   <div className="flex items-end gap-1 min-w-max h-full">
                     {dyBarData.map((d, i) => {
                       const v = d.dy || 0;
-
                       const alturaReal = Math.max(
                         4,
                         Math.round((v / dyMax) * dyBarMaxHeight)
@@ -785,241 +717,12 @@ export default function CarteiraCash() {
                 )}
               </div>
             </div>
-
           </div>
         )}
       </div>
 
-      {/* ======= Bloco inferior: Lançamentos + Tabela de carteira ======= */}
+      {/* ======= Tabela de ativos ======= */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4">
-        {/* Header: botão para abrir lançamentos */}
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-slate-200 text-sm font-medium">
-            Lançamentos de ativos
-          </h2>
-          <button
-            type="button"
-            onClick={() => setShowLancamentos((v) => !v)}
-            className="
-              inline-flex items-center gap-1
-              rounded-lg border border-emerald-400/60 bg-emerald-500/10
-              px-3 py-1.5 text-[12px] font-semibold
-              text-emerald-100 hover:bg-emerald-500/20 transition
-            "
-          >
-            {showLancamentos ? "Fechar lançamentos" : "Adicionar ativos"}
-          </button>
-        </div>
-
-        {/* Quadro de lançamentos (tipo Excel) */}
-        {showLancamentos && (
-          <div className="mb-4 rounded-xl border border-white/10 bg-slate-900/60 p-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[12px] text-slate-200 font-medium">
-                Base de operações (compras ao longo do tempo)
-              </span>
-              <button
-                type="button"
-                onClick={addLancamento}
-                className="
-                  text-[11px] px-2 py-1 rounded-lg
-                  border border-slate-500 bg-slate-800
-                  text-slate-100 hover:bg-slate-700 transition
-                "
-              >
-                + Nova linha
-              </button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="min-w-[720px] w-full text-xs">
-                <thead className="text-slate-300">
-                  <tr className="border-b border-slate-700/70">
-                    <th className="px-2 py-1 text-left font-medium w-32">
-                      Data entrada
-                    </th>
-                    <th className="px-2 py-1 text-left font-medium w-28">
-                      Ticker
-                    </th>
-                    <th className="px-2 py-1 text-left font-medium w-28">
-                      Tipo
-                    </th>
-                    <th className="px-2 py-1 text-right font-medium w-24">
-                      Quantidade
-                    </th>
-                    <th className="px-2 py-1 text-right font-medium w-28">
-                      Preço (R$)
-                    </th>
-                    <th className="px-2 py-1 text-right font-medium w-32">
-                      Custo total (R$)
-                    </th>
-                    <th className="px-2 py-1 text-center font-medium w-10">
-                      {/* lixeira */}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lancamentos.map((l) => {
-                    const qtdNum = toNum(l.quantidade);
-                    const precoNum = toNum(l.preco);
-                    const custo = qtdNum * precoNum;
-
-                    return (
-                      <tr
-                        key={l.id}
-                        className="border-b border-slate-800/60 hover:bg-slate-800/40"
-                      >
-                        <td className="px-2 py-1">
-                          <input
-                            type="date"
-                            className="
-                              w-full bg-slate-900 border border-slate-700
-                              rounded-md px-2 py-1
-                              text-[11px] text-slate-100
-                              focus:outline-none focus:ring-1 focus:ring-emerald-400
-                            "
-                            value={l.dataEntrada}
-                            onChange={(e) =>
-                              updateLancamento(l.id, {
-                                dataEntrada: e.target.value,
-                              })
-                            }
-                          />
-                        </td>
-
-                        <td className="px-2 py-1">
-                          <input
-                            className="
-                              w-full bg-transparent outline-none
-                              text-slate-100 placeholder:text-slate-600
-                              text-[12px]
-                            "
-                            placeholder="VALE3"
-                            value={l.ticker}
-                            onChange={(e) =>
-                              updateLancamento(l.id, {
-                                ticker: e.target.value.toUpperCase(),
-                              })
-                            }
-                          />
-                        </td>
-
-                        <td className="px-2 py-1">
-                          <select
-                            className="
-                              w-full bg-slate-900 border border-slate-700
-                              rounded-md px-2 py-1
-                              text-[11px] text-slate-100
-                              focus:outline-none focus:ring-1 focus:ring-emerald-400
-                            "
-                            value={l.tipo}
-                            onChange={(e) =>
-                              updateLancamento(l.id, { tipo: e.target.value })
-                            }
-                          >
-                            <option value="RF">RF</option>
-                            <option value="ACOES">Ações</option>
-                            <option value="FII">FII</option>
-                          </select>
-                        </td>
-
-                        <td className="px-2 py-1 text-right">
-                          <input
-                            className="
-                              w-full bg-transparent text-right outline-none
-                              text-slate-100 placeholder:text-slate-600
-                              text-[12px]
-                            "
-                            inputMode="decimal"
-                            placeholder="0"
-                            value={l.quantidade}
-                            onChange={(e) =>
-                              updateLancamento(l.id, {
-                                quantidade: e.target.value,
-                              })
-                            }
-                            onBlur={(e) => {
-                              const n = toNum(e.target.value);
-                              updateLancamento(l.id, {
-                                quantidade: n === 0 ? "" : String(n),
-                              });
-                            }}
-                          />
-                        </td>
-
-                        <td className="px-2 py-1 text-right">
-                          <input
-                            className="
-                              w-full bg-transparent text-right outline-none
-                              text-slate-100 placeholder:text-slate-600
-                              text-[12px]
-                            "
-                            inputMode="decimal"
-                            placeholder="0,00"
-                            value={l.preco}
-                            onChange={(e) =>
-                              updateLancamento(l.id, {
-                                preco: e.target.value,
-                              })
-                            }
-                            onBlur={(e) => {
-                              const n = toNum(e.target.value);
-                              updateLancamento(l.id, {
-                                preco: n === 0 ? "" : String(n),
-                              });
-                            }}
-                          />
-                        </td>
-
-                        <td className="px-2 py-1 text-right text-slate-100">
-                          {custo > 0
-                            ? custo.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                              })
-                            : "—"}
-                        </td>
-
-                        <td className="px-2 py-1 text-center">
-                          <button
-                            type="button"
-                            onClick={() => removeLancamento(l.id)}
-                            className="
-                              inline-flex items-center justify-center
-                              h-7 w-7 rounded-full
-                              bg-slate-800 text-slate-300
-                              hover:bg-rose-600 hover:text-white
-                              transition
-                            "
-                            title="Excluir linha"
-                          >
-                            🗑️
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-3 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setShowLancamentos(false)}
-                className="
-                  text-[12px] px-3 py-1.5 rounded-lg
-                  border border-slate-500 bg-slate-800
-                  text-slate-100 hover:bg-slate-700 transition
-                "
-              >
-                Concluir
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Título e legenda da tabela de carteira */}
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-slate-200 text-sm font-medium">
             Detalhamento da carteira modelo
@@ -1029,7 +732,6 @@ export default function CarteiraCash() {
           </span>
         </div>
 
-        {/* Tabela de ativos (inalterada) */}
         <div className="rounded-xl border border-white/10 bg-slate-900/40 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-[2000px] w-full text-sm">
@@ -1038,7 +740,6 @@ export default function CarteiraCash() {
                   <th className="px-3 py-2 text-left text-xs font-medium sticky left-0 bg-slate-800/70 z-20">
                     #
                   </th>
-
                   <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
                     Ticker
                   </th>
@@ -1095,7 +796,10 @@ export default function CarteiraCash() {
                   const dy12mValor = dyMeses.reduce((acc, v) => acc + toNum(v), 0);
 
                   return (
-                    <tr key={r.id} className="border-t border-white/5 hover:bg-slate-800/30">
+                    <tr
+                      key={r.id}
+                      className="border-t border-white/5 hover:bg-slate-800/30"
+                    >
                       <td className="px-3 py-2 text-slate-500 text-xs sticky left-0 bg-slate-900/90 z-10">
                         {i + 1}
                       </td>
