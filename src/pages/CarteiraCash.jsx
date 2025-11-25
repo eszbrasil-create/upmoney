@@ -279,19 +279,20 @@ export default function CarteiraCash() {
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
   /* ===========================
-     DY mensal (ocupa todo o chart) + animação + tooltip
+     DY mensal total — Fase B (idêntico CardDividendos)
+     verde dólar + tooltip premium + gap topo + animação
   =========================== */
   const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
 
-  // animação igual CardEvolucao
+  // animação igual Evolução / CardDividendos
   const [animateDy, setAnimateDy] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAnimateDy(true), 50);
     return () => clearTimeout(t);
   }, []);
 
-  // tooltip DY
+  // tooltip premium
   const [dyTip, setDyTip] = useState(null);
 
   const TooltipDy = ({ x, y, mes, valor }) => (
@@ -313,8 +314,9 @@ export default function CarteiraCash() {
     </div>
   );
 
+  // calcula altura máxima real usando o tamanho do chart
   const dyChartRef = useRef(null);
-  const [dyBarMaxHeight, setDyBarMaxHeight] = useState(90);
+  const [dyBarMaxHeight, setDyBarMaxHeight] = useState(110);
 
   useLayoutEffect(() => {
     if (!dyChartRef.current) return;
@@ -322,8 +324,8 @@ export default function CarteiraCash() {
 
     const compute = () => {
       const h = el.clientHeight || 0;
-      const reservedForLabels = 42; // labels dos meses
-      const topGap = 10;            // espaço no topo
+      const reservedForLabels = 44; // labels dos meses
+      const topGap = 16;           // ✅ GAP NO TOPO
       const usable = Math.max(60, h - reservedForLabels - topGap);
       setDyBarMaxHeight(usable);
     };
@@ -529,7 +531,7 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Barras DY com animação + tooltip */}
+            {/* Barras DY — Fase B */}
             <div className="md:col-span-2">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col relative">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -538,7 +540,11 @@ export default function CarteiraCash() {
 
                 <div
                   ref={dyChartRef}
-                  className="flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/80 p-3 pt-2 overflow-x-auto overflow-y-hidden"
+                  className="
+                    flex-1 min-h-0 rounded-2xl border border-white/10
+                    bg-slate-900/80 p-3 pt-2
+                    overflow-x-auto overflow-y-hidden
+                  "
                 >
                   <div className="flex items-end gap-1 min-w-max h-full">
                     {dyBarData.map((d, i) => {
@@ -553,7 +559,13 @@ export default function CarteiraCash() {
                       return (
                         <div key={i} className="flex flex-col items-center gap-2 w-10">
                           <div
-                            className="w-full rounded-xl bg-emerald-400/80 hover:bg-emerald-300 transition-all duration-700 ease-out"
+                            className="
+                              w-full rounded-xl
+                              bg-emerald-500/90
+                              hover:bg-emerald-400
+                              transition-all duration-700 ease-out
+                              hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
+                            "
                             style={{ height: `${altura}px` }}
                             onMouseEnter={(e) => {
                               const rect = e.currentTarget.getBoundingClientRect();
@@ -573,7 +585,11 @@ export default function CarteiraCash() {
                             }}
                             onMouseLeave={() => setDyTip(null)}
                           />
-                          <div className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap">
+
+                          <div
+                            className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap font-medium"
+                            style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
+                          >
                             {d.name}
                           </div>
                         </div>
