@@ -41,6 +41,7 @@ const BASE_ROWS = [
 ];
 
 const LS_KEY = "cc_carteira_cash_v1";
+const LS_LANC_KEY = "cc_carteira_cash_lanc_v1"; // lançamentos múltiplas compras
 
 // Helper para converter texto em número
 function toNum(x) {
@@ -74,7 +75,7 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
 }
 
 export default function CarteiraCash() {
-  // Estado da carteira (editável)
+  // Estado da carteira (tabela atual)
   const [carteira, setCarteira] = useState(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -94,12 +95,40 @@ export default function CarteiraCash() {
   // ✅ estado do balão "Carteiras Modelo UpMoney"
   const [openCarteiras, setOpenCarteiras] = useState(false);
 
-  // Persiste alterações
+  // ✅ estado dos lançamentos (múltiplas compras por ativo) – ainda invisíveis (Opção A)
+  const [lancamentos, setLancamentos] = useState(() => {
+    try {
+      const raw = localStorage.getItem(LS_LANC_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // ✅ estado do modal "Adicionar ativos"
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addForm, setAddForm] = useState({
+    ticker: "",
+    tipo: "ACOES",
+    qtd: "",
+    preco: "",
+    dataEntrada: "",
+  });
+
+  // Persiste carteira
   useEffect(() => {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(carteira));
     } catch {}
   }, [carteira]);
+
+  // Persiste lançamentos
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_LANC_KEY, JSON.stringify(lancamentos));
+    } catch {}
+  }, [lancamentos]);
 
   const updateRow = (id, patch) => {
     setCarteira((prev) =>
@@ -107,7 +136,54 @@ export default function CarteiraCash() {
     );
   };
 
-  // ✅ Cálculos globais (2 donuts + DY)
+  // handler inputs do modal
+  const handleAddFormChange = (e) => {
+    const { name, value } = e.target;
+    setAddForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const resetAddForm = () => {
+    setAddForm({
+      ticker: "",
+      tipo: "ACOES",
+      qtd: "",
+      preco: "",
+      dataEntrada: "",
+    });
+  };
+
+  const handleAddLancamento = (e) => {
+    e.preventDefault();
+
+    const ticker = (addForm.ticker || "").trim().toUpperCase();
+    const qtd = toNum(addForm.qtd);
+    const preco = toNum(addForm.preco);
+    const dataEntrada = addForm.dataEntrada || "";
+    const tipo = addForm.tipo || "ACOES";
+
+    if (!ticker || qtd <= 0 || preco <= 0) {
+      alert("Preencha pelo menos Ticker, Quantidade e Preço de compra com valores válidos.");
+      return;
+    }
+
+    const novo = {
+      id: Date.now(),
+      ticker,
+      tipo,
+      qtd,
+      preco,
+      dataEntrada,
+    };
+
+    setLancamentos((prev) => [...prev, novo]);
+    resetAddForm();
+    setIsAddModalOpen(false);
+  };
+
+  // ✅ Cálculos globais (2 donuts + DY) – ainda baseados só na tabela atual
   const {
     totalGeral,
     piePartsAtivos,
@@ -138,7 +214,7 @@ export default function CarteiraCash() {
       if (!somaPorTipo[tipoKey]) somaPorTipo[tipoKey] = 0;
       somaPorTipo[tipoKey] += valorPosicao;
 
-      // DY mensal total
+      // DY mensal total (ainda manual)
       const arrMeses = Array.isArray(r.dyMeses) ? r.dyMeses : [];
       for (let i = 0; i < 12; i++) {
         dyMesTotal[i] += toNum(arrMeses[i]);
@@ -377,7 +453,6 @@ export default function CarteiraCash() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Pill Ver modelos em laranja, com animação */}
                   <span
                     className="
                       text-[11px] font-semibold
@@ -496,7 +571,7 @@ export default function CarteiraCash() {
 
                 <div className="flex-1 flex items-center justify-center">
                   <div className="relative" style={{ width: size, height: size }}>
-                    <svg width={size} height={size} viewBox={`0 0 {size} {size}`}>
+                    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
                       <circle
                         cx={cx}
                         cy={cy}
@@ -724,9 +799,23 @@ export default function CarteiraCash() {
       {/* ======= Tabela de ativos ======= */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-slate-200 text-sm font-medium">
-            Detalhamento da carteira modelo
-          </h2>
+          {/* 🔘 Botão Adicionar ativos no lugar do título */}
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="
+              inline-flex items-center gap-2
+              rounded-lg bg-emerald-500/90 hover:bg-emerald-400
+              text-slate-950 text-xs font-semibold
+              px-3 py-2
+              shadow-sm hover:shadow-md
+              transition
+            "
+          >
+            <span className="text-sm">➕</span>
+            <span>Adicionar ativos</span>
+          </button>
+
           <span className="text-[11px] text-slate-400">
             Edite tipo, setor, data de entrada, quantidade, entrada, valor atual e todos os DYs.
           </span>
@@ -963,6 +1052,145 @@ export default function CarteiraCash() {
           Esta carteira é um modelo educacional e não constitui recomendação de investimento.
         </p>
       </div>
+
+      {/* Modal Adicionar ativos (múltiplas compras) */}
+      {isAddModalOpen && (
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/70 p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-white/10 shadow-2xl p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h2 className="text-slate-50 text-base font-semibold">
+                  Adicionar ativos
+                </h2>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Registre cada compra com data, quantidade e preço. Você pode lançar
+                  várias compras do mesmo ativo em dias diferentes.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddModalOpen(false);
+                  resetAddForm();
+                }}
+                className="ml-4 rounded-lg px-2 py-1 text-slate-300 hover:bg-slate-800 text-sm"
+                aria-label="Fechar"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleAddLancamento} className="space-y-4 mt-2">
+              {/* Linha 1: Ticker + Tipo */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-[11px] text-slate-300 mb-1">
+                    Ativo (ticker)
+                  </label>
+                  <input
+                    name="ticker"
+                    value={addForm.ticker}
+                    onChange={handleAddFormChange}
+                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
+                    placeholder="Ex.: VALE3, HGLG11"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-slate-300 mb-1">
+                    Tipo
+                  </label>
+                  <select
+                    name="tipo"
+                    value={addForm.tipo}
+                    onChange={handleAddFormChange}
+                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-2 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
+                  >
+                    <option value="ACOES">Ações</option>
+                    <option value="FII">FII</option>
+                    <option value="RF">RF</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Linha 2: Quantidade + Preço */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] text-slate-300 mb-1">
+                    Quantidade
+                  </label>
+                  <input
+                    name="qtd"
+                    value={addForm.qtd}
+                    onChange={handleAddFormChange}
+                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-100 text-right outline-none focus:ring-1 focus:ring-emerald-400"
+                    inputMode="decimal"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-slate-300 mb-1">
+                    Preço de compra (R$)
+                  </label>
+                  <input
+                    name="preco"
+                    value={addForm.preco}
+                    onChange={handleAddFormChange}
+                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-100 text-right outline-none focus:ring-1 focus:ring-emerald-400"
+                    inputMode="decimal"
+                    placeholder="0,00"
+                  />
+                </div>
+              </div>
+
+              {/* Linha 3: Data de entrada */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] text-slate-300 mb-1">
+                    Data de entrada
+                  </label>
+                  <input
+                    type="date"
+                    name="dataEntrada"
+                    value={addForm.dataEntrada}
+                    onChange={handleAddFormChange}
+                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
+                  />
+                </div>
+                <div className="flex items-end text-[11px] text-slate-400">
+                  <p>
+                    Esses lançamentos ficarão salvos e, em uma fase futura, vão
+                    alimentar automaticamente sua base consolidada e os DYs.
+                  </p>
+                </div>
+              </div>
+
+              {/* Botões */}
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddModalOpen(false);
+                    resetAddForm();
+                  }}
+                  className="rounded-lg border border-slate-600 px-4 py-2 text-xs text-slate-200 hover:bg-slate-800"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-emerald-500 px-5 py-2 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
+                >
+                  Salvar lançamento
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
