@@ -14,39 +14,202 @@ const PIE_COLORS = {
 };
 
 const MESES = [
-  "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-  "Jul", "Ago", "Set", "Out", "Nov", "Dez",
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
 ];
 
 // Carteira base (modelo inicial)
 const BASE_ROWS = [
   // AÇÕES
-  { id: 1, tipo: "ACOES", ticker: "VALE3", nome: "Vale", dataEntrada: "", qtd: "", entrada: "", valorAtual: "", dy: "", dyMeses: Array(12).fill("") },
-  { id: 2, tipo: "ACOES", ticker: "ITUB4", nome: "Itaú Unibanco", dataEntrada: "", qtd: "", entrada: "", valorAtual: "", dy: "", dyMeses: Array(12).fill("") },
-  { id: 3, tipo: "ACOES", ticker: "GGBR4", nome: "Gerdau", dataEntrada: "", qtd: "", entrada: "", valorAtual: "", dy: "", dyMeses: Array(12).fill("") },
-  { id: 4, tipo: "ACOES", ticker: "AXIA6", nome: "AXIA6", dataEntrada: "", qtd: "", entrada: "", valorAtual: "", dy: "", dyMeses: Array(12).fill("") },
-  { id: 5, tipo: "ACOES", ticker: "DIRR3", nome: "Direcional", dataEntrada: "", qtd: "", entrada: "", valorAtual: "", dy: "", dyMeses: Array(12).fill("") },
-  { id: 6, tipo: "ACOES", ticker: "CYRE3", nome: "Cyrela", dataEntrada: "", qtd: "", entrada: "", valorAtual: "", dy: "", dyMeses: Array(12).fill("") },
-  { id: 7, tipo: "ACOES", ticker: "PETR4", nome: "Petrobras PN", dataEntrada: "", qtd: "", entrada: "", valorAtual: "", dy: "", dyMeses: Array(12).fill("") },
-  { id: 8, tipo: "ACOES", ticker: "SLCE3", nome: "SLC Agrícola", dataEntrada: "", qtd: "", entrada: "", valorAtual: "", dy: "", dyMeses: Array(12).fill("") },
-  { id: 9, tipo: "ACOES", ticker: "VIVT3", nome: "Vivo (Telefônica)", dataEntrada: "", qtd: "", entrada: "", valorAtual: "", dy: "", dyMeses: Array(12).fill("") },
+  {
+    id: 1,
+    tipo: "ACOES",
+    ticker: "VALE3",
+    nome: "Vale",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(12).fill(""),
+  },
+  {
+    id: 2,
+    tipo: "ACOES",
+    ticker: "ITUB4",
+    nome: "Itaú Unibanco",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(12).fill(""),
+  },
+  {
+    id: 3,
+    tipo: "ACOES",
+    ticker: "GGBR4",
+    nome: "Gerdau",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(12).fill(""),
+  },
+  {
+    id: 4,
+    tipo: "ACOES",
+    ticker: "AXIA6",
+    nome: "AXIA6",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(12).fill(""),
+  },
+  {
+    id: 5,
+    tipo: "ACOES",
+    ticker: "DIRR3",
+    nome: "Direcional",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(12).fill(""),
+  },
+  {
+    id: 6,
+    tipo: "ACOES",
+    ticker: "CYRE3",
+    nome: "Cyrela",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(12).fill(""),
+  },
+  {
+    id: 7,
+    tipo: "ACOES",
+    ticker: "PETR4",
+    nome: "Petrobras PN",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(12).fill(""),
+  },
+  {
+    id: 8,
+    tipo: "ACOES",
+    ticker: "SLCE3",
+    nome: "SLC Agrícola",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(12).fill(""),
+  },
+  {
+    id: 9,
+    tipo: "ACOES",
+    ticker: "VIVT3",
+    nome: "Vivo (Telefônica)",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(12).fill(""),
+  },
 
   // RENDA FIXA
-  { id: 10, tipo: "RF", ticker: "SELIC", nome: "Selic Simples", dataEntrada: "", qtd: "", entrada: "1", valorAtual: "", dy: "", dyMeses: Array(12).fill("") },
-  { id: 11, tipo: "RF", ticker: "IPCA35", nome: "Tesouro IPCA+ 2035", dataEntrada: "", qtd: "", entrada: "1", valorAtual: "", dy: "", dyMeses: Array(12).fill("") },
+  {
+    id: 10,
+    tipo: "RF",
+    ticker: "SELIC",
+    nome: "Selic Simples",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "1",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(12).fill(""),
+  },
+  {
+    id: 11,
+    tipo: "RF",
+    ticker: "IPCA35",
+    nome: "Tesouro IPCA+ 2035",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "1",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(12).fill(""),
+  },
 
   // FIIs
-  { id: 12, tipo: "FII", ticker: "HGLG11", nome: "CSHG Logística", dataEntrada: "", qtd: "", entrada: "", valorAtual: "", dy: "", dyMeses: Array(12).fill("") },
-  { id: 13, tipo: "FII", ticker: "KNCR11", nome: "Kinea Rendimentos", dataEntrada: "", qtd: "", entrada: "", valorAtual: "", dy: "", dyMeses: Array(12).fill("") },
+  {
+    id: 12,
+    tipo: "FII",
+    ticker: "HGLG11",
+    nome: "CSHG Logística",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(12).fill(""),
+  },
+  {
+    id: 13,
+    tipo: "FII",
+    ticker: "KNCR11",
+    nome: "Kinea Rendimentos",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(12).fill(""),
+  },
 ];
 
 const LS_KEY = "cc_carteira_cash_v1";
+const LS_KEY_LANC = "cc_carteira_cash_lanc_v1";
 
 // Helper para converter texto em número
 function toNum(x) {
   if (x === "" || x === null || x === undefined) return 0;
   const n = Number(String(x).replace(",", "."));
   return Number.isFinite(n) ? n : 0;
+}
+
+// Helper para formatar data BR
+function formatDateBR(iso) {
+  if (!iso) return "—";
+  const parts = iso.split("-");
+  if (parts.length !== 3) return iso;
+  const [y, m, d] = parts;
+  return `${d}/${m}/${y}`;
 }
 
 /* ===========================
@@ -74,7 +237,17 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
 }
 
 export default function CarteiraCash() {
-  // Estado da carteira (editável)
+  // ✅ base escondida de lançamentos
+  const [lancamentos, setLancamentos] = useState(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY_LANC);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Estado da carteira (tabela visível / agregada)
   const [carteira, setCarteira] = useState(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -95,74 +268,116 @@ export default function CarteiraCash() {
   const [openCarteiras, setOpenCarteiras] = useState(false);
 
   // Modal "Adicionar ativos"
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [addForm, setAddForm] = useState({
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [novoLanc, setNovoLanc] = useState({
     ticker: "",
     tipo: "ACOES",
-    qtd: "",
-    entrada: "",
     dataEntrada: "",
+    qtd: "",
+    preco: "",
   });
 
-  // Persiste alterações
+  // Persiste carteira (tabela visível)
   useEffect(() => {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(carteira));
     } catch {}
   }, [carteira]);
 
+  // Persiste base de lançamentos
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEY_LANC, JSON.stringify(lancamentos));
+    } catch {}
+  }, [lancamentos]);
+
+  // Sempre que a base escondida muda, recalcula a tabela agregada
+  useEffect(() => {
+    // Se ainda não existem lançamentos, mantemos a carteira atual (BASE_ROWS / dados antigos)
+    if (!lancamentos || lancamentos.length === 0) return;
+
+    setCarteira((prevCarteira) => {
+      // guarda DY por ticker para reaproveitar os valores já digitados
+      const dyPorTicker = new Map();
+      prevCarteira.forEach((r) => {
+        const t = (r.ticker || "").toUpperCase();
+        if (!t) return;
+        dyPorTicker.set(t, {
+          dyMeses: r.dyMeses || Array(12).fill(""),
+          dy: r.dy ?? "",
+        });
+      });
+
+      // agrega lançamentos por ticker+tipo
+      const grupos = new Map(); // key = `${ticker}__${tipo}`
+
+      lancamentos.forEach((l) => {
+        const ticker = (l.ticker || "").toUpperCase();
+        if (!ticker) return;
+        const tipo = l.tipo || "ACOES";
+        const key = `${ticker}__${tipo}`;
+
+        const qtd = toNum(l.qtd);
+        const preco = toNum(l.preco);
+        const valor = qtd * preco;
+        const data = l.dataEntrada || "";
+
+        const atual = grupos.get(key) || {
+          ticker,
+          tipo,
+          nome: "",
+          somaQtd: 0,
+          somaValor: 0,
+          dataEntradaMaisAntiga: data || "",
+        };
+
+        atual.somaQtd += qtd;
+        atual.somaValor += valor;
+
+        if (!atual.dataEntradaMaisAntiga) {
+          atual.dataEntradaMaisAntiga = data;
+        } else if (data && data < atual.dataEntradaMaisAntiga) {
+          // compara string "YYYY-MM-DD" funciona para datas
+          atual.dataEntradaMaisAntiga = data;
+        }
+
+        grupos.set(key, atual);
+      });
+
+      const novasLinhas = Array.from(grupos.values()).map((g, idx) => {
+        const precoMedio = g.somaQtd > 0 ? g.somaValor / g.somaQtd : 0;
+        const t = g.ticker;
+        const prevDy = dyPorTicker.get(t) || {};
+
+        return {
+          id: idx + 1,
+          ticker: t,
+          tipo: g.tipo,
+          nome: g.nome || "",
+          dataEntrada: g.dataEntradaMaisAntiga || "",
+          qtd: g.somaQtd ? String(g.somaQtd) : "",
+          entrada: precoMedio ? String(precoMedio.toFixed(2)) : "",
+          valorAtual: precoMedio ? String(precoMedio.toFixed(2)) : "",
+          dyMeses: prevDy.dyMeses || Array(12).fill(""),
+          dy: prevDy.dy || "",
+        };
+      });
+
+      return novasLinhas;
+    });
+  }, [lancamentos]);
+
+  // Atualiza apenas campos editáveis da carteira (DYs)
   const updateRow = (id, patch) => {
     setCarteira((prev) =>
       prev.map((r) => (r.id === id ? { ...r, ...patch } : r))
     );
   };
 
-  // Handler modal adicionar
-  const handleAddChange = (e) => {
-    const { name, value } = e.target;
-    setAddForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleAddSubmit = (e) => {
-    e.preventDefault();
-
-    const ticker = addForm.ticker.trim().toUpperCase();
-    if (!ticker) return;
-
-    const nextId =
-      carteira.length > 0 ? Math.max(...carteira.map((r) => r.id)) + 1 : 1;
-
-    const newRow = {
-      id: nextId,
-      ticker,
-      tipo: addForm.tipo,
-      nome: "", // podemos usar depois como setor/categ.
-      dataEntrada: addForm.dataEntrada || "",
-      qtd: addForm.qtd || "",
-      entrada: addForm.entrada || "",
-      valorAtual: "",
-      dy: "",
-      dyMeses: Array(12).fill(""),
-    };
-
-    setCarteira((prev) => [...prev, newRow]);
-    setShowAddModal(false);
-    setAddForm({
-      ticker: "",
-      tipo: "ACOES",
-      qtd: "",
-      entrada: "",
-      dataEntrada: "",
-    });
-  };
-
-  // ✅ Cálculos globais (2 donuts + DY)
-  const {
-    totalGeral,
-    piePartsAtivos,
-    piePartsTipos,
-    dyBarData,
-  } = useMemo(() => {
+  /* ===========================
+     Cálculos globais (2 donuts + DY)
+  =========================== */
+  const { totalGeral, piePartsAtivos, piePartsTipos, dyBarData } = useMemo(() => {
     let total = 0;
 
     const somaPorAtivo = {};
@@ -187,14 +402,14 @@ export default function CarteiraCash() {
       if (!somaPorTipo[tipoKey]) somaPorTipo[tipoKey] = 0;
       somaPorTipo[tipoKey] += valorPosicao;
 
-      // DY mensal total
+      // DY mensal total (ainda manual por enquanto)
       const arrMeses = Array.isArray(r.dyMeses) ? r.dyMeses : [];
       for (let i = 0; i < 12; i++) {
         dyMesTotal[i] += toNum(arrMeses[i]);
       }
     });
 
-    // ==== donut por ATIVO ====
+    // donut por ATIVO
     const ativosRaw = Object.entries(somaPorAtivo)
       .map(([key, value]) => ({ key, name: key, value }))
       .filter((d) => d.value > 0)
@@ -211,10 +426,15 @@ export default function CarteiraCash() {
       pct: total > 0 ? (p.value / total) * 100 : 0,
     }));
 
-    // ==== donut por TIPO ====
+    // donut por TIPO
     const tiposRaw = [
       { key: "RF", name: "RF", value: somaPorTipo.RF, color: PIE_COLORS.RF },
-      { key: "ACOES", name: "Ações", value: somaPorTipo.ACOES, color: PIE_COLORS.ACOES },
+      {
+        key: "ACOES",
+        name: "Ações",
+        value: somaPorTipo.ACOES,
+        color: PIE_COLORS.ACOES,
+      },
       { key: "FII", name: "FIIs", value: somaPorTipo.FII, color: PIE_COLORS.FII },
     ].filter((d) => d.value > 0);
 
@@ -232,20 +452,16 @@ export default function CarteiraCash() {
   }, [carteira]);
 
   /* ===========================
-     Donut por ATIVO (sem legenda)
+     Donuts (sem legenda)
   =========================== */
   const [activeIdxAtivo, setActiveIdxAtivo] = useState(null);
   const [hoverIdxAtivo, setHoverIdxAtivo] = useState(null);
   const idxShownAtivo = hoverIdxAtivo ?? activeIdxAtivo;
 
-  /* ===========================
-     Donut por TIPO (sem legenda)
-  =========================== */
   const [activeIdxTipo, setActiveIdxTipo] = useState(null);
   const [hoverIdxTipo, setHoverIdxTipo] = useState(null);
   const idxShownTipo = hoverIdxTipo ?? activeIdxTipo;
 
-  // donuts compactos
   const size = 180;
   const cx = size / 2;
   const cy = size / 2;
@@ -352,9 +568,7 @@ export default function CarteiraCash() {
       style={{ left: x, top: y }}
     >
       <div className="rounded-xl bg-slate-950/95 border border-white/10 px-3 py-2 shadow-2xl">
-        <div className="text-[11px] text-slate-300 font-medium">
-          {mes}
-        </div>
+        <div className="text-[11px] text-slate-300 font-medium">{mes}</div>
         <div className="text-sm text-slate-100 font-semibold">
           {valor.toLocaleString("pt-BR", {
             style: "currency",
@@ -365,7 +579,6 @@ export default function CarteiraCash() {
     </div>
   );
 
-  // calcula altura máxima real usando o tamanho do chart
   const dyChartRef = useRef(null);
   const [dyBarMaxHeight, setDyBarMaxHeight] = useState(110);
 
@@ -375,7 +588,7 @@ export default function CarteiraCash() {
 
     const compute = () => {
       const h = el.clientHeight || 0;
-      const reservedForLabels = 44; // labels dos meses
+      const reservedForLabels = 44;
       const topGap = 16;
       const usable = Math.max(60, h - reservedForLabels - topGap);
       setDyBarMaxHeight(usable);
@@ -389,6 +602,50 @@ export default function CarteiraCash() {
 
   const handleModeloClick = (tipo) => {
     console.log("Modelo selecionado:", tipo);
+  };
+
+  // Handlers do modal "Adicionar ativos"
+  const handleOpenAdd = () => {
+    setNovoLanc({
+      ticker: "",
+      tipo: "ACOES",
+      dataEntrada: "",
+      qtd: "",
+      preco: "",
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const handleChangeLanc = (e) => {
+    const { name, value } = e.target;
+    setNovoLanc((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSalvarLanc = (e) => {
+    e.preventDefault();
+
+    const ticker = (novoLanc.ticker || "").toUpperCase().trim();
+    const tipo = novoLanc.tipo || "ACOES";
+    const dataEntrada = novoLanc.dataEntrada || "";
+    const qtd = novoLanc.qtd || "";
+    const preco = novoLanc.preco || "";
+
+    if (!ticker || !qtd || !preco) {
+      // validação simples
+      return;
+    }
+
+    const novo = {
+      id: Date.now(),
+      ticker,
+      tipo,
+      dataEntrada,
+      qtd,
+      preco,
+    };
+
+    setLancamentos((prev) => [...prev, novo]);
+    setIsAddModalOpen(false);
   };
 
   return (
@@ -450,6 +707,7 @@ export default function CarteiraCash() {
                     text-[12px]
                   "
                 >
+                  {/* CTA Dividendos */}
                   <button
                     type="button"
                     onClick={() => handleModeloClick("dividendos")}
@@ -474,6 +732,7 @@ export default function CarteiraCash() {
                     </div>
                   </button>
 
+                  {/* CTA Criptomoedas */}
                   <button
                     type="button"
                     onClick={() => handleModeloClick("cripto")}
@@ -493,6 +752,7 @@ export default function CarteiraCash() {
                     </div>
                   </button>
 
+                  {/* CTA FIIs */}
                   <button
                     type="button"
                     onClick={() => handleModeloClick("fiis")}
@@ -517,7 +777,6 @@ export default function CarteiraCash() {
           </div>
         </div>
 
-        {/* Espaço para não sobrepor o conteúdo do dashboard */}
         <div className="h-24" />
       </div>
 
@@ -525,9 +784,8 @@ export default function CarteiraCash() {
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-4">
         {totalGeral <= 0 ? (
           <p className="text-[11px] text-slate-500">
-            Preencha <strong>Quantidade</strong>, <strong>Entrada</strong>,{" "}
-            <strong>Valor atual</strong> e os <strong>DY por mês</strong> na
-            tabela para visualizar os gráficos.
+            Preencha os dados da carteira ou use o botão{" "}
+            <strong>Adicionar ativos</strong> para visualizar os gráficos.
           </p>
         ) : (
           <div className="grid gap-4 md:grid-cols-4 items-stretch">
@@ -540,7 +798,11 @@ export default function CarteiraCash() {
 
                 <div className="flex-1 flex items-center justify-center">
                   <div className="relative" style={{ width: size, height: size }}>
-                    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                    <svg
+                      width={size}
+                      height={size}
+                      viewBox={`0 0 ${size} ${size}`}
+                    >
                       <circle
                         cx={cx}
                         cy={cy}
@@ -570,7 +832,9 @@ export default function CarteiraCash() {
                             onMouseEnter={() => setHoverIdxAtivo(i)}
                             onMouseLeave={() => setHoverIdxAtivo(null)}
                             onClick={() =>
-                              setActiveIdxAtivo((prev) => (prev === i ? null : i))
+                              setActiveIdxAtivo((prev) =>
+                                prev === i ? null : i
+                              )
                             }
                           />
                         );
@@ -617,7 +881,11 @@ export default function CarteiraCash() {
 
                 <div className="flex-1 flex items-center justify-center">
                   <div className="relative" style={{ width: size, height: size }}>
-                    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                    <svg
+                      width={size}
+                      height={size}
+                      viewBox={`0 0 ${size} ${size}`}
+                    >
                       <circle
                         cx={cx}
                         cy={cy}
@@ -647,7 +915,9 @@ export default function CarteiraCash() {
                             onMouseEnter={() => setHoverIdxTipo(i)}
                             onMouseLeave={() => setHoverIdxTipo(null)}
                             onClick={() =>
-                              setActiveIdxTipo((prev) => (prev === i ? null : i))
+                              setActiveIdxTipo((prev) =>
+                                prev === i ? null : i
+                              )
                             }
                           />
                         );
@@ -710,7 +980,10 @@ export default function CarteiraCash() {
                       const altura = animateDy ? alturaReal : 4;
 
                       return (
-                        <div key={i} className="flex flex-col items-center gap-2 w-10">
+                        <div
+                          key={i}
+                          className="flex flex-col items-center gap-2 w-10"
+                        >
                           <div
                             className="
                               w-full rounded-xl
@@ -721,7 +994,8 @@ export default function CarteiraCash() {
                             "
                             style={{ height: `${altura}px` }}
                             onMouseEnter={(e) => {
-                              const rect = e.currentTarget.getBoundingClientRect();
+                              const rect =
+                                e.currentTarget.getBoundingClientRect();
                               setDyTip({
                                 x: rect.left + rect.width / 2,
                                 y: rect.top - 8,
@@ -732,7 +1006,11 @@ export default function CarteiraCash() {
                             onMouseMove={(e) => {
                               setDyTip((prev) =>
                                 prev
-                                  ? { ...prev, x: e.clientX, y: e.clientY - 12 }
+                                  ? {
+                                      ...prev,
+                                      x: e.clientX,
+                                      y: e.clientY - 12,
+                                    }
                                   : prev
                               );
                             }}
@@ -770,21 +1048,21 @@ export default function CarteiraCash() {
         <div className="flex items-center justify-between mb-3">
           <button
             type="button"
-            onClick={() => setShowAddModal(true)}
+            onClick={handleOpenAdd}
             className="
               inline-flex items-center gap-2
               rounded-xl bg-emerald-500 px-4 py-2
-              text-sm font-semibold text-slate-950
+              text-xs sm:text-sm font-semibold text-slate-950
               hover:bg-emerald-400 transition
-              shadow-sm
             "
           >
-            <span className="text-lg leading-none">＋</span>
+            <span className="text-base leading-none">+</span>
             <span>Adicionar ativos</span>
           </button>
 
           <span className="text-[11px] text-slate-400">
-            Use o botão para lançar compras. Os dados aparecem abaixo na mesma tabela.
+            As colunas principais são preenchidas automaticamente pelos lançamentos.
+            Edite apenas os DYs, se desejar.
           </span>
         </div>
 
@@ -799,19 +1077,44 @@ export default function CarteiraCash() {
                   <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
                     Ticker
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium">Relatório</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium">Tipo</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium w-32">Setor</th>
-                  <th className="px-3 py-2 text-left text-xs font-medium">Data entrada</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">Quantidade</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">Entrada (R$)</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">Valor atual (R$)</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">Posição (R$)</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">% Var</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">Part. %</th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">DY (12m)</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium">
+                    Relatório
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium">
+                    Tipo
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium w-32">
+                    Setor
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium">
+                    Data entrada
+                  </th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">
+                    Quantidade
+                  </th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">
+                    Entrada (R$)
+                  </th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">
+                    Valor atual (R$)
+                  </th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">
+                    Posição (R$)
+                  </th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">
+                    % Var
+                  </th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">
+                    Part. %
+                  </th>
+                  <th className="px-3 py-2 text-right text-xs font-medium">
+                    DY (12m)
+                  </th>
                   {MESES.map((m) => (
-                    <th key={m} className="px-3 py-2 text-right text-xs font-medium">
+                    <th
+                      key={m}
+                      className="px-3 py-2 text-right text-xs font-medium"
+                    >
                       DY {m}
                     </th>
                   ))}
@@ -838,18 +1141,23 @@ export default function CarteiraCash() {
                     varPerc = (valorAtualNum / entradaNum - 1) * 100;
                     hasVar = true;
                   }
-                  const varClass =
-                    !hasVar
-                      ? "text-slate-400"
-                      : varPerc >= 0
-                      ? "text-emerald-300 font-semibold"
-                      : "text-rose-300 font-semibold";
+                  const varClass = !hasVar
+                    ? "text-slate-400"
+                    : varPerc >= 0
+                    ? "text-emerald-300 font-semibold"
+                    : "text-rose-300 font-semibold";
 
                   const dyMeses = Array.isArray(r.dyMeses)
-                    ? [...r.dyMeses, ...Array(12 - r.dyMeses.length).fill("").slice(0, 12)]
+                    ? [
+                        ...r.dyMeses,
+                        ...Array(12 - r.dyMeses.length).fill(""),
+                      ].slice(0, 12)
                     : Array(12).fill("");
 
-                  const dy12mValor = dyMeses.reduce((acc, v) => acc + toNum(v), 0);
+                  const dy12mValor = dyMeses.reduce(
+                    (acc, v) => acc + toNum(v),
+                    0
+                  );
 
                   return (
                     <tr
@@ -860,15 +1168,11 @@ export default function CarteiraCash() {
                         {i + 1}
                       </td>
 
+                      {/* Ticker (somente leitura) */}
                       <td className="px-3 py-2 text-left sticky left-[2.5rem] bg-slate-900/90 z-10">
-                        <input
-                          className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                          value={r.ticker ?? ""}
-                          onChange={(e) =>
-                            updateRow(r.id, { ticker: e.target.value.toUpperCase() })
-                          }
-                          title="Ticker do ativo"
-                        />
+                        <span className="text-slate-100 text-sm">
+                          {r.ticker || "—"}
+                        </span>
                       </td>
 
                       <td className="px-3 py-2">
@@ -880,83 +1184,54 @@ export default function CarteiraCash() {
                         </button>
                       </td>
 
+                      {/* Tipo (somente leitura) */}
                       <td className="px-3 py-2">
-                        <select
-                          className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
-                          value={r.tipo}
-                          onChange={(e) => updateRow(r.id, { tipo: e.target.value })}
-                        >
-                          <option value="RF">RF</option>
-                          <option value="ACOES">Ações</option>
-                          <option value="FII">FII</option>
-                        </select>
+                        <span className="inline-flex items-center rounded-md bg-slate-900 border border-slate-700 px-2 py-1 text-xs text-slate-100">
+                          {r.tipo === "RF"
+                            ? "RF"
+                            : r.tipo === "FII"
+                            ? "FII"
+                            : "Ações"}
+                        </span>
                       </td>
 
+                      {/* Setor (ainda não alimentado pela base, só exibe) */}
                       <td className="px-3 py-2 text-slate-200 w-32 truncate">
-                        <input
-                          className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                          value={r.nome ?? ""}
-                          onChange={(e) => updateRow(r.id, { nome: e.target.value })}
-                          placeholder="Setor"
-                          title="Setor ou categoria do ativo"
-                        />
+                        <span className="text-slate-100 text-sm">
+                          {r.nome || "—"}
+                        </span>
                       </td>
 
+                      {/* Data entrada (somente leitura) */}
                       <td className="px-3 py-2 text-left">
-                        <input
-                          type="date"
-                          className="bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-sky-500"
-                          value={r.dataEntrada ?? ""}
-                          onChange={(e) =>
-                            updateRow(r.id, { dataEntrada: e.target.value })
-                          }
-                          title="Data de entrada no ativo"
-                        />
+                        <span className="text-xs text-slate-100">
+                          {formatDateBR(r.dataEntrada)}
+                        </span>
                       </td>
 
-                      <td className="px-3 py-2 text-right">
-                        <input
-                          className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                          inputMode="decimal"
-                          placeholder="0"
-                          value={r.qtd ?? ""}
-                          onChange={(e) => updateRow(r.id, { qtd: e.target.value })}
-                          onBlur={(e) => {
-                            const n = toNum(e.target.value);
-                            updateRow(r.id, { qtd: n === 0 ? "" : String(n) });
-                          }}
-                          title="Quantidade de cotas/ações"
-                        />
+                      {/* Quantidade (somente leitura) */}
+                      <td className="px-3 py-2 text-right text-slate-100">
+                        {r.qtd || "—"}
                       </td>
 
-                      <td className="px-3 py-2 text-right">
-                        <input
-                          className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                          inputMode="decimal"
-                          placeholder="0,00"
-                          value={r.entrada ?? ""}
-                          onChange={(e) => updateRow(r.id, { entrada: e.target.value })}
-                          onBlur={(e) => {
-                            const n = toNum(e.target.value);
-                            updateRow(r.id, { entrada: n === 0 ? "" : String(n) });
-                          }}
-                          title="Preço médio de entrada"
-                        />
+                      {/* Entrada (R$) somente leitura */}
+                      <td className="px-3 py-2 text-right text-slate-100">
+                        {entradaNum > 0
+                          ? entradaNum.toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })
+                          : "—"}
                       </td>
 
-                      <td className="px-3 py-2 text-right">
-                        <input
-                          className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
-                          inputMode="decimal"
-                          placeholder="0,00"
-                          value={r.valorAtual ?? ""}
-                          onChange={(e) => updateRow(r.id, { valorAtual: e.target.value })}
-                          onBlur={(e) => {
-                            const n = toNum(e.target.value);
-                            updateRow(r.id, { valorAtual: n === 0 ? "" : String(n) });
-                          }}
-                          title="Preço atual estimado"
-                        />
+                      {/* Valor atual (R$) somente leitura */}
+                      <td className="px-3 py-2 text-right text-slate-100">
+                        {valorAtualNum > 0
+                          ? valorAtualNum.toLocaleString("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            })
+                          : "—"}
                       </td>
 
                       <td className="px-3 py-2 text-right text-slate-200">
@@ -985,6 +1260,7 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
+                      {/* DY meses — ainda editáveis manualmente */}
                       {MESES.map((_, idx) => (
                         <td key={idx} className="px-3 py-2 text-right">
                           <input
@@ -1016,32 +1292,29 @@ export default function CarteiraCash() {
         </div>
 
         <p className="mt-3 text-[11px] text-slate-500">
-          Esta carteira é um modelo educacional e não constitui recomendação de investimento.
+          Esta carteira é um modelo educacional e não constitui recomendação de
+          investimento.
         </p>
       </div>
 
       {/* Modal Adicionar Ativos */}
-      {showAddModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-white/10 p-6 shadow-2xl">
-            <div className="flex items-start justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-100">
-                Adicionar ativos
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-slate-100 font-semibold text-lg">
+                Adicionar ativo à base
               </h2>
               <button
-                onClick={() => setShowAddModal(false)}
-                className="ml-4 rounded-lg px-2 py-1 text-slate-300 hover:bg-slate-800"
-                aria-label="Fechar"
+                type="button"
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-slate-400 hover:text-slate-100 text-xl leading-none"
               >
-                ✕
+                ×
               </button>
             </div>
 
-            <form onSubmit={handleAddSubmit} className="space-y-4">
+            <form onSubmit={handleSalvarLanc} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-slate-300 mb-1">
@@ -1049,11 +1322,11 @@ export default function CarteiraCash() {
                   </label>
                   <input
                     name="ticker"
-                    value={addForm.ticker}
-                    onChange={handleAddChange}
-                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
-                    placeholder="Ex.: VALE3"
-                    required
+                    value={novoLanc.ticker}
+                    onChange={handleChangeLanc}
+                    placeholder="ex: VALE3"
+                    className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
+                    autoFocus
                   />
                 </div>
 
@@ -1063,13 +1336,13 @@ export default function CarteiraCash() {
                   </label>
                   <select
                     name="tipo"
-                    value={addForm.tipo}
-                    onChange={handleAddChange}
-                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
+                    value={novoLanc.tipo}
+                    onChange={handleChangeLanc}
+                    className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
                   >
                     <option value="ACOES">Ações</option>
                     <option value="FII">FII</option>
-                    <option value="RF">RF</option>
+                    <option value="RF">Renda Fixa</option>
                   </select>
                 </div>
               </div>
@@ -1077,16 +1350,28 @@ export default function CarteiraCash() {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs text-slate-300 mb-1">
+                    Data de entrada
+                  </label>
+                  <input
+                    type="date"
+                    name="dataEntrada"
+                    value={novoLanc.dataEntrada}
+                    onChange={handleChangeLanc}
+                    className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-300 mb-1">
                     Quantidade
                   </label>
                   <input
                     name="qtd"
-                    value={addForm.qtd}
-                    onChange={handleAddChange}
-                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-100 text-right outline-none focus:ring-1 focus:ring-emerald-400"
+                    value={novoLanc.qtd}
+                    onChange={handleChangeLanc}
                     inputMode="decimal"
                     placeholder="0"
-                    required
+                    className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
                   />
                 </div>
 
@@ -1095,53 +1380,40 @@ export default function CarteiraCash() {
                     Preço de compra (R$)
                   </label>
                   <input
-                    name="entrada"
-                    value={addForm.entrada}
-                    onChange={handleAddChange}
-                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-100 text-right outline-none focus:ring-1 focus:ring-emerald-400"
+                    name="preco"
+                    value={novoLanc.preco}
+                    onChange={handleChangeLanc}
                     inputMode="decimal"
                     placeholder="0,00"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs text-slate-300 mb-1">
-                    Data de entrada
-                  </label>
-                  <input
-                    type="date"
-                    name="dataEntrada"
-                    value={addForm.dataEntrada}
-                    onChange={handleAddChange}
-                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
-                    required
+                    className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-lg border border-slate-700 text-sm text-slate-300 hover:bg-slate-800"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-lg bg-emerald-500 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
-                >
-                  Salvar lançamento
-                </button>
+              <div className="flex items-center justify-between pt-2">
+                <p className="text-[11px] text-slate-400 max-w-xs">
+                  Cada lançamento é guardado na base escondida. A tabela abaixo
+                  mostra o consolidado por ativo (quantidade total, preço médio
+                  e data mais antiga).
+                </p>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-600 text-xs text-slate-200 hover:bg-slate-800"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-emerald-500 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
+                  >
+                    Salvar lançamento
+                  </button>
+                </div>
               </div>
             </form>
-
-            <p className="mt-3 text-[11px] text-slate-400">
-              Os lançamentos feitos aqui alimentam automaticamente a tabela de
-              ativos abaixo. No futuro, essa base será conectada à base de
-              proventos para calcular o DY por mês.
-            </p>
           </div>
         </div>
       )}
