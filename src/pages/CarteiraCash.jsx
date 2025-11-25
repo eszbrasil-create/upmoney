@@ -281,6 +281,7 @@ export default function CarteiraCash() {
   /* ===========================
      DY mensal total — Fase B (idêntico CardDividendos)
      verde dólar + tooltip premium + gap topo + animação
+     + ✅ GRADIENTE VERTICAL LEVE NAS BARRAS
   =========================== */
   const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
@@ -531,7 +532,7 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Barras DY — Fase B */}
+            {/* Barras DY — Fase B + gradiente */}
             <div className="md:col-span-2">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col relative">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -561,10 +562,10 @@ export default function CarteiraCash() {
                           <div
                             className="
                               w-full rounded-xl
-                              bg-emerald-500/90
-                              hover:bg-emerald-400
+                              bg-gradient-to-t from-emerald-600/95 via-emerald-500/90 to-emerald-300/90
+                              hover:from-emerald-500 hover:via-emerald-400 hover:to-emerald-200
                               transition-all duration-700 ease-out
-                              hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
+                              hover:shadow-[0_0_14px_rgba(16,185,129,0.65)]
                             "
                             style={{ height: `${altura}px` }}
                             onMouseEnter={(e) => {
