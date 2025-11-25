@@ -41,7 +41,6 @@ const BASE_ROWS = [
 ];
 
 const LS_KEY = "cc_carteira_cash_v1";
-const LS_LANC_KEY = "cc_carteira_cash_lanc_v1"; // lançamentos múltiplas compras
 
 // Helper para converter texto em número
 function toNum(x) {
@@ -75,7 +74,7 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
 }
 
 export default function CarteiraCash() {
-  // Estado da carteira (tabela atual)
+  // Estado da carteira (editável)
   const [carteira, setCarteira] = useState(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -92,43 +91,25 @@ export default function CarteiraCash() {
     }
   });
 
-  // ✅ estado do balão "Carteiras Modelo UpMoney"
+  // Balão "Carteiras Modelo UpMoney"
   const [openCarteiras, setOpenCarteiras] = useState(false);
 
-  // ✅ estado dos lançamentos (múltiplas compras por ativo) – ainda invisíveis (Opção A)
-  const [lancamentos, setLancamentos] = useState(() => {
-    try {
-      const raw = localStorage.getItem(LS_LANC_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // ✅ estado do modal "Adicionar ativos"
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // Modal "Adicionar ativos"
+  const [showAddModal, setShowAddModal] = useState(false);
   const [addForm, setAddForm] = useState({
     ticker: "",
     tipo: "ACOES",
     qtd: "",
-    preco: "",
+    entrada: "",
     dataEntrada: "",
   });
 
-  // Persiste carteira
+  // Persiste alterações
   useEffect(() => {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(carteira));
     } catch {}
   }, [carteira]);
-
-  // Persiste lançamentos
-  useEffect(() => {
-    try {
-      localStorage.setItem(LS_LANC_KEY, JSON.stringify(lancamentos));
-    } catch {}
-  }, [lancamentos]);
 
   const updateRow = (id, patch) => {
     setCarteira((prev) =>
@@ -136,54 +117,46 @@ export default function CarteiraCash() {
     );
   };
 
-  // handler inputs do modal
-  const handleAddFormChange = (e) => {
+  // Handler modal adicionar
+  const handleAddChange = (e) => {
     const { name, value } = e.target;
-    setAddForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setAddForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const resetAddForm = () => {
+  const handleAddSubmit = (e) => {
+    e.preventDefault();
+
+    const ticker = addForm.ticker.trim().toUpperCase();
+    if (!ticker) return;
+
+    const nextId =
+      carteira.length > 0 ? Math.max(...carteira.map((r) => r.id)) + 1 : 1;
+
+    const newRow = {
+      id: nextId,
+      ticker,
+      tipo: addForm.tipo,
+      nome: "", // podemos usar depois como setor/categ.
+      dataEntrada: addForm.dataEntrada || "",
+      qtd: addForm.qtd || "",
+      entrada: addForm.entrada || "",
+      valorAtual: "",
+      dy: "",
+      dyMeses: Array(12).fill(""),
+    };
+
+    setCarteira((prev) => [...prev, newRow]);
+    setShowAddModal(false);
     setAddForm({
       ticker: "",
       tipo: "ACOES",
       qtd: "",
-      preco: "",
+      entrada: "",
       dataEntrada: "",
     });
   };
 
-  const handleAddLancamento = (e) => {
-    e.preventDefault();
-
-    const ticker = (addForm.ticker || "").trim().toUpperCase();
-    const qtd = toNum(addForm.qtd);
-    const preco = toNum(addForm.preco);
-    const dataEntrada = addForm.dataEntrada || "";
-    const tipo = addForm.tipo || "ACOES";
-
-    if (!ticker || qtd <= 0 || preco <= 0) {
-      alert("Preencha pelo menos Ticker, Quantidade e Preço de compra com valores válidos.");
-      return;
-    }
-
-    const novo = {
-      id: Date.now(),
-      ticker,
-      tipo,
-      qtd,
-      preco,
-      dataEntrada,
-    };
-
-    setLancamentos((prev) => [...prev, novo]);
-    resetAddForm();
-    setIsAddModalOpen(false);
-  };
-
-  // ✅ Cálculos globais (2 donuts + DY) – ainda baseados só na tabela atual
+  // ✅ Cálculos globais (2 donuts + DY)
   const {
     totalGeral,
     piePartsAtivos,
@@ -214,7 +187,7 @@ export default function CarteiraCash() {
       if (!somaPorTipo[tipoKey]) somaPorTipo[tipoKey] = 0;
       somaPorTipo[tipoKey] += valorPosicao;
 
-      // DY mensal total (ainda manual)
+      // DY mensal total
       const arrMeses = Array.isArray(r.dyMeses) ? r.dyMeses : [];
       for (let i = 0; i < 12; i++) {
         dyMesTotal[i] += toNum(arrMeses[i]);
@@ -414,7 +387,6 @@ export default function CarteiraCash() {
     return () => ro.disconnect();
   }, []);
 
-  // (futuro) handler para clicar nos modelos
   const handleModeloClick = (tipo) => {
     console.log("Modelo selecionado:", tipo);
   };
@@ -478,7 +450,6 @@ export default function CarteiraCash() {
                     text-[12px]
                   "
                 >
-                  {/* CTA principal: Dividendos */}
                   <button
                     type="button"
                     onClick={() => handleModeloClick("dividendos")}
@@ -503,7 +474,6 @@ export default function CarteiraCash() {
                     </div>
                   </button>
 
-                  {/* CTA Criptomoedas */}
                   <button
                     type="button"
                     onClick={() => handleModeloClick("cripto")}
@@ -523,7 +493,6 @@ export default function CarteiraCash() {
                     </div>
                   </button>
 
-                  {/* CTA FIIs */}
                   <button
                     type="button"
                     onClick={() => handleModeloClick("fiis")}
@@ -799,25 +768,23 @@ export default function CarteiraCash() {
       {/* ======= Tabela de ativos ======= */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4">
         <div className="flex items-center justify-between mb-3">
-          {/* 🔘 Botão Adicionar ativos no lugar do título */}
           <button
             type="button"
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => setShowAddModal(true)}
             className="
               inline-flex items-center gap-2
-              rounded-lg bg-emerald-500/90 hover:bg-emerald-400
-              text-slate-950 text-xs font-semibold
-              px-3 py-2
-              shadow-sm hover:shadow-md
-              transition
+              rounded-xl bg-emerald-500 px-4 py-2
+              text-sm font-semibold text-slate-950
+              hover:bg-emerald-400 transition
+              shadow-sm
             "
           >
-            <span className="text-sm">➕</span>
+            <span className="text-lg leading-none">＋</span>
             <span>Adicionar ativos</span>
           </button>
 
           <span className="text-[11px] text-slate-400">
-            Edite tipo, setor, data de entrada, quantidade, entrada, valor atual e todos os DYs.
+            Use o botão para lançar compras. Os dados aparecem abaixo na mesma tabela.
           </span>
         </div>
 
@@ -879,7 +846,7 @@ export default function CarteiraCash() {
                       : "text-rose-300 font-semibold";
 
                   const dyMeses = Array.isArray(r.dyMeses)
-                    ? [...r.dyMeses, ...Array(12 - r.dyMeses.length).fill("")].slice(0, 12)
+                    ? [...r.dyMeses, ...Array(12 - r.dyMeses.length).fill("").slice(0, 12)]
                     : Array(12).fill("");
 
                   const dy12mValor = dyMeses.reduce((acc, v) => acc + toNum(v), 0);
@@ -1053,61 +1020,52 @@ export default function CarteiraCash() {
         </p>
       </div>
 
-      {/* Modal Adicionar ativos (múltiplas compras) */}
-      {isAddModalOpen && (
+      {/* Modal Adicionar Ativos */}
+      {showAddModal && (
         <div
-          className="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/70 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-white/10 shadow-2xl p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h2 className="text-slate-50 text-base font-semibold">
-                  Adicionar ativos
-                </h2>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Registre cada compra com data, quantidade e preço. Você pode lançar
-                  várias compras do mesmo ativo em dias diferentes.
-                </p>
-              </div>
+          <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-white/10 p-6 shadow-2xl">
+            <div className="flex items-start justify-between mb-4">
+              <h2 className="text-lg font-semibold text-slate-100">
+                Adicionar ativos
+              </h2>
               <button
-                type="button"
-                onClick={() => {
-                  setIsAddModalOpen(false);
-                  resetAddForm();
-                }}
-                className="ml-4 rounded-lg px-2 py-1 text-slate-300 hover:bg-slate-800 text-sm"
+                onClick={() => setShowAddModal(false)}
+                className="ml-4 rounded-lg px-2 py-1 text-slate-300 hover:bg-slate-800"
                 aria-label="Fechar"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleAddLancamento} className="space-y-4 mt-2">
-              {/* Linha 1: Ticker + Tipo */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-2">
-                  <label className="block text-[11px] text-slate-300 mb-1">
+            <form onSubmit={handleAddSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-slate-300 mb-1">
                     Ativo (ticker)
                   </label>
                   <input
                     name="ticker"
                     value={addForm.ticker}
-                    onChange={handleAddFormChange}
+                    onChange={handleAddChange}
                     className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
-                    placeholder="Ex.: VALE3, HGLG11"
+                    placeholder="Ex.: VALE3"
+                    required
                   />
                 </div>
+
                 <div>
-                  <label className="block text-[11px] text-slate-300 mb-1">
+                  <label className="block text-xs text-slate-300 mb-1">
                     Tipo
                   </label>
                   <select
                     name="tipo"
                     value={addForm.tipo}
-                    onChange={handleAddFormChange}
-                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-2 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
+                    onChange={handleAddChange}
+                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
                   >
                     <option value="ACOES">Ações</option>
                     <option value="FII">FII</option>
@@ -1116,78 +1074,74 @@ export default function CarteiraCash() {
                 </div>
               </div>
 
-              {/* Linha 2: Quantidade + Preço */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] text-slate-300 mb-1">
+                  <label className="block text-xs text-slate-300 mb-1">
                     Quantidade
                   </label>
                   <input
                     name="qtd"
                     value={addForm.qtd}
-                    onChange={handleAddFormChange}
+                    onChange={handleAddChange}
                     className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-100 text-right outline-none focus:ring-1 focus:ring-emerald-400"
                     inputMode="decimal"
                     placeholder="0"
+                    required
                   />
                 </div>
+
                 <div>
-                  <label className="block text-[11px] text-slate-300 mb-1">
+                  <label className="block text-xs text-slate-300 mb-1">
                     Preço de compra (R$)
                   </label>
                   <input
-                    name="preco"
-                    value={addForm.preco}
-                    onChange={handleAddFormChange}
+                    name="entrada"
+                    value={addForm.entrada}
+                    onChange={handleAddChange}
                     className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-100 text-right outline-none focus:ring-1 focus:ring-emerald-400"
                     inputMode="decimal"
                     placeholder="0,00"
+                    required
                   />
                 </div>
-              </div>
 
-              {/* Linha 3: Data de entrada */}
-              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] text-slate-300 mb-1">
+                  <label className="block text-xs text-slate-300 mb-1">
                     Data de entrada
                   </label>
                   <input
                     type="date"
                     name="dataEntrada"
                     value={addForm.dataEntrada}
-                    onChange={handleAddFormChange}
+                    onChange={handleAddChange}
                     className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
+                    required
                   />
-                </div>
-                <div className="flex items-end text-[11px] text-slate-400">
-                  <p>
-                    Esses lançamentos ficarão salvos e, em uma fase futura, vão
-                    alimentar automaticamente sua base consolidada e os DYs.
-                  </p>
                 </div>
               </div>
 
-              {/* Botões */}
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsAddModalOpen(false);
-                    resetAddForm();
-                  }}
-                  className="rounded-lg border border-slate-600 px-4 py-2 text-xs text-slate-200 hover:bg-slate-800"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 rounded-lg border border-slate-700 text-sm text-slate-300 hover:bg-slate-800"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="rounded-lg bg-emerald-500 px-5 py-2 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
+                  className="px-5 py-2 rounded-lg bg-emerald-500 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
                 >
                   Salvar lançamento
                 </button>
               </div>
             </form>
+
+            <p className="mt-3 text-[11px] text-slate-400">
+              Os lançamentos feitos aqui alimentam automaticamente a tabela de
+              ativos abaixo. No futuro, essa base será conectada à base de
+              proventos para calcular o DY por mês.
+            </p>
           </div>
         </div>
       )}
