@@ -279,7 +279,7 @@ export default function CarteiraCash() {
 
   // Ordenação da tabela principal
   const [sortConfig, setSortConfig] = useState({
-    key: null, // "posicao" | "var"
+    key: null, // "posicao" | "var" | "part"
     direction: "desc", // "asc" | "desc"
   });
 
@@ -712,6 +712,15 @@ export default function CarteiraCash() {
         const hasB = entradaB > 0 && valorAtualB > 0;
         valA = hasA ? (valorAtualA / entradaA - 1) * 100 : -Infinity;
         valB = hasB ? (valorAtualB / entradaB - 1) * 100 : -Infinity;
+      } else if (sortConfig.key === "part") {
+        const posA = qtdA * (valorAtualA || 0);
+        const posB = qtdB * (valorAtualB || 0);
+        const partA =
+          totalGeral > 0 ? (posA / totalGeral) * 100 : 0;
+        const partB =
+          totalGeral > 0 ? (posB / totalGeral) * 100 : 0;
+        valA = partA;
+        valB = partB;
       }
 
       if (valA === valB) return 0;
@@ -720,7 +729,7 @@ export default function CarteiraCash() {
       }
       return valB - valA;
     });
-  }, [carteira, sortConfig]);
+  }, [carteira, sortConfig, totalGeral]);
 
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return "↕";
@@ -730,7 +739,7 @@ export default function CarteiraCash() {
   return (
     <div className="pt-0 pr-3 pl-0 relative">
       {/* FAIXA FIXA COM BALÃO EXPANSÍVEL */}
-      <div className="mb-2">
+      <div className="mb-1">
         <div className="fixed left-48 right-6 top-3 z-30">
           <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-sky-500 to-fuchsia-500 p-[1px] shadow-xl">
             <div
@@ -846,11 +855,12 @@ export default function CarteiraCash() {
           </div>
         </div>
 
-        <div className="h-24" />
+        {/* Espaçador reduzido para aproximar os gráficos */}
+        <div className="h-16" />
       </div>
 
       {/* BALÃO: 2 donuts + 1 barra */}
-      <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-4">
+      <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-3">
         {totalGeral <= 0 ? (
           <p className="text-[11px] text-slate-500">
             Preencha os dados da carteira ou use o botão{" "}
@@ -1161,7 +1171,7 @@ export default function CarteiraCash() {
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     Entrada (R$)
                   </th>
-                  {/* removido Valor atual */}
+                  {/* Posição com ordenação */}
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     <button
                       type="button"
@@ -1172,6 +1182,7 @@ export default function CarteiraCash() {
                       <span className="text-[10px]">{getSortIcon("posicao")}</span>
                     </button>
                   </th>
+                  {/* % Var com ordenação */}
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     <button
                       type="button"
@@ -1182,8 +1193,16 @@ export default function CarteiraCash() {
                       <span className="text-[10px]">{getSortIcon("var")}</span>
                     </button>
                   </th>
+                  {/* Part % com ordenação */}
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium">
-                    Part. %
+                    <button
+                      type="button"
+                      onClick={() => handleSort("part")}
+                      className="inline-flex items-center gap-1"
+                    >
+                      <span>Part. %</span>
+                      <span className="text-[10px]">{getSortIcon("part")}</span>
+                    </button>
                   </th>
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     DY (12m)
@@ -1308,10 +1327,12 @@ export default function CarteiraCash() {
                         {hasVar ? `${varPerc.toFixed(2)}%` : "—"}
                       </td>
 
+                      {/* Part. % */}
                       <td className="px-2 py-1.5 text-right text-xs text-slate-200">
                         {partStr}
                       </td>
 
+                      {/* DY 12m */}
                       <td className="px-2 py-1.5 text-right text-xs text-slate-200 font-semibold">
                         {dy12mValor > 0
                           ? dy12mValor.toLocaleString("pt-BR", {
