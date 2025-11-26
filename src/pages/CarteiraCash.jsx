@@ -549,7 +549,7 @@ export default function CarteiraCash() {
       line1: it.value.toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL",
-          maximumFractionDigits: 0,
+        maximumFractionDigits: 0,
       }),
       line2: `${it.pct.toFixed(1)}%`,
     };
@@ -715,10 +715,8 @@ export default function CarteiraCash() {
       } else if (sortConfig.key === "part") {
         const posA = qtdA * (valorAtualA || 0);
         const posB = qtdB * (valorAtualB || 0);
-        const partA =
-          totalGeral > 0 ? (posA / totalGeral) * 100 : 0;
-        const partB =
-          totalGeral > 0 ? (posB / totalGeral) * 100 : 0;
+        const partA = totalGeral > 0 ? (posA / totalGeral) * 100 : 0;
+        const partB = totalGeral > 0 ? (posB / totalGeral) * 100 : 0;
         valA = partA;
         valB = partB;
       }
@@ -740,7 +738,7 @@ export default function CarteiraCash() {
     <div className="pt-0 pr-3 pl-0 relative">
       {/* FAIXA FIXA COM BALÃO EXPANSÍVEL */}
       <div className="mb-1">
-        <div className="fixed left-48 right-6 top-3 z-30">
+        <div className="fixed left-48 right-3 top-3 z-30">
           <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-sky-500 to-fuchsia-500 p-[1px] shadow-xl">
             <div
               className={`
@@ -1156,7 +1154,7 @@ export default function CarteiraCash() {
                   <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
                     Ticker
                   </th>
-                  <th className="px-2 py-1.5 text-left text-[11px] font-medium">
+                  <th className="px-2 py-1.5 text-left text-[11px] font-medium w-24">
                     Tipo
                   </th>
                   <th className="px-2 py-1.5 text-left text-[11px] font-medium w-32">
@@ -1179,7 +1177,9 @@ export default function CarteiraCash() {
                       className="inline-flex items-center gap-1"
                     >
                       <span>Posição (R$)</span>
-                      <span className="text-[10px]">{getSortIcon("posicao")}</span>
+                      <span className="text-[10px]">
+                        {getSortIcon("posicao")}
+                      </span>
                     </button>
                   </th>
                   {/* % Var com ordenação */}
@@ -1265,7 +1265,7 @@ export default function CarteiraCash() {
                         {i + 1}
                       </td>
 
-                      {/* Ticker (somente leitura) - agora com mesma transparência das demais colunas */}
+                      {/* Ticker (somente leitura) */}
                       <td className="px-2 py-1.5 text-left sticky left-[2.5rem] bg-slate-900/90 z-10">
                         <span className="text-[11px] text-slate-200">
                           {r.ticker || "—"}
@@ -1273,7 +1273,7 @@ export default function CarteiraCash() {
                       </td>
 
                       {/* Tipo (somente leitura) */}
-                      <td className="px-2 py-1.5">
+                      <td className="px-2 py-1.5 w-24">
                         <span className="inline-flex items-center rounded-md bg-slate-900 border border-slate-700 px-2 py-0.5 text-[11px] text-slate-100">
                           {r.tipo === "RF"
                             ? "RF"
