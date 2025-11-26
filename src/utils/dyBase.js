@@ -1,109 +1,142 @@
 // src/utils/dyBase.js
-// Lê a base de DY a partir do CSV público no GitHub
-// Formato esperado:
-// ticker,nome,setor,valorAtual,Dec-2025,Jan-2026,...,Nov-2027
+import { useEffect, useState } from "react";
 
-const DY_BASE_URL =
+// 👉 URL RAW do seu CSV no GitHub
+// (ajuste se mudar o repositório ou o caminho do arquivo)
+const CSV_URL =
   "https://raw.githubusercontent.com/eszbrasil-create/upmoney-data/main/data/base-dy.csv";
 
-// Converte texto CSV em objeto JS organizado por ticker
-async function fetchDyBaseRaw() {
-  const res = await fetch(DY_BASE_URL);
-  if (!res.ok) {
-    throw new Error(`Erro ao buscar base DY: ${res.status}`);
+/**
+ * Converte texto de célula numérica em número.
+ * "" ou valores inválidos viram 0.
+ */
+function toNumCell(value) {
+  if (value === undefined || value === null) return 0;
+  const trimmed = String(value).trim();
+  if (trimmed === "") return 0;
+
+  const n = Number(trimmed.replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+}
+
+/**
+ * Faz o parse do CSV em um array de objetos:
+ * {
+ *   ticker: "VALE3",
+ *   nome: "Vale",
+ *   setor: "Mineração",
+ *   valorAtual: 68.21,
+ *   months: [/* 24 valores numéricos *-/],
+ *   monthLabels: ["Dec-2025", "Jan-2026", ...]
+ * }
+ */
+function parseDyCsv(text) {
+  if (!text) return [];
+
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l !== "");
+
+  if (lines.length < 2) return [];
+
+  const header = lines[0].split(",").map((h) => h.trim());
+
+  // Esperamos algo como:
+  // ticker,nome,setor,valorAtual,Dec-2025,Jan-2026,...
+  const IDX_TICKER = header.indexOf("ticker");
+  const IDX_NOME = header.indexOf("nome");
+  const IDX_SETOR = header.indexOf("setor");
+  const IDX_VALOR = header.indexOf("valorAtual");
+
+  if (
+    IDX_TICKER === -1 ||
+    IDX_NOME === -1 ||
+    IDX_SETOR === -1 ||
+    IDX_VALOR === -1
+  ) {
+    console.warn(
+      "[useDyBase] Cabeçalho inesperado no CSV. Verifique os nomes das colunas."
+    );
   }
 
-  const text = await res.text();
-  const lines = text.trim().split(/\r?\n/);
+  // Tudo depois de valorAtual é mês (Dec-2025, Jan-2026, ...)
+  const monthCols = header.slice(IDX_VALOR + 1);
 
-  if (lines.length < 2) {
-    // só cabeçalho, sem dados
-    return { byTicker: {}, monthHeaders: [] };
-  }
+  const rows = lines.slice(1).map((line) => {
+    const cols = line.split(",").map((c) => c.trim());
 
-  const headerLine = lines[0];
-  const headers = headerLine.split(",");
+    const ticker = cols[IDX_TICKER] || "";
+    const nome = cols[IDX_NOME] || "";
+    const setor = cols[IDX_SETOR] || "";
+    const valorAtual = toNumCell(cols[IDX_VALOR]);
 
-  // Índices fixos do cabeçalho
-  const idxTicker = headers.indexOf("ticker");
-  const idxNome = headers.indexOf("nome");
-  const idxSetor = headers.indexOf("setor");
-  const idxValorAtual = headers.indexOf("valorAtual");
-
-  // Colunas de meses começam depois de valorAtual
-  const firstMonthIdx = idxValorAtual + 1;
-  const monthHeaders = headers.slice(firstMonthIdx); // ["Dec-2025", "Jan-2026", ...]
-
-  const byTicker = {};
-
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-
-    const cols = line.split(",");
-    const ticker = (cols[idxTicker] || "").trim().toUpperCase();
-    if (!ticker) continue;
-
-    const nome = (cols[idxNome] || "").trim();
-    const setor = (cols[idxSetor] || "").trim();
-    const valorAtualRaw = (cols[idxValorAtual] || "").trim();
-
-    const valorAtual = valorAtualRaw
-      ? Number(valorAtualRaw.replace(",", "."))
-      : 0;
-
-    const dyMeses = monthHeaders.map((_, j) => {
-      const raw = cols[firstMonthIdx + j];
-      if (!raw || raw.trim() === "") return "";
-      const n = Number(raw.replace(",", "."));
-      return Number.isFinite(n) ? n : "";
+    const months = monthCols.map((_, i) => {
+      const idx = IDX_VALOR + 1 + i;
+      return toNumCell(cols[idx]);
     });
 
-    byTicker[ticker] = {
+    return {
       ticker,
       nome,
       setor,
       valorAtual,
-      dyMeses,
+      months,
+      monthLabels: monthCols,
     };
-  }
+  });
 
-  return { byTicker, monthHeaders };
+  return rows.filter((r) => r.ticker); // remove linhas vazias
 }
 
-// Hook React para usar dentro dos componentes
-import { useEffect, useState } from "react";
-
+/**
+ * Hook principal que:
+ *  - Busca o CSV no GitHub
+ *  - Faz o parse para objetos JS
+ *  - Exposta para o app:
+ *    { dyBase, dyBaseLoading, dyBaseError }
+ */
 export function useDyBase() {
-  const [dyBase, setDyBase] = useState(null); // { [ticker]: {nome,setor,valorAtual,dyMeses} }
+  const [dyBase, setDyBase] = useState([]);
   const [dyBaseLoading, setDyBaseLoading] = useState(true);
   const [dyBaseError, setDyBaseError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
+    async function loadCsv() {
       try {
         setDyBaseLoading(true);
         setDyBaseError(null);
-        const { byTicker } = await fetchDyBaseRaw();
-        if (!cancelled) {
-          setDyBase(byTicker);
+
+        const res = await fetch(CSV_URL, {
+          // garante que sempre busque a versão mais nova
+          cache: "no-cache",
+        });
+
+        if (!res.ok) {
+          throw new Error(`Erro HTTP ${res.status}`);
         }
+
+        const text = await res.text();
+        if (cancelled) return;
+
+        const parsed = parseDyCsv(text);
+        setDyBase(parsed);
+        // Só para debug:
+        console.log("[useDyBase] Base DY carregada:", parsed);
       } catch (err) {
-        if (!cancelled) {
-          console.error("Erro ao carregar base DY:", err);
-          setDyBaseError(err);
-        }
+        if (cancelled) return;
+        console.error("[useDyBase] Erro ao carregar CSV:", err);
+        setDyBaseError(err);
       } finally {
-        if (!cancelled) {
-          setDyBaseLoading(false);
-        }
+        if (!cancelled) setDyBaseLoading(false);
       }
     }
 
-    load();
+    loadCsv();
 
+    // cleanup para evitar setState depois do unmount
     return () => {
       cancelled = true;
     };
