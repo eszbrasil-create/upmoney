@@ -549,7 +549,7 @@ export default function CarteiraCash() {
       line1: it.value.toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL",
-        maximumFractionDigits: 0,
+          maximumFractionDigits: 0,
       }),
       line2: `${it.pct.toFixed(1)}%`,
     };
@@ -1154,7 +1154,8 @@ export default function CarteiraCash() {
                   <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
                     Ticker
                   </th>
-                  <th className="px-2 py-1.5 text-left text-[11px] font-medium w-24">
+                  {/* 👇 AQUI: largura maior + centralizado */}
+                  <th className="px-2 py-1.5 text-center text-[11px] font-medium w-28">
                     Tipo
                   </th>
                   <th className="px-2 py-1.5 text-left text-[11px] font-medium w-32">
@@ -1272,9 +1273,9 @@ export default function CarteiraCash() {
                         </span>
                       </td>
 
-                      {/* Tipo (somente leitura) */}
-                      <td className="px-2 py-1.5 w-24">
-                        <span className="inline-flex items-center rounded-md bg-slate-900 border border-slate-700 px-2 py-0.5 text-[11px] text-slate-100">
+                      {/* Tipo (somente leitura) – largura maior + centralizado */}
+                      <td className="px-2 py-1.5 w-28 text-center">
+                        <span className="inline-flex items-center justify-center rounded-md bg-slate-900 border border-slate-700 px-2 py-0.5 text-[11px] text-slate-100">
                           {r.tipo === "RF"
                             ? "RF"
                             : r.tipo === "FII"
