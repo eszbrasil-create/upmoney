@@ -74,7 +74,7 @@ export function useDyBase() {
       setDyBaseError(null);
 
       try {
-        const res = await fetch(CSV_URL);
+        const res = await fetch(CSV_URL, { cache: "no-store" });
         if (!res.ok) {
           throw new Error(`Erro ao buscar CSV: ${res.status}`);
         }
@@ -93,21 +93,32 @@ export function useDyBase() {
           return;
         }
 
-        const header = lines[0].split(",");
+        // Detecta automaticamente se o separador é ";" ou ","
+        const firstLine = lines[0];
+        const SEP =
+          firstLine.includes(";") && !firstLine.includes(",") ? ";" : ",";
+
+        const header = firstLine.split(SEP).map((h) => h.trim());
+
         const idxTicker = header.indexOf("ticker");
         const idxNome = header.indexOf("nome");
         const idxSetor = header.indexOf("setor");
         const idxValorAtual = header.indexOf("valorAtual");
 
-        const monthIndexes = DY_MONTH_KEYS.map((key) => header.indexOf(key));
+        const monthIndexes = DY_MONTH_KEYS.map((key) =>
+          header.indexOf(key)
+        );
 
         const rows = lines.slice(1).map((line) => {
-          const cols = line.split(",");
+          const cols = line
+            .split(SEP)
+            .map((c) => c.trim());
 
           const ticker = (cols[idxTicker] || "").toUpperCase().trim();
-          const nome = (cols[idxNome] || "").trim();
-          const setor = (cols[idxSetor] || "").trim();
-          const valorAtual = toNum(cols[idxValorAtual]);
+          const nome = idxNome >= 0 ? (cols[idxNome] || "").trim() : "";
+          const setor = idxSetor >= 0 ? (cols[idxSetor] || "").trim() : "";
+          const valorAtual =
+            idxValorAtual >= 0 ? toNum(cols[idxValorAtual]) : 0;
 
           const dyMeses = monthIndexes.map((idx) => {
             if (idx < 0 || idx >= cols.length) return 0;
