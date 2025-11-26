@@ -13,7 +13,8 @@ const PIE_COLORS = {
   FII: "#fbbf24",
 };
 
-const MESES = [
+// Mapa fixo de meses em PT-BR
+const PT_MESES = [
   "Jan",
   "Fev",
   "Mar",
@@ -28,6 +29,25 @@ const MESES = [
   "Dez",
 ];
 
+// 24 meses começando em Dez/2025
+const DY_MONTHS = (() => {
+  const result = [];
+  let year = 2025;
+  let month = 11; // 0=Jan, 11=Dez
+
+  for (let i = 0; i < 24; i++) {
+    const label = `${PT_MESES[month]} ${year}`;
+    result.push({ label, month, year });
+
+    month++;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
+  }
+  return result;
+})();
+
 // Carteira base (modelo inicial)
 const BASE_ROWS = [
   // AÇÕES
@@ -41,7 +61,7 @@ const BASE_ROWS = [
     entrada: "",
     valorAtual: "",
     dy: "",
-    dyMeses: Array(12).fill(""),
+    dyMeses: Array(DY_MONTHS.length).fill(""),
   },
   {
     id: 2,
@@ -53,7 +73,7 @@ const BASE_ROWS = [
     entrada: "",
     valorAtual: "",
     dy: "",
-    dyMeses: Array(12).fill(""),
+    dyMeses: Array(DY_MONTHS.length).fill(""),
   },
   {
     id: 3,
@@ -65,7 +85,7 @@ const BASE_ROWS = [
     entrada: "",
     valorAtual: "",
     dy: "",
-    dyMeses: Array(12).fill(""),
+    dyMeses: Array(DY_MONTHS.length).fill(""),
   },
   {
     id: 4,
@@ -77,7 +97,7 @@ const BASE_ROWS = [
     entrada: "",
     valorAtual: "",
     dy: "",
-    dyMeses: Array(12).fill(""),
+    dyMeses: Array(DY_MONTHS.length).fill(""),
   },
   {
     id: 5,
@@ -89,7 +109,7 @@ const BASE_ROWS = [
     entrada: "",
     valorAtual: "",
     dy: "",
-    dyMeses: Array(12).fill(""),
+    dyMeses: Array(DY_MONTHS.length).fill(""),
   },
   {
     id: 6,
@@ -101,7 +121,7 @@ const BASE_ROWS = [
     entrada: "",
     valorAtual: "",
     dy: "",
-    dyMeses: Array(12).fill(""),
+    dyMeses: Array(DY_MONTHS.length).fill(""),
   },
   {
     id: 7,
@@ -113,7 +133,7 @@ const BASE_ROWS = [
     entrada: "",
     valorAtual: "",
     dy: "",
-    dyMeses: Array(12).fill(""),
+    dyMeses: Array(DY_MONTHS.length).fill(""),
   },
   {
     id: 8,
@@ -125,7 +145,7 @@ const BASE_ROWS = [
     entrada: "",
     valorAtual: "",
     dy: "",
-    dyMeses: Array(12).fill(""),
+    dyMeses: Array(DY_MONTHS.length).fill(""),
   },
   {
     id: 9,
@@ -137,7 +157,7 @@ const BASE_ROWS = [
     entrada: "",
     valorAtual: "",
     dy: "",
-    dyMeses: Array(12).fill(""),
+    dyMeses: Array(DY_MONTHS.length).fill(""),
   },
 
   // RENDA FIXA
@@ -151,7 +171,7 @@ const BASE_ROWS = [
     entrada: "1",
     valorAtual: "",
     dy: "",
-    dyMeses: Array(12).fill(""),
+    dyMeses: Array(DY_MONTHS.length).fill(""),
   },
   {
     id: 11,
@@ -163,7 +183,7 @@ const BASE_ROWS = [
     entrada: "1",
     valorAtual: "",
     dy: "",
-    dyMeses: Array(12).fill(""),
+    dyMeses: Array(DY_MONTHS.length).fill(""),
   },
 
   // FIIs
@@ -177,7 +197,7 @@ const BASE_ROWS = [
     entrada: "",
     valorAtual: "",
     dy: "",
-    dyMeses: Array(12).fill(""),
+    dyMeses: Array(DY_MONTHS.length).fill(""),
   },
   {
     id: 13,
@@ -189,7 +209,7 @@ const BASE_ROWS = [
     entrada: "",
     valorAtual: "",
     dy: "",
-    dyMeses: Array(12).fill(""),
+    dyMeses: Array(DY_MONTHS.length).fill(""),
   },
 ];
 
@@ -256,8 +276,11 @@ export default function CarteiraCash() {
         ...r,
         dataEntrada: r.dataEntrada ?? "",
         dyMeses: Array.isArray(r.dyMeses)
-          ? [...r.dyMeses, ...Array(12 - r.dyMeses.length).fill("")].slice(0, 12)
-          : Array(12).fill(""),
+          ? [
+              ...r.dyMeses,
+              ...Array(DY_MONTHS.length - r.dyMeses.length).fill(""),
+            ].slice(0, DY_MONTHS.length)
+          : Array(DY_MONTHS.length).fill(""),
       }));
     } catch {
       return BASE_ROWS;
@@ -279,7 +302,7 @@ export default function CarteiraCash() {
 
   // Ordenação da tabela principal
   const [sortConfig, setSortConfig] = useState({
-    key: null, // "posicao" | "var" | "part"
+    key: null, // "posicao" | "var" | "part" | "data"
     direction: "desc", // "asc" | "desc"
   });
 
@@ -319,7 +342,7 @@ export default function CarteiraCash() {
         const t = (r.ticker || "").toUpperCase();
         if (!t) return;
         dyPorTicker.set(t, {
-          dyMeses: r.dyMeses || Array(12).fill(""),
+          dyMeses: r.dyMeses || Array(DY_MONTHS.length).fill(""),
           dy: r.dy ?? "",
         });
       });
@@ -372,7 +395,7 @@ export default function CarteiraCash() {
           qtd: g.somaQtd ? String(g.somaQtd) : "",
           entrada: precoMedio ? String(precoMedio.toFixed(2)) : "",
           valorAtual: precoMedio ? String(precoMedio.toFixed(2)) : "",
-          dyMeses: prevDy.dyMeses || Array(12).fill(""),
+          dyMeses: prevDy.dyMeses || Array(DY_MONTHS.length).fill(""),
           dy: prevDy.dy || "",
         };
       });
@@ -396,7 +419,7 @@ export default function CarteiraCash() {
 
     const somaPorAtivo = {};
     const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
-    const dyMesTotal = Array(12).fill(0);
+    const dyMesTotal = Array(DY_MONTHS.length).fill(0);
 
     carteira.forEach((r) => {
       const qtd = toNum(r.qtd);
@@ -415,7 +438,7 @@ export default function CarteiraCash() {
       somaPorTipo[tipoKey] += valorPosicao;
 
       const arrMeses = Array.isArray(r.dyMeses) ? r.dyMeses : [];
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < DY_MONTHS.length; i++) {
         dyMesTotal[i] += toNum(arrMeses[i]);
       }
     });
@@ -452,8 +475,8 @@ export default function CarteiraCash() {
       pct: total > 0 ? (p.value / total) * 100 : 0,
     }));
 
-    const dyBarData = MESES.map((m, idx) => ({
-      name: m,
+    const dyBarData = DY_MONTHS.map((m, idx) => ({
+      name: m.label,
       dy: dyMesTotal[idx],
     }));
 
@@ -556,7 +579,7 @@ export default function CarteiraCash() {
   }, [idxShownTipo, piePartsTipos, totalGeral]);
 
   /* ===========================
-     DY mensal total — estilo CardDividendos
+     DY mensal total — 24 meses
   =========================== */
   const dyTotals = dyBarData.map((d) => d.dy || 0);
   const dyMax = Math.max(1, ...dyTotals);
@@ -723,6 +746,27 @@ export default function CarteiraCash() {
         const partB = totalGeral > 0 ? (posB / totalGeral) * 100 : 0;
         valA = partA;
         valB = partB;
+      } else if (sortConfig.key === "data") {
+        const da = a.dataEntrada || "";
+        const db = b.dataEntrada || "";
+
+        // opção A: datas vazias sempre no fim
+        if (!da && !db) return 0;
+        if (!da) return 1; // a vazio → fim
+        if (!db) return -1; // b vazio → fim
+
+        if (da === db) return 0;
+
+        if (sortConfig.direction === "asc") {
+          return da < db ? -1 : 1;
+        } else {
+          return da > db ? -1 : 1;
+        }
+      }
+
+      if (sortConfig.key === "data") {
+        // já retornado acima
+        return 0;
       }
 
       if (valA === valB) return 0;
@@ -1099,7 +1143,7 @@ export default function CarteiraCash() {
                           />
 
                           <div
-                            className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap font-medium"
+                            className="text-[11px] text-slate-300 text-center leading-tight whitespace-nowrap font-medium"
                             style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
                           >
                             {d.name}
@@ -1143,39 +1187,47 @@ export default function CarteiraCash() {
 
           <span className="text-[11px] text-slate-400">
             As colunas principais são preenchidas automaticamente pelos lançamentos.
-            Edite apenas os DYs, se desejar.
+            Edite apenas os DYs, se desejar (janela de 24 meses a partir de Dez/2025).
           </span>
         </div>
 
         <div className="rounded-xl border border-white/10 bg-slate-900/40 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-[1450px] w-full text-[13px]">
+            <table className="min-w-[1700px] w-full text-[13px]">
               <thead className="bg-slate-800/70 text-slate-300">
                 <tr>
                   <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-0 bg-slate-800/70 z-20">
                     #
                   </th>
-                  <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
+                  <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-[2.5rem] bg-slate-800/70 z-20 w-24">
                     Ticker
                   </th>
                   {/* Tipo */}
-                  <th className="px-2 py-1.5 text-center text-[11px] font-medium w-28">
+                  <th className="px-2 py-1.5 text-center text-[11px] font-medium w-32">
                     Tipo
                   </th>
-                  <th className="px-2 py-1.5 text-left text-[11px] font-medium w-32">
+                  <th className="px-2 py-1.5 text-left text-[11px] font-medium w-36">
                     Setor
                   </th>
+                  {/* Data entrada com ordenação */}
                   <th className="px-2 py-1.5 text-left text-[11px] font-medium">
-                    Data entrada
+                    <button
+                      type="button"
+                      onClick={() => handleSort("data")}
+                      className="inline-flex items-center gap-1"
+                    >
+                      <span>Data entrada</span>
+                      <span className="text-[10px]">{getSortIcon("data")}</span>
+                    </button>
                   </th>
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     Quantidade
                   </th>
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-28">
                     Entrada (R$)
                   </th>
                   {/* Posição com ordenação */}
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-28">
                     <button
                       type="button"
                       onClick={() => handleSort("posicao")}
@@ -1188,7 +1240,7 @@ export default function CarteiraCash() {
                     </button>
                   </th>
                   {/* % Var com ordenação */}
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-24">
                     <button
                       type="button"
                       onClick={() => handleSort("var")}
@@ -1199,7 +1251,7 @@ export default function CarteiraCash() {
                     </button>
                   </th>
                   {/* Part % com ordenação */}
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-24">
                     <button
                       type="button"
                       onClick={() => handleSort("part")}
@@ -1209,15 +1261,15 @@ export default function CarteiraCash() {
                       <span className="text-[10px]">{getSortIcon("part")}</span>
                     </button>
                   </th>
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-28">
                     DY (12m)
                   </th>
-                  {MESES.map((m) => (
+                  {DY_MONTHS.map((m) => (
                     <th
-                      key={m}
-                      className="px-2 py-1.5 text-right text-[11px] font-medium"
+                      key={m.label}
+                      className="px-2 py-1.5 text-right text-[11px] font-medium whitespace-nowrap"
                     >
-                      DY {m} (Mês/Ano)
+                      {`DY ${m.label}`}
                     </th>
                   ))}
                 </tr>
@@ -1252,9 +1304,9 @@ export default function CarteiraCash() {
                   const dyMeses = Array.isArray(r.dyMeses)
                     ? [
                         ...r.dyMeses,
-                        ...Array(12 - r.dyMeses.length).fill(""),
-                      ].slice(0, 12)
-                    : Array(12).fill("");
+                        ...Array(DY_MONTHS.length - r.dyMeses.length).fill(""),
+                      ].slice(0, DY_MONTHS.length)
+                    : Array(DY_MONTHS.length).fill("");
 
                   const dy12mValor = dyMeses.reduce(
                     (acc, v) => acc + toNum(v),
@@ -1271,14 +1323,14 @@ export default function CarteiraCash() {
                       </td>
 
                       {/* Ticker (somente leitura) */}
-                      <td className="px-2 py-1.5 text-left sticky left-[2.5rem] bg-slate-900/90 z-10">
+                      <td className="px-2 py-1.5 text-left sticky left-[2.5rem] bg-slate-900/90 z-10 w-24">
                         <span className="text-[11px] text-slate-200">
                           {r.ticker || "—"}
                         </span>
                       </td>
 
                       {/* Tipo (somente leitura) */}
-                      <td className="px-2 py-1.5 w-28 text-center">
+                      <td className="px-2 py-1.5 w-32 text-center">
                         <span className="inline-flex items-center justify-center rounded-md bg-slate-900 border border-slate-700 px-2 py-0.5 text-[11px] text-slate-100">
                           {r.tipo === "RF"
                             ? "RF"
@@ -1289,7 +1341,7 @@ export default function CarteiraCash() {
                       </td>
 
                       {/* Setor (exibição simples) */}
-                      <td className="px-2 py-1.5 text-slate-200 w-32 truncate">
+                      <td className="px-2 py-1.5 text-slate-200 w-36 truncate">
                         <span className="text-slate-100 text-xs">
                           {r.nome || "—"}
                         </span>
@@ -1308,37 +1360,41 @@ export default function CarteiraCash() {
                       </td>
 
                       {/* Entrada (R$) somente leitura */}
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-100">
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-100 w-28">
                         {entradaNum > 0
                           ? entradaNum.toLocaleString("pt-BR", {
                               style: "currency",
                               currency: "BRL",
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
                             })
                           : "—"}
                       </td>
 
                       {/* Posição (R$) */}
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-200">
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-200 w-28">
                         {valorPosicao > 0
                           ? valorPosicao.toLocaleString("pt-BR", {
                               style: "currency",
                               currency: "BRL",
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
                             })
                           : "—"}
                       </td>
 
                       {/* % Var */}
-                      <td className={`px-2 py-1.5 text-right text-xs ${varClass}`}>
+                      <td className={`px-2 py-1.5 text-right text-xs w-24 ${varClass}`}>
                         {hasVar ? `${varPerc.toFixed(2)}%` : "—"}
                       </td>
 
                       {/* Part. % */}
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-200">
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-200 w-24">
                         {partStr}
                       </td>
 
                       {/* DY 12m */}
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-200 font-semibold">
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-200 font-semibold w-28">
                         {dy12mValor > 0
                           ? dy12mValor.toLocaleString("pt-BR", {
                               style: "currency",
@@ -1347,9 +1403,9 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
-                      {/* DY meses — editáveis manualmente */}
-                      {MESES.map((_, idx) => (
-                        <td key={idx} className="px-2 py-1.5 text-right">
+                      {/* DY meses — 24 colunas, editáveis manualmente */}
+                      {DY_MONTHS.map((m, idx) => (
+                        <td key={m.label} className="px-2 py-1.5 text-right">
                           <input
                             className="w-full bg-transparent text-right outline-none text-[11px] text-slate-100 placeholder:text-slate-600"
                             inputMode="decimal"
@@ -1366,7 +1422,7 @@ export default function CarteiraCash() {
                               novo[idx] = n === 0 ? "" : String(n);
                               updateRow(r.id, { dyMeses: novo });
                             }}
-                            title={`DY em ${MESES[idx]} (mês/ano, R$)`}
+                            title={`DY em ${m.label} (R$)`}
                           />
                         </td>
                       ))}
