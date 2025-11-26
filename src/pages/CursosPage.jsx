@@ -1,36 +1,82 @@
 // src/pages/Cursos.jsx
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { PiggyBank, FileDown, CheckCircle2 } from "lucide-react";
 
 const ORANGE = "#f97316"; // Carteira Cash (laranja)
-const GREEN  = "#10e597ff"; // Concluído (verde)
+const GREEN = "#10e597ff"; // Concluído (verde)
+const LS_KEY_CURSOS = "cc_cursos_concluidos_v1";
 
 export default function CursosPage() {
   const MODULOS = useMemo(
     () => [
-      { id: 1, titulo: "Apresentação do Curso(Check in 1:1)",  pdf: "/pdfs/MEU-PRIMEIRO-DIVIDENDO.pdf" },
-      { id: 2, titulo: "Abrir Conta na Corretora",             pdf: "/pdfs/modulo2.pdf" },
-      { id: 3, titulo: "Renda Fixa",                           pdf: "/pdfs/modulo3.pdf" },
-      { id: 4, titulo: "Renda Variável",                       pdf: "/pdfs/modulo4.pdf" },
-      { id: 5, titulo: "FIIs – Fundos Imobiliários",           pdf: "/pdfs/modulo5.pdf" },
-      { id: 6, titulo: "Montando sua Carteira (1:1)",          pdf: "/pdfs/modulo6.pdf" },
-      { id: 7, titulo: "Cash Control (1:1)",                   pdf: "/pdfs/modulo6.pdf" },
-      { id: 8, titulo: "Impostos",                             pdf: "/pdfs/modulo6.pdf" },
-      { id: 9, titulo: "Recebendo o Primeiro Dividendo (Checkout 1:1)", pdf: "/pdfs/modulo7.pdf" },
+      {
+        id: 1,
+        titulo: "Apresentação do Curso(Check in 1:1)",
+        pdf: "/pdfs/MEU-PRIMEIRO-DIVIDENDO.pdf",
+      },
+      { id: 2, titulo: "Abrir Conta na Corretora", pdf: "/pdfs/modulo2.pdf" },
+      { id: 3, titulo: "Renda Fixa", pdf: "/pdfs/modulo3.pdf" },
+      { id: 4, titulo: "Renda Variável", pdf: "/pdfs/modulo4.pdf" },
+      {
+        id: 5,
+        titulo: "FIIs – Fundos Imobiliários",
+        pdf: "/pdfs/modulo5.pdf",
+      },
+      {
+        id: 6,
+        titulo: "Montando sua Carteira (1:1)",
+        pdf: "/pdfs/modulo6.pdf",
+      },
+      {
+        id: 7,
+        titulo: "Cash Control (1:1)",
+        pdf: "/pdfs/modulo6.pdf",
+      },
+      { id: 8, titulo: "Impostos", pdf: "/pdfs/modulo6.pdf" },
+      {
+        id: 9,
+        titulo: "Recebendo o Primeiro Dividendo (Checkout 1:1)",
+        pdf: "/pdfs/modulo7.pdf",
+      },
     ],
     []
   );
 
-  const [concluidos, setConcluidos] = useState(() => new Set());
+  // ✅ Estado dos módulos concluídos, carregando do localStorage
+  const [concluidos, setConcluidos] = useState(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY_CURSOS);
+      if (!raw) return new Set();
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return new Set();
+      return new Set(arr);
+    } catch {
+      return new Set();
+    }
+  });
+
+  // ✅ Sempre que concluidos muda, salvar no localStorage
+  useEffect(() => {
+    try {
+      const arr = Array.from(concluidos);
+      localStorage.setItem(LS_KEY_CURSOS, JSON.stringify(arr));
+    } catch {
+      // se der erro, só não persiste
+    }
+  }, [concluidos]);
 
   const total = MODULOS.length;
-  const done  = concluidos.size;
-  const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
+  const done = concluidos.size;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   const toggleConcluido = (id) => {
     setConcluidos((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -46,7 +92,7 @@ export default function CursosPage() {
         }
       `}</style>
 
-      {/* BLOCO 1 (mantido com seus ajustes) */}
+      {/* BLOCO 1 – Cabeçalho + Progresso */}
       <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[1200px] max-w-full p-5 mb-4">
         <div className="text-center mb-4">
           <h1 className="text-2xl md:text-3xl font-bold text-slate-150">
@@ -57,7 +103,9 @@ export default function CursosPage() {
         <div className="rounded-xl bg-slate-900/40 border border-white/10 p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-slate-300 text-sm">Progresso do curso</span>
-            <span className="text-slate-100 text-sm font-semibold">{done}/{total} • {pct}%</span>
+            <span className="text-slate-100 text-sm font-semibold">
+              {done}/{total} • {pct}%
+            </span>
           </div>
 
           <div className="w-full h-5 rounded-full bg-slate-700/40 overflow-hidden">
@@ -73,7 +121,7 @@ export default function CursosPage() {
         </div>
       </div>
 
-      {/* BLOCO 2 (restaurado) com porquinho animado */}
+      {/* BLOCO 2 – Cards de módulos com porquinho animado */}
       <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[1200px] max-w-full p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {MODULOS.map((m) => {
@@ -87,14 +135,13 @@ export default function CursosPage() {
                 <div
                   className="shrink-0 transition-transform duration-300 group-hover:scale-105"
                   style={{
-                    animation: isDone ? "pig-pulse 1200ms ease-in-out infinite" : "none",
+                    animation: isDone
+                      ? "pig-pulse 1200ms ease-in-out infinite"
+                      : "none",
                     transformOrigin: "center",
                   }}
                 >
-                  <PiggyBank
-                    size={100}
-                    color={isDone ? GREEN : ORANGE}
-                  />
+                  <PiggyBank size={100} color={isDone ? GREEN : ORANGE} />
                 </div>
 
                 <div className="flex-1">
