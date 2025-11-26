@@ -277,6 +277,24 @@ export default function CarteiraCash() {
     preco: "",
   });
 
+  // Ordenação da tabela principal
+  const [sortConfig, setSortConfig] = useState({
+    key: null, // "posicao" | "var"
+    direction: "desc", // "asc" | "desc"
+  });
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return { key, direction: "desc" };
+    });
+  };
+
   // Persiste carteira (tabela visível)
   useEffect(() => {
     try {
@@ -656,22 +674,58 @@ export default function CarteiraCash() {
       const da = a.dataEntrada || "";
       const db = b.dataEntrada || "";
 
-      // Ambos têm data → ordena pela data
       if (da && db) {
         if (da < db) return -1;
         if (da > db) return 1;
-        // mesma data → ordena por id (mais antigo primeiro)
         return (a.id || 0) - (b.id || 0);
       }
 
-      // Só um tem data → o que tem data vem primeiro
       if (da && !db) return -1;
       if (!da && db) return 1;
 
-      // Nenhum tem data → ordena por id (mais antigo primeiro)
       return (a.id || 0) - (b.id || 0);
     });
   }, [lancamentos]);
+
+  // ====== Ordenação da carteira (tabela principal) ======
+  const sortedCarteira = useMemo(() => {
+    const arr = [...carteira];
+
+    if (!sortConfig.key) return arr;
+
+    return arr.sort((a, b) => {
+      const qtdA = toNum(a.qtd);
+      const qtdB = toNum(b.qtd);
+      const entradaA = toNum(a.entrada);
+      const entradaB = toNum(b.entrada);
+      const valorAtualA = toNum(a.valorAtual) || entradaA;
+      const valorAtualB = toNum(b.valorAtual) || entradaB;
+
+      let valA = 0;
+      let valB = 0;
+
+      if (sortConfig.key === "posicao") {
+        valA = qtdA * valorAtualA;
+        valB = qtdB * valorAtualB;
+      } else if (sortConfig.key === "var") {
+        const hasA = entradaA > 0 && valorAtualA > 0;
+        const hasB = entradaB > 0 && valorAtualB > 0;
+        valA = hasA ? (valorAtualA / entradaA - 1) * 100 : -Infinity;
+        valB = hasB ? (valorAtualB / entradaB - 1) * 100 : -Infinity;
+      }
+
+      if (valA === valB) return 0;
+      if (sortConfig.direction === "asc") {
+        return valA - valB;
+      }
+      return valB - valA;
+    });
+  }, [carteira, sortConfig]);
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return "↕";
+    return sortConfig.direction === "asc" ? "▲" : "▼";
+  };
 
   return (
     <div className="pt-0 pr-3 pl-0 relative">
@@ -1083,7 +1137,7 @@ export default function CarteiraCash() {
 
         <div className="rounded-xl border border-white/10 bg-slate-900/40 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-[1500px] w-full text-[13px]">
+            <table className="min-w-[1450px] w-full text-[13px]">
               <thead className="bg-slate-800/70 text-slate-300">
                 <tr>
                   <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-0 bg-slate-800/70 z-20">
@@ -1107,14 +1161,26 @@ export default function CarteiraCash() {
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     Entrada (R$)
                   </th>
+                  {/* removido Valor atual */}
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium">
-                    Valor atual (R$)
+                    <button
+                      type="button"
+                      onClick={() => handleSort("posicao")}
+                      className="inline-flex items-center gap-1"
+                    >
+                      <span>Posição (R$)</span>
+                      <span className="text-[10px]">{getSortIcon("posicao")}</span>
+                    </button>
                   </th>
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium">
-                    Posição (R$)
-                  </th>
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
-                    % Var
+                    <button
+                      type="button"
+                      onClick={() => handleSort("var")}
+                      className="inline-flex items-center gap-1"
+                    >
+                      <span>% Var</span>
+                      <span className="text-[10px]">{getSortIcon("var")}</span>
+                    </button>
                   </th>
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     Part. %
@@ -1134,7 +1200,7 @@ export default function CarteiraCash() {
               </thead>
 
               <tbody>
-                {carteira.map((r, i) => {
+                {sortedCarteira.map((r, i) => {
                   const qtdNum = toNum(r.qtd);
                   const entradaNum = toNum(r.entrada);
                   const valorAtualNum = toNum(r.valorAtual) || entradaNum;
@@ -1182,7 +1248,7 @@ export default function CarteiraCash() {
 
                       {/* Ticker (somente leitura) */}
                       <td className="px-2 py-1.5 text-left sticky left-[2.5rem] bg-slate-900/90 z-10">
-                        <span className="text-slate-100 text-xs font-medium">
+                        <span className="text-[11px] text-slate-100">
                           {r.ticker || "—"}
                         </span>
                       </td>
@@ -1227,16 +1293,7 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
-                      {/* Valor atual (R$) somente leitura */}
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-100">
-                        {valorAtualNum > 0
-                          ? valorAtualNum.toLocaleString("pt-BR", {
-                              style: "currency",
-                              currency: "BRL",
-                            })
-                          : "—"}
-                      </td>
-
+                      {/* Posição (R$) */}
                       <td className="px-2 py-1.5 text-right text-xs text-slate-200">
                         {valorPosicao > 0
                           ? valorPosicao.toLocaleString("pt-BR", {
@@ -1246,6 +1303,7 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
+                      {/* % Var */}
                       <td className={`px-2 py-1.5 text-right text-xs ${varClass}`}>
                         {hasVar ? `${varPerc.toFixed(2)}%` : "—"}
                       </td>
