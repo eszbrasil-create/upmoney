@@ -6,7 +6,7 @@ import React, {
   useRef,
   useLayoutEffect,
 } from "react";
-import ModalLancamentos from "../modules/carteiraCash/ModalLancamentos";
+import ModalLancamentos from "../modules/carteiraCash/ModalLancamentos.jsx";
 
 const PIE_COLORS = {
   RF: "#22c55e",
@@ -690,34 +690,10 @@ export default function CarteiraCash() {
     }));
   };
 
-  // 🔥 Deletar lançamento
+  // 🔥 Deletar lançamento (usado pelo modal)
   const handleDeleteLanc = (id) => {
     setLancamentos((prev) => prev.filter((l) => l.id !== id));
   };
-
-  // Lista de lançamentos ordenada: MAIS RECENTE → MAIS ANTIGO
-  const lancOrdenados = useMemo(() => {
-    const arr = [...lancamentos];
-
-    return arr.sort((a, b) => {
-      const da = a.dataEntrada || "";
-      const db = b.dataEntrada || "";
-
-      // ambos têm data → compara desc (mais recente primeiro)
-      if (da && db) {
-        if (da < db) return 1;
-        if (da > db) return -1;
-        return (b.id || 0) - (a.id || 0);
-      }
-
-      // quem tem data vem antes de quem não tem
-      if (da && !db) return -1;
-      if (!da && db) return 1;
-
-      // nenhum tem data → id desc
-      return (b.id || 0) - (a.id || 0);
-    });
-  }, [lancamentos]);
 
   // ====== Ordenação da carteira (tabela principal) ======
   const sortedCarteira = useMemo(() => {
@@ -755,7 +731,7 @@ export default function CarteiraCash() {
         const da = a.dataEntrada || "";
         const db = b.dataEntrada || "";
 
-        // opção A: datas vazias sempre no fim
+        // datas vazias sempre no fim
         if (!da && !db) return 0;
         if (!da) return 1;
         if (!db) return -1;
@@ -1109,7 +1085,7 @@ export default function CarteiraCash() {
                               w-full rounded-xl
                               bg-emerald-500/90
                               hover:bg-emerald-400
-                              transition-all duration-700 ease-out
+                              transition-all duração-700 ease-out
                               hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
                             "
                             style={{ height: `${altura}px` }}
@@ -1450,14 +1426,14 @@ export default function CarteiraCash() {
         </p>
       </div>
 
-      {/* Modal extraído */}
+      {/* Modal Adicionar Ativos (agora componente separado) */}
       <ModalLancamentos
-        open={isAddModalOpen}
+        isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         novoLanc={novoLanc}
         onChangeLanc={handleChangeLanc}
         onSalvarLanc={handleSalvarLanc}
-        lancOrdenados={lancOrdenados}
+        lancamentos={lancamentos}
         onDeleteLanc={handleDeleteLanc}
       />
     </div>

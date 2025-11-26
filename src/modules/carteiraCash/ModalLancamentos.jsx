@@ -1,17 +1,55 @@
 // src/modules/carteiraCash/ModalLancamentos.jsx
-import React from "react";
-import { formatDateBR, toNum } from "./modalUtils"; // vamos já falar disso abaixo
+import React, { useMemo } from "react";
+
+// Helpers locais (iguais aos do CarteiraCash)
+function toNum(x) {
+  if (x === "" || x === null || x === undefined) return 0;
+  const n = Number(String(x).replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function formatDateBR(iso) {
+  if (!iso) return "—";
+  const parts = iso.split("-");
+  if (parts.length !== 3) return iso;
+  const [y, m, d] = parts;
+  return `${d}/${m}/${y}`;
+}
 
 export default function ModalLancamentos({
-  open,
+  isOpen,
   onClose,
   novoLanc,
   onChangeLanc,
   onSalvarLanc,
-  lancOrdenados,
+  lancamentos,
   onDeleteLanc,
 }) {
-  if (!open) return null;
+  if (!isOpen) return null;
+
+  // Lista de lançamentos ordenada: MAIS RECENTE → MAIS ANTIGO
+  const lancOrdenados = useMemo(() => {
+    const arr = [...(lancamentos || [])];
+
+    return arr.sort((a, b) => {
+      const da = a.dataEntrada || "";
+      const db = b.dataEntrada || "";
+
+      // ambos têm data → compara desc (mais recente primeiro)
+      if (da && db) {
+        if (da < db) return 1;
+        if (da > db) return -1;
+        return (b.id || 0) - (a.id || 0);
+      }
+
+      // quem tem data vem antes de quem não tem
+      if (da && !db) return -1;
+      if (!da && db) return 1;
+
+      // nenhum tem data → id desc
+      return (b.id || 0) - (a.id || 0);
+    });
+  }, [lancamentos]);
 
   return (
     <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
@@ -185,7 +223,9 @@ export default function ModalLancamentos({
 
                         {/* Data */}
                         <td className="px-3 py-1.5 text-slate-100">
-                          {l.dataEntrada ? formatDateBR(l.dataEntrada) : "—"}
+                          {l.dataEntrada
+                            ? formatDateBR(l.dataEntrada)
+                            : "—"}
                         </td>
 
                         {/* Lixeira ao lado da data */}
