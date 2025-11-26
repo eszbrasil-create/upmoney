@@ -395,7 +395,7 @@ export default function CarteiraCash() {
     let total = 0;
 
     const somaPorAtivo = {};
-    const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
+       const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
     const dyMesTotal = Array(12).fill(0);
 
     carteira.forEach((r) => {
@@ -549,7 +549,7 @@ export default function CarteiraCash() {
       line1: it.value.toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL",
-          maximumFractionDigits: 0,
+        maximumFractionDigits: 0,
       }),
       line2: `${it.pct.toFixed(1)}%`,
     };
@@ -666,7 +666,7 @@ export default function CarteiraCash() {
     setLancamentos((prev) => prev.filter((l) => l.id !== id));
   };
 
-  // 🔎 Lista de lançamentos ordenada: data mais antiga → mais recente
+  // 🔎 Lista de lançamentos ordenada: MAIS RECENTE → MAIS ANTIGO
   const lancOrdenados = useMemo(() => {
     const arr = [...lancamentos];
 
@@ -674,16 +674,20 @@ export default function CarteiraCash() {
       const da = a.dataEntrada || "";
       const db = b.dataEntrada || "";
 
+      // ambos têm data → compara desc (mais recente primeiro)
       if (da && db) {
-        if (da < db) return -1;
-        if (da > db) return 1;
-        return (a.id || 0) - (b.id || 0);
+        if (da < db) return 1;
+        if (da > db) return -1;
+        // se mesma data, id mais novo primeiro
+        return (b.id || 0) - (a.id || 0);
       }
 
+      // quem tem data vem antes de quem não tem
       if (da && !db) return -1;
       if (!da && db) return 1;
 
-      return (a.id || 0) - (b.id || 0);
+      // nenhum tem data → id desc (mais novo primeiro)
+      return (b.id || 0) - (a.id || 0);
     });
   }, [lancamentos]);
 
@@ -1154,7 +1158,7 @@ export default function CarteiraCash() {
                   <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
                     Ticker
                   </th>
-                  {/* 👇 AQUI: largura maior + centralizado */}
+                  {/* Tipo */}
                   <th className="px-2 py-1.5 text-center text-[11px] font-medium w-28">
                     Tipo
                   </th>
@@ -1273,7 +1277,7 @@ export default function CarteiraCash() {
                         </span>
                       </td>
 
-                      {/* Tipo (somente leitura) – largura maior + centralizado */}
+                      {/* Tipo (somente leitura) */}
                       <td className="px-2 py-1.5 w-28 text-center">
                         <span className="inline-flex items-center justify-center rounded-md bg-slate-900 border border-slate-700 px-2 py-0.5 text-[11px] text-slate-100">
                           {r.tipo === "RF"
