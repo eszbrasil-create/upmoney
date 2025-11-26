@@ -395,7 +395,7 @@ export default function CarteiraCash() {
     let total = 0;
 
     const somaPorAtivo = {};
-       const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
+    const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
     const dyMesTotal = Array(12).fill(0);
 
     carteira.forEach((r) => {
@@ -1217,7 +1217,7 @@ export default function CarteiraCash() {
                       key={m}
                       className="px-2 py-1.5 text-right text-[11px] font-medium"
                     >
-                      DY {m}
+                      DY {m} (Mês/Ano)
                     </th>
                   ))}
                 </tr>
@@ -1366,7 +1366,7 @@ export default function CarteiraCash() {
                               novo[idx] = n === 0 ? "" : String(n);
                               updateRow(r.id, { dyMeses: novo });
                             }}
-                            title={`DY em ${MESES[idx]} (R$)`}
+                            title={`DY em ${MESES[idx]} (mês/ano, R$)`}
                           />
                         </td>
                       ))}
