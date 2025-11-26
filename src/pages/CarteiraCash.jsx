@@ -9,14 +9,13 @@ import React, {
 import ModalLancamentos from "../modules/carteiraCash/ModalLancamentos.jsx";
 import { useDyBase } from "../utils/dyBase";
 
-// Cores dos donuts
 const PIE_COLORS = {
   RF: "#22c55e",
   ACOES: "#0ea5e9",
   FII: "#fbbf24",
 };
 
-// Meses em PT-BR (para exibir)
+// Mapa fixo de meses em PT-BR
 const PT_MESES = [
   "Jan",
   "Fev",
@@ -32,59 +31,28 @@ const PT_MESES = [
   "Dez",
 ];
 
-// Mapa ENG → PT para as labels do CSV
-const ENG_TO_PT = {
-  Jan: "Jan",
-  Feb: "Fev",
-  Mar: "Mar",
-  Apr: "Abr",
-  May: "Mai",
-  Jun: "Jun",
-  Jul: "Jul",
-  Aug: "Ago",
-  Sep: "Set",
-  Oct: "Out",
-  Nov: "Nov",
-  Dec: "Dez",
-};
+// 24 meses começando em Dez/2025
+const DY_MONTHS = (() => {
+  const result = [];
+  let year = 2025;
+  let month = 11; // 0=Jan, 11=Dez
 
-// Ordem EXATA das colunas de DY no CSV
-const CSV_MONTH_KEYS = [
-  "Dec-2025",
-  "Jan-2026",
-  "Feb-2026",
-  "Mar-2026",
-  "Apr-2026",
-  "May-2026",
-  "Jun-2026",
-  "Jul-2026",
-  "Aug-2026",
-  "Sep-2026",
-  "Oct-2026",
-  "Nov-2026",
-  "Dec-2026",
-  "Jan-2027",
-  "Feb-2027",
-  "Mar-2027",
-  "Apr-2027",
-  "May-2027",
-  "Jun-2027",
-  "Jul-2027",
-  "Aug-2027",
-  "Sep-2027",
-  "Oct-2027",
-  "Nov-2027",
-];
+  for (let i = 0; i < 24; i++) {
+    const label = `${PT_MESES[month]} ${year}`;
+    result.push({ label, month, year });
 
-// Estrutura usada pela tela: label bonitinha + chave do CSV
-const DY_MONTHS = CSV_MONTH_KEYS.map((key) => {
-  const [eng, year] = key.split("-");
-  const label = `${ENG_TO_PT[eng] ?? eng} ${year}`;
-  return { key, label };
-});
+    month++;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
+  }
+  return result;
+})();
 
-// Carteira base (caso não tenha nada salvo ainda)
+// Carteira base (modelo inicial)
 const BASE_ROWS = [
+  // AÇÕES
   {
     id: 1,
     tipo: "ACOES",
@@ -97,18 +65,167 @@ const BASE_ROWS = [
     dy: "",
     dyMeses: Array(DY_MONTHS.length).fill(""),
   },
+  {
+    id: 2,
+    tipo: "ACOES",
+    ticker: "ITUB4",
+    nome: "Itaú Unibanco",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(DY_MONTHS.length).fill(""),
+  },
+  {
+    id: 3,
+    tipo: "ACOES",
+    ticker: "GGBR4",
+    nome: "Gerdau",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(DY_MONTHS.length).fill(""),
+  },
+  {
+    id: 4,
+    tipo: "ACOES",
+    ticker: "AXIA6",
+    nome: "AXIA6",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(DY_MONTHS.length).fill(""),
+  },
+  {
+    id: 5,
+    tipo: "ACOES",
+    ticker: "DIRR3",
+    nome: "Direcional",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(DY_MONTHS.length).fill(""),
+  },
+  {
+    id: 6,
+    tipo: "ACOES",
+    ticker: "CYRE3",
+    nome: "Cyrela",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(DY_MONTHS.length).fill(""),
+  },
+  {
+    id: 7,
+    tipo: "ACOES",
+    ticker: "PETR4",
+    nome: "Petrobras PN",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(DY_MONTHS.length).fill(""),
+  },
+  {
+    id: 8,
+    tipo: "ACOES",
+    ticker: "SLCE3",
+    nome: "SLC Agrícola",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(DY_MONTHS.length).fill(""),
+  },
+  {
+    id: 9,
+    tipo: "ACOES",
+    ticker: "VIVT3",
+    nome: "Vivo (Telefônica)",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(DY_MONTHS.length).fill(""),
+  },
+
+  // RENDA FIXA
+  {
+    id: 10,
+    tipo: "RF",
+    ticker: "SELIC",
+    nome: "Selic Simples",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "1",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(DY_MONTHS.length).fill(""),
+  },
+  {
+    id: 11,
+    tipo: "RF",
+    ticker: "IPCA35",
+    nome: "Tesouro IPCA+ 2035",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "1",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(DY_MONTHS.length).fill(""),
+  },
+
+  // FIIs
+  {
+    id: 12,
+    tipo: "FII",
+    ticker: "HGLG11",
+    nome: "CSHG Logística",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(DY_MONTHS.length).fill(""),
+  },
+  {
+    id: 13,
+    tipo: "FII",
+    ticker: "KNCR11",
+    nome: "Kinea Rendimentos",
+    dataEntrada: "",
+    qtd: "",
+    entrada: "",
+    valorAtual: "",
+    dy: "",
+    dyMeses: Array(DY_MONTHS.length).fill(""),
+  },
 ];
 
 const LS_KEY = "cc_carteira_cash_v1";
 const LS_KEY_LANC = "cc_carteira_cash_lanc_v1";
 
-// Helpers
+// Helper para converter texto em número
 function toNum(x) {
   if (x === "" || x === null || x === undefined) return 0;
   const n = Number(String(x).replace(",", "."));
   return Number.isFinite(n) ? n : 0;
 }
 
+// Helper para formatar data BR
 function formatDateBR(iso) {
   if (!iso) return "—";
   const parts = iso.split("-");
@@ -118,15 +235,15 @@ function formatDateBR(iso) {
 }
 
 /* ===========================
-   Helpers donut
+   Helpers donut estilo Dash
 =========================== */
 function polarToCartesian(cx, cy, r, angleDeg) {
   const a = ((angleDeg - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(a), y: cy + Math.sin(a) * r };
+  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
 }
-
 function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
   const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+
   const p1 = polarToCartesian(cx, cy, rOuter, endAngle);
   const p2 = polarToCartesian(cx, cy, rOuter, startAngle);
   const p3 = polarToCartesian(cx, cy, rInner, startAngle);
@@ -142,28 +259,15 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
 }
 
 export default function CarteiraCash() {
-  // 🔗 Base de DY vinda do GitHub (CSV)
+  // 🔗 Lê a base de DY do GitHub
   const { dyBase, dyBaseLoading, dyBaseError } = useDyBase();
 
-  // Mapa rápido: TICKER → linha do CSV
-  const dyBaseMap = useMemo(() => {
-    const map = new Map();
-    if (Array.isArray(dyBase)) {
-      dyBase.forEach((row) => {
-        const t = (row.ticker || "").toUpperCase();
-        if (!t) return;
-        map.set(t, row);
-      });
-    }
-    return map;
-  }, [dyBase]);
-
-  // Log para debug
+  // 👀 Log para debug
   useEffect(() => {
     console.log("Base DY carregada:", { dyBase, dyBaseLoading, dyBaseError });
   }, [dyBase, dyBaseLoading, dyBaseError]);
 
-  // Base escondida de lançamentos
+  // ✅ base escondida de lançamentos
   const [lancamentos, setLancamentos] = useState(() => {
     try {
       const raw = localStorage.getItem(LS_KEY_LANC);
@@ -173,7 +277,7 @@ export default function CarteiraCash() {
     }
   });
 
-  // Estado da carteira (tabela agregada)
+  // Estado da carteira (tabela visível / agregada)
   const [carteira, setCarteira] = useState(() => {
     try {
       const raw = localStorage.getItem(LS_KEY);
@@ -193,6 +297,47 @@ export default function CarteiraCash() {
     }
   });
 
+  // ---------------------------------------------------------------------------
+  // Integra DY + setor + valorAtual a partir do CSV (dyBase)
+  // Sempre sobrescreve os DYs da carteira com o que vier do CSV.
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (dyBaseLoading || dyBaseError) return;
+    if (!dyBase || dyBase.length === 0) return;
+
+    setCarteira((prev) =>
+      prev.map((row) => {
+        const t = (row.ticker || "").toUpperCase();
+        if (!t) return row;
+
+        const fromCsv = dyBase.find((item) => item.ticker === t);
+        if (!fromCsv) return row;
+
+        const dyMesesCsvRaw = Array.isArray(fromCsv.dyMeses)
+          ? [
+              ...fromCsv.dyMeses,
+              ...Array(DY_MONTHS.length - fromCsv.dyMeses.length).fill(0),
+            ].slice(0, DY_MONTHS.length)
+          : Array(DY_MONTHS.length).fill(0);
+
+        // Aqui deixo os DYs como número; a UI aceita números ou strings
+        const dyMesesCsv = dyMesesCsvRaw;
+
+        return {
+          ...row,
+          // No app, a coluna "Setor" está usando o campo `nome`,
+          // então mapeamos o setor do CSV para `nome`
+          nome: fromCsv.setor || fromCsv.nome || row.nome,
+          valorAtual:
+            fromCsv.valorAtual != null && fromCsv.valorAtual !== 0
+              ? String(fromCsv.valorAtual)
+              : row.valorAtual,
+          dyMeses: dyMesesCsv, // SEMPRE o DY vindo do CSV
+        };
+      })
+    );
+  }, [dyBase, dyBaseLoading, dyBaseError]);
+
   // Balão "Carteiras Modelo UpMoney"
   const [openCarteiras, setOpenCarteiras] = useState(false);
 
@@ -206,10 +351,10 @@ export default function CarteiraCash() {
     preco: "",
   });
 
-  // Ordenação
+  // Ordenação da tabela principal
   const [sortConfig, setSortConfig] = useState({
-    key: null,
-    direction: "desc",
+    key: null, // "posicao" | "var" | "part" | "data"
+    direction: "desc", // "asc" | "desc"
   });
 
   const handleSort = (key) => {
@@ -229,34 +374,33 @@ export default function CarteiraCash() {
     return sortConfig.direction === "asc" ? "▲" : "▼";
   };
 
-  // Persiste carteira
+  // Persiste carteira (tabela visível)
   useEffect(() => {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(carteira));
     } catch {}
   }, [carteira]);
 
-  // Persiste lançamentos
+  // Persiste base de lançamentos
   useEffect(() => {
     try {
       localStorage.setItem(LS_KEY_LANC, JSON.stringify(lancamentos));
     } catch {}
   }, [lancamentos]);
 
-  /* =========================================
-     Recalcula carteira sempre que:
-     - lançamentos mudam
-     - ou a base de DY (CSV) é carregada
-  ========================================== */
+  // Sempre que a base escondida muda, recalcula a tabela agregada
   useEffect(() => {
     if (!lancamentos || lancamentos.length === 0) return;
 
     setCarteira((prevCarteira) => {
-      // Mapa para preservar DY editado manualmente
-      const prevMap = new Map();
+      const dyPorTicker = new Map();
       prevCarteira.forEach((r) => {
-        const key = `${(r.ticker || "").toUpperCase()}__${r.tipo || ""}`;
-        prevMap.set(key, r);
+        const t = (r.ticker || "").toUpperCase();
+        if (!t) return;
+        dyPorTicker.set(t, {
+          dyMeses: r.dyMeses || Array(DY_MONTHS.length).fill(""),
+          dy: r.dy ?? "",
+        });
       });
 
       const grupos = new Map(); // key = `${ticker}__${tipo}`
@@ -275,6 +419,7 @@ export default function CarteiraCash() {
         const atual = grupos.get(key) || {
           ticker,
           tipo,
+          nome: "",
           somaQtd: 0,
           somaValor: 0,
           dataEntradaMaisAntiga: data || "",
@@ -294,65 +439,28 @@ export default function CarteiraCash() {
 
       const novasLinhas = Array.from(grupos.values()).map((g, idx) => {
         const precoMedio = g.somaQtd > 0 ? g.somaValor / g.somaQtd : 0;
-        const ticker = g.ticker;
-        const tipo = g.tipo;
-        const key = `${ticker}__${tipo}`;
-
-        const prev = prevMap.get(key);
-
-        // Linha da base DY (CSV)
-        const dyInfo = dyBaseMap.get(ticker);
-
-        // DY dos 24 meses vindo do CSV
-        const dyFromCsv = DY_MONTHS.map((m) => {
-          if (!dyInfo) return "";
-          const v = toNum(dyInfo[m.key]);
-          return v === 0 ? "" : String(v);
-        });
-
-        // Se o usuário já editou DY manualmente, preserva
-        let dyMeses;
-        if (
-          prev &&
-          Array.isArray(prev.dyMeses) &&
-          prev.dyMeses.some((v) => v !== "" && v !== null && v !== undefined)
-        ) {
-          dyMeses = [
-            ...prev.dyMeses,
-            ...Array(DY_MONTHS.length - prev.dyMeses.length).fill(""),
-          ].slice(0, DY_MONTHS.length);
-        } else {
-          dyMeses = dyFromCsv;
-        }
-
-        const dy12mValor = dyMeses.reduce(
-          (acc, v) => acc + toNum(v),
-          0
-        );
+        const t = g.ticker;
+        const prevDy = dyPorTicker.get(t) || {};
 
         return {
           id: idx + 1,
-          ticker,
-          tipo,
-          nome: dyInfo?.setor || dyInfo?.nome || prev?.nome || "",
-          dataEntrada: g.dataEntradaMaisAntiga || prev?.dataEntrada || "",
-          qtd: g.somaQtd ? String(g.somaQtd) : prev?.qtd || "",
-          entrada: precoMedio
-            ? String(precoMedio.toFixed(2))
-            : prev?.entrada || "",
-          valorAtual: dyInfo?.valorAtual
-            ? String(dyInfo.valorAtual)
-            : prev?.valorAtual || "",
-          dyMeses,
-          dy: dy12mValor ? String(dy12mValor.toFixed(2)) : prev?.dy || "",
+          ticker: t,
+          tipo: g.tipo,
+          nome: g.nome || "",
+          dataEntrada: g.dataEntradaMaisAntiga || "",
+          qtd: g.somaQtd ? String(g.somaQtd) : "",
+          entrada: precoMedio ? String(precoMedio.toFixed(2)) : "",
+          valorAtual: precoMedio ? String(precoMedio.toFixed(2)) : "",
+          dyMeses: prevDy.dyMeses || Array(DY_MONTHS.length).fill(""),
+          dy: prevDy.dy || "",
         };
       });
 
       return novasLinhas;
     });
-  }, [lancamentos, dyBaseMap]);
+  }, [lancamentos]);
 
-  // Atualiza campos editáveis da carteira (DY)
+  // Atualiza apenas campos editáveis da carteira (DYs)
   const updateRow = (id, patch) => {
     setCarteira((prev) =>
       prev.map((r) => (r.id === id ? { ...r, ...patch } : r))
@@ -360,10 +468,11 @@ export default function CarteiraCash() {
   };
 
   /* ===========================
-     Cálculos globais
+     Cálculos globais (2 donuts + DY)
   =========================== */
   const { totalGeral, piePartsAtivos, piePartsTipos, dyBarData } = useMemo(() => {
     let total = 0;
+
     const somaPorAtivo = {};
     const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
     const dyMesTotal = Array(DY_MONTHS.length).fill(0);
@@ -431,7 +540,7 @@ export default function CarteiraCash() {
   }, [carteira]);
 
   /* ===========================
-     Donuts
+     Donuts (sem legenda)
   =========================== */
   const [activeIdxAtivo, setActiveIdxAtivo] = useState(null);
   const [hoverIdxAtivo, setHoverIdxAtivo] = useState(null);
@@ -581,7 +690,7 @@ export default function CarteiraCash() {
     console.log("Modelo selecionado:", tipo);
   };
 
-  // Modal "Adicionar ativos"
+  // Handlers do modal "Adicionar ativos"
   const handleOpenAdd = () => {
     setNovoLanc({
       ticker: "",
@@ -622,6 +731,7 @@ export default function CarteiraCash() {
 
     setLancamentos((prev) => [...prev, novo]);
 
+    // mantém o modal aberto e limpa campos principais
     setNovoLanc((prev) => ({
       ...prev,
       ticker: "",
@@ -630,13 +740,15 @@ export default function CarteiraCash() {
     }));
   };
 
+  // 🔥 Deletar lançamento (usado pelo modal)
   const handleDeleteLanc = (id) => {
     setLancamentos((prev) => prev.filter((l) => l.id !== id));
   };
 
-  // Ordenação da tabela
+  // ====== Ordenação da carteira (tabela principal) ======
   const sortedCarteira = useMemo(() => {
     const arr = [...carteira];
+
     if (!sortConfig.key) return arr;
 
     return arr.sort((a, b) => {
@@ -669,6 +781,7 @@ export default function CarteiraCash() {
         const da = a.dataEntrada || "";
         const db = b.dataEntrada || "";
 
+        // datas vazias sempre no fim
         if (!da && !db) return 0;
         if (!da) return 1;
         if (!db) return -1;
@@ -691,12 +804,9 @@ export default function CarteiraCash() {
     });
   }, [carteira, sortConfig, totalGeral]);
 
-  /* ===========================
-     RENDER
-  =========================== */
   return (
     <div className="pt-0 pr-3 pl-0 relative">
-      {/* Faixa fixa com balão */}
+      {/* FAIXA FIXA COM BALÃO EXPANSÍVEL */}
       <div className="mb-1">
         <div className="fixed left-48 right-3 top-3 z-30">
           <div className="rounded-2xl bg-gradient-to-r from-emerald-500 via-sky-500 to-fuchsia-500 p-[1px] shadow-xl">
@@ -816,7 +926,7 @@ export default function CarteiraCash() {
         <div className="h-16" />
       </div>
 
-      {/* Balão com gráficos */}
+      {/* BALÃO: 2 donuts + 1 barra */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-3">
         {totalGeral <= 0 ? (
           <p className="text-[11px] text-slate-500">
@@ -825,7 +935,7 @@ export default function CarteiraCash() {
           </p>
         ) : (
           <div className="grid gap-4 md:grid-cols-4 items-stretch">
-            {/* Donut por ativo */}
+            {/* Donut 1: por ATIVO (sem legenda) */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -908,7 +1018,7 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Donut por tipo */}
+            {/* Donut 2: por TIPO (sem legenda) */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -1079,7 +1189,7 @@ export default function CarteiraCash() {
         )}
       </div>
 
-      {/* Tabela */}
+      {/* ======= Tabela de ativos ======= */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <button
@@ -1097,8 +1207,9 @@ export default function CarteiraCash() {
           </button>
 
           <span className="text-[11px] text-slate-400">
-            As colunas principais são preenchidas automaticamente pelos lançamentos.
-            Edite apenas os DYs, se desejar (janela de 24 meses a partir de Dez/2025).
+            As colunas principais são preenchidas automaticamente pelos
+            lançamentos. Edite apenas os DYs, se desejar (janela de 24 meses a
+            partir de Dez/2025).
           </span>
         </div>
 
@@ -1110,15 +1221,23 @@ export default function CarteiraCash() {
                   <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-0 bg-slate-800/70 z-20 w-8">
                     #
                   </th>
+
+                  {/* Ticker – largura aumentada */}
                   <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-[2rem] bg-slate-800/70 z-20 w-28">
                     Ticker
                   </th>
+
+                  {/* Tipo – largura aumentada + centralizado */}
                   <th className="px-2 py-1.5 text-center text-[11px] font-medium w-32">
                     Tipo
                   </th>
+
+                  {/* Setor – largura aumentada */}
                   <th className="px-2 py-1.5 text-left text-[11px] font-medium w-40">
                     Setor
                   </th>
+
+                  {/* Data entrada com ordenação */}
                   <th className="px-2 py-1.5 text-left text-[11px] font-medium w-32">
                     <button
                       type="button"
@@ -1129,12 +1248,17 @@ export default function CarteiraCash() {
                       <span className="text-[10px]">{getSortIcon("data")}</span>
                     </button>
                   </th>
+
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium w-24">
                     Quantidade
                   </th>
+
+                  {/* Entrada – largura aumentada */}
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium w-32">
                     Entrada (R$)
                   </th>
+
+                  {/* Posição com ordenação – largura aumentada */}
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium w-32">
                     <button
                       type="button"
@@ -1147,6 +1271,8 @@ export default function CarteiraCash() {
                       </span>
                     </button>
                   </th>
+
+                  {/* % Var – largura aumentada */}
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium w-24">
                     <button
                       type="button"
@@ -1157,6 +1283,8 @@ export default function CarteiraCash() {
                       <span className="text-[10px]">{getSortIcon("var")}</span>
                     </button>
                   </th>
+
+                  {/* Part. % – largura aumentada */}
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium w-24">
                     <button
                       type="button"
@@ -1167,13 +1295,15 @@ export default function CarteiraCash() {
                       <span className="text-[10px]">{getSortIcon("part")}</span>
                     </button>
                   </th>
+
+                  {/* DY 12m – largura aumentada */}
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium w-32">
                     DY (12m)
                   </th>
 
                   {DY_MONTHS.map((m) => (
                     <th
-                      key={m.key}
+                      key={m.label}
                       className="px-2 py-1.5 text-right text-[11px] font-medium whitespace-nowrap"
                     >
                       {`DY ${m.label}`}
@@ -1228,11 +1358,15 @@ export default function CarteiraCash() {
                       <td className="px-2 py-1.5 text-[11px] text-slate-500 sticky left-0 bg-slate-900/90 z-10 w-8">
                         {i + 1}
                       </td>
+
+                      {/* Ticker (somente leitura) */}
                       <td className="px-2 py-1.5 text-left sticky left-[2rem] bg-slate-900/90 z-10 w-28">
                         <span className="text-[11px] text-slate-200">
                           {r.ticker || "—"}
                         </span>
                       </td>
+
+                      {/* Tipo */}
                       <td className="px-2 py-1.5 w-32 text-center">
                         <span className="inline-flex items-center justify-center rounded-md bg-slate-900 border border-slate-700 px-2 py-0.5 text-[11px] text-slate-100">
                           {r.tipo === "RF"
@@ -1242,19 +1376,27 @@ export default function CarteiraCash() {
                             : "Ações"}
                         </span>
                       </td>
+
+                      {/* Setor */}
                       <td className="px-2 py-1.5 text-slate-200 w-40 truncate">
                         <span className="text-slate-100 text-xs">
                           {r.nome || "—"}
                         </span>
                       </td>
+
+                      {/* Data entrada */}
                       <td className="px-2 py-1.5 text-left w-32">
                         <span className="text-[11px] text-slate-100">
                           {formatDateBR(r.dataEntrada)}
                         </span>
                       </td>
+
+                      {/* Quantidade */}
                       <td className="px-2 py-1.5 text-right text-xs text-slate-100 w-24">
                         {r.qtd || "—"}
                       </td>
+
+                      {/* Entrada (R$) 2 casas */}
                       <td className="px-2 py-1.5 text-right text-xs text-slate-100 w-32">
                         {entradaNum > 0
                           ? entradaNum.toLocaleString("pt-BR", {
@@ -1265,6 +1407,8 @@ export default function CarteiraCash() {
                             })
                           : "—"}
                       </td>
+
+                      {/* Posição (R$) 2 casas */}
                       <td className="px-2 py-1.5 text-right text-xs text-slate-200 w-32">
                         {valorPosicao > 0
                           ? valorPosicao.toLocaleString("pt-BR", {
@@ -1275,12 +1419,18 @@ export default function CarteiraCash() {
                             })
                           : "—"}
                       </td>
+
+                      {/* % Var */}
                       <td className={`px-2 py-1.5 text-right text-xs w-24 ${varClass}`}>
                         {hasVar ? `${varPerc.toFixed(2)}%` : "—"}
                       </td>
+
+                      {/* Part. % */}
                       <td className="px-2 py-1.5 text-right text-xs text-slate-200 w-24">
                         {partStr}
                       </td>
+
+                      {/* DY 12m */}
                       <td className="px-2 py-1.5 text-right text-xs text-slate-200 font-semibold w-32">
                         {dy12mValor > 0
                           ? dy12mValor.toLocaleString("pt-BR", {
@@ -1290,8 +1440,9 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
+                      {/* DY meses — 24 colunas */}
                       {DY_MONTHS.map((m, idx) => (
-                        <td key={m.key} className="px-2 py-1.5 text-right">
+                        <td key={m.label} className="px-2 py-1.5 text-right">
                           <input
                             className="w-full bg-transparent text-right outline-none text-[11px] text-slate-100 placeholder:text-slate-600"
                             inputMode="decimal"
@@ -1326,7 +1477,7 @@ export default function CarteiraCash() {
         </p>
       </div>
 
-      {/* Modal Adicionar Ativos */}
+      {/* Modal Adicionar Ativos (agora componente separado) */}
       <ModalLancamentos
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
