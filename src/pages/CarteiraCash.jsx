@@ -1163,11 +1163,16 @@ export default function CarteiraCash() {
                             onMouseLeave={() => setDyTip(null)}
                           />
 
+                          {/* LABEL AJUSTADO: MÊS EM CIMA, ANO EMBAIXO */}
                           <div
                             className="text-[11px] text-slate-300 text-center leading-tight whitespace-nowrap font-medium"
                             style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
                           >
-                            {d.name}
+                            {d.name.split(" ")[0]}
+                            <br />
+                            <span className="text-[10px] text-slate-500">
+                              {d.name.split(" ")[1]}
+                            </span>
                           </div>
                         </div>
                       );
