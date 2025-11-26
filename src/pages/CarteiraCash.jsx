@@ -297,47 +297,6 @@ export default function CarteiraCash() {
     }
   });
 
-  // ---------------------------------------------------------------------------
-  // Integra DY + setor + valorAtual a partir do CSV (dyBase)
-  // Sempre sobrescreve os DYs da carteira com o que vier do CSV.
-  // ---------------------------------------------------------------------------
-  useEffect(() => {
-    if (dyBaseLoading || dyBaseError) return;
-    if (!dyBase || dyBase.length === 0) return;
-
-    setCarteira((prev) =>
-      prev.map((row) => {
-        const t = (row.ticker || "").toUpperCase();
-        if (!t) return row;
-
-        const fromCsv = dyBase.find((item) => item.ticker === t);
-        if (!fromCsv) return row;
-
-        const dyMesesCsvRaw = Array.isArray(fromCsv.dyMeses)
-          ? [
-              ...fromCsv.dyMeses,
-              ...Array(DY_MONTHS.length - fromCsv.dyMeses.length).fill(0),
-            ].slice(0, DY_MONTHS.length)
-          : Array(DY_MONTHS.length).fill(0);
-
-        // Aqui deixo os DYs como número; a UI aceita números ou strings
-        const dyMesesCsv = dyMesesCsvRaw;
-
-        return {
-          ...row,
-          // No app, a coluna "Setor" está usando o campo `nome`,
-          // então mapeamos o setor do CSV para `nome`
-          nome: fromCsv.setor || fromCsv.nome || row.nome,
-          valorAtual:
-            fromCsv.valorAtual != null && fromCsv.valorAtual !== 0
-              ? String(fromCsv.valorAtual)
-              : row.valorAtual,
-          dyMeses: dyMesesCsv, // SEMPRE o DY vindo do CSV
-        };
-      })
-    );
-  }, [dyBase, dyBaseLoading, dyBaseError]);
-
   // Balão "Carteiras Modelo UpMoney"
   const [openCarteiras, setOpenCarteiras] = useState(false);
 
@@ -459,6 +418,46 @@ export default function CarteiraCash() {
       return novasLinhas;
     });
   }, [lancamentos]);
+
+  // ---------------------------------------------------------------------------
+  // Integra DY + setor + valorAtual a partir do CSV (dyBase)
+  // Sempre sobrescreve os DYs da carteira com o que vier do CSV.
+  // Agora roda também quando os lançamentos mudam, para que novos ativos
+  // já recebam os dados da base automaticamente.
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (dyBaseLoading || dyBaseError) return;
+    if (!dyBase || dyBase.length === 0) return;
+
+    setCarteira((prev) =>
+      prev.map((row) => {
+        const t = (row.ticker || "").toUpperCase();
+        if (!t) return row;
+
+        const fromCsv = dyBase.find((item) => item.ticker === t);
+        if (!fromCsv) return row;
+
+        const dyMesesCsvRaw = Array.isArray(fromCsv.dyMeses)
+          ? [
+              ...fromCsv.dyMeses,
+              ...Array(DY_MONTHS.length - fromCsv.dyMeses.length).fill(0),
+            ].slice(0, DY_MONTHS.length)
+          : Array(DY_MONTHS.length).fill(0);
+
+        const dyMesesCsv = dyMesesCsvRaw;
+
+        return {
+          ...row,
+          nome: fromCsv.setor || fromCsv.nome || row.nome,
+          valorAtual:
+            fromCsv.valorAtual != null && fromCsv.valorAtual !== 0
+              ? String(fromCsv.valorAtual)
+              : row.valorAtual,
+          dyMeses: dyMesesCsv,
+        };
+      })
+    );
+  }, [dyBase, dyBaseLoading, dyBaseError, lancamentos]);
 
   // Atualiza apenas campos editáveis da carteira (DYs)
   const updateRow = (id, patch) => {
@@ -1163,7 +1162,7 @@ export default function CarteiraCash() {
                             onMouseLeave={() => setDyTip(null)}
                           />
 
-                          {/* LABEL AJUSTADO: MÊS EM CIMA, ANO EMBAIXO */}
+                          {/* LABEL: mês em cima, ano embaixo */}
                           <div
                             className="text-[11px] text-slate-300 text-center leading-tight whitespace-nowrap font-medium"
                             style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
@@ -1250,7 +1249,7 @@ export default function CarteiraCash() {
                       className="inline-flex items-center gap-1"
                     >
                       <span>Data entrada</span>
-                      <span className="text-[10px]">{getSortIcon("data")}</span>
+                      <span className="text-[10px"]>{getSortIcon("data")}</span>
                     </button>
                   </th>
 
