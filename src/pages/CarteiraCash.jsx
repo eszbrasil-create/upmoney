@@ -7,6 +7,7 @@ import React, {
   useLayoutEffect,
 } from "react";
 import ModalLancamentos from "../modules/carteiraCash/ModalLancamentos.jsx";
+import { useDyBase } from "../utils/dyBase";
 
 const PIE_COLORS = {
   RF: "#22c55e",
@@ -258,6 +259,18 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
 }
 
 export default function CarteiraCash() {
+    // 🔗 Lê a base de DY do GitHub
+  const { dyBase, dyBaseLoading, dyBaseError } = useDyBase();
+
+  // 👀 Só para testar por enquanto
+  useEffect(() => {
+    console.log("Base DY carregada:", {
+      dyBase,
+      dyBaseLoading,
+      dyBaseError,
+    });
+  }, [dyBase, dyBaseLoading, dyBaseError]);
+
   // ✅ base escondida de lançamentos
   const [lancamentos, setLancamentos] = useState(() => {
     try {

@@ -1,73 +1,62 @@
 // src/utils/dyBase.js
+// Lê a base de DY a partir do CSV público no GitHub
+// Formato esperado:
+// ticker,nome,setor,valorAtual,Dec-2025,Jan-2026,...,Nov-2027
 
-const BASE_DY_URL =
-  "https://raw.githubusercontent.com/eszbrasil-create/upmoney-data/refs/heads/main/data/base-dy.csv";
+const DY_BASE_URL =
+  "https://raw.githubusercontent.com/eszbrasil-create/upmoney-data/main/data/base-dy.csv";
 
-const MONTH_MAP = {
-  Jan: "01",
-  Feb: "02",
-  Mar: "03",
-  Apr: "04",
-  May: "05",
-  Jun: "06",
-  Jul: "07",
-  Aug: "08",
-  Sep: "09",
-  Oct: "10",
-  Nov: "11",
-  Dec: "12",
-};
+// Converte texto CSV em objeto JS organizado por ticker
+async function fetchDyBaseRaw() {
+  const res = await fetch(DY_BASE_URL);
+  if (!res.ok) {
+    throw new Error(`Erro ao buscar base DY: ${res.status}`);
+  }
 
-// "Dec-2025" → "2025-12"
-function monthLabelToKey(label) {
-  const [monStr, yearStr] = label.split("-");
-  const mm = MONTH_MAP[monStr];
-  if (!mm || !yearStr) return null;
-  return `${yearStr}-${mm}`;
-}
+  const text = await res.text();
+  const lines = text.trim().split(/\r?\n/);
 
-// Converte CSV em objeto
-export function parseDyCsv(csvText) {
-  if (!csvText) return { byTicker: {}, monthOrder: [], monthLabels: [] };
+  if (lines.length < 2) {
+    // só cabeçalho, sem dados
+    return { byTicker: {}, monthHeaders: [] };
+  }
 
-  const lines = csvText
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l.length > 0);
+  const headerLine = lines[0];
+  const headers = headerLine.split(",");
 
-  const header = lines[0].split(",").map((h) => h.trim());
-  const monthLabels = header.slice(4);
+  // Índices fixos do cabeçalho
+  const idxTicker = headers.indexOf("ticker");
+  const idxNome = headers.indexOf("nome");
+  const idxSetor = headers.indexOf("setor");
+  const idxValorAtual = headers.indexOf("valorAtual");
 
-  const monthOrder = monthLabels
-    .map((lbl) => monthLabelToKey(lbl))
-    .filter(Boolean);
+  // Colunas de meses começam depois de valorAtual
+  const firstMonthIdx = idxValorAtual + 1;
+  const monthHeaders = headers.slice(firstMonthIdx); // ["Dec-2025", "Jan-2026", ...]
 
   const byTicker = {};
 
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(",");
+    const line = lines[i].trim();
+    if (!line) continue;
 
-    const ticker = (cols[0] || "").trim().toUpperCase();
+    const cols = line.split(",");
+    const ticker = (cols[idxTicker] || "").trim().toUpperCase();
     if (!ticker) continue;
 
-    const nome = (cols[1] || "").trim();
-    const setor = (cols[2] || "").trim();
-    const valorAtual = Number((cols[3] || "0").replace(",", "."));
+    const nome = (cols[idxNome] || "").trim();
+    const setor = (cols[idxSetor] || "").trim();
+    const valorAtualRaw = (cols[idxValorAtual] || "").trim();
 
-    const dyByMonthKey = {};
+    const valorAtual = valorAtualRaw
+      ? Number(valorAtualRaw.replace(",", "."))
+      : 0;
 
-    monthLabels.forEach((label, idx) => {
-      const colIndex = 4 + idx;
-      const raw = (cols[colIndex] || "").trim();
-      if (!raw) return;
-
+    const dyMeses = monthHeaders.map((_, j) => {
+      const raw = cols[firstMonthIdx + j];
+      if (!raw || raw.trim() === "") return "";
       const n = Number(raw.replace(",", "."));
-      if (!Number.isFinite(n)) return;
-
-      const key = monthLabelToKey(label);
-      if (!key) return;
-
-      dyByMonthKey[key] = (dyByMonthKey[key] || 0) + n;
+      return Number.isFinite(n) ? n : "";
     });
 
     byTicker[ticker] = {
@@ -75,18 +64,50 @@ export function parseDyCsv(csvText) {
       nome,
       setor,
       valorAtual,
-      dyByMonthKey,
+      dyMeses,
     };
   }
 
-  return { byTicker, monthOrder, monthLabels };
+  return { byTicker, monthHeaders };
 }
 
-export async function loadDyBase() {
-  const res = await fetch(BASE_DY_URL);
-  if (!res.ok) {
-    throw new Error(`Erro ao carregar base DY: ${res.status}`);
-  }
-  const text = await res.text();
-  return parseDyCsv(text);
+// Hook React para usar dentro dos componentes
+import { useEffect, useState } from "react";
+
+export function useDyBase() {
+  const [dyBase, setDyBase] = useState(null); // { [ticker]: {nome,setor,valorAtual,dyMeses} }
+  const [dyBaseLoading, setDyBaseLoading] = useState(true);
+  const [dyBaseError, setDyBaseError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        setDyBaseLoading(true);
+        setDyBaseError(null);
+        const { byTicker } = await fetchDyBaseRaw();
+        if (!cancelled) {
+          setDyBase(byTicker);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Erro ao carregar base DY:", err);
+          setDyBaseError(err);
+        }
+      } finally {
+        if (!cancelled) {
+          setDyBaseLoading(false);
+        }
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return { dyBase, dyBaseLoading, dyBaseError };
 }
