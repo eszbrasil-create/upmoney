@@ -549,7 +549,7 @@ export default function CarteiraCash() {
       line1: it.value.toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL",
-        maximumFractionDigits: 0,
+          maximumFractionDigits: 0,
       }),
       line2: `${it.pct.toFixed(1)}%`,
     };
@@ -1265,9 +1265,9 @@ export default function CarteiraCash() {
                         {i + 1}
                       </td>
 
-                      {/* Ticker (somente leitura) */}
+                      {/* Ticker (somente leitura) - agora com mesma transparência das demais colunas */}
                       <td className="px-2 py-1.5 text-left sticky left-[2.5rem] bg-slate-900/90 z-10">
-                        <span className="text-[11px] text-slate-100">
+                        <span className="text-[11px] text-slate-200">
                           {r.ticker || "—"}
                         </span>
                       </td>
