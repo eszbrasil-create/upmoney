@@ -234,6 +234,30 @@ function formatDateBR(iso) {
   return `${d}/${m}/${y}`;
 }
 
+// Helper para encontrar um ticker na base DY (seja array ou objeto)
+function getDyInfoForTicker(dyBase, ticker) {
+  if (!dyBase || !ticker) return null;
+  const t = ticker.toUpperCase();
+
+  // Caso dyBase seja um array de linhas
+  if (Array.isArray(dyBase)) {
+    return (
+      dyBase.find(
+        (row) => (row.ticker || "").toUpperCase() === t
+      ) || null
+    );
+  }
+
+  // Caso dyBase seja um objeto com chaves por ticker
+  if (typeof dyBase === "object") {
+    if (dyBase[t]) return dyBase[t];
+    if (dyBase[t.toLowerCase()]) return dyBase[t.toLowerCase()];
+    if (dyBase[t.toUpperCase()]) return dyBase[t.toUpperCase()];
+  }
+
+  return null;
+}
+
 /* ===========================
    Helpers donut estilo Dash
 =========================== */
@@ -259,7 +283,7 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
 }
 
 export default function CarteiraCash() {
-    // 🔗 Lê a base de DY do GitHub
+  // 🔗 Lê a base de DY do GitHub
   const { dyBase, dyBaseLoading, dyBaseError } = useDyBase();
 
   // 👀 Só para testar por enquanto
@@ -300,6 +324,43 @@ export default function CarteiraCash() {
       return BASE_ROWS;
     }
   });
+
+  // 🔄 Integra a base DY (CSV) à carteira, assim que o hook carregar
+  useEffect(() => {
+    if (!dyBase || dyBaseLoading || dyBaseError) return;
+
+    setCarteira((prev) =>
+      prev.map((row) => {
+        const ticker = (row.ticker || "").toUpperCase();
+        if (!ticker) return row;
+
+        const info = getDyInfoForTicker(dyBase, ticker);
+        if (!info) return row;
+
+        // Ajuste aqui se os nomes dos campos forem diferentes no seu dyBase
+        const novoValorAtual =
+          info.valorAtual !== undefined && info.valorAtual !== null
+            ? String(info.valorAtual)
+            : row.valorAtual;
+
+        // Se o hook já montar um array alinhado com os 24 meses:
+        let novosDyMeses = row.dyMeses;
+        if (Array.isArray(info.dyMeses)) {
+          novosDyMeses = [
+            ...info.dyMeses,
+            ...Array(DY_MONTHS.length - info.dyMeses.length).fill(""),
+          ].slice(0, DY_MONTHS.length);
+        }
+
+        return {
+          ...row,
+          nome: info.setor || info.nome || row.nome,
+          valorAtual: novoValorAtual,
+          dyMeses: novosDyMeses,
+        };
+      })
+    );
+  }, [dyBase, dyBaseLoading, dyBaseError]);
 
   // Balão "Carteiras Modelo UpMoney"
   const [openCarteiras, setOpenCarteiras] = useState(false);
@@ -1098,7 +1159,7 @@ export default function CarteiraCash() {
                               w-full rounded-xl
                               bg-emerald-500/90
                               hover:bg-emerald-400
-                              transition-all duração-700 ease-out
+                              transition-all duration-700 ease-out
                               hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
                             "
                             style={{ height: `${altura}px` }}
