@@ -634,7 +634,7 @@ export default function CarteiraCash() {
 
     setLancamentos((prev) => [...prev, novo]);
 
-    // ✅ mantém o modal aberto e limpa os campos principais para o próximo lançamento
+    // mantém o modal aberto e limpa alguns campos para o próximo lançamento
     setNovoLanc((prev) => ({
       ...prev,
       ticker: "",
@@ -990,7 +990,7 @@ export default function CarteiraCash() {
                               w-full rounded-xl
                               bg-emerald-500/90
                               hover:bg-emerald-400
-                              transition-all duration-700 ease-out
+                              transition-all duração-700 ease-out
                               hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
                             "
                             style={{ height: `${altura}px` }}
@@ -1289,8 +1289,8 @@ export default function CarteiraCash() {
       {/* Modal Adicionar Ativos */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
-          {/* 🔄 Modal 70% largura, 90% altura, com layout em coluna */}
-          <div className="w-[70vw] h-[90vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 flex flex-col overflow-hidden">
+          {/* Modal com scroll VERTICAL próprio */}
+          <div className="w-[70vw] h-[90vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 flex flex-col overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-slate-100 font-semibold text-lg">
                 Adicionar ativo à base
@@ -1403,7 +1403,7 @@ export default function CarteiraCash() {
             </form>
 
             {/* 🧾 Lista de lançamentos cadastrados */}
-            <div className="mt-6 border-t border-slate-700 pt-4 flex-1 min-h-0 flex flex-col">
+            <div className="mt-6 border-t border-slate-700 pt-4 flex-1 flex flex-col">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-slate-100 text-sm font-semibold">
                   Lançamentos cadastrados
@@ -1419,114 +1419,110 @@ export default function CarteiraCash() {
                   clique em <strong>Salvar lançamento</strong>.
                 </p>
               ) : (
-                // 🔽 Esta caixa cresce até o limite do modal e depois ganha scroll vertical
-                <div className="rounded-xl border border-slate-700 bg-slate-950/60 overflow-hidden flex-1 min-h-0">
-                  <div className="w-full h-full overflow-y-auto">
-                    <table className="w-full text-xs">
-                      <thead className="bg-slate-800/80 text-slate-300">
-                        <tr>
-                          <th className="px-3 py-2 text-left font-medium">
-                            #
-                          </th>
-                          <th className="px-3 py-2 text-left font-medium">
-                            Data
-                          </th>
-                          <th className="px-1 py-2 text-center font-medium">
-                            {/* lixeira */}
-                          </th>
-                          <th className="px-3 py-2 text-left font-medium">
-                            Ticker
-                          </th>
-                          <th className="px-3 py-2 text-left font-medium">
-                            Tipo
-                          </th>
-                          <th className="px-3 py-2 text-right font-medium">
-                            Quantidade
-                          </th>
-                          <th className="px-3 py-2 text-right font-medium">
-                            Preço (R$)
-                          </th>
-                          <th className="px-3 py-2 text-right font-medium">
-                            Valor (R$)
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {lancOrdenados.map((l, idx) => {
-                          const qtd = toNum(l.qtd);
-                          const preco = toNum(l.preco);
-                          const valor = qtd * preco;
+                // Caixa cresce com o conteúdo; quem ganha scroll é o modal (overflow-y-auto)
+                <div className="rounded-xl border border-slate-700 bg-slate-950/60 flex-1">
+                  <table className="w-full text-xs">
+                    <thead className="bg-slate-800/80 text-slate-300">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium">#</th>
+                        <th className="px-3 py-2 text-left font-medium">
+                          Data
+                        </th>
+                        <th className="px-1 py-2 text-center font-medium">
+                          {/* lixeira */}
+                        </th>
+                        <th className="px-3 py-2 text-left font-medium">
+                          Ticker
+                        </th>
+                        <th className="px-3 py-2 text-left font-medium">
+                          Tipo
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium">
+                          Quantidade
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium">
+                          Preço (R$)
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium">
+                          Valor (R$)
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lancOrdenados.map((l, idx) => {
+                        const qtd = toNum(l.qtd);
+                        const preco = toNum(l.preco);
+                        const valor = qtd * preco;
 
-                          return (
-                            <tr
-                              key={l.id}
-                              className="border-t border-slate-800 hover:bg-slate-800/40"
-                            >
-                              <td className="px-3 py-1.5 text-slate-400">
-                                {idx + 1}
-                              </td>
+                        return (
+                          <tr
+                            key={l.id}
+                            className="border-t border-slate-800 hover:bg-slate-800/40"
+                          >
+                            <td className="px-3 py-1.5 text-slate-400">
+                              {idx + 1}
+                            </td>
 
-                              {/* Data */}
-                              <td className="px-3 py-1.5 text-slate-100">
-                                {l.dataEntrada
-                                  ? formatDateBR(l.dataEntrada)
-                                  : "—"}
-                              </td>
+                            {/* Data */}
+                            <td className="px-3 py-1.5 text-slate-100">
+                              {l.dataEntrada
+                                ? formatDateBR(l.dataEntrada)
+                                : "—"}
+                            </td>
 
-                              {/* Lixeira ao lado da data */}
-                              <td className="px-1 py-1.5 text-center align-middle">
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteLanc(l.id)}
-                                  className="
-                                    inline-flex items-center justify-center
-                                    h-6 w-6 rounded-full
-                                    text-slate-400 hover:text-rose-100
-                                    hover:bg-rose-500/70
-                                    text-[11px]
-                                    transition
-                                  "
-                                  title="Excluir lançamento"
-                                >
-                                  🗑️
-                                </button>
-                              </td>
+                            {/* Lixeira ao lado da data */}
+                            <td className="px-1 py-1.5 text-center align-middle">
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteLanc(l.id)}
+                                className="
+                                  inline-flex items-center justify-center
+                                  h-6 w-6 rounded-full
+                                  text-slate-400 hover:text-rose-100
+                                  hover:bg-rose-500/70
+                                  text-[11px]
+                                  transition
+                                "
+                                title="Excluir lançamento"
+                              >
+                                🗑️
+                              </button>
+                            </td>
 
-                              <td className="px-3 py-1.5 text-slate-100">
-                                {(l.ticker || "").toUpperCase()}
-                              </td>
-                              <td className="px-3 py-1.5 text-slate-200">
-                                {l.tipo === "RF"
-                                  ? "RF"
-                                  : l.tipo === "FII"
-                                  ? "FII"
-                                  : "Ações"}
-                              </td>
-                              <td className="px-3 py-1.5 text-right text-slate-100">
-                                {l.qtd || "—"}
-                              </td>
-                              <td className="px-3 py-1.5 text-right text-slate-100">
-                                {preco > 0
-                                  ? preco.toLocaleString("pt-BR", {
-                                      style: "currency",
-                                      currency: "BRL",
-                                    })
-                                  : "—"}
-                              </td>
-                              <td className="px-3 py-1.5 text-right text-slate-100">
-                                {valor > 0
-                                  ? valor.toLocaleString("pt-BR", {
-                                      style: "currency",
-                                      currency: "BRL",
-                                    })
-                                  : "—"}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                            <td className="px-3 py-1.5 text-slate-100">
+                              {(l.ticker || "").toUpperCase()}
+                            </td>
+                            <td className="px-3 py-1.5 text-slate-200">
+                              {l.tipo === "RF"
+                                ? "RF"
+                                : l.tipo === "FII"
+                                ? "FII"
+                                : "Ações"}
+                            </td>
+                            <td className="px-3 py-1.5 text-right text-slate-100">
+                              {l.qtd || "—"}
+                            </td>
+                            <td className="px-3 py-1.5 text-right text-slate-100">
+                              {preco > 0
+                                ? preco.toLocaleString("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                  })
+                                : "—"}
+                            </td>
+                            <td className="px-3 py-1.5 text-right text-slate-100">
+                              {valor > 0
+                                ? valor.toLocaleString("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                  })
+                                : "—"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
