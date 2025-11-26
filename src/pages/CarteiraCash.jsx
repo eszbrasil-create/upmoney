@@ -634,7 +634,7 @@ export default function CarteiraCash() {
 
     setLancamentos((prev) => [...prev, novo]);
 
-    // mantém o modal aberto e limpa alguns campos para o próximo lançamento
+    // mantém o modal aberto e limpa campos principais
     setNovoLanc((prev) => ({
       ...prev,
       ticker: "",
@@ -648,14 +648,14 @@ export default function CarteiraCash() {
     setLancamentos((prev) => prev.filter((l) => l.id !== id));
   };
 
-  // 🔎 Lista de lançamentos ordenada (mais recente por data / id)
+  // 🔎 Lista de lançamentos ordenada
   const lancOrdenados = useMemo(() => {
     const arr = [...lancamentos];
     return arr.sort((a, b) => {
       if (a.dataEntrada && b.dataEntrada && a.dataEntrada !== b.dataEntrada) {
-        return a.dataEntrada < b.dataEntrada ? 1 : -1; // data mais recente primeiro
+        return a.dataEntrada < b.dataEntrada ? 1 : -1;
       }
-      return (b.id || 0) - (a.id || 0); // fallback pelo id (Date.now)
+      return (b.id || 0) - (a.id || 0);
     });
   }, [lancamentos]);
 
@@ -669,7 +669,7 @@ export default function CarteiraCash() {
               className={`
                 w-full rounded-2xl bg-slate-950/95 px-3 pt-2 pb-2
                 flex flex-col gap-2
-                transition-all duration-300
+                transition-all duração-300
                 ${openCarteiras ? "pb-3" : ""}
               `}
             >
@@ -1289,121 +1289,123 @@ export default function CarteiraCash() {
       {/* Modal Adicionar Ativos */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
-          {/* Modal com scroll VERTICAL próprio */}
-          <div className="w-[70vw] h-[90vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 flex flex-col overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-slate-100 font-semibold text-lg">
-                Adicionar ativo à base
-              </h2>
-              <button
-                type="button"
-                onClick={() => setIsAddModalOpen(false)}
-                className="text-slate-400 hover:text-slate-100 text-xl leading-none"
-              >
-                ×
-              </button>
-            </div>
-
-            {/* LINHA ÚNICA: Ativo | Tipo | Data | Quantidade | Preço | Salvar */}
-            <form onSubmit={handleSalvarLanc} className="space-y-3">
-              <div className="flex flex-nowrap items-end gap-3 overflow-x-auto">
-                <div className="flex flex-col flex-[0_0_130px]">
-                  <label className="block text-[11px] text-slate-300 mb-1">
-                    Ativo (ticker)
-                  </label>
-                  <input
-                    name="ticker"
-                    value={novoLanc.ticker}
-                    onChange={handleChangeLanc}
-                    placeholder="ex: VALE3"
-                    className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
-                    autoFocus
-                  />
-                </div>
-
-                <div className="flex flex-col flex-[0_0_110px]">
-                  <label className="block text-[11px] text-slate-300 mb-1">
-                    Tipo
-                  </label>
-                  <select
-                    name="tipo"
-                    value={novoLanc.tipo}
-                    onChange={handleChangeLanc}
-                    className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
-                  >
-                    <option value="ACOES">Ações</option>
-                    <option value="FII">FII</option>
-                    <option value="RF">Renda Fixa</option>
-                  </select>
-                </div>
-
-                <div className="flex flex-col flex-[0_0_150px]">
-                  <label className="block text-[11px] text-slate-300 mb-1">
-                    Data de entrada
-                  </label>
-                  <input
-                    type="date"
-                    name="dataEntrada"
-                    value={novoLanc.dataEntrada}
-                    onChange={handleChangeLanc}
-                    className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
-                  />
-                </div>
-
-                <div className="flex flex-col flex-[0_0_120px]">
-                  <label className="block text-[11px] text-slate-300 mb-1">
-                    Quantidade
-                  </label>
-                  <input
-                    name="qtd"
-                    value={novoLanc.qtd}
-                    onChange={handleChangeLanc}
-                    inputMode="decimal"
-                    placeholder="0"
-                    className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
-                  />
-                </div>
-
-                <div className="flex flex-col flex-[0_0_160px]">
-                  <label className="block text-[11px] text-slate-300 mb-1">
-                    Preço de compra (R$)
-                  </label>
-                  <input
-                    name="preco"
-                    value={novoLanc.preco}
-                    onChange={handleChangeLanc}
-                    inputMode="decimal"
-                    placeholder="0,00"
-                    className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
-                  />
-                </div>
-
-                <div className="flex flex-col flex-[0_0_auto]">
-                  <span className="block text-[11px] text-transparent mb-1">
-                    &nbsp;
-                  </span>
-                  <button
-                    type="submit"
-                    className="
-                      px-4 py-2 rounded-xl
-                      bg-emerald-500 text-xs sm:text-sm font-semibold text-slate-950
-                      hover:bg-emerald-400 whitespace-nowrap
-                    "
-                  >
-                    Salvar lançamento
-                  </button>
-                </div>
+          {/* Modal: 70% largura, 90% altura, topo fixo, lista com scroll interno */}
+          <div className="w-[70vw] h-[90vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 flex flex-col overflow-hidden">
+            {/* Cabeçalho + formulário (FAIXA FIXA) */}
+            <div className="flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-slate-100 font-semibold text-lg">
+                  Adicionar ativo à base
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="text-slate-400 hover:text-slate-100 text-xl leading-none"
+                >
+                  ×
+                </button>
               </div>
 
-              <p className="text-[11px] text-slate-400 max-w-xl">
-                Cada lançamento é guardado na base escondida. A tabela principal
-                abaixo mostra o consolidado por ativo (quantidade total, preço
-                médio e data de entrada mais antiga).
-              </p>
-            </form>
+              <form onSubmit={handleSalvarLanc} className="space-y-3">
+                <div className="flex flex-nowrap items-end gap-3 overflow-x-auto">
+                  <div className="flex flex-col flex-[0_0_130px]">
+                    <label className="block text-[11px] text-slate-300 mb-1">
+                      Ativo (ticker)
+                    </label>
+                    <input
+                      name="ticker"
+                      value={novoLanc.ticker}
+                      onChange={handleChangeLanc}
+                      placeholder="ex: VALE3"
+                      className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
+                      autoFocus
+                    />
+                  </div>
 
-            {/* 🧾 Lista de lançamentos cadastrados */}
-            <div className="mt-6 border-t border-slate-700 pt-4 flex-1 flex flex-col">
+                  <div className="flex flex-col flex-[0_0_110px]">
+                    <label className="block text-[11px] text-slate-300 mb-1">
+                      Tipo
+                    </label>
+                    <select
+                      name="tipo"
+                      value={novoLanc.tipo}
+                      onChange={handleChangeLanc}
+                      className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
+                    >
+                      <option value="ACOES">Ações</option>
+                      <option value="FII">FII</option>
+                      <option value="RF">Renda Fixa</option>
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col flex-[0_0_150px]">
+                    <label className="block text-[11px] text-slate-300 mb-1">
+                      Data de entrada
+                    </label>
+                    <input
+                      type="date"
+                      name="dataEntrada"
+                      value={novoLanc.dataEntrada}
+                      onChange={handleChangeLanc}
+                      className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
+                    />
+                  </div>
+
+                  <div className="flex flex-col flex-[0_0_120px]">
+                    <label className="block text-[11px] text-slate-300 mb-1">
+                      Quantidade
+                    </label>
+                    <input
+                      name="qtd"
+                      value={novoLanc.qtd}
+                      onChange={handleChangeLanc}
+                      inputMode="decimal"
+                      placeholder="0"
+                      className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
+                    />
+                  </div>
+
+                  <div className="flex flex-col flex-[0_0_160px]">
+                    <label className="block text-[11px] text-slate-300 mb-1">
+                      Preço de compra (R$)
+                    </label>
+                    <input
+                      name="preco"
+                      value={novoLanc.preco}
+                      onChange={handleChangeLanc}
+                      inputMode="decimal"
+                      placeholder="0,00"
+                      className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
+                    />
+                  </div>
+
+                  <div className="flex flex-col flex-[0_0_auto]">
+                    <span className="block text-[11px] text-transparent mb-1">
+                      &nbsp;
+                    </span>
+                    <button
+                      type="submit"
+                      className="
+                        px-4 py-2 rounded-xl
+                        bg-emerald-500 text-xs sm:text-sm font-semibold text-slate-950
+                        hover:bg-emerald-400 whitespace-nowrap
+                      "
+                    >
+                      Salvar lançamento
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-400 max-w-xl">
+                  Cada lançamento é guardado na base escondida. A tabela principal
+                  abaixo mostra o consolidado por ativo (quantidade total, preço
+                  médio e data de entrada mais antiga).
+                </p>
+              </form>
+            </div>
+
+            {/* Lista com SCROLL interno (flex-1 + overflow-y-auto) */}
+            <div className="mt-6 border-t border-slate-700 pt-4 flex-1 min-h-0 flex flex-col">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-slate-100 text-sm font-semibold">
                   Lançamentos cadastrados
@@ -1419,8 +1421,7 @@ export default function CarteiraCash() {
                   clique em <strong>Salvar lançamento</strong>.
                 </p>
               ) : (
-                // Caixa cresce com o conteúdo; quem ganha scroll é o modal (overflow-y-auto)
-                <div className="rounded-xl border border-slate-700 bg-slate-950/60 flex-1">
+                <div className="rounded-xl border border-slate-700 bg-slate-950/60 flex-1 min-h-0 overflow-y-auto">
                   <table className="w-full text-xs">
                     <thead className="bg-slate-800/80 text-slate-300">
                       <tr>
