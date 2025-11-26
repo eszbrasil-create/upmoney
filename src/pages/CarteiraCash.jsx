@@ -648,14 +648,28 @@ export default function CarteiraCash() {
     setLancamentos((prev) => prev.filter((l) => l.id !== id));
   };
 
-  // 🔎 Lista de lançamentos ordenada
+  // 🔎 Lista de lançamentos ordenada: data mais antiga → mais recente
   const lancOrdenados = useMemo(() => {
     const arr = [...lancamentos];
+
     return arr.sort((a, b) => {
-      if (a.dataEntrada && b.dataEntrada && a.dataEntrada !== b.dataEntrada) {
-        return a.dataEntrada < b.dataEntrada ? 1 : -1;
+      const da = a.dataEntrada || "";
+      const db = b.dataEntrada || "";
+
+      // Ambos têm data → ordena pela data
+      if (da && db) {
+        if (da < db) return -1;
+        if (da > db) return 1;
+        // mesma data → ordena por id (mais antigo primeiro)
+        return (a.id || 0) - (b.id || 0);
       }
-      return (b.id || 0) - (a.id || 0);
+
+      // Só um tem data → o que tem data vem primeiro
+      if (da && !db) return -1;
+      if (!da && db) return 1;
+
+      // Nenhum tem data → ordena por id (mais antigo primeiro)
+      return (a.id || 0) - (b.id || 0);
     });
   }, [lancamentos]);
 
@@ -669,7 +683,7 @@ export default function CarteiraCash() {
               className={`
                 w-full rounded-2xl bg-slate-950/95 px-3 pt-2 pb-2
                 flex flex-col gap-2
-                transition-all duração-300
+                transition-all duration-300
                 ${openCarteiras ? "pb-3" : ""}
               `}
             >
@@ -990,7 +1004,7 @@ export default function CarteiraCash() {
                               w-full rounded-xl
                               bg-emerald-500/90
                               hover:bg-emerald-400
-                              transition-all duração-700 ease-out
+                              transition-all duration-700 ease-out
                               hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
                             "
                             style={{ height: `${altura}px` }}
