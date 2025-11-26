@@ -419,12 +419,8 @@ export default function CarteiraCash() {
     });
   }, [lancamentos]);
 
-  // ---------------------------------------------------------------------------
   // Integra DY + setor + valorAtual a partir do CSV (dyBase)
-  // Sempre sobrescreve os DYs da carteira com o que vier do CSV.
-  // Agora roda também quando os lançamentos mudam, para que novos ativos
-  // já recebam os dados da base automaticamente.
-  // ---------------------------------------------------------------------------
+  // Agora roda também quando os lançamentos mudam
   useEffect(() => {
     if (dyBaseLoading || dyBaseError) return;
     if (!dyBase || dyBase.length === 0) return;
@@ -1249,7 +1245,9 @@ export default function CarteiraCash() {
                       className="inline-flex items-center gap-1"
                     >
                       <span>Data entrada</span>
-                      <span className="text-[10px"]>{getSortIcon("data")}</span>
+                      <span className="text-[10px]">
+                        {getSortIcon("data")}
+                      </span>
                     </button>
                   </th>
 
@@ -1296,7 +1294,9 @@ export default function CarteiraCash() {
                       className="inline-flex items-center gap-1"
                     >
                       <span>Part. %</span>
-                      <span className="text-[10px]">{getSortIcon("part")}</span>
+                      <span className="text-[10px]">
+                        {getSortIcon("part")}
+                      </span>
                     </button>
                   </th>
 
