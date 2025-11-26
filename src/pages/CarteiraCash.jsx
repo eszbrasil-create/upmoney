@@ -1083,49 +1083,49 @@ export default function CarteiraCash() {
 
         <div className="rounded-xl border border-white/10 bg-slate-900/40 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-[1700px] w-full text-sm">
+            <table className="min-w-[1500px] w-full text-[13px]">
               <thead className="bg-slate-800/70 text-slate-300">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-medium sticky left-0 bg-slate-800/70 z-20">
+                  <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-0 bg-slate-800/70 z-20">
                     #
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
+                  <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-[2.5rem] bg-slate-800/70 z-20">
                     Ticker
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium">
+                  <th className="px-2 py-1.5 text-left text-[11px] font-medium">
                     Tipo
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium w-32">
+                  <th className="px-2 py-1.5 text-left text-[11px] font-medium w-32">
                     Setor
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium">
+                  <th className="px-2 py-1.5 text-left text-[11px] font-medium">
                     Data entrada
                   </th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     Quantidade
                   </th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     Entrada (R$)
                   </th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     Valor atual (R$)
                   </th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     Posição (R$)
                   </th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     % Var
                   </th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     Part. %
                   </th>
-                  <th className="px-3 py-2 text-right text-xs font-medium">
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
                     DY (12m)
                   </th>
                   {MESES.map((m) => (
                     <th
                       key={m}
-                      className="px-3 py-2 text-right text-xs font-medium"
+                      className="px-2 py-1.5 text-right text-[11px] font-medium"
                     >
                       DY {m}
                     </th>
@@ -1176,20 +1176,20 @@ export default function CarteiraCash() {
                       key={r.id}
                       className="border-t border-white/5 hover:bg-slate-800/30"
                     >
-                      <td className="px-3 py-2 text-slate-500 text-xs sticky left-0 bg-slate-900/90 z-10">
+                      <td className="px-2 py-1.5 text-[11px] text-slate-500 sticky left-0 bg-slate-900/90 z-10">
                         {i + 1}
                       </td>
 
                       {/* Ticker (somente leitura) */}
-                      <td className="px-3 py-2 text-left sticky left-[2.5rem] bg-slate-900/90 z-10">
-                        <span className="text-slate-100 text-sm">
+                      <td className="px-2 py-1.5 text-left sticky left-[2.5rem] bg-slate-900/90 z-10">
+                        <span className="text-slate-100 text-xs font-medium">
                           {r.ticker || "—"}
                         </span>
                       </td>
 
                       {/* Tipo (somente leitura) */}
-                      <td className="px-3 py-2">
-                        <span className="inline-flex items-center rounded-md bg-slate-900 border border-slate-700 px-2 py-1 text-xs text-slate-100">
+                      <td className="px-2 py-1.5">
+                        <span className="inline-flex items-center rounded-md bg-slate-900 border border-slate-700 px-2 py-0.5 text-[11px] text-slate-100">
                           {r.tipo === "RF"
                             ? "RF"
                             : r.tipo === "FII"
@@ -1199,26 +1199,26 @@ export default function CarteiraCash() {
                       </td>
 
                       {/* Setor (exibição simples) */}
-                      <td className="px-3 py-2 text-slate-200 w-32 truncate">
-                        <span className="text-slate-100 text-sm">
+                      <td className="px-2 py-1.5 text-slate-200 w-32 truncate">
+                        <span className="text-slate-100 text-xs">
                           {r.nome || "—"}
                         </span>
                       </td>
 
                       {/* Data entrada (somente leitura) */}
-                      <td className="px-3 py-2 text-left">
-                        <span className="text-xs text-slate-100">
+                      <td className="px-2 py-1.5 text-left">
+                        <span className="text-[11px] text-slate-100">
                           {formatDateBR(r.dataEntrada)}
                         </span>
                       </td>
 
                       {/* Quantidade (somente leitura) */}
-                      <td className="px-3 py-2 text-right text-slate-100">
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-100">
                         {r.qtd || "—"}
                       </td>
 
                       {/* Entrada (R$) somente leitura */}
-                      <td className="px-3 py-2 text-right text-slate-100">
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-100">
                         {entradaNum > 0
                           ? entradaNum.toLocaleString("pt-BR", {
                               style: "currency",
@@ -1228,7 +1228,7 @@ export default function CarteiraCash() {
                       </td>
 
                       {/* Valor atual (R$) somente leitura */}
-                      <td className="px-3 py-2 text-right text-slate-100">
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-100">
                         {valorAtualNum > 0
                           ? valorAtualNum.toLocaleString("pt-BR", {
                               style: "currency",
@@ -1237,7 +1237,7 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
-                      <td className="px-3 py-2 text-right text-slate-200">
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-200">
                         {valorPosicao > 0
                           ? valorPosicao.toLocaleString("pt-BR", {
                               style: "currency",
@@ -1246,15 +1246,15 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
-                      <td className={`px-3 py-2 text-right ${varClass}`}>
+                      <td className={`px-2 py-1.5 text-right text-xs ${varClass}`}>
                         {hasVar ? `${varPerc.toFixed(2)}%` : "—"}
                       </td>
 
-                      <td className="px-3 py-2 text-right text-slate-200">
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-200">
                         {partStr}
                       </td>
 
-                      <td className="px-3 py-2 text-right text-slate-200 font-semibold">
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-200 font-semibold">
                         {dy12mValor > 0
                           ? dy12mValor.toLocaleString("pt-BR", {
                               style: "currency",
@@ -1265,9 +1265,9 @@ export default function CarteiraCash() {
 
                       {/* DY meses — editáveis manualmente */}
                       {MESES.map((_, idx) => (
-                        <td key={idx} className="px-3 py-2 text-right">
+                        <td key={idx} className="px-2 py-1.5 text-right">
                           <input
-                            className="w-full bg-transparent text-right outline-none text-slate-100 placeholder:text-slate-600 text-sm"
+                            className="w-full bg-transparent text-right outline-none text-[11px] text-slate-100 placeholder:text-slate-600"
                             inputMode="decimal"
                             placeholder="0,00"
                             value={dyMeses[idx] ?? ""}
