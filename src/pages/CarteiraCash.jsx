@@ -318,6 +318,11 @@ export default function CarteiraCash() {
     });
   };
 
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return "↕";
+    return sortConfig.direction === "asc" ? "▲" : "▼";
+  };
+
   // Persiste carteira (tabela visível)
   useEffect(() => {
     try {
@@ -689,7 +694,7 @@ export default function CarteiraCash() {
     setLancamentos((prev) => prev.filter((l) => l.id !== id));
   };
 
-  // 🔎 Lista de lançamentos ordenada: MAIS RECENTE → MAIS ANTIGO
+  // Lista de lançamentos ordenada: MAIS RECENTE → MAIS ANTIGO
   const lancOrdenados = useMemo(() => {
     const arr = [...lancamentos];
 
@@ -701,7 +706,6 @@ export default function CarteiraCash() {
       if (da && db) {
         if (da < db) return 1;
         if (da > db) return -1;
-        // se mesma data, id mais novo primeiro
         return (b.id || 0) - (a.id || 0);
       }
 
@@ -709,7 +713,7 @@ export default function CarteiraCash() {
       if (da && !db) return -1;
       if (!da && db) return 1;
 
-      // nenhum tem data → id desc (mais novo primeiro)
+      // nenhum tem data → id desc
       return (b.id || 0) - (a.id || 0);
     });
   }, [lancamentos]);
@@ -752,9 +756,8 @@ export default function CarteiraCash() {
 
         // opção A: datas vazias sempre no fim
         if (!da && !db) return 0;
-        if (!da) return 1; // a vazio → fim
-        if (!db) return -1; // b vazio → fim
-
+        if (!da) return 1;
+        if (!db) return -1;
         if (da === db) return 0;
 
         if (sortConfig.direction === "asc") {
@@ -764,10 +767,7 @@ export default function CarteiraCash() {
         }
       }
 
-      if (sortConfig.key === "data") {
-        // já retornado acima
-        return 0;
-      }
+      if (sortConfig.key === "data") return 0;
 
       if (valA === valB) return 0;
       if (sortConfig.direction === "asc") {
@@ -776,11 +776,6 @@ export default function CarteiraCash() {
       return valB - valA;
     });
   }, [carteira, sortConfig, totalGeral]);
-
-  const getSortIcon = (key) => {
-    if (sortConfig.key !== key) return "↕";
-    return sortConfig.direction === "asc" ? "▲" : "▼";
-  };
 
   return (
     <div className="pt-0 pr-3 pl-0 relative">
@@ -901,7 +896,6 @@ export default function CarteiraCash() {
           </div>
         </div>
 
-        {/* Espaçador reduzido para aproximar os gráficos */}
         <div className="h-16" />
       </div>
 
@@ -1193,24 +1187,30 @@ export default function CarteiraCash() {
 
         <div className="rounded-xl border border-white/10 bg-slate-900/40 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-[1700px] w-full text-[13px]">
+            <table className="min-w-[1800px] w-full text-[13px]">
               <thead className="bg-slate-800/70 text-slate-300">
                 <tr>
-                  <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-0 bg-slate-800/70 z-20">
+                  <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-0 bg-slate-800/70 z-20 w-8">
                     #
                   </th>
-                  <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-[2.5rem] bg-slate-800/70 z-20 w-24">
+
+                  {/* Ticker – largura aumentada */}
+                  <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-[2rem] bg-slate-800/70 z-20 w-28">
                     Ticker
                   </th>
-                  {/* Tipo */}
+
+                  {/* Tipo – largura aumentada + centralizado */}
                   <th className="px-2 py-1.5 text-center text-[11px] font-medium w-32">
                     Tipo
                   </th>
-                  <th className="px-2 py-1.5 text-left text-[11px] font-medium w-36">
+
+                  {/* Setor – largura aumentada */}
+                  <th className="px-2 py-1.5 text-left text-[11px] font-medium w-40">
                     Setor
                   </th>
+
                   {/* Data entrada com ordenação */}
-                  <th className="px-2 py-1.5 text-left text-[11px] font-medium">
+                  <th className="px-2 py-1.5 text-left text-[11px] font-medium w-32">
                     <button
                       type="button"
                       onClick={() => handleSort("data")}
@@ -1220,14 +1220,18 @@ export default function CarteiraCash() {
                       <span className="text-[10px]">{getSortIcon("data")}</span>
                     </button>
                   </th>
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium">
+
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-24">
                     Quantidade
                   </th>
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-28">
+
+                  {/* Entrada – largura aumentada */}
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-32">
                     Entrada (R$)
                   </th>
-                  {/* Posição com ordenação */}
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-28">
+
+                  {/* Posição com ordenação – largura aumentada */}
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-32">
                     <button
                       type="button"
                       onClick={() => handleSort("posicao")}
@@ -1239,7 +1243,8 @@ export default function CarteiraCash() {
                       </span>
                     </button>
                   </th>
-                  {/* % Var com ordenação */}
+
+                  {/* % Var – largura aumentada */}
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium w-24">
                     <button
                       type="button"
@@ -1250,7 +1255,8 @@ export default function CarteiraCash() {
                       <span className="text-[10px]">{getSortIcon("var")}</span>
                     </button>
                   </th>
-                  {/* Part % com ordenação */}
+
+                  {/* Part. % – largura aumentada */}
                   <th className="px-2 py-1.5 text-right text-[11px] font-medium w-24">
                     <button
                       type="button"
@@ -1261,9 +1267,12 @@ export default function CarteiraCash() {
                       <span className="text-[10px]">{getSortIcon("part")}</span>
                     </button>
                   </th>
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-28">
+
+                  {/* DY 12m – largura aumentada */}
+                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-32">
                     DY (12m)
                   </th>
+
                   {DY_MONTHS.map((m) => (
                     <th
                       key={m.label}
@@ -1318,18 +1327,18 @@ export default function CarteiraCash() {
                       key={r.id}
                       className="border-t border-white/5 hover:bg-slate-800/30"
                     >
-                      <td className="px-2 py-1.5 text-[11px] text-slate-500 sticky left-0 bg-slate-900/90 z-10">
+                      <td className="px-2 py-1.5 text-[11px] text-slate-500 sticky left-0 bg-slate-900/90 z-10 w-8">
                         {i + 1}
                       </td>
 
                       {/* Ticker (somente leitura) */}
-                      <td className="px-2 py-1.5 text-left sticky left-[2.5rem] bg-slate-900/90 z-10 w-24">
+                      <td className="px-2 py-1.5 text-left sticky left-[2rem] bg-slate-900/90 z-10 w-28">
                         <span className="text-[11px] text-slate-200">
                           {r.ticker || "—"}
                         </span>
                       </td>
 
-                      {/* Tipo (somente leitura) */}
+                      {/* Tipo */}
                       <td className="px-2 py-1.5 w-32 text-center">
                         <span className="inline-flex items-center justify-center rounded-md bg-slate-900 border border-slate-700 px-2 py-0.5 text-[11px] text-slate-100">
                           {r.tipo === "RF"
@@ -1340,27 +1349,27 @@ export default function CarteiraCash() {
                         </span>
                       </td>
 
-                      {/* Setor (exibição simples) */}
-                      <td className="px-2 py-1.5 text-slate-200 w-36 truncate">
+                      {/* Setor */}
+                      <td className="px-2 py-1.5 text-slate-200 w-40 truncate">
                         <span className="text-slate-100 text-xs">
                           {r.nome || "—"}
                         </span>
                       </td>
 
-                      {/* Data entrada (somente leitura) */}
-                      <td className="px-2 py-1.5 text-left">
+                      {/* Data entrada */}
+                      <td className="px-2 py-1.5 text-left w-32">
                         <span className="text-[11px] text-slate-100">
                           {formatDateBR(r.dataEntrada)}
                         </span>
                       </td>
 
-                      {/* Quantidade (somente leitura) */}
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-100">
+                      {/* Quantidade */}
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-100 w-24">
                         {r.qtd || "—"}
                       </td>
 
-                      {/* Entrada (R$) somente leitura */}
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-100 w-28">
+                      {/* Entrada (R$) 2 casas */}
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-100 w-32">
                         {entradaNum > 0
                           ? entradaNum.toLocaleString("pt-BR", {
                               style: "currency",
@@ -1371,8 +1380,8 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
-                      {/* Posição (R$) */}
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-200 w-28">
+                      {/* Posição (R$) 2 casas */}
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-200 w-32">
                         {valorPosicao > 0
                           ? valorPosicao.toLocaleString("pt-BR", {
                               style: "currency",
@@ -1394,7 +1403,7 @@ export default function CarteiraCash() {
                       </td>
 
                       {/* DY 12m */}
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-200 font-semibold w-28">
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-200 font-semibold w-32">
                         {dy12mValor > 0
                           ? dy12mValor.toLocaleString("pt-BR", {
                               style: "currency",
@@ -1403,7 +1412,7 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
-                      {/* DY meses — 24 colunas, editáveis manualmente */}
+                      {/* DY meses — 24 colunas */}
                       {DY_MONTHS.map((m, idx) => (
                         <td key={m.label} className="px-2 py-1.5 text-right">
                           <input
@@ -1443,9 +1452,8 @@ export default function CarteiraCash() {
       {/* Modal Adicionar Ativos */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
-          {/* Modal: 70% largura, 90% altura, topo fixo, lista com scroll interno */}
           <div className="w-[70vw] h-[90vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 flex flex-col overflow-hidden">
-            {/* Cabeçalho + formulário (FAIXA FIXA) */}
+            {/* Cabeçalho + formulário (fixo) */}
             <div className="flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-slate-100 font-semibold text-lg">
@@ -1558,7 +1566,7 @@ export default function CarteiraCash() {
               </form>
             </div>
 
-            {/* Lista com SCROLL interno (flex-1 + overflow-y-auto) */}
+            {/* Lista com SCROLL interno */}
             <div className="mt-6 border-t border-slate-700 pt-4 flex-1 min-h-0 flex flex-col">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-slate-100 text-sm font-semibold">
