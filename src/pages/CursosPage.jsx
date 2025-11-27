@@ -1,7 +1,8 @@
 // src/pages/Cursos.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { PiggyBank, FileDown, CheckCircle2 } from "lucide-react";
 import confetti from "canvas-confetti";
+import party from "party-js";
 
 const ORANGE = "#f97316"; // Carteira Cash (laranja)
 const GREEN = "#10e597ff"; // Concluído (verde)
@@ -83,6 +84,20 @@ export default function CursosPage() {
     }, 250);
   }
 
+  // ============================================
+  // 💸 CHUVA DE MOEDAS (party-js)
+  // ============================================
+  function launchCoinRain(target) {
+    if (!target) return;
+    party.confetti(target, {
+      count: 120,
+      shapes: ["💰", "🪙", "💵"],
+    });
+  }
+
+  // ref para o container da página (onde a chuva de moedas vai acontecer)
+  const containerRef = useRef(null);
+
   // =================================================
   // Estado dos módulos concluídos (com proteção SSR)
   // =================================================
@@ -117,11 +132,14 @@ export default function CursosPage() {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   // =================================================
-  // 🎉 DISPARA FOGOS QUANDO FINALIZAR 100%
+  // 🎉 DISPARA FOGOS + CHUVA DE MOEDAS QUANDO 100%
   // =================================================
   useEffect(() => {
     if (done === total && total > 0) {
       launchFireworks();
+      if (containerRef.current) {
+        launchCoinRain(containerRef.current);
+      }
     }
   }, [done, total]);
 
@@ -134,7 +152,7 @@ export default function CursosPage() {
   };
 
   return (
-    <div className="pt-3 pr-6 pl-0">
+    <div ref={containerRef} className="pt-3 pr-6 pl-0">
       {/* keyframes locais para animações do porquinho */}
       <style>{`
         @keyframes pig-pulse {
