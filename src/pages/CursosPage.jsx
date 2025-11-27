@@ -42,10 +42,14 @@ export default function CursosPage() {
     []
   );
 
-  // ✅ Estado dos módulos concluídos, carregando do localStorage
+  // ✅ Estado dos módulos concluídos, carregando do localStorage (seguro para SSR)
   const [concluidos, setConcluidos] = useState(() => {
+    if (typeof window === "undefined") {
+      // Em ambiente de servidor, não há localStorage
+      return new Set();
+    }
     try {
-      const raw = localStorage.getItem(LS_KEY_CURSOS);
+      const raw = window.localStorage.getItem(LS_KEY_CURSOS);
       if (!raw) return new Set();
       const arr = JSON.parse(raw);
       if (!Array.isArray(arr)) return new Set();
@@ -55,11 +59,12 @@ export default function CursosPage() {
     }
   });
 
-  // ✅ Sempre que concluidos muda, salvar no localStorage
+  // ✅ Sempre que concluidos muda, salvar no localStorage (também checando window)
   useEffect(() => {
+    if (typeof window === "undefined") return;
     try {
       const arr = Array.from(concluidos);
-      localStorage.setItem(LS_KEY_CURSOS, JSON.stringify(arr));
+      window.localStorage.setItem(LS_KEY_CURSOS, JSON.stringify(arr));
     } catch {
       // se der erro, só não persiste
     }
@@ -129,7 +134,6 @@ export default function CursosPage() {
             return (
               <div
                 key={m.id}
-                // 🟢 Fundo esverdeado e borda diferente quando concluído
                 className={`group rounded-xl border p-4 flex items-start gap-3 transition-colors duration-300 ${
                   isDone
                     ? "border-emerald-500/60 bg-emerald-900/30"
@@ -150,14 +154,14 @@ export default function CursosPage() {
                 </div>
 
                 <div className="flex-1">
-                  {/* 🟢 Título + Badge "Concluído" */}
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-slate-200 font-semibold">
+                  {/* Título com badge "Concluído" absoluto, perto do título, sem aumentar o card */}
+                  <div className="relative pb-1">
+                    <h3 className="text-slate-200 font-semibold pr-20">
                       {m.id}. {m.titulo}
                     </h3>
 
                     {isDone && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600/20 border border-emerald-500/60 px-2 py-1 text-[11px] font-medium text-emerald-100">
+                      <span className="absolute top-0 right-0 inline-flex items-center gap-1 rounded-full bg-emerald-600/20 border border-emerald-500/60 px-2 py-1 text-[11px] font-medium text-emerald-100">
                         <CheckCircle2 size={14} />
                         Concluído
                       </span>
@@ -165,7 +169,7 @@ export default function CursosPage() {
                   </div>
 
                   <div className="mt-3 flex flex-wrap items-center gap-3">
-                    {/* 🟢 Botão "Ver PDF" - abre em nova aba */}
+                    {/* Botão "Ver PDF" - abre em nova aba */}
                     <a
                       href={m.pdf}
                       target="_blank"
@@ -175,7 +179,7 @@ export default function CursosPage() {
                       Ver PDF
                     </a>
 
-                    {/* 🟢 Botão "Baixar PDF" - download direto */}
+                    {/* Botão "Baixar PDF" - download direto */}
                     <a
                       href={m.pdf}
                       download
