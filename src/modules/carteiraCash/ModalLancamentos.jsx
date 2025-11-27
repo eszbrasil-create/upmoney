@@ -71,6 +71,7 @@ export default function ModalLancamentos({
 
           <form onSubmit={onSalvarLanc} className="space-y-3">
             <div className="flex flex-nowrap items-end gap-3 overflow-x-auto">
+              {/* Ticker (foco automático) */}
               <div className="flex flex-col flex-[0_0_130px]">
                 <label className="block text-[11px] text-slate-300 mb-1">
                   Ativo (ticker)
@@ -85,19 +86,24 @@ export default function ModalLancamentos({
                 />
               </div>
 
-              <div className="flex flex-col flex-[0_0_110px]">
+              {/* Tipo com mais opções e início vazio */}
+              <div className="flex flex-col flex-[0_0_130px]">
                 <label className="block text-[11px] text-slate-300 mb-1">
                   Tipo
                 </label>
                 <select
                   name="tipo"
-                  value={novoLanc.tipo}
+                  value={novoLanc.tipo || ""}
                   onChange={onChangeLanc}
                   className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
                 >
+                  <option value="">Selecione...</option>
                   <option value="ACOES">Ações</option>
                   <option value="FII">FII</option>
                   <option value="RF">Renda Fixa</option>
+                  <option value="CRIPTO">Cripto</option>
+                  <option value="CAIXA">Caixa</option>
+                  <option value="OUTROS">Outros</option>
                 </select>
               </div>
 
@@ -223,9 +229,7 @@ export default function ModalLancamentos({
 
                         {/* Data */}
                         <td className="px-3 py-1.5 text-slate-100">
-                          {l.dataEntrada
-                            ? formatDateBR(l.dataEntrada)
-                            : "—"}
+                          {l.dataEntrada ? formatDateBR(l.dataEntrada) : "—"}
                         </td>
 
                         {/* Lixeira ao lado da data */}
@@ -250,13 +254,24 @@ export default function ModalLancamentos({
                         <td className="px-3 py-1.5 text-slate-100">
                           {(l.ticker || "").toUpperCase()}
                         </td>
+
+                        {/* Tipo exibindo todas as variações */}
                         <td className="px-3 py-1.5 text-slate-200">
                           {l.tipo === "RF"
-                            ? "RF"
+                            ? "Renda Fixa"
                             : l.tipo === "FII"
                             ? "FII"
-                            : "Ações"}
+                            : l.tipo === "CRIPTO"
+                            ? "Cripto"
+                            : l.tipo === "CAIXA"
+                            ? "Caixa"
+                            : l.tipo === "OUTROS"
+                            ? "Outros"
+                            : l.tipo === "ACOES"
+                            ? "Ações"
+                            : l.tipo || "—"}
                         </td>
+
                         <td className="px-3 py-1.5 text-right text-slate-100">
                           {l.qtd || "—"}
                         </td>
