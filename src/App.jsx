@@ -7,13 +7,13 @@ import CardRegistro from "./components/cards/CardRegistro";
 import CardEvolucao from "./components/cards/CardEvolucao";
 import CardEvolucaoPct from "./components/cards/CardEvolucaoPct";
 import CardParticipacao from "./components/cards/CardParticipacao";
-import CardDividendosCash from "./components/cards/CardDividendosCash"; // ✅ NOVO
+import CardDividendosCash from "./components/cards/CardDividendosCash";
 
 // páginas internas do painel (com sidebar)
 import CarteiraCash from "./pages/CarteiraCash";
 import Despesas from "./pages/Despesas";
 import Relatorios from "./pages/Relatorios";
-import CursosPage from "./pages/CursosPage"; // cursos DENTRO do dashboard
+import CursosPage from "./pages/CursosPage";
 
 // landing hero
 import Landing from "./pages/Landing";
@@ -21,7 +21,7 @@ import Landing from "./pages/Landing";
 // páginas full-screen (sem sidebar)
 import SaidaFiscal from "./pages/SaidaFiscal";
 import InvistaExterior from "./pages/InvistaExterior";
-import Cursos from "./pages/Cursos"; // página de cursos full-screen escura
+import Cursos from "./pages/Cursos";
 import Noticias from "./pages/Noticias";
 import CashControlHome from "./pages/CashControlHome";
 

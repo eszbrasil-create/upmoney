@@ -27,10 +27,10 @@ export default function Sidebar({
 
       {/* Menu Superior */}
       <nav className="flex flex-col gap-3 text-base font-medium tracking-wide">
-        {/* Sair → volta para a homepage (Landing.jsx) */}
+        {/* Sair → volta para a homepage */}
         <button
           onClick={() => {
-            window.location.href = "/"; // abre a homepage (Landing.jsx)
+            window.location.href = "/";
           }}
           className="flex flex-col items-center gap-1 hover:text-sky-400 transition"
         >
