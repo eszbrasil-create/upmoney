@@ -11,7 +11,7 @@ export default function CursosPage() {
     () => [
       {
         id: 1,
-        titulo: "Apresentação do Curso(Check in 1:1)",
+        titulo: "Apresentação do Curso(1 to 1)",
         pdf: "/pdfs/MEU-PRIMEIRO-DIVIDENDO.pdf",
       },
       { id: 2, titulo: "Abrir Conta na Corretora", pdf: "/pdfs/modulo2.pdf" },
@@ -24,7 +24,7 @@ export default function CursosPage() {
       },
       {
         id: 6,
-        titulo: "Montando sua Carteira (1:1)",
+        titulo: "Montando sua Carteira (1 to 1)",
         pdf: "/pdfs/modulo6.pdf",
       },
       {
@@ -35,7 +35,7 @@ export default function CursosPage() {
       { id: 8, titulo: "Impostos", pdf: "/pdfs/modulo6.pdf" },
       {
         id: 9,
-        titulo: "Recebendo o Primeiro Dividendo (Checkout 1:1)",
+        titulo: "Recebendo o Primeiro Dividendo (1 to 1)",
         pdf: "/pdfs/modulo7.pdf",
       },
     ],
