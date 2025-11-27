@@ -1,5 +1,5 @@
 // src/modules/carteiraCash/ModalLancamentos.jsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 
 // Helpers locais (iguais aos do CarteiraCash)
 function toNum(x) {
@@ -27,8 +27,6 @@ export default function ModalLancamentos({
 }) {
   if (!isOpen) return null;
 
-  const [openTipo, setOpenTipo] = useState(false);
-
   // Lista de lançamentos ordenada: MAIS RECENTE → MAIS ANTIGO
   const lancOrdenados = useMemo(() => {
     const arr = [...(lancamentos || [])];
@@ -52,17 +50,6 @@ export default function ModalLancamentos({
       return (b.id || 0) - (a.id || 0);
     });
   }, [lancamentos]);
-
-  const labelTipo =
-    novoLanc.tipo &&
-    {
-      ACOES: "Ações",
-      FII: "FII",
-      RF: "Renda Fixa",
-      CRIPTO: "Cripto",
-      CAIXA: "Caixa",
-      OUTROS: "Outros",
-    }[novoLanc.tipo];
 
   return (
     <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
@@ -99,64 +86,25 @@ export default function ModalLancamentos({
                 />
               </div>
 
-              {/* Tipo com dropdown customizado dark */}
-              <div className="flex flex-col flex-[0_0_130px] relative">
+              {/* Tipo com mais opções e início vazio */}
+              <div className="flex flex-col flex-[0_0_130px]">
                 <label className="block text-[11px] text-slate-300 mb-1">
                   Tipo
                 </label>
-
-                <button
-                  type="button"
-                  className="
-                    w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2
-                    text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400
-                    flex items-center justify-between
-                  "
-                  onClick={() => setOpenTipo((prev) => !prev)}
+                <select
+                  name="tipo"
+                  value={novoLanc.tipo || ""}
+                  onChange={onChangeLanc}
+                  className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
                 >
-                  {labelTipo ? (
-                    <span>{labelTipo}</span>
-                  ) : (
-                    <span className="text-slate-500">Selecione...</span>
-                  )}
-                  <span className="text-slate-400 text-[10px] ml-2">▼</span>
-                </button>
-
-                {openTipo && (
-                  <div
-                    className="
-                      absolute left-0 right-0 mt-1 z-50
-                      bg-slate-900 border border-slate-700 rounded-lg shadow-xl
-                      py-1
-                    "
-                  >
-                    {[
-                      { v: "ACOES", t: "Ações" },
-                      { v: "FII", t: "FII" },
-                      { v: "RF", t: "Renda Fixa" },
-                      { v: "CRIPTO", t: "Cripto" },
-                      { v: "CAIXA", t: "Caixa" },
-                      { v: "OUTROS", t: "Outros" },
-                    ].map((o) => (
-                      <button
-                        key={o.v}
-                        type="button"
-                        onClick={() => {
-                          onChangeLanc({
-                            target: { name: "tipo", value: o.v },
-                          });
-                          setOpenTipo(false);
-                        }}
-                        className="
-                          w-full text-left px-3 py-1.5 text-xs
-                          text-slate-200 hover:text-white hover:bg-slate-700/70
-                        "
-                      >
-                        {o.t}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                  <option value="">Selecione...</option>
+                  <option value="ACOES">Ações</option>
+                  <option value="FII">FII</option>
+                  <option value="RF">Renda Fixa</option>
+                  <option value="CRIPTO">Cripto</option>
+                  <option value="CAIXA">Caixa</option>
+                  <option value="OUTROS">Outros</option>
+                </select>
               </div>
 
               <div className="flex flex-col flex-[0_0_150px]">
