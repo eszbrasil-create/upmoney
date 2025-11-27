@@ -14,6 +14,7 @@ export default function Sidebar({
   onEditAtivos = () => {},
   onResetAll = () => {},
   onNavigate = () => {},
+  currentView = "",
 }) {
   return (
     <aside className="fixed left-0 top-0 w-48 h-screen bg-slate-900 text-white flex flex-col justify-between p-4 border-r border-slate-700 select-none">
@@ -26,7 +27,7 @@ export default function Sidebar({
 
       {/* Menu Superior */}
       <nav className="flex flex-col gap-3 text-base font-medium tracking-wide">
-        {/* Login → redireciona para a página principal (Meu Patrimônio) */}
+        {/* Sair → volta para a homepage (Landing.jsx) */}
         <button
           onClick={() => {
             window.location.href = "/"; // abre a homepage (Landing.jsx)
@@ -34,7 +35,7 @@ export default function Sidebar({
           className="flex flex-col items-center gap-1 hover:text-sky-400 transition"
         >
           <UserCircle size={36} strokeWidth={2} />
-          <span>Login</span>
+          <span>Sair</span>
         </button>
 
         {/* Editar Ativos */}
@@ -63,7 +64,9 @@ export default function Sidebar({
         {/* Dash */}
         <button
           onClick={() => onNavigate("dashboard")}
-          className="flex flex-col items-center gap-1 hover:text-yellow-400 transition"
+          className={`flex flex-col items-center gap-1 text-slate-100 transition hover:text-yellow-400 ${
+            currentView === "dashboard" ? "text-yellow-400 font-semibold" : ""
+          }`}
         >
           <Home size={36} strokeWidth={2} />
           <span>Dash</span>
@@ -72,7 +75,11 @@ export default function Sidebar({
         {/* Cursos */}
         <button
           onClick={() => onNavigate("cursos-dashboard")}
-          className="flex flex-col items-center gap-1 hover:text-emerald-400 transition"
+          className={`flex flex-col items-center gap-1 text-slate-100 transition hover:text-emerald-400 ${
+            currentView === "cursos-dashboard"
+              ? "text-emerald-400 font-semibold"
+              : ""
+          }`}
         >
           <GraduationCap size={36} strokeWidth={2} />
           <span>Cursos</span>
@@ -81,7 +88,9 @@ export default function Sidebar({
         {/* Carteira Cash */}
         <button
           onClick={() => onNavigate("carteira")}
-          className="flex flex-col items-center gap-1 hover:text-orange-500 transition"
+          className={`flex flex-col items-center gap-1 text-slate-100 transition hover:text-orange-500 ${
+            currentView === "carteira" ? "text-orange-500 font-semibold" : ""
+          }`}
         >
           <DollarSign size={36} strokeWidth={2} />
           <span>Carteira Cash</span>
@@ -90,7 +99,9 @@ export default function Sidebar({
         {/* Despesas */}
         <button
           onClick={() => onNavigate("despesas")}
-          className="flex flex-col items-center gap-1 hover:text-red-400 transition"
+          className={`flex flex-col items-center gap-1 text-slate-100 transition hover:text-red-400 ${
+            currentView === "despesas" ? "text-red-400 font-semibold" : ""
+          }`}
         >
           <Wallet size={36} strokeWidth={2} />
           <span>Despesas</span>
@@ -99,7 +110,9 @@ export default function Sidebar({
         {/* Relatórios */}
         <button
           onClick={() => onNavigate("relatorios")}
-          className="flex flex-col items-center gap-1 hover:text-pink-400 transition"
+          className={`flex flex-col items-center gap-1 text-slate-100 transition hover:text-pink-400 ${
+            currentView === "relatorios" ? "text-pink-400 font-semibold" : ""
+          }`}
         >
           <BarChart3 size={36} strokeWidth={2} />
           <span>Relatórios</span>
