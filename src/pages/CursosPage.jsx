@@ -1,6 +1,7 @@
 // src/pages/Cursos.jsx
 import React, { useEffect, useMemo, useState } from "react";
 import { PiggyBank, FileDown, CheckCircle2 } from "lucide-react";
+import confetti from "canvas-confetti";
 
 const ORANGE = "#f97316"; // Carteira Cash (laranja)
 const GREEN = "#10e597ff"; // Concluído (verde)
@@ -42,12 +43,51 @@ export default function CursosPage() {
     []
   );
 
-  // ✅ Estado dos módulos concluídos, carregando do localStorage (seguro para SSR)
-  const [concluidos, setConcluidos] = useState(() => {
-    if (typeof window === "undefined") {
-      // Em ambiente de servidor, não há localStorage
-      return new Set();
+  // ============================================
+  // 🎆 FUNÇÃO DE FOGOS DE ARTIFÍCIO
+  // ============================================
+  function launchFireworks() {
+    const duration = 2000;
+    const animationEnd = Date.now() + duration;
+
+    const defaults = {
+      startVelocity: 25,
+      spread: 360,
+      ticks: 40,
+      zIndex: 9999,
+    };
+
+    function randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
     }
+
+    const interval = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+      });
+    }, 250);
+  }
+
+  // =================================================
+  // Estado dos módulos concluídos (com proteção SSR)
+  // =================================================
+  const [concluidos, setConcluidos] = useState(() => {
+    if (typeof window === "undefined") return new Set();
     try {
       const raw = window.localStorage.getItem(LS_KEY_CURSOS);
       if (!raw) return new Set();
@@ -59,29 +99,36 @@ export default function CursosPage() {
     }
   });
 
-  // ✅ Sempre que concluidos muda, salvar no localStorage (também checando window)
+  // =================================================
+  // Salva no localStorage (também protegido)
+  // =================================================
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const arr = Array.from(concluidos);
-      window.localStorage.setItem(LS_KEY_CURSOS, JSON.stringify(arr));
-    } catch {
-      // se der erro, só não persiste
-    }
+      window.localStorage.setItem(
+        LS_KEY_CURSOS,
+        JSON.stringify(Array.from(concluidos))
+      );
+    } catch {}
   }, [concluidos]);
 
   const total = MODULOS.length;
   const done = concluidos.size;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
+  // =================================================
+  // 🎉 DISPARA FOGOS QUANDO FINALIZAR 100%
+  // =================================================
+  useEffect(() => {
+    if (done === total && total > 0) {
+      launchFireworks();
+    }
+  }, [done, total]);
+
   const toggleConcluido = (id) => {
     setConcluidos((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   };
@@ -126,11 +173,12 @@ export default function CursosPage() {
         </div>
       </div>
 
-      {/* BLOCO 2 – Cards de módulos com porquinho animado */}
+      {/* BLOCO 2 – Cards */}
       <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[1200px] max-w-full p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {MODULOS.map((m) => {
             const isDone = concluidos.has(m.id);
+
             return (
               <div
                 key={m.id}
@@ -140,7 +188,7 @@ export default function CursosPage() {
                     : "border-white/10 bg-slate-900/40"
                 }`}
               >
-                {/* Porquinho animado */}
+                {/* Porquinho */}
                 <div
                   className="shrink-0 transition-transform duration-300 group-hover:scale-105"
                   style={{
@@ -154,7 +202,7 @@ export default function CursosPage() {
                 </div>
 
                 <div className="flex-1">
-                  {/* Título com badge "Concluído" absoluto, perto do título, sem aumentar o card */}
+                  {/* Título + Badge ABSOLUTO */}
                   <div className="relative pb-1">
                     <h3 className="text-slate-200 font-semibold pr-20">
                       {m.id}. {m.titulo}
@@ -169,7 +217,7 @@ export default function CursosPage() {
                   </div>
 
                   <div className="mt-3 flex flex-wrap items-center gap-3">
-                    {/* Botão "Ver PDF" - abre em nova aba */}
+                    {/* Ver PDF */}
                     <a
                       href={m.pdf}
                       target="_blank"
@@ -179,7 +227,7 @@ export default function CursosPage() {
                       Ver PDF
                     </a>
 
-                    {/* Botão "Baixar PDF" - download direto */}
+                    {/* Baixar PDF */}
                     <a
                       href={m.pdf}
                       download
@@ -189,6 +237,7 @@ export default function CursosPage() {
                       Baixar PDF
                     </a>
 
+                    {/* Marcar concluído */}
                     <button
                       onClick={() => toggleConcluido(m.id)}
                       className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs border ${
