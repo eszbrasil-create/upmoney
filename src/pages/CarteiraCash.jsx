@@ -297,7 +297,7 @@ export default function CarteiraCash() {
     }
   });
 
-  // Balão "Carteiras Modelo UpMoney"
+  // Balão "Sugestões UpMoney"
   const [openCarteiras, setOpenCarteiras] = useState(false);
 
   // Modal "Adicionar ativos"
@@ -309,6 +309,16 @@ export default function CarteiraCash() {
     qtd: "",
     preco: "",
   });
+
+  // Focar automaticamente no campo Ticker ao abrir o modal
+  useEffect(() => {
+    if (!isAddModalOpen) return;
+    const t = setTimeout(() => {
+      const el = document.querySelector('input[name="ticker"]');
+      if (el) el.focus();
+    }, 80);
+    return () => clearTimeout(t);
+  }, [isAddModalOpen]);
 
   // Ordenação da tabela principal
   const [sortConfig, setSortConfig] = useState({
@@ -420,7 +430,7 @@ export default function CarteiraCash() {
   }, [lancamentos]);
 
   // Integra DY + setor + valorAtual a partir do CSV (dyBase)
-  // Agora roda também quando os lançamentos mudam
+  // Também roda quando os lançamentos mudam
   useEffect(() => {
     if (dyBaseLoading || dyBaseError) return;
     if (!dyBase || dyBase.length === 0) return;
@@ -823,7 +833,7 @@ export default function CarteiraCash() {
                   <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
                   <div className="flex flex-col">
                     <span className="text-[12px] sm:text-[13px] font-semibold text-slate-100">
-                      Carteiras Modelo UpMoney
+                      Sugestões UpMoney
                     </span>
                     <span className="hidden sm:block text-[11px] text-slate-400">
                       Clique para ver sugestões de carteiras temáticas
@@ -918,7 +928,8 @@ export default function CarteiraCash() {
           </div>
         </div>
 
-        <div className="h-16" />
+        {/* Espaço para não sobrepor os cards abaixo */}
+        <div className="h-20" />
       </div>
 
       {/* BALÃO: 2 donuts + 1 barra */}
@@ -1218,27 +1229,27 @@ export default function CarteiraCash() {
             <table className="min-w-[1800px] w-full text-[13px]">
               <thead className="bg-slate-800/70 text-slate-300">
                 <tr>
-                  <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-0 bg-slate-800/70 z-20 w-8">
+                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold sticky left-0 bg-slate-800/70 z-20 w-8">
                     #
                   </th>
 
                   {/* Ticker – largura aumentada */}
-                  <th className="px-2 py-1.5 text-left text-[11px] font-medium sticky left-[2rem] bg-slate-800/70 z-20 w-28">
+                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold sticky left-[2rem] bg-slate-800/70 z-20 w-28">
                     Ticker
                   </th>
 
                   {/* Tipo – largura aumentada + centralizado */}
-                  <th className="px-2 py-1.5 text-center text-[11px] font-medium w-32">
+                  <th className="px-2 py-1.5 text-center text-[12px] font-semibold w-32">
                     Tipo
                   </th>
 
                   {/* Setor – largura aumentada */}
-                  <th className="px-2 py-1.5 text-left text-[11px] font-medium w-40">
+                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold w-40">
                     Setor
                   </th>
 
                   {/* Data entrada com ordenação */}
-                  <th className="px-2 py-1.5 text-left text-[11px] font-medium w-32">
+                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold w-32">
                     <button
                       type="button"
                       onClick={() => handleSort("data")}
@@ -1251,17 +1262,17 @@ export default function CarteiraCash() {
                     </button>
                   </th>
 
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-24">
+                  <th className="px-2 py-1.5 text-center text-[12px] font-semibold w-24">
                     Quantidade
                   </th>
 
-                  {/* Entrada – largura aumentada */}
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-32">
+                  {/* Entrada – largura aumentada + alinhada à esquerda */}
+                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold w-36">
                     Entrada (R$)
                   </th>
 
-                  {/* Posição com ordenação – largura aumentada */}
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-32">
+                  {/* Posição – largura aumentada + alinhada à esquerda */}
+                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold w-36">
                     <button
                       type="button"
                       onClick={() => handleSort("posicao")}
@@ -1275,7 +1286,7 @@ export default function CarteiraCash() {
                   </th>
 
                   {/* % Var – largura aumentada */}
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-24">
+                  <th className="px-2 py-1.5 text-right text-[12px] font-semibold w-28">
                     <button
                       type="button"
                       onClick={() => handleSort("var")}
@@ -1287,7 +1298,7 @@ export default function CarteiraCash() {
                   </th>
 
                   {/* Part. % – largura aumentada */}
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-24">
+                  <th className="px-2 py-1.5 text-right text-[12px] font-semibold w-28">
                     <button
                       type="button"
                       onClick={() => handleSort("part")}
@@ -1301,14 +1312,14 @@ export default function CarteiraCash() {
                   </th>
 
                   {/* DY 12m – largura aumentada */}
-                  <th className="px-2 py-1.5 text-right text-[11px] font-medium w-32">
+                  <th className="px-2 py-1.5 text-right text-[12px] font-semibold w-32">
                     DY (12m)
                   </th>
 
                   {DY_MONTHS.map((m) => (
                     <th
                       key={m.label}
-                      className="px-2 py-1.5 text-right text-[11px] font-medium whitespace-nowrap"
+                      className="px-2 py-1.5 text-right text-[12px] font-semibold whitespace-nowrap"
                     >
                       {`DY ${m.label}`}
                     </th>
@@ -1377,6 +1388,12 @@ export default function CarteiraCash() {
                             ? "RF"
                             : r.tipo === "FII"
                             ? "FII"
+                            : r.tipo === "CRIPTO"
+                            ? "Cripto"
+                            : r.tipo === "CAIXA"
+                            ? "Caixa"
+                            : r.tipo === "OUTROS"
+                            ? "Outros"
                             : "Ações"}
                         </span>
                       </td>
@@ -1395,13 +1412,13 @@ export default function CarteiraCash() {
                         </span>
                       </td>
 
-                      {/* Quantidade */}
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-100 w-24">
+                      {/* Quantidade centralizada */}
+                      <td className="px-2 py-1.5 text-center text-xs text-slate-100 w-24">
                         {r.qtd || "—"}
                       </td>
 
-                      {/* Entrada (R$) 2 casas */}
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-100 w-32">
+                      {/* Entrada (R$) alinhado à esquerda */}
+                      <td className="px-2 py-1.5 text-left text-xs text-slate-100 w-36">
                         {entradaNum > 0
                           ? entradaNum.toLocaleString("pt-BR", {
                               style: "currency",
@@ -1412,8 +1429,8 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
-                      {/* Posição (R$) 2 casas */}
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-200 w-32">
+                      {/* Posição (R$) alinhado à esquerda */}
+                      <td className="px-2 py-1.5 text-left text-xs text-slate-200 w-36">
                         {valorPosicao > 0
                           ? valorPosicao.toLocaleString("pt-BR", {
                               style: "currency",
@@ -1425,12 +1442,12 @@ export default function CarteiraCash() {
                       </td>
 
                       {/* % Var */}
-                      <td className={`px-2 py-1.5 text-right text-xs w-24 ${varClass}`}>
+                      <td className={`px-2 py-1.5 text-right text-xs w-28 ${varClass}`}>
                         {hasVar ? `${varPerc.toFixed(2)}%` : "—"}
                       </td>
 
                       {/* Part. % */}
-                      <td className="px-2 py-1.5 text-right text-xs text-slate-200 w-24">
+                      <td className="px-2 py-1.5 text-right text-xs text-slate-200 w-28">
                         {partStr}
                       </td>
 
