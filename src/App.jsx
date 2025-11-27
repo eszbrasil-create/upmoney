@@ -172,7 +172,7 @@ export default function App() {
   }
 
   return (
-    <AppLayout onNavigate={setView}>
+    <AppLayout onNavigate={setView} currentView={view}>
       {SCREEN[view] ?? <DashboardMain />}
     </AppLayout>
   );
