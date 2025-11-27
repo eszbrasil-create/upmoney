@@ -430,7 +430,6 @@ export default function CarteiraCash() {
   }, [lancamentos]);
 
   // Integra DY + setor + valorAtual a partir do CSV (dyBase)
-  // Também roda quando os lançamentos mudam
   useEffect(() => {
     if (dyBaseLoading || dyBaseError) return;
     if (!dyBase || dyBase.length === 0) return;
@@ -1229,31 +1228,31 @@ export default function CarteiraCash() {
             <table className="min-w-[1800px] w-full text-[13px]">
               <thead className="bg-slate-800/70 text-slate-300">
                 <tr>
-                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold sticky left-0 bg-slate-800/70 z-20 w-8">
+                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap sticky left-0 bg-slate-800/70 z-20 w-8">
                     #
                   </th>
 
                   {/* Ticker – largura aumentada */}
-                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold sticky left-[2rem] bg-slate-800/70 z-20 w-28">
+                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap sticky left-[2rem] bg-slate-800/70 z-20 w-28">
                     Ticker
                   </th>
 
                   {/* Tipo – largura aumentada + centralizado */}
-                  <th className="px-2 py-1.5 text-center text-[12px] font-semibold w-32">
+                  <th className="px-2 py-1.5 text-center text-[12px] font-semibold whitespace-nowrap w-32">
                     Tipo
                   </th>
 
                   {/* Setor – largura aumentada */}
-                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold w-40">
+                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap w-40">
                     Setor
                   </th>
 
                   {/* Data entrada com ordenação */}
-                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold w-32">
+                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap w-32">
                     <button
                       type="button"
                       onClick={() => handleSort("data")}
-                      className="inline-flex items-center gap-1"
+                      className="inline-flex items-center gap-1 whitespace-nowrap"
                     >
                       <span>Data entrada</span>
                       <span className="text-[10px]">
@@ -1262,21 +1261,21 @@ export default function CarteiraCash() {
                     </button>
                   </th>
 
-                  <th className="px-2 py-1.5 text-center text-[12px] font-semibold w-24">
+                  <th className="px-2 py-1.5 text-center text-[12px] font-semibold whitespace-nowrap w-24">
                     Quantidade
                   </th>
 
                   {/* Entrada – largura aumentada + alinhada à esquerda */}
-                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold w-36">
+                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap w-36">
                     Entrada (R$)
                   </th>
 
                   {/* Posição – largura aumentada + alinhada à esquerda */}
-                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold w-36">
+                  <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap w-36">
                     <button
                       type="button"
                       onClick={() => handleSort("posicao")}
-                      className="inline-flex items-center gap-1"
+                      className="inline-flex items-center gap-1 whitespace-nowrap"
                     >
                       <span>Posição (R$)</span>
                       <span className="text-[10px]">
@@ -1286,11 +1285,11 @@ export default function CarteiraCash() {
                   </th>
 
                   {/* % Var – largura aumentada */}
-                  <th className="px-2 py-1.5 text-right text-[12px] font-semibold w-28">
+                  <th className="px-2 py-1.5 text-right text-[12px] font-semibold whitespace-nowrap w-28">
                     <button
                       type="button"
                       onClick={() => handleSort("var")}
-                      className="inline-flex items-center gap-1"
+                      className="inline-flex items-center gap-1 whitespace-nowrap"
                     >
                       <span>% Var</span>
                       <span className="text-[10px]">{getSortIcon("var")}</span>
@@ -1298,11 +1297,11 @@ export default function CarteiraCash() {
                   </th>
 
                   {/* Part. % – largura aumentada */}
-                  <th className="px-2 py-1.5 text-right text-[12px] font-semibold w-28">
+                  <th className="px-2 py-1.5 text-right text-[12px] font-semibold whitespace-nowrap w-28">
                     <button
                       type="button"
                       onClick={() => handleSort("part")}
-                      className="inline-flex items-center gap-1"
+                      className="inline-flex items-center gap-1 whitespace-nowrap"
                     >
                       <span>Part. %</span>
                       <span className="text-[10px]">
@@ -1312,7 +1311,7 @@ export default function CarteiraCash() {
                   </th>
 
                   {/* DY 12m – largura aumentada */}
-                  <th className="px-2 py-1.5 text-right text-[12px] font-semibold w-32">
+                  <th className="px-2 py-1.5 text-right text-[12px] font-semibold whitespace-nowrap w-32">
                     DY (12m)
                   </th>
 
