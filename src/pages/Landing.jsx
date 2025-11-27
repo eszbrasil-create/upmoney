@@ -21,7 +21,6 @@ const IconInstagram = (props) => (
   </svg>
 );
 
-// divisor premium entre faixas
 const SectionDivider = () => (
   <div className="w-full">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -35,14 +34,12 @@ export default function Landing({ onNavigate }) {
   const RECEIVER_EMAIL = "eszbrasil@gmail.com";
   const WHATSAPP_NUMBER = "393517380919";
 
-  // ✅ login simples do Meu Plano (pode trocar depois)
   const PLANO_USER = "admin";
   const PLANO_PASS = "1234";
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({ nome: "", email: "", telefone: "" });
 
-  // ✅ modal Meu Plano
   const [isPlanoModalOpen, setIsPlanoModalOpen] = useState(false);
   const [planoForm, setPlanoForm] = useState({ usuario: "", senha: "" });
   const [planoError, setPlanoError] = useState("");
@@ -78,14 +75,13 @@ export default function Landing({ onNavigate }) {
     );
   };
 
-  // ✅ handlers Meu Plano
   const handlePlanoChange = (e) => {
     const { name, value } = e.target;
     setPlanoForm((p) => ({ ...p, [name]: value }));
   };
 
   const handlePlanoLoginSuccess = () => {
-    onNavigate?.("login"); // hoje no App isso leva pro dashboard
+    onNavigate?.("login");
   };
 
   const handlePlanoSubmit = (e) => {
@@ -118,7 +114,7 @@ export default function Landing({ onNavigate }) {
             UpMoney
           </button>
 
-          {/* ✅ Menu superior maior e negrito */}
+          {/* Botões do menu */}
           <nav className="hidden md:flex items-center gap-8 text-[15px] font-semibold">
             <a
               href="#cursos"
@@ -164,19 +160,10 @@ export default function Landing({ onNavigate }) {
               Invista no Exterior
             </a>
 
-            <a
-              href="#ultimas-noticias"
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigate?.("noticias");
-              }}
-              className="hover:text-white font-semibold"
-            >
-              Últimas notícias
-            </a>
+            {/* 🔴 BOTÃO REMOVIDO: Últimas notícias */}
           </nav>
 
-          {/* Lado direito: Meu Plano + ícones */}
+          {/* Área da direita */}
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -209,7 +196,7 @@ export default function Landing({ onNavigate }) {
         </div>
       </header>
 
-      {/* Hero 1 */}
+      {/* Hero principal */}
       <main className="flex-1">
         <section className="bg-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-12 items-center">
@@ -224,9 +211,8 @@ export default function Landing({ onNavigate }) {
               </div>
             </div>
 
-            {/* Texto e CTA */}
+            {/* Texto */}
             <div className="order-1 md:order-2">
-              {/* ✅ fonte um pouco menor */}
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1f3548] leading-tight">
                 Conquiste seu Primeiro Dividendo em 30 dias
               </h1>
@@ -237,7 +223,6 @@ export default function Landing({ onNavigate }) {
                 e o suporte que faltava para finalmente entrar no mundo dos investimentos.
               </p>
 
-              {/* ✅ CTAs lado a lado + fontes menores */}
               <div className="mt-7 flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => setIsModalOpen(true)}
@@ -256,7 +241,6 @@ export default function Landing({ onNavigate }) {
                 </button>
               </div>
 
-              {/* Microprovas */}
               <div className="mt-4 flex flex-wrap gap-3 text-sm text-[#1f3548]/70">
                 <span>✔ Ideal para iniciantes</span>
                 <span>✔ Acompanhamento individual</span>
@@ -266,15 +250,13 @@ export default function Landing({ onNavigate }) {
           </div>
         </section>
 
-        {/* Respiro entre faixas */}
-        <div className="h-16 md:h-24" />
+        <div className="h-16 md:h-24"></div>
 
         <SectionDivider />
 
-        {/* Hero 2 — Programa */}
+        {/* Hero 2 — O Programa */}
         <section className="bg-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
-            {/* Texto à esquerda */}
             <div className="order-1">
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1f3548]">
                 O Programa Completo para Viver seu Primeiro Dividendo
@@ -290,8 +272,8 @@ export default function Landing({ onNavigate }) {
                 <li>📗 Curso de <strong>Ações</strong> — como escolher empresas boas pagadoras</li>
                 <li>📙 Curso de <strong>FIIs</strong> — renda mensal na prática</li>
                 <li>📂 Material exclusivo (PDFs, resumos e roteiros)</li>
-                <li>📊 Acesso ao <strong>UpControl</strong> (controle patrimonial)</li>
-                <li>📅 Agenda de <strong>acompanhamento pessoal</strong> comigo</li>
+                <li>📊 Acesso ao <strong>UpControl</strong></li>
+                <li>📅 Acompanhamento pessoal</li>
                 <li>💬 Grupo exclusivo no WhatsApp</li>
               </ul>
 
@@ -304,7 +286,6 @@ export default function Landing({ onNavigate }) {
               </button>
             </div>
 
-            {/* Imagem à direita */}
             <div className="order-2">
               <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
                 <img
@@ -320,11 +301,7 @@ export default function Landing({ onNavigate }) {
 
       {/* Modal de agendamento */}
       {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
             <div className="flex items-start justify-between">
               <h2 className="text-lg font-bold text-[#1f3548]">
@@ -333,7 +310,6 @@ export default function Landing({ onNavigate }) {
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="ml-4 rounded-lg px-2 py-1 text-[#1f3548]/70 hover:bg-[#cfd6dc]/40"
-                aria-label="Fechar"
               >
                 ✕
               </button>
@@ -348,6 +324,7 @@ export default function Landing({ onNavigate }) {
                 className="w-full border rounded-xl px-3 py-2 text-sm"
                 required
               />
+
               <input
                 name="email"
                 value={form.email}
@@ -356,6 +333,7 @@ export default function Landing({ onNavigate }) {
                 className="w-full border rounded-xl px-3 py-2 text-sm"
                 required
               />
+
               <input
                 name="telefone"
                 value={form.telefone}
@@ -381,21 +359,13 @@ export default function Landing({ onNavigate }) {
                 </button>
               </div>
             </form>
-
-            <p className="mt-4 text-xs text-[#1f3548]/60">
-              Os dados serão enviados por e-mail e WhatsApp.
-            </p>
           </div>
         </div>
       )}
 
-      {/* ✅ Modal Meu Plano (login) */}
+      {/* Modal Meu Plano */}
       {isPlanoModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
             <div className="flex items-start justify-between">
               <h2 className="text-lg font-bold text-[#1f3548]">
@@ -407,7 +377,6 @@ export default function Landing({ onNavigate }) {
                   setPlanoError("");
                 }}
                 className="ml-4 rounded-lg px-2 py-1 text-[#1f3548]/70 hover:bg-[#cfd6dc]/40"
-                aria-label="Fechar"
               >
                 ✕
               </button>
@@ -422,6 +391,7 @@ export default function Landing({ onNavigate }) {
                 className="w-full border rounded-xl px-3 py-2 text-sm"
                 required
               />
+
               <input
                 name="senha"
                 type="password"
@@ -433,9 +403,7 @@ export default function Landing({ onNavigate }) {
               />
 
               {planoError && (
-                <div className="text-sm text-red-600 font-medium">
-                  {planoError}
-                </div>
+                <div className="text-sm text-red-600">{planoError}</div>
               )}
 
               <div className="flex justify-end gap-3 pt-1">
@@ -449,6 +417,7 @@ export default function Landing({ onNavigate }) {
                 >
                   Cancelar
                 </button>
+
                 <button
                   type="submit"
                   className="bg-[#1f3548] px-5 py-2 rounded-xl font-semibold text-white hover:brightness-110 text-sm"
@@ -457,10 +426,6 @@ export default function Landing({ onNavigate }) {
                 </button>
               </div>
             </form>
-
-            <p className="mt-3 text-xs text-[#1f3548]/60">
-              Acesso restrito. Se quiser mudar usuário/senha, me avisa.
-            </p>
           </div>
         </div>
       )}
@@ -470,9 +435,15 @@ export default function Landing({ onNavigate }) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <nav className="flex items-center gap-6 text-sm">
-              <a href="#sobre" className="hover:text-white">Sobre</a>
-              <a href="#contato" className="hover:text-white">Contato</a>
-              <a href="#privacidade" className="hover:text-white">Política de Privacidade</a>
+              <a href="#sobre" className="hover:text-white">
+                Sobre
+              </a>
+              <a href="#contato" className="hover:text-white">
+                Contato
+              </a>
+              <a href="#privacidade" className="hover:text-white">
+                Política de Privacidade
+              </a>
             </nav>
           </div>
 
