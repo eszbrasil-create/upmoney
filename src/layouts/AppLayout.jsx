@@ -13,7 +13,7 @@ const FALLBACK_KEYS = [
   "cashcontrol-registros",
 ];
 
-export default function AppLayout({ children, onNavigate }) {
+export default function AppLayout({ children, onNavigate, currentView }) {
   const [openEdit, setOpenEdit] = useState(false);
   const [registrosPorMes, setRegistrosPorMes] = useState({});
 
@@ -102,6 +102,7 @@ export default function AppLayout({ children, onNavigate }) {
         onEditAtivos={() => setOpenEdit(true)}
         onResetAll={handleResetAll}
         onNavigate={onNavigate}
+        currentView={currentView}
       />
 
       {/* Conteúdo ajustado: mais perto do sidebar e mais para cima */}
