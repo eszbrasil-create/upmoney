@@ -129,7 +129,12 @@ export default function CursosPage() {
             return (
               <div
                 key={m.id}
-                className="group rounded-xl border border-white/10 bg-slate-900/40 p-4 flex items-start gap-3"
+                // 🟢 Fundo esverdeado e borda diferente quando concluído
+                className={`group rounded-xl border p-4 flex items-start gap-3 transition-colors duration-300 ${
+                  isDone
+                    ? "border-emerald-500/60 bg-emerald-900/30"
+                    : "border-white/10 bg-slate-900/40"
+                }`}
               >
                 {/* Porquinho animado */}
                 <div
@@ -145,17 +150,38 @@ export default function CursosPage() {
                 </div>
 
                 <div className="flex-1">
-                  <h3 className="text-slate-200 font-semibold">
-                    {m.id}. {m.titulo}
-                  </h3>
+                  {/* 🟢 Título + Badge "Concluído" */}
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-slate-200 font-semibold">
+                      {m.id}. {m.titulo}
+                    </h3>
 
-                  <div className="mt-3 flex items-center gap-4">
+                    {isDone && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600/20 border border-emerald-500/60 px-2 py-1 text-[11px] font-medium text-emerald-100">
+                        <CheckCircle2 size={14} />
+                        Concluído
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    {/* 🟢 Botão "Ver PDF" - abre em nova aba */}
+                    <a
+                      href={m.pdf}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-slate-800 px-3 py-2 text-xs text-slate-100 hover:bg-slate-700"
+                    >
+                      Ver PDF
+                    </a>
+
+                    {/* 🟢 Botão "Baixar PDF" - download direto */}
                     <a
                       href={m.pdf}
                       download
                       className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-slate-800 px-3 py-2 text-xs text-slate-100 hover:bg-slate-700"
                     >
-                      <FileDown size={26} />
+                      <FileDown size={20} />
                       Baixar PDF
                     </a>
 
@@ -169,7 +195,7 @@ export default function CursosPage() {
                     >
                       {isDone ? (
                         <>
-                          <CheckCircle2 size={26} /> Concluído
+                          <CheckCircle2 size={20} /> Concluído
                         </>
                       ) : (
                         "Marcar como concluído"
