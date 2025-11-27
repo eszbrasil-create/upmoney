@@ -4,7 +4,7 @@ import CardRegistro from "../components/cards/CardRegistro";
 import CardEvolucao from "../components/cards/CardEvolucao";
 import CardEvolucaoPct from "../components/cards/CardEvolucaoPct";
 import CardParticipacao from "../components/cards/CardParticipacao";
-import CardDividendosCash from "../components/cards/CardDividendosCash"; // ✅ novo card
+import CardDividendosCash from "../components/cards/CardDividendosCash"; // novo card
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const MES_IDX = { Jan:0,Fev:1,Mar:2,Abr:3,Mai:4,Jun:5,Jul:6,Ago:7,Set:8,Out:9,Nov:10,Dez:11 };
@@ -111,13 +111,13 @@ export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
           onDeleteMonth={onDeleteMonth}
         />
 
-        {/* ✅ Coluna direita empilhada: Participação + Dividendos Cash */}
+        {/* ⬆️ CardDividendosCash agora vem primeiro */}
         <div className="flex flex-col gap-3">
+          <CardDividendosCash />
           <CardParticipacao
             itens={dadosResumo.distribuicao}
             mesAtual={dadosResumo.mesAtual}
           />
-          <CardDividendosCash />
         </div>
       </div>
 
@@ -129,4 +129,3 @@ export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
     </div>
   );
 }
-
