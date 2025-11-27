@@ -94,27 +94,29 @@ function DashboardMain({ registrosPorMes = {}, onDeleteMonth }) {
 
   return (
     <div className="pt-3 pr-6 pl-0">
+      {/* Linha superior */}
       <div className="flex items-start gap-3 flex-wrap md:flex-nowrap">
         <CardResumo data={dadosResumo} />
         <CardEvolucao columns={columns} rows={rows} />
       </div>
 
+      {/* Linha do meio – Registros + MEUS DIVIDENDOS */}
       <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
         <CardRegistro
           columns={columns}
           rows={rows}
           onDeleteMonth={onDeleteMonth}
         />
+        <CardDividendosCash columns={columns} />
+      </div>
+
+      {/* Linha inferior – Evolução % + PARTICIPAÇÃO */}
+      <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
+        <CardEvolucaoPct columns={columns} rows={rows} />
         <CardParticipacao
           itens={dadosResumo.distribuicao}
           mesAtual={dadosResumo.mesAtual}
         />
-      </div>
-
-      {/* ✅ AQUI FICAM LADO A LADO */}
-      <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
-        <CardEvolucaoPct columns={columns} rows={rows} />
-        <CardDividendosCash columns={columns} />
       </div>
     </div>
   );
