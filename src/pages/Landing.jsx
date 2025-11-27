@@ -170,7 +170,7 @@ export default function Landing({ onNavigate }) {
               onClick={() => setIsPlanoModalOpen(true)}
               className="hidden sm:inline-flex items-center rounded-xl bg-[#F5B60A] px-4 py-2 text-sm font-bold text-[#1f3548] shadow-sm hover:brightness-105 transition"
             >
-              Meu Plano
+              Login
             </button>
 
             <a
