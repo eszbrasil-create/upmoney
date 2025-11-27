@@ -101,7 +101,6 @@ export default function ModalLancamentos({
                   <option value="ACOES">Ações</option>
                   <option value="FII">FII</option>
                   <option value="RF">Renda Fixa</option>
-                  <option value="CRIPTO">Cripto</option>
                   <option value="CAIXA">Caixa</option>
                   <option value="OUTROS">Outros</option>
                 </select>
