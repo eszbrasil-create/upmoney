@@ -1,7 +1,8 @@
 // src/modules/carteiraCash/ModalLancamentos.jsx
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+import { supabase } from "../../lib/supabaseClient";
 
-// Helpers locais (iguais aos do CarteiraCash)
+// Helpers
 function toNum(x) {
   if (x === "" || x === null || x === undefined) return 0;
   const n = Number(String(x).replace(",", "."));
@@ -16,37 +17,135 @@ function formatDateBR(iso) {
   return `${d}/${m}/${y}`;
 }
 
-export default function ModalLancamentos({
-  isOpen,
-  onClose,
-  novoLanc,
-  onChangeLanc,
-  onSalvarLanc,
-  lancamentos,
-  onDeleteLanc,
-}) {
+export default function ModalLancamentos({ isOpen, onClose }) {
   if (!isOpen) return null;
 
-  // Lista de lançamentos ordenada: MAIS RECENTE → MAIS ANTIGO
+  // Estado do formulário
+  const [novo, setNovo] = useState({
+    ticker: "",
+    tipo: "",
+    dataEntrada: "",
+    qtd: "",
+    preco: "",
+  });
+
+  // Lista REAL dos lançamentos do Supabase
+  const [lancamentos, setLancamentos] = useState([]);
+
+  // Usuário logado
+  const [user, setUser] = useState(null);
+
+  // ================================
+  // 1) Obter usuário logado
+  // ================================
+  useEffect(() => {
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      setUser(data?.user || null);
+    }
+    loadUser();
+  }, []);
+
+  // ================================
+  // 2) Carregar lançamentos do Supabase
+  // ================================
+  useEffect(() => {
+    if (!user) return;
+
+    async function loadLanc() {
+      const { data, error } = await supabase
+        .from("wallet_assets")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("dataEntrada", { ascending: false });
+
+      if (!error) setLancamentos(data || []);
+    }
+
+    loadLanc();
+  }, [user]);
+
+  // ================================
+  // 3) Alterar campos
+  // ================================
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setNovo((old) => ({ ...old, [name]: value }));
+  }
+
+  // ================================
+  // 4) Salvar no Supabase
+  // ================================
+  async function handleSalvar(e) {
+    e.preventDefault();
+    if (!user) return alert("Usuário não identificado.");
+
+    const payload = {
+      user_id: user.id,
+      asset_name: novo.ticker?.toUpperCase(),
+      category: novo.tipo || null,
+      amount: toNum(novo.qtd),
+      price: toNum(novo.preco),
+      purchase_date: novo.dataEntrada || null,
+    };
+
+    const { error } = await supabase.from("wallet_assets").insert(payload);
+
+    if (error) {
+      console.error(error);
+      alert("Erro ao salvar ativo.");
+      return;
+    }
+
+    // reload
+    const { data } = await supabase
+      .from("wallet_assets")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("dataEntrada", { ascending: false });
+
+    setLancamentos(data || []);
+
+    // Reset
+    setNovo({
+      ticker: "",
+      tipo: "",
+      dataEntrada: "",
+      qtd: "",
+      preco: "",
+    });
+  }
+
+  // ================================
+  // 5) Excluir lançamento
+  // ================================
+  async function handleDelete(id) {
+    const { error } = await supabase
+      .from("wallet_assets")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id);
+
+    if (error) {
+      console.error(error);
+      alert("Erro ao excluir.");
+      return;
+    }
+
+    setLancamentos((old) => old.filter((l) => l.id !== id));
+  }
+
+  // ================================
+  // 6) Ordenação local
+  // ================================
   const lancOrdenados = useMemo(() => {
     const arr = [...(lancamentos || [])];
-
     return arr.sort((a, b) => {
-      const da = a.dataEntrada || "";
-      const db = b.dataEntrada || "";
-
-      // ambos têm data → compara desc (mais recente primeiro)
-      if (da && db) {
-        if (da < db) return 1;
-        if (da > db) return -1;
-        return (b.id || 0) - (a.id || 0);
-      }
-
-      // quem tem data vem antes de quem não tem
-      if (da && !db) return -1;
-      if (!da && db) return 1;
-
-      // nenhum tem data → id desc
+      const da = a.purchase_date || "";
+      const db = b.purchase_date || "";
+      if (da && db) return db.localeCompare(da);
+      if (da) return -1;
+      if (db) return 1;
       return (b.id || 0) - (a.id || 0);
     });
   }, [lancamentos]);
@@ -54,249 +153,189 @@ export default function ModalLancamentos({
   return (
     <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
       <div className="w-[70vw] h-[90vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 flex flex-col overflow-hidden">
-        {/* Cabeçalho + formulário (fixo) */}
-        <div className="flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-slate-100 font-semibold text-lg">
-              Adicionar ativo à base
-            </h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-100 text-xl leading-none"
-            >
-              ×
-            </button>
-          </div>
-
-          <form onSubmit={onSalvarLanc} className="space-y-3">
-            <div className="flex flex-nowrap items-end gap-3 overflow-x-auto">
-              {/* Ticker (foco automático) */}
-              <div className="flex flex-col flex-[0_0_130px]">
-                <label className="block text-[11px] text-slate-300 mb-1">
-                  Ativo (ticker)
-                </label>
-                <input
-                  name="ticker"
-                  value={novoLanc.ticker}
-                  onChange={onChangeLanc}
-                  placeholder="ex: VALE3"
-                  className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
-                  autoFocus
-                />
-              </div>
-
-              {/* Tipo com mais opções e início vazio */}
-              <div className="flex flex-col flex-[0_0_130px]">
-                <label className="block text-[11px] text-slate-300 mb-1">
-                  Tipo
-                </label>
-                <select
-                  name="tipo"
-                  value={novoLanc.tipo || ""}
-                  onChange={onChangeLanc}
-                  className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
-                >
-                  <option value="">Selecione...</option>
-                  <option value="ACOES">Ações</option>
-                  <option value="FII">FII</option>
-                  <option value="RF">Renda Fixa</option>
-                  <option value="CAIXA">Caixa</option>
-                  <option value="OUTROS">Outros</option>
-                </select>
-              </div>
-
-              <div className="flex flex-col flex-[0_0_150px]">
-                <label className="block text-[11px] text-slate-300 mb-1">
-                  Data de entrada
-                </label>
-                <input
-                  type="date"
-                  name="dataEntrada"
-                  value={novoLanc.dataEntrada}
-                  onChange={onChangeLanc}
-                  className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
-                />
-              </div>
-
-              <div className="flex flex-col flex-[0_0_120px]">
-                <label className="block text-[11px] text-slate-300 mb-1">
-                  Quantidade
-                </label>
-                <input
-                  name="qtd"
-                  value={novoLanc.qtd}
-                  onChange={onChangeLanc}
-                  inputMode="decimal"
-                  placeholder="0"
-                  className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
-                />
-              </div>
-
-              <div className="flex flex-col flex-[0_0_160px]">
-                <label className="block text-[11px] text-slate-300 mb-1">
-                  Preço de compra (R$)
-                </label>
-                <input
-                  name="preco"
-                  value={novoLanc.preco}
-                  onChange={onChangeLanc}
-                  inputMode="decimal"
-                  placeholder="0,00"
-                  className="w-full rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-emerald-400"
-                />
-              </div>
-
-              <div className="flex flex-col flex-[0_0_auto]">
-                <span className="block text-[11px] text-transparent mb-1">
-                  &nbsp;
-                </span>
-                <button
-                  type="submit"
-                  className="
-                    px-4 py-2 rounded-xl
-                    bg-emerald-500 text-xs sm:text-sm font-semibold text-slate-950
-                    hover:bg-emerald-400 whitespace-nowrap
-                  "
-                >
-                  Salvar lançamento
-                </button>
-              </div>
-            </div>
-
-            <p className="text-[11px] text-slate-400 max-w-xl">
-              Cada lançamento é guardado na base escondida. A tabela principal
-              abaixo mostra o consolidado por ativo (quantidade total, preço
-              médio e data de entrada mais antiga).
-            </p>
-          </form>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-slate-100 font-semibold text-lg">
+            Adicionar ativo à base
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-100 text-xl"
+          >
+            ×
+          </button>
         </div>
 
-        {/* Lista com SCROLL interno */}
+        {/* Formulário */}
+        <form onSubmit={handleSalvar} className="flex flex-col gap-4">
+          <div className="flex gap-3 overflow-x-auto pb-2">
+
+            <div className="flex flex-col flex-[0_0_130px]">
+              <label className="text-[11px] text-slate-300 mb-1">
+                Ativo (ticker)
+              </label>
+              <input
+                name="ticker"
+                value={novo.ticker}
+                onChange={handleChange}
+                placeholder="VALE3"
+                className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              />
+            </div>
+
+            <div className="flex flex-col flex-[0_0_130px]">
+              <label className="text-[11px] text-slate-300 mb-1">Tipo</label>
+              <select
+                name="tipo"
+                value={novo.tipo}
+                onChange={handleChange}
+                className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100"
+              >
+                <option value="">Selecione...</option>
+                <option value="ACOES">Ações</option>
+                <option value="FII">FII</option>
+                <option value="RF">Renda Fixa</option>
+                <option value="CAIXA">Caixa</option>
+                <option value="OUTROS">Outros</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col flex-[0_0_150px]">
+              <label className="text-[11px] text-slate-300 mb-1">
+                Data de entrada
+              </label>
+              <input
+                type="date"
+                name="dataEntrada"
+                value={novo.dataEntrada}
+                onChange={handleChange}
+                className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100"
+              />
+            </div>
+
+            <div className="flex flex-col flex-[0_0_120px]">
+              <label className="text-[11px] text-slate-300 mb-1">
+                Quantidade
+              </label>
+              <input
+                name="qtd"
+                value={novo.qtd}
+                onChange={handleChange}
+                inputMode="decimal"
+                className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              />
+            </div>
+
+            <div className="flex flex-col flex-[0_0_160px]">
+              <label className="text-[11px] text-slate-300 mb-1">
+                Preço de compra (R$)
+              </label>
+              <input
+                name="preco"
+                value={novo.preco}
+                onChange={handleChange}
+                inputMode="decimal"
+                className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+              />
+            </div>
+
+            <div className="flex flex-col flex-[0_0_auto]">
+              <label className="text-[11px] text-transparent mb-1">&nbsp;</label>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-xl bg-emerald-500 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
+              >
+                Salvar lançamento
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {/* Lista */}
         <div className="mt-6 border-t border-slate-700 pt-4 flex-1 min-h-0 flex flex-col">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-slate-100 text-sm font-semibold">
               Lançamentos cadastrados
             </h3>
             <span className="text-[11px] text-slate-400">
-              Total: {lancOrdenados.length} lançamento(s)
+              Total: {lancOrdenados.length}
             </span>
           </div>
 
-          {lancOrdenados.length === 0 ? (
-            <p className="text-[11px] text-slate-500">
-              Nenhum lançamento cadastrado ainda. Preencha os campos acima e
-              clique em <strong>Salvar lançamento</strong>.
-            </p>
-          ) : (
-            <div className="rounded-xl border border-slate-700 bg-slate-950/60 flex-1 min-h-0 overflow-y-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-slate-800/80 text-slate-300">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-medium">#</th>
-                    <th className="px-3 py-2 text-left font-medium">Data</th>
-                    <th className="px-1 py-2 text-center font-medium">
-                      {/* lixeira */}
-                    </th>
-                    <th className="px-3 py-2 text-left font-medium">Ticker</th>
-                    <th className="px-3 py-2 text-left font-medium">Tipo</th>
-                    <th className="px-3 py-2 text-right font-medium">
-                      Quantidade
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium">
-                      Preço (R$)
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium">
-                      Valor (R$)
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {lancOrdenados.map((l, idx) => {
-                    const qtd = toNum(l.qtd);
-                    const preco = toNum(l.preco);
-                    const valor = qtd * preco;
+          <div className="rounded-xl border border-slate-700 bg-slate-950/60 flex-1 overflow-y-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-slate-800/80 text-slate-300">
+                <tr>
+                  <th className="px-3 py-2 text-left">#</th>
+                  <th className="px-3 py-2 text-left">Data</th>
+                  <th className="px-1 py-2 text-center"></th>
+                  <th className="px-3 py-2 text-left">Ticker</th>
+                  <th className="px-3 py-2 text-left">Tipo</th>
+                  <th className="px-3 py-2 text-right">Quantidade</th>
+                  <th className="px-3 py-2 text-right">Preço</th>
+                  <th className="px-3 py-2 text-right">Valor</th>
+                </tr>
+              </thead>
 
-                    return (
-                      <tr
-                        key={l.id}
-                        className="border-t border-slate-800 hover:bg-slate-800/40"
-                      >
-                        <td className="px-3 py-1.5 text-slate-400">
-                          {idx + 1}
-                        </td>
+              <tbody>
+                {lancOrdenados.map((l, idx) => {
+                  const qtd = toNum(l.amount);
+                  const preco = toNum(l.price);
+                  const valor = qtd * preco;
 
-                        {/* Data */}
-                        <td className="px-3 py-1.5 text-slate-100">
-                          {l.dataEntrada ? formatDateBR(l.dataEntrada) : "—"}
-                        </td>
+                  return (
+                    <tr
+                      key={l.id}
+                      className="border-t border-slate-800 hover:bg-slate-800/40"
+                    >
+                      <td className="px-3 py-1.5 text-slate-400">
+                        {idx + 1}
+                      </td>
 
-                        {/* Lixeira ao lado da data */}
-                        <td className="px-1 py-1.5 text-center align-middle">
-                          <button
-                            type="button"
-                            onClick={() => onDeleteLanc(l.id)}
-                            className="
-                              inline-flex items-center justify-center
-                              h-6 w-6 rounded-full
-                              text-slate-400 hover:text-rose-100
-                              hover:bg-rose-500/70
-                              text-[11px]
-                              transition
-                            "
-                            title="Excluir lançamento"
-                          >
-                            🗑️
-                          </button>
-                        </td>
+                      <td className="px-3 py-1.5 text-slate-100">
+                        {formatDateBR(l.purchase_date)}
+                      </td>
 
-                        <td className="px-3 py-1.5 text-slate-100">
-                          {(l.ticker || "").toUpperCase()}
-                        </td>
+                      <td className="px-1 py-1.5 text-center">
+                        <button
+                          onClick={() => handleDelete(l.id)}
+                          className="h-6 w-6 rounded-full text-slate-400 hover:text-rose-100 hover:bg-rose-500/70"
+                        >
+                          🗑️
+                        </button>
+                      </td>
 
-                        {/* Tipo exibindo todas as variações */}
-                        <td className="px-3 py-1.5 text-slate-200">
-                          {l.tipo === "RF"
-                            ? "Renda Fixa"
-                            : l.tipo === "FII"
-                            ? "FII"
-                            : l.tipo === "CRIPTO"
-                            ? "Cripto"
-                            : l.tipo === "CAIXA"
-                            ? "Caixa"
-                            : l.tipo === "OUTROS"
-                            ? "Outros"
-                            : l.tipo === "ACOES"
-                            ? "Ações"
-                            : l.tipo || "—"}
-                        </td>
+                      <td className="px-3 py-1.5 text-slate-100">
+                        {l.asset_name}
+                      </td>
 
-                        <td className="px-3 py-1.5 text-right text-slate-100">
-                          {l.qtd || "—"}
-                        </td>
-                        <td className="px-3 py-1.5 text-right text-slate-100">
-                          {preco > 0
-                            ? preco.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                              })
-                            : "—"}
-                        </td>
-                        <td className="px-3 py-1.5 text-right text-slate-100">
-                          {valor > 0
-                            ? valor.toLocaleString("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                              })
-                            : "—"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                      <td className="px-3 py-1.5 text-slate-200">
+                        {l.category}
+                      </td>
+
+                      <td className="px-3 py-1.5 text-right text-slate-100">
+                        {qtd}
+                      </td>
+
+                      <td className="px-3 py-1.5 text-right text-slate-100">
+                        {preco.toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </td>
+
+                      <td className="px-3 py-1.5 text-right text-slate-100">
+                        {valor.toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
