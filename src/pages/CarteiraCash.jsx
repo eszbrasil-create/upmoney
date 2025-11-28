@@ -131,12 +131,12 @@ export default function CarteiraCash() {
     if (!currentUser) return;
 
     const { data, error } = await supabase
-      .from("wallet_assets")
+      .from("wallet_items")
       .select("*")
       .eq("user_id", currentUser.id);
 
     if (error) {
-      console.error("Erro ao carregar wallet_assets:", error);
+      console.error("Erro ao carregar wallet_items:", error);
       return;
     }
 
