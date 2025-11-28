@@ -2,6 +2,7 @@
 // Página inicial completa do ecossistema "Meu Patrimônio"
 
 import React, { useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 const IconWhatsApp = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
@@ -34,6 +35,7 @@ export default function Landing({ onNavigate }) {
   const RECEIVER_EMAIL = "eszbrasil@gmail.com";
   const WHATSAPP_NUMBER = "393517380919";
 
+  // Login do "Meu Plano" (hero)
   const PLANO_USER = "admin";
   const PLANO_PASS = "1234";
 
@@ -84,21 +86,36 @@ export default function Landing({ onNavigate }) {
     onNavigate?.("login");
   };
 
-  const handlePlanoSubmit = (e) => {
+  // ✅ Login do hero integrado com Supabase
+  const handlePlanoSubmit = async (e) => {
     e.preventDefault();
     setPlanoError("");
 
     const u = planoForm.usuario.trim();
-    const s = planoForm.senha;
+    const s = planoForm.senha.trim();
 
-    if (u === PLANO_USER && s === PLANO_PASS) {
-      setIsPlanoModalOpen(false);
-      setPlanoForm({ usuario: "", senha: "" });
-      handlePlanoLoginSuccess();
+    // 1) Validação simples (mantém a experiência que você já tinha)
+    if (u !== PLANO_USER || s !== PLANO_PASS) {
+      setPlanoError("Usuário ou senha inválidos.");
       return;
     }
 
-    setPlanoError("Usuário ou senha inválidos.");
+    // 2) Login real no Supabase (usuário admin "oculto")
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: "admin@upmoney.local", // crie esse usuário no Supabase
+      password: "1234",
+    });
+
+    if (error) {
+      console.error("Erro Supabase:", error);
+      setPlanoError("Erro ao conectar ao servidor. Tente novamente.");
+      return;
+    }
+
+    // 3) Sucesso: fecha modal e entra no app logado
+    setIsPlanoModalOpen(false);
+    setPlanoForm({ usuario: "", senha: "" });
+    handlePlanoLoginSuccess();
   };
 
   return (
@@ -159,8 +176,6 @@ export default function Landing({ onNavigate }) {
             >
               Invista no Exterior
             </a>
-
-            {/* 🔴 BOTÃO REMOVIDO: Últimas notícias */}
           </nav>
 
           {/* Área da direita */}
@@ -187,7 +202,7 @@ export default function Landing({ onNavigate }) {
               href="https://instagram.com"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg:white/10 hover:bg-white/20"
               aria-label="Instagram"
             >
               <IconInstagram className="h-4 w-4" />
@@ -218,9 +233,10 @@ export default function Landing({ onNavigate }) {
               </h1>
 
               <p className="mt-5 text-base sm:text-lg text-[#1f3548]/80 leading-relaxed">
-                Nada de complicação, termos difíceis ou teoria sem prática.
-                Aqui você aprende fazendo: passo a passo, no seu ritmo, com orientação real
-                e o suporte que faltava para finalmente entrar no mundo dos investimentos.
+                Nada de complicação, termos difíceis ou teoria sem prática. Aqui
+                você aprende fazendo: passo a passo, no seu ritmo, com
+                orientação real e o suporte que faltava para finalmente entrar
+                no mundo dos investimentos.
               </p>
 
               <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -263,16 +279,24 @@ export default function Landing({ onNavigate }) {
               </h2>
 
               <p className="mt-4 text-base sm:text-lg text-[#1f3548]/80">
-                Você terá acesso ao método que já ajudou muitas pessoas a saírem do zero
-                e conquistarem renda passiva real com segurança e estratégia.
+                Você terá acesso ao método que já ajudou muitas pessoas a
+                saírem do zero e conquistarem renda passiva real com segurança e
+                estratégia.
               </p>
 
               <ul className="mt-6 space-y-3 text-[#1f3548]/90 text-sm sm:text-base">
                 <li>📘 Curso completo de <strong>Renda Fixa</strong></li>
-                <li>📗 Curso de <strong>Ações</strong> — como escolher empresas boas pagadoras</li>
-                <li>📙 Curso de <strong>FIIs</strong> — renda mensal na prática</li>
+                <li>
+                  📗 Curso de <strong>Ações</strong> — como escolher empresas
+                  boas pagadoras
+                </li>
+                <li>
+                  📙 Curso de <strong>FIIs</strong> — renda mensal na prática
+                </li>
                 <li>📂 Material exclusivo (PDFs, resumos e roteiros)</li>
-                <li>📊 Acesso ao <strong>UpControl</strong></li>
+                <li>
+                  📊 Acesso ao <strong>UpControl</strong>
+                </li>
                 <li>📅 Acompanhamento pessoal</li>
                 <li>💬 Grupo exclusivo no WhatsApp</li>
               </ul>
@@ -448,7 +472,8 @@ export default function Landing({ onNavigate }) {
           </div>
 
           <p className="mt-8 text-sm text-white/75">
-            UpMoney — Educação e controle financeiro para uma vida com liberdade.
+            UpMoney — Educação e controle financeiro para uma vida com
+            liberdade.
           </p>
         </div>
       </footer>
