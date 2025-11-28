@@ -84,7 +84,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
       user_id: user.id,
       asset_name: novo.ticker?.toUpperCase(),
       category: novo.tipo || null,
-      amount: toNum(novo.qtd),
+      qtd: toNum(novo.qtd),
       price: toNum(novo.preco),
       purchase_date: novo.dataEntrada || null,
     };
@@ -279,8 +279,8 @@ export default function ModalLancamentos({ isOpen, onClose }) {
 
               <tbody>
                 {lancOrdenados.map((l, idx) => {
-                  const qtd = toNum(l.amount);
-                  const preco = toNum(l.price);
+                  const qtd = toNum(l.qtd);
+                  const preco = toNum(l.preco);
                   const valor = qtd * preco;
 
                   return (
