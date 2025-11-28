@@ -54,7 +54,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
 
     async function loadLanc() {
       const { data, error } = await supabase
-        .from("wallet_assets")
+        .from("wallet_items")
         .select("*")
         .eq("user_id", user.id)
         .order("dataEntrada", { ascending: false });
@@ -89,7 +89,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
       purchase_date: novo.dataEntrada || null,
     };
 
-    const { error } = await supabase.from("wallet_assets").insert(payload);
+    const { error } = await supabase.from("wallet_items").insert(payload);
 
     if (error) {
       console.error(error);
@@ -99,7 +99,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
 
     // reload
     const { data } = await supabase
-      .from("wallet_assets")
+      .from("wallet_items")
       .select("*")
       .eq("user_id", user.id)
       .order("dataEntrada", { ascending: false });
@@ -121,7 +121,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
   // ================================
   async function handleDelete(id) {
     const { error } = await supabase
-      .from("wallet_assets")
+      .from("wallet_items")
       .delete()
       .eq("id", id)
       .eq("user_id", user.id);
