@@ -1,20 +1,25 @@
-// src/pages/Cursos.jsx
+// src/pages/CursosPage.jsx
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { PiggyBank, FileDown, CheckCircle2 } from "lucide-react";
 import confetti from "canvas-confetti";
 import party from "party-js";
 
-// 👉 AJUSTE ESTE IMPORT SE O CAMINHO DO SEU CLIENT FOR DIFERENTE
-import { supabase } from "../lib/supabaseClient";
+// 👇 IMPORTA O CLIENT DO SUPABASE
+import { supabase } from "../lib/supabaseClient.js";
 
 const ORANGE = "#f97316"; // Carteira Cash (laranja)
 const GREEN = "#10e597ff"; // Concluído (verde)
-const LS_KEY_CURSOS = "cc_cursos_concluidos_v1";
+
+// localStorage (continua como segurança / offline)
+const LS_KEY_CURSOS = "cc_cursos_concluidos_v2";
 
 // id do curso na tabela user_course_progress
 const COURSE_ID = "do_zero_ao_meu_primeiro_dividendo";
 
 export default function CursosPage() {
+  // -----------------------------
+  // LISTA DE MÓDULOS (igual antes)
+  // -----------------------------
   const MODULOS = useMemo(
     () => [
       {
@@ -50,7 +55,9 @@ export default function CursosPage() {
     []
   );
 
-  // ========= FOGOS =========
+  // -----------------------------
+  // 🎆 FOGOS DE ARTIFÍCIO
+  // -----------------------------
   function launchFireworks() {
     const duration = 2000;
     const animationEnd = Date.now() + duration;
@@ -88,7 +95,9 @@ export default function CursosPage() {
     }, 250);
   }
 
-  // ========= CHUVA DE MOEDAS =========
+  // -----------------------------
+  // 💸 CHUVA DE MOEDAS
+  // -----------------------------
   function launchCoinRain(target) {
     if (!target) return;
     party.confetti(target, {
@@ -99,10 +108,18 @@ export default function CursosPage() {
 
   const containerRef = useRef(null);
 
-  // ============= ESTADOS =============
-  // módulos concluídos (Set de ids)
+  // -----------------------------
+  // ESTADOS PRINCIPAIS
+  // -----------------------------
+  // usuário logado (Supabase)
+  const [user, setUser] = useState(null);
+  // id da linha na tabela user_course_progress (para dar UPDATE depois)
+  const [progressRowId, setProgressRowId] = useState(null);
+  // carregando progresso inicial do Supabase
+  const [loadingProgress, setLoadingProgress] = useState(true);
+
+  // módulos concluídos (começa lendo do localStorage)
   const [concluidos, setConcluidos] = useState(() => {
-    // carrega do localStorage como antes
     if (typeof window === "undefined") return new Set();
     try {
       const raw = window.localStorage.getItem(LS_KEY_CURSOS);
@@ -115,16 +132,74 @@ export default function CursosPage() {
     }
   });
 
-  // info do usuário e linha de progresso no Supabase
-  const [userId, setUserId] = useState(null);
-  const [progressRowId, setProgressRowId] = useState(null);
-  const [loadingFromSupabase, setLoadingFromSupabase] = useState(true);
-
   const total = MODULOS.length;
   const done = concluidos.size;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
-  // ======== SALVAR NO LOCALSTORAGE ========
+  // -----------------------------
+  // 1) BUSCA USUÁRIO + PROGRESSO NO SUPABASE
+  // -----------------------------
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadUserAndProgress() {
+      try {
+        // pega usuário atual
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+
+        if (userError || !userData?.user) {
+          // sem login → usa só localStorage mesmo
+          if (isMounted) setLoadingProgress(false);
+          return;
+        }
+
+        const currentUser = userData.user;
+        if (!isMounted) return;
+
+        setUser(currentUser);
+
+        // busca progresso na tabela user_course_progress
+        const { data, error } = await supabase
+          .from("user_course_progress")
+          .select("id, completed_lessons")
+          .eq("user_id", currentUser.id)
+          .eq("course_id", COURSE_ID)
+          .maybeSingle();
+
+        if (!isMounted) return;
+
+        if (error) {
+          console.error("Erro ao buscar progresso do curso:", error.message);
+          setLoadingProgress(false);
+          return;
+        }
+
+        if (data) {
+          // se já existe registro no banco, usa ele
+          const arr = Array.isArray(data.completed_lessons)
+            ? data.completed_lessons
+            : [];
+          setConcluidos(new Set(arr));
+          setProgressRowId(data.id);
+        }
+
+        setLoadingProgress(false);
+      } catch (e) {
+        console.error("Erro inesperado ao carregar progresso:", e);
+        if (isMounted) setLoadingProgress(false);
+      }
+    }
+
+    loadUserAndProgress();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // -----------------------------
+  // 2) SALVA SEMPRE NO LOCALSTORAGE
+  // -----------------------------
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -132,108 +207,73 @@ export default function CursosPage() {
         LS_KEY_CURSOS,
         JSON.stringify(Array.from(concluidos))
       );
-    } catch {}
+    } catch (e) {
+      console.error("Erro ao salvar cursos no localStorage:", e);
+    }
   }, [concluidos]);
 
-  // ======== CARREGAR DO SUPABASE ========
+  // -----------------------------
+  // 3) QUANDO CONCLUIR AULA → SALVAR NO SUPABASE
+  // -----------------------------
   useEffect(() => {
-    async function loadProgress() {
+    // se não tem usuário logado, não tenta salvar no banco
+    if (!user) return;
+
+    const completedArr = Array.from(concluidos);
+    const progressPercent =
+      total > 0 ? Math.round((completedArr.length / total) * 100) : 0;
+
+    let cancelled = false;
+
+    async function saveProgress() {
       try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
+        const payload = {
+          user_id: user.id,
+          course_id: COURSE_ID,
+          progress_percent: progressPercent,
+          completed_lessons: completedArr,
+        };
 
-        if (userError) {
-          console.error("Erro ao buscar usuário:", userError);
-          setLoadingFromSupabase(false);
-          return;
-        }
+        if (progressRowId) {
+          // já existe linha → UPDATE
+          const { error } = await supabase
+            .from("user_course_progress")
+            .update(payload)
+            .eq("id", progressRowId);
 
-        if (!user) {
-          // sem usuário logado: fica só com o localStorage mesmo
-          setLoadingFromSupabase(false);
-          return;
-        }
+          if (error) {
+            console.error("Erro ao atualizar progresso do curso:", error.message);
+          }
+        } else {
+          // ainda não existe linha → INSERT
+          const { data, error } = await supabase
+            .from("user_course_progress")
+            .insert(payload)
+            .select("id")
+            .single();
 
-        setUserId(user.id);
-
-        const { data, error } = await supabase
-          .from("user_course_progress")
-          .select("id, completed_lessons")
-          .eq("user_id", user.id)
-          .eq("course_id", COURSE_ID)
-          .maybeSingle();
-
-        if (error) {
-          console.error("Erro ao carregar progresso do curso:", error);
-          setLoadingFromSupabase(false);
-          return;
-        }
-
-        if (data) {
-          setProgressRowId(data.id);
-          if (Array.isArray(data.completed_lessons)) {
-            setConcluidos(new Set(data.completed_lessons));
+          if (error) {
+            console.error("Erro ao inserir progresso do curso:", error.message);
+          } else if (!cancelled && data?.id) {
+            setProgressRowId(data.id);
           }
         }
       } catch (e) {
-        console.error("Erro inesperado ao carregar progresso:", e);
-      } finally {
-        setLoadingFromSupabase(false);
+        console.error("Erro inesperado ao salvar progresso do curso:", e);
       }
     }
 
-    loadProgress();
-  }, []);
+    saveProgress();
 
-  // ======== SALVAR NO SUPABASE ========
-  async function persistProgress(nextSet) {
-    if (!userId) return; // se não estiver logado, não tenta salvar
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [concluidos, user, total]);
 
-    const completedArray = Array.from(nextSet);
-    const progress_percent =
-      total > 0 ? Math.round((completedArray.length / total) * 100) : 0;
-
-    try {
-      if (progressRowId) {
-        // já existe linha -> UPDATE
-        const { error } = await supabase
-          .from("user_course_progress")
-          .update({
-            completed_lessons: completedArray,
-            progress_percent,
-          })
-          .eq("id", progressRowId);
-
-        if (error) {
-          console.error("Erro ao atualizar progresso:", error);
-        }
-      } else {
-        // ainda não existe -> INSERT
-        const { data, error } = await supabase
-          .from("user_course_progress")
-          .insert({
-            user_id: userId,
-            course_id: COURSE_ID,
-            completed_lessons: completedArray,
-            progress_percent,
-          })
-          .select("id")
-          .single();
-
-        if (error) {
-          console.error("Erro ao inserir progresso:", error);
-        } else if (data) {
-          setProgressRowId(data.id);
-        }
-      }
-    } catch (e) {
-      console.error("Erro inesperado ao salvar progresso:", e);
-    }
-  }
-
-  // ======== FOGOS QUANDO 100% ========
+  // -----------------------------
+  // 4) FOGOS QUANDO CHEGA EM 100%
+  // -----------------------------
   useEffect(() => {
     if (done === total && total > 0) {
       launchFireworks();
@@ -243,19 +283,20 @@ export default function CursosPage() {
     }
   }, [done, total]);
 
-  // ======== CLICK EM "CONCLUÍDO" ========
+  // -----------------------------
+  // 5) FUNÇÃO PARA MARCAR CONCLUÍDO
+  // -----------------------------
   const toggleConcluido = (id) => {
     setConcluidos((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
-
-      // salva no Supabase (não bloqueia o clique, é assíncrono)
-      persistProgress(next);
-
       return next;
     });
   };
 
+  // -----------------------------
+  // RENDER
+  // -----------------------------
   return (
     <div ref={containerRef} className="pt-3 pr-6 pl-0">
       {/* keyframes locais para animações do porquinho */}
@@ -294,9 +335,9 @@ export default function CursosPage() {
             />
           </div>
 
-          {loadingFromSupabase && (
+          {loadingProgress && (
             <p className="mt-2 text-xs text-slate-400">
-              Carregando progresso do servidor...
+              Carregando progresso do curso...
             </p>
           )}
         </div>
@@ -331,7 +372,7 @@ export default function CursosPage() {
                 </div>
 
                 <div className="flex-1">
-                  {/* Título + Badge */}
+                  {/* Título + Badge ABSOLUTO */}
                   <div className="relative pb-1">
                     <h3 className="text-slate-200 font-semibold pr-20">
                       {m.id}. {m.titulo}
