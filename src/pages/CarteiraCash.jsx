@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import ModalLancamentos from "../modules/carteiraCash/ModalLancamentos.jsx";
 import { useDyBase } from "../utils/dyBase";
+import { supabase } from "../lib/supabaseClient";
 
 const PIE_COLORS = {
   RF: "#22c55e",
@@ -49,174 +50,6 @@ const DY_MONTHS = (() => {
   }
   return result;
 })();
-
-// Carteira base (modelo inicial)
-const BASE_ROWS = [
-  // AÇÕES
-  {
-    id: 1,
-    tipo: "ACOES",
-    ticker: "VALE3",
-    nome: "Vale",
-    dataEntrada: "",
-    qtd: "",
-    entrada: "",
-    valorAtual: "",
-    dy: "",
-    dyMeses: Array(DY_MONTHS.length).fill(""),
-  },
-  {
-    id: 2,
-    tipo: "ACOES",
-    ticker: "ITUB4",
-    nome: "Itaú Unibanco",
-    dataEntrada: "",
-    qtd: "",
-    entrada: "",
-    valorAtual: "",
-    dy: "",
-    dyMeses: Array(DY_MONTHS.length).fill(""),
-  },
-  {
-    id: 3,
-    tipo: "ACOES",
-    ticker: "GGBR4",
-    nome: "Gerdau",
-    dataEntrada: "",
-    qtd: "",
-    entrada: "",
-    valorAtual: "",
-    dy: "",
-    dyMeses: Array(DY_MONTHS.length).fill(""),
-  },
-  {
-    id: 4,
-    tipo: "ACOES",
-    ticker: "AXIA6",
-    nome: "AXIA6",
-    dataEntrada: "",
-    qtd: "",
-    entrada: "",
-    valorAtual: "",
-    dy: "",
-    dyMeses: Array(DY_MONTHS.length).fill(""),
-  },
-  {
-    id: 5,
-    tipo: "ACOES",
-    ticker: "DIRR3",
-    nome: "Direcional",
-    dataEntrada: "",
-    qtd: "",
-    entrada: "",
-    valorAtual: "",
-    dy: "",
-    dyMeses: Array(DY_MONTHS.length).fill(""),
-  },
-  {
-    id: 6,
-    tipo: "ACOES",
-    ticker: "CYRE3",
-    nome: "Cyrela",
-    dataEntrada: "",
-    qtd: "",
-    entrada: "",
-    valorAtual: "",
-    dy: "",
-    dyMeses: Array(DY_MONTHS.length).fill(""),
-  },
-  {
-    id: 7,
-    tipo: "ACOES",
-    ticker: "PETR4",
-    nome: "Petrobras PN",
-    dataEntrada: "",
-    qtd: "",
-    entrada: "",
-    valorAtual: "",
-    dy: "",
-    dyMeses: Array(DY_MONTHS.length).fill(""),
-  },
-  {
-    id: 8,
-    tipo: "ACOES",
-    ticker: "SLCE3",
-    nome: "SLC Agrícola",
-    dataEntrada: "",
-    qtd: "",
-    entrada: "",
-    valorAtual: "",
-    dy: "",
-    dyMeses: Array(DY_MONTHS.length).fill(""),
-  },
-  {
-    id: 9,
-    tipo: "ACOES",
-    ticker: "VIVT3",
-    nome: "Vivo (Telefônica)",
-    dataEntrada: "",
-    qtd: "",
-    entrada: "",
-    valorAtual: "",
-    dy: "",
-    dyMeses: Array(DY_MONTHS.length).fill(""),
-  },
-
-  // RENDA FIXA
-  {
-    id: 10,
-    tipo: "RF",
-    ticker: "SELIC",
-    nome: "Selic Simples",
-    dataEntrada: "",
-    qtd: "",
-    entrada: "1",
-    valorAtual: "",
-    dy: "",
-    dyMeses: Array(DY_MONTHS.length).fill(""),
-  },
-  {
-    id: 11,
-    tipo: "RF",
-    ticker: "IPCA35",
-    nome: "Tesouro IPCA+ 2035",
-    dataEntrada: "",
-    qtd: "",
-    entrada: "1",
-    valorAtual: "",
-    dy: "",
-    dyMeses: Array(DY_MONTHS.length).fill(""),
-  },
-
-  // FIIs
-  {
-    id: 12,
-    tipo: "FII",
-    ticker: "HGLG11",
-    nome: "CSHG Logística",
-    dataEntrada: "",
-    qtd: "",
-    entrada: "",
-    valorAtual: "",
-    dy: "",
-    dyMeses: Array(DY_MONTHS.length).fill(""),
-  },
-  {
-    id: 13,
-    tipo: "FII",
-    ticker: "KNCR11",
-    nome: "Kinea Rendimentos",
-    dataEntrada: "",
-    qtd: "",
-    entrada: "",
-    valorAtual: "",
-    dy: "",
-    dyMeses: Array(DY_MONTHS.length).fill(""),
-  },
-];
-
-const LS_KEY = "cc_carteira_cash_v1";
-const LS_KEY_LANC = "cc_carteira_cash_lanc_v1";
 
 // Helper para converter texto em número
 function toNum(x) {
@@ -262,69 +95,130 @@ export default function CarteiraCash() {
   // 🔗 Lê a base de DY do GitHub
   const { dyBase, dyBaseLoading, dyBaseError } = useDyBase();
 
-  // 👀 Log para debug
-  useEffect(() => {
-    console.log("Base DY carregada:", { dyBase, dyBaseLoading, dyBaseError });
-  }, [dyBase, dyBaseLoading, dyBaseError]);
+  // 👤 Usuário logado (Supabase)
+  const [user, setUser] = useState(null);
 
-  // ✅ base escondida de lançamentos
-  const [lancamentos, setLancamentos] = useState(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY_LANC);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // Estado da carteira (tabela visível / agregada)
-  const [carteira, setCarteira] = useState(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      const parsed = raw ? JSON.parse(raw) : BASE_ROWS;
-      return parsed.map((r) => ({
-        ...r,
-        dataEntrada: r.dataEntrada ?? "",
-        dyMeses: Array.isArray(r.dyMeses)
-          ? [
-              ...r.dyMeses,
-              ...Array(DY_MONTHS.length - r.dyMeses.length).fill(""),
-            ].slice(0, DY_MONTHS.length)
-          : Array(DY_MONTHS.length).fill(""),
-      }));
-    } catch {
-      return BASE_ROWS;
-    }
-  });
+  // 📊 Carteira agregada vinda da Supabase
+  const [carteira, setCarteira] = useState([]);
 
   // Balão "Sugestões UpMoney"
   const [openCarteiras, setOpenCarteiras] = useState(false);
 
   // Modal "Adicionar ativos"
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [novoLanc, setNovoLanc] = useState({
-    ticker: "",
-    tipo: "ACOES",
-    dataEntrada: "",
-    qtd: "",
-    preco: "",
-  });
-
-  // Focar automaticamente no campo Ticker ao abrir o modal
-  useEffect(() => {
-    if (!isAddModalOpen) return;
-    const t = setTimeout(() => {
-      const el = document.querySelector('input[name="ticker"]');
-      if (el) el.focus();
-    }, 80);
-    return () => clearTimeout(t);
-  }, [isAddModalOpen]);
 
   // Ordenação da tabela principal
   const [sortConfig, setSortConfig] = useState({
     key: null, // "posicao" | "var" | "part" | "data"
-    direction: "desc", // "asc" | "desc"
+    direction: "desc",
   });
+
+  // ============================
+  // 1) Pega usuário logado
+  // ============================
+  useEffect(() => {
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      setUser(data?.user || null);
+    }
+    loadUser();
+  }, []);
+
+  // ============================
+  // 2) Carrega carteira da Supabase
+  // ============================
+  const loadCarteiraFromSupabase = async (currentUser) => {
+    if (!currentUser) return;
+
+    const { data, error } = await supabase
+      .from("wallet_assets")
+      .select("*")
+      .eq("user_id", currentUser.id);
+
+    if (error) {
+      console.error("Erro ao carregar wallet_assets:", error);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      setCarteira([]);
+      return;
+    }
+
+    // Agrupa por ativo + tipo
+    const grupos = new Map(); // key = `${ticker}__${tipo}`
+
+    data.forEach((row) => {
+      const ticker = (row.asset_name || "").toUpperCase();
+      if (!ticker) return;
+
+      const tipo = row.category || "ACOES";
+      const key = `${ticker}__${tipo}`;
+
+      const qtd = toNum(row.amount);
+      const preco = toNum(row.price);
+      const valor = qtd * preco;
+      const dataEntrada = row.purchase_date || "";
+
+      const atual = grupos.get(key) || {
+        ticker,
+        tipo,
+        nome: "",
+        somaQtd: 0,
+        somaValor: 0,
+        dataEntradaMaisAntiga: dataEntrada || "",
+      };
+
+      atual.somaQtd += qtd;
+      atual.somaValor += valor;
+
+      if (!atual.dataEntradaMaisAntiga) {
+        atual.dataEntradaMaisAntiga = dataEntrada;
+      } else if (dataEntrada && dataEntrada < atual.dataEntradaMaisAntiga) {
+        atual.dataEntradaMaisAntiga = dataEntrada;
+      }
+
+      grupos.set(key, atual);
+    });
+
+    const linhas = Array.from(grupos.values()).map((g, idx) => {
+      const precoMedio = g.somaQtd > 0 ? g.somaValor / g.somaQtd : 0;
+
+      return {
+        id: idx + 1,
+        ticker: g.ticker,
+        tipo: g.tipo,
+        nome: "",
+        dataEntrada: g.dataEntradaMaisAntiga || "",
+        qtd: g.somaQtd ? String(g.somaQtd) : "",
+        entrada: precoMedio ? String(precoMedio.toFixed(2)) : "",
+        valorAtual: precoMedio ? String(precoMedio.toFixed(2)) : "",
+        dyMeses: Array(DY_MONTHS.length).fill(""),
+        dy: "",
+      };
+    });
+
+    setCarteira(linhas);
+  };
+
+  // Carrega quando tiver usuário
+  useEffect(() => {
+    if (!user) return;
+    loadCarteiraFromSupabase(user);
+  }, [user]);
+
+  // Recarrega quando fechar o modal (após salvar/excluir lá dentro)
+  useEffect(() => {
+    if (!user) return;
+    if (!isAddModalOpen) {
+      loadCarteiraFromSupabase(user);
+    }
+  }, [isAddModalOpen, user]);
+
+  // 👀 Log para debug (opcional)
+  useEffect(() => {
+    console.log("Base DY carregada:", { dyBase, dyBaseLoading, dyBaseError });
+  }, [dyBase, dyBaseLoading, dyBaseError]);
 
   const handleSort = (key) => {
     setSortConfig((prev) => {
@@ -342,92 +236,6 @@ export default function CarteiraCash() {
     if (sortConfig.key !== key) return "↕";
     return sortConfig.direction === "asc" ? "▲" : "▼";
   };
-
-  // Persiste carteira (tabela visível)
-  useEffect(() => {
-    try {
-      localStorage.setItem(LS_KEY, JSON.stringify(carteira));
-    } catch {}
-  }, [carteira]);
-
-  // Persiste base de lançamentos
-  useEffect(() => {
-    try {
-      localStorage.setItem(LS_KEY_LANC, JSON.stringify(lancamentos));
-    } catch {}
-  }, [lancamentos]);
-
-  // Sempre que a base escondida muda, recalcula a tabela agregada
-  useEffect(() => {
-    if (!lancamentos || lancamentos.length === 0) return;
-
-    setCarteira((prevCarteira) => {
-      const dyPorTicker = new Map();
-      prevCarteira.forEach((r) => {
-        const t = (r.ticker || "").toUpperCase();
-        if (!t) return;
-        dyPorTicker.set(t, {
-          dyMeses: r.dyMeses || Array(DY_MONTHS.length).fill(""),
-          dy: r.dy ?? "",
-        });
-      });
-
-      const grupos = new Map(); // key = `${ticker}__${tipo}`
-
-      lancamentos.forEach((l) => {
-        const ticker = (l.ticker || "").toUpperCase();
-        if (!ticker) return;
-        const tipo = l.tipo || "ACOES";
-        const key = `${ticker}__${tipo}`;
-
-        const qtd = toNum(l.qtd);
-        const preco = toNum(l.preco);
-        const valor = qtd * preco;
-        const data = l.dataEntrada || "";
-
-        const atual = grupos.get(key) || {
-          ticker,
-          tipo,
-          nome: "",
-          somaQtd: 0,
-          somaValor: 0,
-          dataEntradaMaisAntiga: data || "",
-        };
-
-        atual.somaQtd += qtd;
-        atual.somaValor += valor;
-
-        if (!atual.dataEntradaMaisAntiga) {
-          atual.dataEntradaMaisAntiga = data;
-        } else if (data && data < atual.dataEntradaMaisAntiga) {
-          atual.dataEntradaMaisAntiga = data;
-        }
-
-        grupos.set(key, atual);
-      });
-
-      const novasLinhas = Array.from(grupos.values()).map((g, idx) => {
-        const precoMedio = g.somaQtd > 0 ? g.somaValor / g.somaQtd : 0;
-        const t = g.ticker;
-        const prevDy = dyPorTicker.get(t) || {};
-
-        return {
-          id: idx + 1,
-          ticker: t,
-          tipo: g.tipo,
-          nome: g.nome || "",
-          dataEntrada: g.dataEntradaMaisAntiga || "",
-          qtd: g.somaQtd ? String(g.somaQtd) : "",
-          entrada: precoMedio ? String(precoMedio.toFixed(2)) : "",
-          valorAtual: precoMedio ? String(precoMedio.toFixed(2)) : "",
-          dyMeses: prevDy.dyMeses || Array(DY_MONTHS.length).fill(""),
-          dy: prevDy.dy || "",
-        };
-      });
-
-      return novasLinhas;
-    });
-  }, [lancamentos]);
 
   // Integra DY + setor + valorAtual a partir do CSV (dyBase)
   useEffect(() => {
@@ -449,8 +257,6 @@ export default function CarteiraCash() {
             ].slice(0, DY_MONTHS.length)
           : Array(DY_MONTHS.length).fill(0);
 
-        const dyMesesCsv = dyMesesCsvRaw;
-
         return {
           ...row,
           nome: fromCsv.setor || fromCsv.nome || row.nome,
@@ -458,11 +264,11 @@ export default function CarteiraCash() {
             fromCsv.valorAtual != null && fromCsv.valorAtual !== 0
               ? String(fromCsv.valorAtual)
               : row.valorAtual,
-          dyMeses: dyMesesCsv,
+          dyMeses: dyMesesCsvRaw,
         };
       })
     );
-  }, [dyBase, dyBaseLoading, dyBaseError, lancamentos]);
+  }, [dyBase, dyBaseLoading, dyBaseError]);
 
   // Atualiza apenas campos editáveis da carteira (DYs)
   const updateRow = (id, patch) => {
@@ -694,59 +500,9 @@ export default function CarteiraCash() {
     console.log("Modelo selecionado:", tipo);
   };
 
-  // Handlers do modal "Adicionar ativos"
+  // Abrir modal de lançamentos
   const handleOpenAdd = () => {
-    setNovoLanc({
-      ticker: "",
-      tipo: "ACOES",
-      dataEntrada: "",
-      qtd: "",
-      preco: "",
-    });
     setIsAddModalOpen(true);
-  };
-
-  const handleChangeLanc = (e) => {
-    const { name, value } = e.target;
-    setNovoLanc((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSalvarLanc = (e) => {
-    e.preventDefault();
-
-    const ticker = (novoLanc.ticker || "").toUpperCase().trim();
-    const tipo = novoLanc.tipo || "ACOES";
-    const dataEntrada = novoLanc.dataEntrada || "";
-    const qtd = novoLanc.qtd || "";
-    const preco = novoLanc.preco || "";
-
-    if (!ticker || !qtd || !preco) {
-      return;
-    }
-
-    const novo = {
-      id: Date.now(),
-      ticker,
-      tipo,
-      dataEntrada,
-      qtd,
-      preco,
-    };
-
-    setLancamentos((prev) => [...prev, novo]);
-
-    // mantém o modal aberto e limpa campos principais
-    setNovoLanc((prev) => ({
-      ...prev,
-      ticker: "",
-      qtd: "",
-      preco: "",
-    }));
-  };
-
-  // 🔥 Deletar lançamento (usado pelo modal)
-  const handleDeleteLanc = (id) => {
-    setLancamentos((prev) => prev.filter((l) => l.id !== id));
   };
 
   // ====== Ordenação da carteira (tabela principal) ======
@@ -785,7 +541,6 @@ export default function CarteiraCash() {
         const da = a.dataEntrada || "";
         const db = b.dataEntrada || "";
 
-        // datas vazias sempre no fim
         if (!da && !db) return 0;
         if (!da) return 1;
         if (!db) return -1;
@@ -1140,7 +895,7 @@ export default function CarteiraCash() {
                               w-full rounded-xl
                               bg-emerald-500/90
                               hover:bg-emerald-400
-                              transition-all duration-700 ease-out
+                              transition-all duração-700 ease-out
                               hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
                             "
                             style={{ height: `${altura}px` }}
@@ -1218,8 +973,8 @@ export default function CarteiraCash() {
 
           <span className="text-[11px] text-slate-400">
             As colunas principais são preenchidas automaticamente pelos
-            lançamentos. Edite apenas os DYs, se desejar (janela de 24 meses a
-            partir de Dez/2025).
+            lançamentos (Supabase). Edite apenas os DYs, se desejar (janela de 24
+            meses a partir de Dez/2025).
           </span>
         </div>
 
@@ -1232,22 +987,22 @@ export default function CarteiraCash() {
                     #
                   </th>
 
-                  {/* Ticker – largura aumentada */}
+                  {/* Ticker */}
                   <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap sticky left-[2rem] bg-slate-800/70 z-20 w-28">
                     Ticker
                   </th>
 
-                  {/* Tipo – largura aumentada + centralizado */}
+                  {/* Tipo */}
                   <th className="px-2 py-1.5 text-center text-[12px] font-semibold whitespace-nowrap w-32">
                     Tipo
                   </th>
 
-                  {/* Setor – largura aumentada */}
+                  {/* Setor */}
                   <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap w-40">
                     Setor
                   </th>
 
-                  {/* Data entrada com ordenação */}
+                  {/* Data entrada */}
                   <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap w-32">
                     <button
                       type="button"
@@ -1265,12 +1020,12 @@ export default function CarteiraCash() {
                     Quantidade
                   </th>
 
-                  {/* Entrada – largura aumentada + alinhada à esquerda */}
+                  {/* Entrada */}
                   <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap w-36">
                     Entrada (R$)
                   </th>
 
-                  {/* Posição – largura aumentada + alinhada à esquerda */}
+                  {/* Posição */}
                   <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap w-36">
                     <button
                       type="button"
@@ -1284,7 +1039,7 @@ export default function CarteiraCash() {
                     </button>
                   </th>
 
-                  {/* % Var – largura aumentada */}
+                  {/* % Var */}
                   <th className="px-2 py-1.5 text-right text-[12px] font-semibold whitespace-nowrap w-28">
                     <button
                       type="button"
@@ -1296,7 +1051,7 @@ export default function CarteiraCash() {
                     </button>
                   </th>
 
-                  {/* Part. % – largura aumentada */}
+                  {/* Part % */}
                   <th className="px-2 py-1.5 text-right text-[12px] font-semibold whitespace-nowrap w-28">
                     <button
                       type="button"
@@ -1310,7 +1065,7 @@ export default function CarteiraCash() {
                     </button>
                   </th>
 
-                  {/* DY 12m – largura aumentada */}
+                  {/* DY 12m */}
                   <th className="px-2 py-1.5 text-right text-[12px] font-semibold whitespace-nowrap w-32">
                     DY (12m)
                   </th>
@@ -1373,7 +1128,7 @@ export default function CarteiraCash() {
                         {i + 1}
                       </td>
 
-                      {/* Ticker (somente leitura) */}
+                      {/* Ticker */}
                       <td className="px-2 py-1.5 text-left sticky left-[2rem] bg-slate-900/90 z-10 w-28">
                         <span className="text-[11px] text-slate-200">
                           {r.ticker || "—"}
@@ -1411,12 +1166,12 @@ export default function CarteiraCash() {
                         </span>
                       </td>
 
-                      {/* Quantidade centralizada */}
+                      {/* Quantidade */}
                       <td className="px-2 py-1.5 text-center text-xs text-slate-100 w-24">
                         {r.qtd || "—"}
                       </td>
 
-                      {/* Entrada (R$) alinhado à esquerda */}
+                      {/* Entrada (R$) */}
                       <td className="px-2 py-1.5 text-left text-xs text-slate-100 w-36">
                         {entradaNum > 0
                           ? entradaNum.toLocaleString("pt-BR", {
@@ -1428,7 +1183,7 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
-                      {/* Posição (R$) alinhado à esquerda */}
+                      {/* Posição (R$) */}
                       <td className="px-2 py-1.5 text-left text-xs text-slate-200 w-36">
                         {valorPosicao > 0
                           ? valorPosicao.toLocaleString("pt-BR", {
@@ -1497,15 +1252,10 @@ export default function CarteiraCash() {
         </p>
       </div>
 
-      {/* Modal Adicionar Ativos (agora componente separado) */}
+      {/* Modal Adicionar Ativos (Supabase) */}
       <ModalLancamentos
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        novoLanc={novoLanc}
-        onChangeLanc={handleChangeLanc}
-        onSalvarLanc={handleSalvarLanc}
-        lancamentos={lancamentos}
-        onDeleteLanc={handleDeleteLanc}
       />
     </div>
   );
