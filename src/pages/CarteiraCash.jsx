@@ -155,10 +155,10 @@ export default function CarteiraCash() {
       const tipo = row.category || "ACOES";
       const key = `${ticker}__${tipo}`;
 
-      const qtd = toNum(row.amount);
-      const preco = toNum(row.price);
+      const qtd = toNum(row.qtd);
+      const preco = toNum(row.preco);
       const valor = qtd * preco;
-      const dataEntrada = row.purchase_date || "";
+      const dataEntrada = row_data_entrada || "";
 
       const atual = grupos.get(key) || {
         ticker,
