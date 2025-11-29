@@ -11,7 +11,7 @@ function toNum(x) {
 
 function formatDateBR(iso) {
   if (!iso) return "—";
-  const parts = iso.split("-");
+  const parts = String(iso).split("-");
   if (parts.length !== 3) return iso;
   const [y, m, d] = parts;
   return `${d}/${m}/${y}`;
@@ -79,7 +79,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
   }
 
   // ================================
-  // 4) Salvar no Supabase (ALINHADO COM A TABELA)
+  // 4) Salvar no Supabase
   // ================================
   async function handleSalvar(e) {
     e.preventDefault();
@@ -91,7 +91,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
     const precoUnit = toNum(novo.price);
 
     // Se não tiver data informada, usa hoje (para não quebrar NOT NULL)
-    const hojeISO = new Date().toISOString().slice(0, 10);
+    const hojeISO = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
     const dataEntradaISO = novo.dataEntrada || hojeISO;
 
     const valorTotal = quantidade * precoUnit;
@@ -99,14 +99,14 @@ export default function ModalLancamentos({ isOpen, onClose }) {
     const payload = {
       user_id: user.id,
 
-      // Campos "novos"
+      // "modelo novo"
       qtd: quantidade,
       price: precoUnit,
       asset_name: tickerUpper,
       category: tipo,
       purchase_date: dataEntradaISO,
 
-      // Campos legados que existem na tabela e são NOT NULL
+      // campos legados que ainda existem na tabela
       ticker: tickerUpper,
       tipo: tipo,
       nome: tickerUpper,
@@ -165,7 +165,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
   }
 
   // ================================
-  // 6) Ordenação local (por data_entrada)
+  // 6) Ordenação local (por data_entrada / purchase_date)
   // ================================
   const lancOrdenados = useMemo(() => {
     const arr = [...(lancamentos || [])];
