@@ -57,9 +57,10 @@ export default function ModalLancamentos({ isOpen, onClose }) {
         .from("wallet_items")
         .select("*")
         .eq("user_id", user.id)
-        .order("data_entrada", { ascending: false });
+        .order("purchase_date", { ascending: false });
 
       if (!error) setLancamentos(data || []);
+      if (error) console.error("Erro ao carregar wallet_items:", error);
     }
 
     loadLanc();
@@ -74,21 +75,27 @@ export default function ModalLancamentos({ isOpen, onClose }) {
   }
 
   // ================================
-  // 4) Salvar no Supabase (CORRIGIDO)
+  // 4) Salvar no Supabase
   // ================================
   async function handleSalvar(e) {
     e.preventDefault();
     if (!user) return alert("Usuário não identificado.");
 
+    if (!novo.ticker) {
+      alert("Preencha o ticker do ativo.");
+      return;
+    }
+
+    const qtdNum = toNum(novo.qtd);
+    const precoNum = toNum(novo.preco);
+
     const payload = {
       user_id: user.id,
-      ticker: novo.ticker?.toUpperCase(),
-      tipo: novo.tipo || null,
-      qtd: toNum(novo.qtd),
-      preco: toNum(novo.preco),
-      data_entrada: novo.dataEntrada || null,
-      valor: toNum(novo.qtd) * toNum(novo.preco),
-      nome: novo.ticker?.toUpperCase(), // opcional, compatível com sua tabela
+      asset_name: novo.ticker.toUpperCase(),   // nome do ativo
+      category: novo.tipo || null,             // tipo (AÇÕES, FII, etc.)
+      qtd: qtdNum,
+      price: precoNum,
+      purchase_date: novo.dataEntrada || null, // data (coluna purchase_date)
     };
 
     const { error } = await supabase.from("wallet_items").insert(payload);
@@ -100,13 +107,14 @@ export default function ModalLancamentos({ isOpen, onClose }) {
     }
 
     // reload
-    const { data } = await supabase
+    const { data, error: reloadError } = await supabase
       .from("wallet_items")
       .select("*")
       .eq("user_id", user.id)
-      .order("data_entrada", { ascending: false });
+      .order("purchase_date", { ascending: false });
 
-    setLancamentos(data || []);
+    if (!reloadError) setLancamentos(data || []);
+    if (reloadError) console.error("Erro ao recarregar wallet_items:", reloadError);
 
     // Reset
     setNovo({
@@ -119,7 +127,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
   }
 
   // ================================
-  // 5) Excluir lançamento (OK)
+  // 5) Excluir lançamento
   // ================================
   async function handleDelete(id) {
     const { error } = await supabase
@@ -138,13 +146,13 @@ export default function ModalLancamentos({ isOpen, onClose }) {
   }
 
   // ================================
-  // 6) Ordenação local (CORRIGIDO)
+  // 6) Ordenação local
   // ================================
   const lancOrdenados = useMemo(() => {
     const arr = [...(lancamentos || [])];
     return arr.sort((a, b) => {
-      const da = a.data_entrada || "";
-      const db = b.data_entrada || "";
+      const da = a.purchase_date || "";
+      const db = b.purchase_date || "";
       if (da && db) return db.localeCompare(da);
       if (da) return -1;
       if (db) return 1;
@@ -171,7 +179,6 @@ export default function ModalLancamentos({ isOpen, onClose }) {
         {/* Formulário */}
         <form onSubmit={handleSalvar} className="flex flex-col gap-4">
           <div className="flex gap-3 overflow-x-auto pb-2">
-
             <div className="flex flex-col flex-[0_0_130px]">
               <label className="text-[11px] text-slate-300 mb-1">
                 Ativo (ticker)
@@ -282,7 +289,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
               <tbody>
                 {lancOrdenados.map((l, idx) => {
                   const qtd = toNum(l.qtd);
-                  const preco = toNum(l.preco);
+                  const preco = toNum(l.price); // coluna 'price' da tabela
                   const valor = qtd * preco;
 
                   return (
@@ -295,7 +302,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
                       </td>
 
                       <td className="px-3 py-1.5 text-slate-100">
-                        {formatDateBR(l.data_entrada)}
+                        {formatDateBR(l.purchase_date)}
                       </td>
 
                       <td className="px-1 py-1.5 text-center">
@@ -308,11 +315,11 @@ export default function ModalLancamentos({ isOpen, onClose }) {
                       </td>
 
                       <td className="px-3 py-1.5 text-slate-100">
-                        {l.ticker}
+                        {l.asset_name}
                       </td>
 
                       <td className="px-3 py-1.5 text-slate-200">
-                        {l.tipo}
+                        {l.category}
                       </td>
 
                       <td className="px-3 py-1.5 text-right text-slate-100">
