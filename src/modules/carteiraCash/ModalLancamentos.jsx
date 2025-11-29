@@ -57,7 +57,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
         .from("wallet_items")
         .select("*")
         .eq("user_id", user.id)
-        .order("dataEntrada", { ascending: false });
+        .order("data_entrada", { ascending: false });
 
       if (!error) setLancamentos(data || []);
     }
@@ -74,7 +74,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
   }
 
   // ================================
-  // 4) Salvar no Supabase
+  // 4) Salvar no Supabase (CORRIGIDO)
   // ================================
   async function handleSalvar(e) {
     e.preventDefault();
@@ -82,11 +82,13 @@ export default function ModalLancamentos({ isOpen, onClose }) {
 
     const payload = {
       user_id: user.id,
-      asset_name: novo.ticker?.toUpperCase(),
-      category: novo.tipo || null,
+      ticker: novo.ticker?.toUpperCase(),
+      tipo: novo.tipo || null,
       qtd: toNum(novo.qtd),
-      price: toNum(novo.preco),
-      purchase_date: novo.dataEntrada || null,
+      preco: toNum(novo.preco),
+      data_entrada: novo.dataEntrada || null,
+      valor: toNum(novo.qtd) * toNum(novo.preco),
+      nome: novo.ticker?.toUpperCase(), // opcional, compatível com sua tabela
     };
 
     const { error } = await supabase.from("wallet_items").insert(payload);
@@ -102,7 +104,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
       .from("wallet_items")
       .select("*")
       .eq("user_id", user.id)
-      .order("dataEntrada", { ascending: false });
+      .order("data_entrada", { ascending: false });
 
     setLancamentos(data || []);
 
@@ -117,7 +119,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
   }
 
   // ================================
-  // 5) Excluir lançamento
+  // 5) Excluir lançamento (OK)
   // ================================
   async function handleDelete(id) {
     const { error } = await supabase
@@ -136,13 +138,13 @@ export default function ModalLancamentos({ isOpen, onClose }) {
   }
 
   // ================================
-  // 6) Ordenação local
+  // 6) Ordenação local (CORRIGIDO)
   // ================================
   const lancOrdenados = useMemo(() => {
     const arr = [...(lancamentos || [])];
     return arr.sort((a, b) => {
-      const da = a.purchase_date || "";
-      const db = b.purchase_date || "";
+      const da = a.data_entrada || "";
+      const db = b.data_entrada || "";
       if (da && db) return db.localeCompare(da);
       if (da) return -1;
       if (db) return 1;
@@ -293,7 +295,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
                       </td>
 
                       <td className="px-3 py-1.5 text-slate-100">
-                        {formatDateBR(l.purchase_date)}
+                        {formatDateBR(l.data_entrada)}
                       </td>
 
                       <td className="px-1 py-1.5 text-center">
@@ -306,11 +308,11 @@ export default function ModalLancamentos({ isOpen, onClose }) {
                       </td>
 
                       <td className="px-3 py-1.5 text-slate-100">
-                        {l.asset_name}
+                        {l.ticker}
                       </td>
 
                       <td className="px-3 py-1.5 text-slate-200">
-                        {l.category}
+                        {l.tipo}
                       </td>
 
                       <td className="px-3 py-1.5 text-right text-slate-100">
