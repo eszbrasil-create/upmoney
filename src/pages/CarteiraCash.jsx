@@ -157,7 +157,8 @@ export default function CarteiraCash() {
       const key = `${ticker}__${tipo}`;
 
       const qtd = toNum(row.qtd);
-      const preco = toNum(row.preco);
+      // 🔴 AJUSTE IMPORTANTE: usar "price" (coluna real da tabela)
+      const preco = toNum(row.price); // <--- aqui antes estava row.preco
       const valor = qtd * preco;
       const dataEntrada = row.data_entrada || "";
 
@@ -973,7 +974,7 @@ export default function CarteiraCash() {
           </button>
 
           <span className="text-[11px] text-slate-400">
-            As colunas principais são preenchidas automaticamente pelos
+            As colunas principales são preenchidas automaticamente pelos
             lançamentos (Supabase). Edite apenas os DYs, se desejar (janela de 24
             meses a partir de Dez/2025).
           </span>
