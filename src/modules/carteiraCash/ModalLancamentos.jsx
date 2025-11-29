@@ -273,7 +273,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
               </label>
               <button
                 type="submit"
-                className="w-[150px] px-3 py-2 rounded-xl bg-emerald-500 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
+                className="px-2 py-2 flex-shrink-0 rounded-xl bg-emerald-500 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
               >
                 Salvar lançamento
               </button>
