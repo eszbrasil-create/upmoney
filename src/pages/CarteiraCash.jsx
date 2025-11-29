@@ -158,7 +158,7 @@ export default function CarteiraCash() {
 
       const qtd = toNum(row.qtd);
       // 🔴 AJUSTE IMPORTANTE: usar "price" (coluna real da tabela)
-      const preco = toNum(row.price); // <--- aqui antes estava row.preco
+      const preco = toNum(row.price ?? row.preco); // <--- aqui antes estava row.preco
       const valor = qtd * preco;
       const dataEntrada = row.data_entrada || "";
 
