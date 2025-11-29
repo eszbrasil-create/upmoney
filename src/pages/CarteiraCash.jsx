@@ -149,16 +149,17 @@ export default function CarteiraCash() {
     const grupos = new Map(); // key = `${ticker}__${tipo}`
 
     data.forEach((row) => {
-      const ticker = (row.asset_name || "").toUpperCase();
+      // 🔹 Agora batendo com as colunas reais da tabela
+      const ticker = (row.ticker || "").toUpperCase();
       if (!ticker) return;
 
-      const tipo = row.category || "ACOES";
+      const tipo = row.tipo || "ACOES";
       const key = `${ticker}__${tipo}`;
 
       const qtd = toNum(row.qtd);
       const preco = toNum(row.preco);
       const valor = qtd * preco;
-      const dataEntrada = row_data_entrada || "";
+      const dataEntrada = row.data_entrada || "";
 
       const atual = grupos.get(key) || {
         ticker,
@@ -895,7 +896,7 @@ export default function CarteiraCash() {
                               w-full rounded-xl
                               bg-emerald-500/90
                               hover:bg-emerald-400
-                              transition-all duração-700 ease-out
+                              transition-all duration-700 ease-out
                               hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
                             "
                             style={{ height: `${altura}px` }}
