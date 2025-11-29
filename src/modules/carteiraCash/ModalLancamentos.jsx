@@ -181,7 +181,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
-      <div className="w-[80vw] h-[90vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 flex flex-col overflow-hidden">
+      <div className="w-[75vw] h-[90vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-slate-100 font-semibold text-lg">
