@@ -67,40 +67,6 @@ function formatDateBR(iso) {
   return `${d}/${m}/${y}`;
 }
 
-/**
- * Junta os dados da carteira (Supabase) com setor, valorAtual e DY por mês do CSV (dyBase)
- */
-function enrichCarteiraWithDy(rows, dyBase) {
-  if (!Array.isArray(rows) || !Array.isArray(dyBase) || dyBase.length === 0) {
-    return rows;
-  }
-
-  return rows.map((row) => {
-    const t = (row.ticker || "").toUpperCase();
-    if (!t) return row;
-
-    const fromCsv = dyBase.find((item) => item.ticker === t);
-    if (!fromCsv) return row;
-
-    const dyMesesCsvRaw = Array.isArray(fromCsv.dyMeses)
-      ? [
-          ...fromCsv.dyMeses,
-          ...Array(DY_MONTHS.length - fromCsv.dyMeses.length).fill(0),
-        ].slice(0, DY_MONTHS.length)
-      : Array(DY_MONTHS.length).fill(0);
-
-    return {
-      ...row,
-      nome: fromCsv.setor || fromCsv.nome || row.nome,
-      valorAtual:
-        fromCsv.valorAtual != null && fromCsv.valorAtual !== 0
-          ? String(fromCsv.valorAtual)
-          : row.valorAtual,
-      dyMeses: dyMesesCsvRaw,
-    };
-  });
-}
-
 /* ===========================
    Helpers donut estilo Dash
 =========================== */
@@ -183,6 +149,7 @@ export default function CarteiraCash() {
     const grupos = new Map(); // key = `${ticker}__${tipo}`
 
     data.forEach((row) => {
+      // 🔹 Agora batendo com as colunas reais da tabela
       const ticker = (row.ticker || "").toUpperCase();
       if (!ticker) return;
 
@@ -190,7 +157,8 @@ export default function CarteiraCash() {
       const key = `${ticker}__${tipo}`;
 
       const qtd = toNum(row.qtd);
-      const preco = toNum(row.price ?? row.preco);
+      // 🔴 AJUSTE IMPORTANTE: usar "price" (coluna real da tabela)
+      const preco = toNum(row.price ?? row.preco); // <--- aqui antes estava row.preco
       const valor = qtd * preco;
       const dataEntrada = row.data_entrada || "";
 
@@ -215,7 +183,7 @@ export default function CarteiraCash() {
       grupos.set(key, atual);
     });
 
-    const linhasBase = Array.from(grupos.values()).map((g, idx) => {
+    const linhas = Array.from(grupos.values()).map((g, idx) => {
       const precoMedio = g.somaQtd > 0 ? g.somaValor / g.somaQtd : 0;
 
       return {
@@ -232,17 +200,14 @@ export default function CarteiraCash() {
       };
     });
 
-    // 🔗 Enriquecimento com CSV (setor, valorAtual oficial, DY meses)
-    const linhasComDy = enrichCarteiraWithDy(linhasBase, dyBase);
-
-    setCarteira(linhasComDy);
+    setCarteira(linhas);
   };
 
   // Carrega quando tiver usuário
   useEffect(() => {
     if (!user) return;
     loadCarteiraFromSupabase(user);
-  }, [user, dyBase]); // se CSV mudar, recarrega carteira com DY atualizado
+  }, [user]);
 
   // Recarrega quando fechar o modal (após salvar/excluir lá dentro)
   useEffect(() => {
@@ -250,19 +215,61 @@ export default function CarteiraCash() {
     if (!isAddModalOpen) {
       loadCarteiraFromSupabase(user);
     }
-  }, [isAddModalOpen, user, dyBase]);
+  }, [isAddModalOpen, user]);
 
   // 👀 Log para debug (opcional)
   useEffect(() => {
     console.log("Base DY carregada:", { dyBase, dyBaseLoading, dyBaseError });
   }, [dyBase, dyBaseLoading, dyBaseError]);
 
-  // Integra DY + setor + valorAtual a partir do CSV (quando CSV terminar de carregar)
+  const handleSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        return {
+          key,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return { key, direction: "desc" };
+    });
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return "↕";
+    return sortConfig.direction === "asc" ? "▲" : "▼";
+  };
+
+  // Integra DY + setor + valorAtual a partir do CSV (dyBase)
   useEffect(() => {
     if (dyBaseLoading || dyBaseError) return;
     if (!dyBase || dyBase.length === 0) return;
 
-    setCarteira((prev) => enrichCarteiraWithDy(prev, dyBase));
+    setCarteira((prev) =>
+      prev.map((row) => {
+        const t = (row.ticker || "").toUpperCase();
+        if (!t) return row;
+
+        const fromCsv = dyBase.find((item) => item.ticker === t);
+        if (!fromCsv) return row;
+
+        const dyMesesCsvRaw = Array.isArray(fromCsv.dyMeses)
+          ? [
+              ...fromCsv.dyMeses,
+              ...Array(DY_MONTHS.length - fromCsv.dyMeses.length).fill(0),
+            ].slice(0, DY_MONTHS.length)
+          : Array(DY_MONTHS.length).fill(0);
+
+        return {
+          ...row,
+          nome: fromCsv.setor || fromCsv.nome || row.nome,
+          valorAtual:
+            fromCsv.valorAtual != null && fromCsv.valorAtual !== 0
+              ? String(fromCsv.valorAtual)
+              : row.valorAtual,
+          dyMeses: dyMesesCsvRaw,
+        };
+      })
+    );
   }, [dyBase, dyBaseLoading, dyBaseError]);
 
   // Atualiza apenas campos editáveis da carteira (DYs)
@@ -406,7 +413,7 @@ export default function CarteiraCash() {
         currency: "BRL",
         maximumFractionDigits: 0,
       }),
-        line2: `${it.pct.toFixed(1)}%`,
+      line2: `${it.pct.toFixed(1)}%`,
     };
   }, [idxShownAtivo, piePartsAtivos, totalGeral]);
 
@@ -568,7 +575,7 @@ export default function CarteiraCash() {
               className={`
                 w-full rounded-2xl bg-slate-950/95 px-3 pt-2 pb-2
                 flex flex-col gap-2
-                transition-all duração-300
+                transition-all duration-300
                 ${openCarteiras ? "pb-3" : ""}
               `}
             >
@@ -967,7 +974,7 @@ export default function CarteiraCash() {
           </button>
 
           <span className="text-[11px] text-slate-400">
-            As colunas principais são preenchidas automaticamente pelos
+            As colunas principales são preenchidas automaticamente pelos
             lançamentos (Supabase). Edite apenas os DYs, se desejar (janela de 24
             meses a partir de Dez/2025).
           </span>
@@ -1254,4 +1261,4 @@ export default function CarteiraCash() {
       />
     </div>
   );
-}
+} 
