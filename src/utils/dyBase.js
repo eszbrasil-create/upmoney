@@ -82,24 +82,73 @@ export function useDyBase() {
         const text = await res.text();
         if (cancelled) return;
 
-        const lines = text
-          .split(/\r?\n/)
-          .map((l) => l.trim())
-          .filter((l) => l.length > 0);
-
-        if (lines.length < 2) {
+        const raw = text.trim();
+        if (!raw) {
           setDyBase([]);
           setDyBaseLoading(false);
           return;
         }
 
-        // Detecta automaticamente se o separador é ";" ou ","
-        const firstLine = lines[0];
+        // Detecta separador ";" ou ","
         const SEP =
-          firstLine.includes(";") && !firstLine.includes(",") ? ";" : ",";
+          raw.includes(";") && !raw.includes(",") ? ";" : ",";
 
-        const header = firstLine.split(SEP).map((h) => h.trim());
+        let header = [];
+        let rowStrings = [];
 
+        // Caso normal: arquivo com múltiplas linhas
+        if (raw.includes("\n")) {
+          const lines = raw
+            .split(/\r?\n/)
+            .map((l) => l.trim())
+            .filter((l) => l.length > 0);
+
+          if (lines.length < 2) {
+            setDyBase([]);
+            setDyBaseLoading(false);
+            return;
+          }
+
+          header = lines[0].split(SEP).map((h) => h.trim());
+          rowStrings = lines.slice(1).map((line) =>
+            line.split(SEP).map((c) => c.trim())
+          );
+        } else {
+          /**
+           * Caso especial: tudo em UMA linha só (como está hoje no GitHub)
+           * Estratégia:
+           *  - separamos tudo por SEP em um array de tokens
+           *  - os primeiros N tokens são o cabeçalho
+           *  - o resto é dividido em blocos de N tokens (linhas de dados)
+           */
+          const tokens = raw.split(SEP).map((c) => c.trim());
+
+          // 4 colunas fixas + 24 meses (DY_MONTH_KEYS)
+          const expectedCols = 4 + DY_MONTH_KEYS.length;
+
+          if (tokens.length <= expectedCols) {
+            // não tem dados além do cabeçalho
+            setDyBase([]);
+            setDyBaseLoading(false);
+            return;
+          }
+
+          header = tokens.slice(0, expectedCols);
+
+          const dataTokens = tokens.slice(expectedCols);
+          const rows = [];
+          for (let i = 0; i < dataTokens.length; i += expectedCols) {
+            const slice = dataTokens.slice(i, i + expectedCols);
+            // ignora "linhas" completamente vazias
+            const hasContent = slice.some((c) => c !== "");
+            if (!hasContent) continue;
+            rows.push(slice);
+          }
+
+          rowStrings = rows;
+        }
+
+        // Índices das colunas importantes
         const idxTicker = header.indexOf("ticker");
         const idxNome = header.indexOf("nome");
         const idxSetor = header.indexOf("setor");
@@ -109,12 +158,11 @@ export function useDyBase() {
           header.indexOf(key)
         );
 
-        const rows = lines.slice(1).map((line) => {
-          const cols = line
-            .split(SEP)
-            .map((c) => c.trim());
+        const rowsParsed = rowStrings.map((cols) => {
+          const ticker = idxTicker >= 0
+            ? (cols[idxTicker] || "").toUpperCase().trim()
+            : "";
 
-          const ticker = (cols[idxTicker] || "").toUpperCase().trim();
           const nome = idxNome >= 0 ? (cols[idxNome] || "").trim() : "";
           const setor = idxSetor >= 0 ? (cols[idxSetor] || "").trim() : "";
           const valorAtual =
@@ -135,8 +183,8 @@ export function useDyBase() {
         });
 
         if (!cancelled) {
-          setDyBase(rows);
-          console.log("[useDyBase] Base DY carregada:", rows);
+          setDyBase(rowsParsed);
+          console.log("[useDyBase] Base DY carregada:", rowsParsed);
         }
       } catch (err) {
         console.error("[useDyBase] Erro ao carregar base DY:", err);
