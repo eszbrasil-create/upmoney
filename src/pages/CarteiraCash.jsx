@@ -9,6 +9,7 @@ import React, {
 import ModalLancamentos from "../modules/carteiraCash/ModalLancamentos.jsx";
 import { useDyBase } from "../utils/dyBase";
 import { supabase } from "../lib/supabaseClient";
+import { mergeDyBaseIntoCarteira } from "../utils/mergeDyBase";
 
 const PIE_COLORS = {
   RF: "#22c55e",
@@ -101,6 +102,12 @@ export default function CarteiraCash() {
   // 📊 Carteira agregada vinda da Supabase
   const [carteira, setCarteira] = useState([]);
 
+  // 📊 Carteira combinada com a base DY (GitHub)
+  const carteiraComDy = useMemo(
+    () => mergeDyBaseIntoCarteira(carteira, dyBase, DY_MONTHS),
+    [carteira, dyBase]
+  );
+
   // Balão "Sugestões UpMoney"
   const [openCarteiras, setOpenCarteiras] = useState(false);
 
@@ -149,7 +156,6 @@ export default function CarteiraCash() {
     const grupos = new Map(); // key = `${ticker}__${tipo}`
 
     data.forEach((row) => {
-      // 🔹 Agora batendo com as colunas reais da tabela
       const ticker = (row.ticker || "").toUpperCase();
       if (!ticker) return;
 
@@ -157,8 +163,7 @@ export default function CarteiraCash() {
       const key = `${ticker}__${tipo}`;
 
       const qtd = toNum(row.qtd);
-      // 🔴 AJUSTE IMPORTANTE: usar "price" (coluna real da tabela)
-      const preco = toNum(row.price ?? row.preco); // <--- aqui antes estava row.preco
+      const preco = toNum(row.price ?? row.preco);
       const valor = qtd * preco;
       const dataEntrada = row.data_entrada || "";
 
@@ -239,39 +244,6 @@ export default function CarteiraCash() {
     return sortConfig.direction === "asc" ? "▲" : "▼";
   };
 
-  // Integra DY + setor + valorAtual a partir do CSV (dyBase)
-  useEffect(() => {
-    if (dyBaseLoading || dyBaseError) return;
-    if (!dyBase || dyBase.length === 0) return;
-
-    setCarteira((prev) =>
-      prev.map((row) => {
-        const t = (row.ticker || "").toUpperCase();
-        if (!t) return row;
-
-        const fromCsv = dyBase.find((item) => item.ticker === t);
-        if (!fromCsv) return row;
-
-        const dyMesesCsvRaw = Array.isArray(fromCsv.dyMeses)
-          ? [
-              ...fromCsv.dyMeses,
-              ...Array(DY_MONTHS.length - fromCsv.dyMeses.length).fill(0),
-            ].slice(0, DY_MONTHS.length)
-          : Array(DY_MONTHS.length).fill(0);
-
-        return {
-          ...row,
-          nome: fromCsv.setor || fromCsv.nome || row.nome,
-          valorAtual:
-            fromCsv.valorAtual != null && fromCsv.valorAtual !== 0
-              ? String(fromCsv.valorAtual)
-              : row.valorAtual,
-          dyMeses: dyMesesCsvRaw,
-        };
-      })
-    );
-  }, [dyBase, dyBaseLoading, dyBaseError]);
-
   // Atualiza apenas campos editáveis da carteira (DYs)
   const updateRow = (id, patch) => {
     setCarteira((prev) =>
@@ -289,7 +261,7 @@ export default function CarteiraCash() {
     const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
     const dyMesTotal = Array(DY_MONTHS.length).fill(0);
 
-    carteira.forEach((r) => {
+    carteiraComDy.forEach((r) => {
       const qtd = toNum(r.qtd);
       const entrada = toNum(r.entrada);
       const valorAtual = toNum(r.valorAtual) || entrada;
@@ -349,7 +321,7 @@ export default function CarteiraCash() {
     }));
 
     return { totalGeral: total, piePartsAtivos, piePartsTipos, dyBarData };
-  }, [carteira]);
+  }, [carteiraComDy]);
 
   /* ===========================
      Donuts (sem legenda)
@@ -509,7 +481,7 @@ export default function CarteiraCash() {
 
   // ====== Ordenação da carteira (tabela principal) ======
   const sortedCarteira = useMemo(() => {
-    const arr = [...carteira];
+    const arr = [...carteiraComDy];
 
     if (!sortConfig.key) return arr;
 
@@ -563,7 +535,7 @@ export default function CarteiraCash() {
       }
       return valB - valA;
     });
-  }, [carteira, sortConfig, totalGeral]);
+  }, [carteiraComDy, sortConfig, totalGeral]);
 
   return (
     <div className="pt-0 pr-3 pl-0 relative">
@@ -897,7 +869,7 @@ export default function CarteiraCash() {
                               w-full rounded-xl
                               bg-emerald-500/90
                               hover:bg-emerald-400
-                              transition-all duration-700 ease-out
+                              transition-all duração-700 ease-out
                               hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
                             "
                             style={{ height: `${altura}px` }}
@@ -1261,4 +1233,4 @@ export default function CarteiraCash() {
       />
     </div>
   );
-} 
+}
