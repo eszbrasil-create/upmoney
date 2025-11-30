@@ -25,8 +25,8 @@ import Cursos from "./pages/Cursos";
 import Noticias from "./pages/Noticias";
 import CashControlHome from "./pages/CashControlHome";
 
-// página de login (full-screen)
-import Login from "./pages/Login";
+// 🔐 página de login
+import Login from "./pages/Login.jsx";
 
 // ---- Mapa dos meses
 const MES_IDX = {
@@ -62,7 +62,9 @@ function DashboardMain({ registrosPorMes = {}, onDeleteMonth }) {
   const { rows } = useMemo(() => {
     const allAssets = new Set();
     for (const mes of columns) {
-      (registrosPorMes[mes] || []).forEach((item) => allAssets.add(item.nome));
+      (registrosPorMes[mes] || []).forEach((item) =>
+        allAssets.add(item.nome)
+      );
     }
     const assetsSorted = Array.from(allAssets).sort((a, b) =>
       a.localeCompare(b, "pt-BR")
@@ -147,23 +149,9 @@ function Mercado() {
   );
 }
 
-// ------------------ Função para escolher a view inicial ------------------
-function getInitialView() {
-  const path = window.location.pathname;
-
-  // rota direta para login
-  if (path === "/login") return "login";
-
-  // aqui você pode no futuro mapear outras rotas, ex:
-  // if (path === "/app") return "dashboard";
-
-  // padrão: landing
-  return "landing";
-}
-
 // ------------------ App ------------------
 export default function App() {
-  const [view, setView] = useState(getInitialView);
+  const [view, setView] = useState("landing");
 
   const SCREEN = {
     // FULL-SCREEN (sem sidebar)
@@ -173,7 +161,6 @@ export default function App() {
     cursos: <Cursos onNavigate={setView} />,
     noticias: <Noticias onNavigate={setView} />,
     "cashcontrol-home": <CashControlHome onNavigate={setView} />,
-    login: <Login />,
 
     // PAINEL COM SIDEBAR
     dashboard: <DashboardMain />,
@@ -182,6 +169,9 @@ export default function App() {
     despesas: <Despesas />,
     relatorios: <Relatorios />,
     mercado: <Mercado />,
+
+    // Tela de login
+    login: <Login />,
   };
 
   const FULLSCREEN_VIEWS = [
@@ -191,7 +181,7 @@ export default function App() {
     "cursos",
     "noticias",
     "cashcontrol-home",
-    "login",
+    "login", // login também é full-screen
   ];
 
   if (FULLSCREEN_VIEWS.includes(view)) {
