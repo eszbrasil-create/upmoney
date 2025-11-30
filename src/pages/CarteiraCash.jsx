@@ -261,7 +261,7 @@ export default function CarteiraCash() {
     let total = 0;
 
     const somaPorAtivo = {};
-    the const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
+    const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
     const dyMesTotal = Array(DY_MONTHS.length).fill(0);
 
     carteiraComDy.forEach((r) => {
