@@ -476,6 +476,7 @@ export default function CarteiraCash() {
   const handleModeloClick = (tipo) => {
     // Fase 1: só seleciona o modelo e exibe texto + exemplos
     setSelectedModelo(tipo);
+    setOpenCarteiras(true);
   };
 
   // Abrir modal de lançamentos
@@ -487,9 +488,17 @@ export default function CarteiraCash() {
   const renderModeloInfo = () => {
     if (!selectedModelo) return null;
 
+    const handleLeave = () => {
+      setSelectedModelo(null);
+      setOpenCarteiras(false);
+    };
+
     if (selectedModelo === "dividendos") {
       return (
-        <div className="mb-3 rounded-xl border border-emerald-500/40 bg-slate-900/80 shadow-lg p-4">
+        <div
+          className="mb-3 rounded-xl border border-emerald-500/40 bg-slate-900/80 shadow-lg p-4"
+          onMouseLeave={handleLeave}
+        >
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-semibold text-emerald-300">
@@ -548,34 +557,37 @@ export default function CarteiraCash() {
                 </div>
               </div>
 
-              <div>
-                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
-                  Exemplos de FIIs de renda
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-amber-200 text-[11px] border border-amber-400/40">
-                    HGLG11 — Logística
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[11px] border border-slate-600/70">
-                    (ex.: MXRF11, KNRI11, VISC11…)
-                  </span>
-                </div>
+            <div>
+              <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
+                Exemplos de FIIs de renda
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-amber-200 text-[11px] border border-amber-400/40">
+                  HGLG11 — Logística
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[11px] border border-slate-600/70">
+                  (ex.: MXRF11, KNRI11, VISC11…)
+                </span>
               </div>
             </div>
-
-            <p className="mt-2 text-[11px] text-slate-400">
-              Esta visão é apenas educacional e não constitui recomendação de
-              compra ou venda de ativos. Use como referência para estudar e
-              adaptar à sua realidade.
-            </p>
           </div>
+
+          <p className="mt-2 text-[11px] text-slate-400">
+            Esta visão é apenas educacional e não constitui recomendação de
+            compra ou venda de ativos. Use como referência para estudar e
+            adaptar à sua realidade.
+          </p>
         </div>
+      </div>
       );
     }
 
     if (selectedModelo === "cripto") {
       return (
-        <div className="mb-3 rounded-xl border border-fuchsia-500/40 bg-slate-900/80 shadow-lg p-4">
+        <div
+          className="mb-3 rounded-xl border border-fuchsia-500/40 bg-slate-900/80 shadow-lg p-4"
+          onMouseLeave={handleLeave}
+        >
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-semibold text-fuchsia-300">
@@ -660,7 +672,10 @@ export default function CarteiraCash() {
 
     if (selectedModelo === "fiis") {
       return (
-        <div className="mb-3 rounded-xl border border-amber-500/40 bg-slate-900/80 shadow-lg p-4">
+        <div
+          className="mb-3 rounded-xl border border-amber-500/40 bg-slate-900/80 shadow-lg p-4"
+          onMouseLeave={handleLeave}
+        >
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-semibold text-amber-300">
@@ -1133,7 +1148,7 @@ export default function CarteiraCash() {
                               w-full rounded-xl
                               bg-emerald-500/90
                               hover:bg-emerald-400
-                              transition-all duration-700 ease-out
+                              transition-all duração-700 ease-out
                               hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
                             "
                             style={{ height: `${altura}px` }}
