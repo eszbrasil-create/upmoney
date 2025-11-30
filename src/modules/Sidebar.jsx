@@ -27,7 +27,6 @@ export default function Sidebar({
 
       {/* Menu Superior */}
       <nav className="flex flex-col gap-3 text-base font-medium tracking-wide">
-        {/* Sair → volta para a homepage */}
         <button
           onClick={() => {
             window.location.href = "/";
@@ -38,7 +37,6 @@ export default function Sidebar({
           <span>Sair</span>
         </button>
 
-        {/* Editar Ativos */}
         <button
           onClick={onEditAtivos}
           className="flex flex-col items-center gap-1 hover:text-purple-400 transition"
@@ -47,7 +45,6 @@ export default function Sidebar({
           <span>Editar Ativos</span>
         </button>
 
-        {/* Zerar Tudo */}
         <button
           onClick={onResetAll}
           className="flex flex-col items-center gap-1 hover:text-red-400 transition"
@@ -61,13 +58,12 @@ export default function Sidebar({
 
       {/* Menu Inferior */}
       <nav className="flex flex-col gap-3 text-base font-medium tracking-wide">
+
         {/* Dash */}
         <button
           onClick={() => onNavigate("dashboard")}
-          className={`flex flex-col items-center gap-1 text-slate-100 transition px-2 py-1 rounded-xl hover:text-yellow-400 ${
-            currentView === "dashboard"
-              ? "text-yellow-400 font-semibold bg-slate-800"
-              : ""
+          className={`flex flex-col items-center gap-1 transition hover:text-yellow-400 ${
+            currentView === "dashboard" ? "text-yellow-400" : "text-slate-100"
           }`}
         >
           <Home size={36} strokeWidth={2} />
@@ -77,23 +73,23 @@ export default function Sidebar({
         {/* Cursos */}
         <button
           onClick={() => onNavigate("cursos-dashboard")}
-          className={`flex flex-col items-center gap-1 text-slate-100 transition px-2 py-1 rounded-xl hover:text-emerald-400 ${
+          className={`flex flex-col items-center gap-1 transition hover:text-emerald-400 ${
             currentView === "cursos-dashboard"
-              ? "text-emerald-400 font-semibold bg-slate-800"
-              : ""
+              ? "text-emerald-400"
+              : "text-slate-100"
           }`}
         >
           <GraduationCap size={36} strokeWidth={2} />
           <span>Cursos</span>
         </button>
 
-        {/* Carteira Cash */}
+        {/* Carteira */}
         <button
           onClick={() => onNavigate("carteira")}
-          className={`flex flex-col items-center gap-1 text-slate-100 transition px-2 py-1 rounded-xl hover:text-orange-500 ${
+          className={`flex flex-col items-center gap-1 transition hover:text-orange-500 ${
             currentView === "carteira"
-              ? "text-orange-500 font-semibold bg-slate-800"
-              : ""
+              ? "text-orange-500"
+              : "text-slate-100"
           }`}
         >
           <DollarSign size={36} strokeWidth={2} />
@@ -103,10 +99,10 @@ export default function Sidebar({
         {/* Despesas */}
         <button
           onClick={() => onNavigate("despesas")}
-          className={`flex flex-col items-center gap-1 text-slate-100 transition px-2 py-1 rounded-xl hover:text-red-400 ${
+          className={`flex flex-col items-center gap-1 transition hover:text-red-400 ${
             currentView === "despesas"
-              ? "text-red-400 font-semibold bg-slate-800"
-              : ""
+              ? "text-red-400"
+              : "text-slate-100"
           }`}
         >
           <Wallet size={36} strokeWidth={2} />
@@ -116,10 +112,10 @@ export default function Sidebar({
         {/* Relatórios */}
         <button
           onClick={() => onNavigate("relatorios")}
-          className={`flex flex-col items-center gap-1 text-slate-100 transition px-2 py-1 rounded-xl hover:text-pink-400 ${
+          className={`flex flex-col items-center gap-1 transition hover:text-pink-400 ${
             currentView === "relatorios"
-              ? "text-pink-400 font-semibold bg-slate-800"
-              : ""
+              ? "text-pink-400"
+              : "text-slate-100"
           }`}
         >
           <BarChart3 size={36} strokeWidth={2} />
