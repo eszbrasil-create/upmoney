@@ -111,6 +111,9 @@ export default function CarteiraCash() {
   // Balão "Sugestões UpMoney"
   const [openCarteiras, setOpenCarteiras] = useState(false);
 
+  // Modelo selecionado (Fase 1 – texto + exemplos)
+  const [selectedModelo, setSelectedModelo] = useState(null); // "dividendos" | "cripto" | "fiis" | null
+
   // Modal "Adicionar ativos"
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -258,7 +261,7 @@ export default function CarteiraCash() {
     let total = 0;
 
     const somaPorAtivo = {};
-    const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
+    the const somaPorTipo = { RF: 0, ACOES: 0, FII: 0 };
     const dyMesTotal = Array(DY_MONTHS.length).fill(0);
 
     carteiraComDy.forEach((r) => {
@@ -471,12 +474,270 @@ export default function CarteiraCash() {
   }, []);
 
   const handleModeloClick = (tipo) => {
-    console.log("Modelo selecionado:", tipo);
+    // Fase 1: só seleciona o modelo e exibe texto + exemplos
+    setSelectedModelo(tipo);
   };
 
   // Abrir modal de lançamentos
   const handleOpenAdd = () => {
     setIsAddModalOpen(true);
+  };
+
+  // ====== Conteúdo informativo dos modelos (Fase 1) ======
+  const renderModeloInfo = () => {
+    if (!selectedModelo) return null;
+
+    if (selectedModelo === "dividendos") {
+      return (
+        <div className="mb-3 rounded-xl border border-emerald-500/40 bg-slate-900/80 shadow-lg p-4">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-emerald-300">
+                Carteira de Dividendos (renda recorrente)
+              </h3>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-200 border border-emerald-500/30">
+                Modelo educacional
+              </span>
+            </div>
+
+            <p className="text-[12px] text-slate-200">
+              Foco em montar uma carteira que gere fluxo de caixa recorrente ao
+              longo do tempo, por meio de proventos (dividendos, JCP e
+              rendimentos mensais de FIIs).
+            </p>
+
+            <div className="grid gap-3 md:grid-cols-2 text-[12px]">
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide">
+                  Quando faz sentido
+                </div>
+                <ul className="list-disc list-inside text-slate-200/90 space-y-0.5">
+                  <li>Quando você quer construir renda no médio / longo prazo.</li>
+                  <li>Quando gosta da ideia de “proventos caindo na conta”.</li>
+                  <li>Quando aceita oscilações de preço em troca de renda.</li>
+                </ul>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide">
+                  Composição típica (exemplo)
+                </div>
+                <ul className="list-disc list-inside text-slate-200/90 space-y-0.5">
+                  <li>Ações de empresas maduras que pagam bons proventos.</li>
+                  <li>Fundos Imobiliários (FIIs) com renda mensal.</li>
+                  <li>Uma parte em renda fixa para estabilidade.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-2 grid gap-3 md:grid-cols-2 text-[12px]">
+              <div>
+                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
+                  Exemplos de ações pagadoras
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-emerald-200 text-[11px] border border-emerald-500/30">
+                    VALE3 — Mineração
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-emerald-200 text-[11px] border border-emerald-500/30">
+                    ITUB4 — Bancos
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[11px] border border-slate-600/70">
+                    (ex.: TAEE11, PETR4, etc.)
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
+                  Exemplos de FIIs de renda
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-amber-200 text-[11px] border border-amber-400/40">
+                    HGLG11 — Logística
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[11px] border border-slate-600/70">
+                    (ex.: MXRF11, KNRI11, VISC11…)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <p className="mt-2 text-[11px] text-slate-400">
+              Esta visão é apenas educacional e não constitui recomendação de
+              compra ou venda de ativos. Use como referência para estudar e
+              adaptar à sua realidade.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    if (selectedModelo === "cripto") {
+      return (
+        <div className="mb-3 rounded-xl border border-fuchsia-500/40 bg-slate-900/80 shadow-lg p-4">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-fuchsia-300">
+                Carteira de Criptomoedas (alto risco, alto potencial)
+              </h3>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-200 border border-fuchsia-500/30">
+                Modelo educacional
+              </span>
+            </div>
+
+            <p className="text-[12px] text-slate-200">
+              Foco em ativos digitais com alto potencial de valorização, mas
+              também com grande volatilidade e risco de perda de capital.
+            </p>
+
+            <div className="grid gap-3 md:grid-cols-2 text-[12px]">
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide">
+                  Quando faz sentido
+                </div>
+                <ul className="list-disc list-inside text-slate-200/90 space-y-0.5">
+                  <li>Perfil arrojado, que aceita grandes oscilações.</li>
+                  <li>Visão de longo prazo sobre tecnologia e cripto.</li>
+                  <li>Entendimento de que pode haver perdas relevantes.</li>
+                </ul>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide">
+                  Composição típica (exemplo)
+                </div>
+                <ul className="list-disc list-inside text-slate-200/90 space-y-0.5">
+                  <li>
+                    Maior peso em cripto mais consolidadas (Bitcoin, Ethereum).
+                  </li>
+                  <li>
+                    Parte menor em altcoins / projetos específicos.
+                  </li>
+                  <li>Opcionalmente, ETFs de cripto em bolsa regulada.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-2 grid gap-3 md:grid-cols-2 text-[12px]">
+              <div>
+                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
+                  Exemplos de criptoativos
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-fuchsia-200 text-[11px] border border-fuchsia-500/40">
+                    BTC — Bitcoin
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-fuchsia-200 text-[11px] border border-fuchsia-500/40">
+                    ETH — Ethereum
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[11px] border border-slate-600/70">
+                    (ex.: SOL, ETFs de cripto, etc.)
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
+                  Cuidados importantes
+                </div>
+                <ul className="list-disc list-inside text-slate-200/90 space-y-0.5">
+                  <li>Nunca concentrar 100% do patrimônio em cripto.</li>
+                  <li>Evitar alavancagem sem entender os riscos.</li>
+                  <li>Estudar bem a volatilidade antes de investir.</li>
+                </ul>
+              </div>
+            </div>
+
+            <p className="mt-2 text-[11px] text-slate-400">
+              Criptomoedas são ativos de alto risco. Este painel é apenas para
+              fins educacionais e não constitui recomendação de investimento.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    if (selectedModelo === "fiis") {
+      return (
+        <div className="mb-3 rounded-xl border border-amber-500/40 bg-slate-900/80 shadow-lg p-4">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-amber-300">
+                Carteira de Fundos Imobiliários (renda mensal)
+              </h3>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-amber-500/10 text-amber-100 border border-amber-500/40">
+                Modelo educacional
+              </span>
+            </div>
+
+            <p className="text-[12px] text-slate-200">
+              Foco em receber rendimentos mensais de fundos imobiliários (FIIs),
+              que investem em imóveis físicos ou em títulos ligados ao setor.
+            </p>
+
+            <div className="grid gap-3 md:grid-cols-2 text-[12px]">
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide">
+                  Quando faz sentido
+                </div>
+                <ul className="list-disc list-inside text-slate-200/90 space-y-0.5">
+                  <li>Quando você gosta da ideia de “renda de aluguel”.</li>
+                  <li>Quando quer renda mensal sem comprar um imóvel direto.</li>
+                  <li>Quando aceita oscilações das cotas na bolsa.</li>
+                </ul>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide">
+                  Composição típica (exemplo)
+                </div>
+                <ul className="list-disc list-inside text-slate-200/90 space-y-0.5">
+                  <li>FIIs de tijolo (shoppings, galpões, escritórios).</li>
+                  <li>FIIs de papel (CRI, recebíveis imobiliários).</li>
+                  <li>Eventualmente, fundos de fundos (FOFs) para diversificar.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-2 grid gap-3 md:grid-cols-2 text-[12px]">
+              <div>
+                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
+                  Exemplos de FIIs
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-amber-200 text-[11px] border border-amber-400/40">
+                    HGLG11 — Logística
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[11px] border border-slate-600/70">
+                    (ex.: MXRF11, KNRI11, VISC11…)
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
+                  Pontos de atenção
+                </div>
+                <ul className="list-disc list-inside text-slate-200/90 space-y-0.5">
+                  <li>Rendimentos podem variar mês a mês.</li>
+                  <li>Cotas sobem e descem como ações.</li>
+                  <li>Importante diversificar entre segmentos.</li>
+                </ul>
+              </div>
+            </div>
+
+            <p className="mt-2 text-[11px] text-slate-400">
+              Este modelo de carteira de FIIs é apenas uma referência
+              educacional. Não constitui recomendação de compra ou venda de
+              ativos.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   // ====== Ordenação da carteira (tabela principal) ======
@@ -659,6 +920,9 @@ export default function CarteiraCash() {
         {/* Espaço para não sobrepor os cards abaixo */}
         <div className="h-20" />
       </div>
+
+      {/* PAINEL INFORMATIVO DO MODELO SELECIONADO (FASE 1) */}
+      {renderModeloInfo()}
 
       {/* BALÃO: 2 donuts + 1 barra */}
       <div className="rounded-xl bg-slate-800/70 border border-white/10 shadow-lg p-4 mb-3">
@@ -869,7 +1133,7 @@ export default function CarteiraCash() {
                               w-full rounded-xl
                               bg-emerald-500/90
                               hover:bg-emerald-400
-                              transition-all duração-700 ease-out
+                              transition-all duration-700 ease-out
                               hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
                             "
                             style={{ height: `${altura}px` }}
