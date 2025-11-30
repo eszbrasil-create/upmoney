@@ -64,8 +64,10 @@ export default function Sidebar({
         {/* Dash */}
         <button
           onClick={() => onNavigate("dashboard")}
-          className={`flex flex-col items-center gap-1 text-slate-100 transition hover:text-yellow-400 ${
-            currentView === "dashboard" ? "text-yellow-400 font-semibold" : ""
+          className={`flex flex-col items-center gap-1 text-slate-100 transition px-2 py-1 rounded-xl hover:text-yellow-400 ${
+            currentView === "dashboard"
+              ? "text-yellow-400 font-semibold bg-slate-800"
+              : ""
           }`}
         >
           <Home size={36} strokeWidth={2} />
@@ -75,9 +77,9 @@ export default function Sidebar({
         {/* Cursos */}
         <button
           onClick={() => onNavigate("cursos-dashboard")}
-          className={`flex flex-col items-center gap-1 text-slate-100 transition hover:text-emerald-400 ${
+          className={`flex flex-col items-center gap-1 text-slate-100 transition px-2 py-1 rounded-xl hover:text-emerald-400 ${
             currentView === "cursos-dashboard"
-              ? "text-emerald-400 font-semibold"
+              ? "text-emerald-400 font-semibold bg-slate-800"
               : ""
           }`}
         >
@@ -88,8 +90,10 @@ export default function Sidebar({
         {/* Carteira Cash */}
         <button
           onClick={() => onNavigate("carteira")}
-          className={`flex flex-col items-center gap-1 text-slate-100 transition hover:text-orange-500 ${
-            currentView === "carteira" ? "text-orange-500 font-semibold" : ""
+          className={`flex flex-col items-center gap-1 text-slate-100 transition px-2 py-1 rounded-xl hover:text-orange-500 ${
+            currentView === "carteira"
+              ? "text-orange-500 font-semibold bg-slate-800"
+              : ""
           }`}
         >
           <DollarSign size={36} strokeWidth={2} />
@@ -99,8 +103,10 @@ export default function Sidebar({
         {/* Despesas */}
         <button
           onClick={() => onNavigate("despesas")}
-          className={`flex flex-col items-center gap-1 text-slate-100 transition hover:text-red-400 ${
-            currentView === "despesas" ? "text-red-400 font-semibold" : ""
+          className={`flex flex-col items-center gap-1 text-slate-100 transition px-2 py-1 rounded-xl hover:text-red-400 ${
+            currentView === "despesas"
+              ? "text-red-400 font-semibold bg-slate-800"
+              : ""
           }`}
         >
           <Wallet size={36} strokeWidth={2} />
@@ -110,8 +116,10 @@ export default function Sidebar({
         {/* Relatórios */}
         <button
           onClick={() => onNavigate("relatorios")}
-          className={`flex flex-col items-center gap-1 text-slate-100 transition hover:text-pink-400 ${
-            currentView === "relatorios" ? "text-pink-400 font-semibold" : ""
+          className={`flex flex-col items-center gap-1 text-slate-100 transition px-2 py-1 rounded-xl hover:text-pink-400 ${
+            currentView === "relatorios"
+              ? "text-pink-400 font-semibold bg-slate-800"
+              : ""
           }`}
         >
           <BarChart3 size={36} strokeWidth={2} />
