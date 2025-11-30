@@ -1,166 +1,144 @@
 // src/pages/Login.jsx
 import { useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { supabase } from "../supabaseClient";
 
-export default function Login() {
-  const [mode, setMode] = useState("login"); // "login" | "signup"
+export default function Login({ onNavigate }) {
+  const [mode, setMode] = useState("login"); // "login" ou "register"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    setMessage("");
+    setErrorMsg("");
 
     try {
       if (mode === "login") {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-
         if (error) throw error;
 
-        console.log("Login ok:", data);
-        setMessage("Login realizado com sucesso. Abra o painel para continuar.");
+        onNavigate("dashboard");
       } else {
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
         });
-
         if (error) throw error;
 
-        setMessage(
-          "Conta criada. Confira seu e-mail se a confirmação estiver ativada."
-        );
+        alert("Conta criada! Verifique seu e-mail.");
+        setMode("login");
       }
     } catch (err) {
-      console.error(err);
-      setError(err.message ?? "Erro ao autenticar.");
-    } finally {
-      setLoading(false);
+      setErrorMsg(err.message || "Erro ao autenticar.");
     }
+
+    setLoading(false);
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
-      <div className="w-full max-w-md">
-        <div className="mb-6 text-center">
-          <div className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1 mb-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 mr-2" />
-            <span className="text-[11px] tracking-wide uppercase text-slate-300">
-              upControl • acesso seguro
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold text-slate-50">Entrar no painel</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Use seu e-mail e senha para acessar sua carteira, despesas e cursos.
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+        {/* LOGO / NOME DO SISTEMA */}
+        <h1 className="text-3xl font-bold text-center text-[#1f3548] mb-6">
+          upmoney
+        </h1>
 
-        <div className="bg-slate-900/80 border border-slate-700/70 rounded-2xl p-5 shadow-xl">
-          {/* Alternância Login / Cadastro */}
-          <div className="flex mb-4 text-xs font-semibold text-slate-300 bg-slate-800 rounded-xl p-1">
-            <button
-              type="button"
-              onClick={() => {
-                setMode("login");
-                setError("");
-                setMessage("");
-              }}
-              className={`flex-1 rounded-lg py-1.5 transition ${
-                mode === "login"
-                  ? "bg-emerald-500 text-slate-950"
-                  : "bg-transparent hover:bg-slate-700/70"
-              }`}
-            >
-              Já tenho conta
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMode("signup");
-                setError("");
-                setMessage("");
-              }}
-              className={`flex-1 rounded-lg py-1.5 transition ${
-                mode === "signup"
-                  ? "bg-sky-500 text-slate-950"
-                  : "bg-transparent hover:bg-slate-700/70"
-              }`}
-            >
-              Criar conta
-            </button>
+        <h2 className="text-xl font-semibold text-center text-[#1f3548] mb-1">
+          {mode === "login" ? "Acessar conta" : "Criar conta"}
+        </h2>
+
+        <p className="text-center text-[#1f3548]/60 mb-6">
+          {mode === "login"
+            ? "Entre para acessar seu painel financeiro"
+            : "Crie sua conta para começar"}
+        </p>
+
+        {/* FORM */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {errorMsg && (
+            <div className="text-red-600 text-sm text-center">{errorMsg}</div>
+          )}
+
+          <div>
+            <label className="block text-[#1f3548] mb-1">E-mail</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+              placeholder="seu@email.com"
+            />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                E-mail
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
-                placeholder="voce@exemplo.com"
-              />
-            </div>
+          <div>
+            <label className="block text-[#1f3548] mb-1">Senha</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+              placeholder="••••••••"
+            />
+          </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Senha
-              </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500"
-                placeholder="••••••••"
-              />
-              <p className="mt-1 text-[11px] text-slate-500">
-                Mínimo 6 caracteres. Você poderá alterar depois.
-              </p>
-            </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white p-3 font-semibold transition disabled:opacity-60"
+          >
+            {loading
+              ? "Processando..."
+              : mode === "login"
+              ? "Entrar"
+              : "Criar conta"}
+          </button>
+        </form>
 
-            {error && (
-              <div className="rounded-lg bg-rose-500/10 border border-rose-500/50 px-3 py-2 text-[12px] text-rose-100">
-                {error}
-              </div>
-            )}
-
-            {message && (
-              <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/50 px-3 py-2 text-[12px] text-emerald-100">
-                {message}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-70 disabled:cursor-wait text-sm font-semibold text-slate-950 py-2.5 mt-1 transition"
-            >
-              {loading
-                ? "Processando..."
-                : mode === "login"
-                ? "Entrar"
-                : "Criar minha conta"}
-            </button>
-          </form>
-
-          <p className="mt-3 text-[10px] text-slate-500 text-center">
-            Ao continuar, você concorda em usar o upControl apenas para fins
-            educacionais. Nenhum conteúdo constitui recomendação de investimento.
-          </p>
+        {/* LINK ALTERAR MODO */}
+        <div className="text-center mt-4">
+          {mode === "login" ? (
+            <p className="text-sm text-[#1f3548]">
+              Ainda não tem conta?{" "}
+              <button
+                onClick={() => setMode("register")}
+                className="underline text-emerald-600"
+              >
+                Criar agora
+              </button>
+            </p>
+          ) : (
+            <p className="text-sm text-[#1f3548]">
+              Já tem conta?{" "}
+              <button
+                onClick={() => setMode("login")}
+                className="underline text-emerald-600"
+              >
+                Fazer login
+              </button>
+            </p>
+          )}
         </div>
+
+        {/* LINK VOLTAR */}
+        <button
+          onClick={() => onNavigate("landing")}
+          className="mt-6 w-full text-sm text-center text-[#1f3548]/70 underline"
+        >
+          Voltar ao início
+        </button>
+
+        <p className="mt-4 text-[11px] text-[#1f3548]/50 text-center leading-tight">
+          Ao continuar, você concorda em utilizar o upmoney apenas para fins
+          educacionais. Nenhuma informação constitui recomendação de
+          investimento.
+        </p>
       </div>
     </div>
   );
