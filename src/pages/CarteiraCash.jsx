@@ -337,12 +337,11 @@ export default function CarteiraCash() {
   const [hoverIdxTipo, setHoverIdxTipo] = useState(null);
   const idxShownTipo = hoverIdxTipo ?? activeIdxTipo;
 
-  // 🔽 Donuts menores pra reduzir altura do card
-  const size = 150; // antes 180
+  const size = 180;
   const cx = size / 2;
   const cy = size / 2;
-  const rOuter = 64; // antes 78
-  const rInner = 40; // antes 48
+  const rOuter = 78;
+  const rInner = 48;
 
   const anglesAtivo = useMemo(() => {
     let acc = 0;
@@ -558,28 +557,28 @@ export default function CarteiraCash() {
                 </div>
               </div>
 
-              <div>
-                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
-                  Exemplos de FIIs de renda
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-amber-200 text-[11px] border border-amber-400/40">
-                    HGLG11 — Logística
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[11px] border border-slate-600/70">
-                    (ex.: MXRF11, KNRI11, VISC11…)
-                  </span>
-                </div>
+            <div>
+              <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
+                Exemplos de FIIs de renda
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-amber-200 text-[11px] border border-amber-400/40">
+                  HGLG11 — Logística
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[11px] border border-slate-600/70">
+                  (ex.: MXRF11, KNRI11, VISC11…)
+                </span>
               </div>
             </div>
-
-            <p className="mt-2 text-[11px] text-slate-400">
-              Esta visão é apenas educacional e não constitui recomendação de
-              compra ou venda de ativos. Use como referência para estudar e
-              adaptar à sua realidade.
-            </p>
           </div>
+
+          <p className="mt-2 text-[11px] text-slate-400">
+            Esta visão é apenas educacional e não constitui recomendação de
+            compra ou venda de ativos. Use como referência para estudar e
+            adaptar à sua realidade.
+          </p>
         </div>
+      </div>
       );
     }
 
@@ -1125,7 +1124,7 @@ export default function CarteiraCash() {
                 <div
                   ref={dyChartRef}
                   className="
-                    flex-1 min-h-[120px] rounded-2xl border border-white/10
+                    flex-1 min-h-0 rounded-2xl border border-white/10
                     bg-slate-900/80 p-3 pt-2
                     overflow-x-auto overflow-y-hidden
                   "
@@ -1149,7 +1148,7 @@ export default function CarteiraCash() {
                               w-full rounded-xl
                               bg-emerald-500/90
                               hover:bg-emerald-400
-                              transition-all duration-700 ease-out
+                              transition-all duração-700 ease-out
                               hover:shadow-[0_0_12px_rgba(16,185,129,0.55)]
                             "
                             style={{ height: `${altura}px` }}
