@@ -25,10 +25,23 @@ import Cursos from "./pages/Cursos";
 import Noticias from "./pages/Noticias";
 import CashControlHome from "./pages/CashControlHome";
 
+// página de login (full-screen)
+import Login from "./pages/Login";
+
 // ---- Mapa dos meses
 const MES_IDX = {
-  Jan: 0, Fev: 1, Mar: 2, Abr: 3, Mai: 4, Jun: 5,
-  Jul: 6, Ago: 7, Set: 8, Out: 9, Nov: 10, Dez: 11,
+  Jan: 0,
+  Fev: 1,
+  Mar: 2,
+  Abr: 3,
+  Mai: 4,
+  Jun: 5,
+  Jul: 6,
+  Ago: 7,
+  Set: 8,
+  Out: 9,
+  Nov: 10,
+  Dez: 11,
 };
 
 // ------------------ Dashboard ------------------
@@ -134,9 +147,23 @@ function Mercado() {
   );
 }
 
+// ------------------ Função para escolher a view inicial ------------------
+function getInitialView() {
+  const path = window.location.pathname;
+
+  // rota direta para login
+  if (path === "/login") return "login";
+
+  // aqui você pode no futuro mapear outras rotas, ex:
+  // if (path === "/app") return "dashboard";
+
+  // padrão: landing
+  return "landing";
+}
+
 // ------------------ App ------------------
 export default function App() {
-  const [view, setView] = useState("landing");
+  const [view, setView] = useState(getInitialView);
 
   const SCREEN = {
     // FULL-SCREEN (sem sidebar)
@@ -146,6 +173,7 @@ export default function App() {
     cursos: <Cursos onNavigate={setView} />,
     noticias: <Noticias onNavigate={setView} />,
     "cashcontrol-home": <CashControlHome onNavigate={setView} />,
+    login: <Login />,
 
     // PAINEL COM SIDEBAR
     dashboard: <DashboardMain />,
@@ -154,8 +182,6 @@ export default function App() {
     despesas: <Despesas />,
     relatorios: <Relatorios />,
     mercado: <Mercado />,
-
-    login: <DashboardMain />,
   };
 
   const FULLSCREEN_VIEWS = [
@@ -165,6 +191,7 @@ export default function App() {
     "cursos",
     "noticias",
     "cashcontrol-home",
+    "login",
   ];
 
   if (FULLSCREEN_VIEWS.includes(view)) {
