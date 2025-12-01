@@ -23,10 +23,12 @@ import SaidaFiscal from "./pages/SaidaFiscal";
 import InvistaExterior from "./pages/InvistaExterior";
 import Cursos from "./pages/Cursos";
 import Noticias from "./pages/Noticias";
-import CashControlHome from "./pages/CashControlHome";
+import CashControlHome from "./pages/CashCogora vamos ajustar uma coisinha no App.jsx pra Vercel parar de reclamar.
+
+ntrolHome";
 
 // 🔐 página de login
-import Login from "./pages/Login.jsx";
+import Login from "./pages/Login";
 
 // ---- Mapa dos meses
 const MES_IDX = {
@@ -170,7 +172,7 @@ export default function App() {
     relatorios: <Relatorios />,
     mercado: <Mercado />,
 
-    // Tela de login
+    // Tela de Login
     login: <Login />,
   };
 
