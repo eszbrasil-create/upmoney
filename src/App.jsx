@@ -25,9 +25,6 @@ import Cursos from "./pages/Cursos";
 import Noticias from "./pages/Noticias";
 import CashControlHome from "./pages/CashControlHome";
 
-// 🌐 página de login
-import Login from "./pages/Login";
-
 // ---- Mapa dos meses
 const MES_IDX = {
   Jan: 0,
@@ -167,9 +164,6 @@ export default function App() {
     despesas: <Despesas />,
     relatorios: <Relatorios />,
     mercado: <Mercado />,
-
-    // Tela de Login
-    login: <Login />,
   };
 
   const FULLSCREEN_VIEWS = [
@@ -179,7 +173,6 @@ export default function App() {
     "cursos",
     "noticias",
     "cashcontrol-home",
-    "login", // Login também é full-screen
   ];
 
   if (FULLSCREEN_VIEWS.includes(view)) {
