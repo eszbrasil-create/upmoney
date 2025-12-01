@@ -23,11 +23,9 @@ import SaidaFiscal from "./pages/SaidaFiscal";
 import InvistaExterior from "./pages/InvistaExterior";
 import Cursos from "./pages/Cursos";
 import Noticias from "./pages/Noticias";
-import CashControlHome from "./pages/CashCogora vamos ajustar uma coisinha no App.jsx pra Vercel parar de reclamar.
+import CashControlHome from "./pages/CashControlHome";
 
-ntrolHome";
-
-// 🔐 página de login
+// 🌐 página de login
 import Login from "./pages/Login";
 
 // ---- Mapa dos meses
@@ -64,9 +62,7 @@ function DashboardMain({ registrosPorMes = {}, onDeleteMonth }) {
   const { rows } = useMemo(() => {
     const allAssets = new Set();
     for (const mes of columns) {
-      (registrosPorMes[mes] || []).forEach((item) =>
-        allAssets.add(item.nome)
-      );
+      (registrosPorMes[mes] || []).forEach((item) => allAssets.add(item.nome));
     }
     const assetsSorted = Array.from(allAssets).sort((a, b) =>
       a.localeCompare(b, "pt-BR")
@@ -183,7 +179,7 @@ export default function App() {
     "cursos",
     "noticias",
     "cashcontrol-home",
-    "login", // login também é full-screen
+    "login", // Login também é full-screen
   ];
 
   if (FULLSCREEN_VIEWS.includes(view)) {
