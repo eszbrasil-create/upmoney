@@ -25,6 +25,9 @@ import Cursos from "./pages/Cursos";
 import Noticias from "./pages/Noticias";
 import CashControlHome from "./pages/CashControlHome";
 
+// ✅ página de login
+import Login from "./pages/Login.jsx";
+
 // ---- Mapa dos meses
 const MES_IDX = {
   Jan: 0,
@@ -146,7 +149,8 @@ function Mercado() {
 
 // ------------------ App ------------------
 export default function App() {
-  const [view, setView] = useState("landing");
+  // 🔹 Por enquanto iniciamos em "login" para testar a tela de autenticação
+  const [view, setView] = useState("login");
 
   const SCREEN = {
     // FULL-SCREEN (sem sidebar)
@@ -156,6 +160,9 @@ export default function App() {
     cursos: <Cursos onNavigate={setView} />,
     noticias: <Noticias onNavigate={setView} />,
     "cashcontrol-home": <CashControlHome onNavigate={setView} />,
+
+    // Tela de Login (full-screen também)
+    login: <Login onNavigate={setView} />,
 
     // PAINEL COM SIDEBAR
     dashboard: <DashboardMain />,
@@ -173,6 +180,7 @@ export default function App() {
     "cursos",
     "noticias",
     "cashcontrol-home",
+    "login", // login também é full-screen
   ];
 
   if (FULLSCREEN_VIEWS.includes(view)) {

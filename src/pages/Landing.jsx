@@ -2,7 +2,6 @@
 // Página inicial completa do ecossistema "Meu Patrimônio"
 
 import React, { useState } from "react";
-import { supabase } from "../lib/supabaseClient";
 
 const IconWhatsApp = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
@@ -35,16 +34,8 @@ export default function Landing({ onNavigate }) {
   const RECEIVER_EMAIL = "eszbrasil@gmail.com";
   const WHATSAPP_NUMBER = "393517380919";
 
-  // Login do "Meu Plano" (hero)
-  const PLANO_USER = "admin";
-  const PLANO_PASS = "1234";
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({ nome: "", email: "", telefone: "" });
-
-  const [isPlanoModalOpen, setIsPlanoModalOpen] = useState(false);
-  const [planoForm, setPlanoForm] = useState({ usuario: "", senha: "" });
-  const [planoError, setPlanoError] = useState("");
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -75,47 +66,6 @@ export default function Landing({ onNavigate }) {
       `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`,
       "_blank"
     );
-  };
-
-  const handlePlanoChange = (e) => {
-    const { name, value } = e.target;
-    setPlanoForm((p) => ({ ...p, [name]: value }));
-  };
-
-  const handlePlanoLoginSuccess = () => {
-    onNavigate?.("login");
-  };
-
-  // ✅ Login do hero integrado com Supabase
-  const handlePlanoSubmit = async (e) => {
-    e.preventDefault();
-    setPlanoError("");
-
-    const u = planoForm.usuario.trim();
-    const s = planoForm.senha.trim();
-
-    // 1) Validação simples (mantém a experiência que você já tinha)
-    if (u !== PLANO_USER || s !== PLANO_PASS) {
-      setPlanoError("Usuário ou senha inválidos.");
-      return;
-    }
-
-    // 2) Login real no Supabase (usuário admin "oculto")
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: "admin@upmoney.local", // crie esse usuário no Supabase
-      password: "1234",
-    });
-
-    if (error) {
-      console.error("Erro Supabase:", error);
-      setPlanoError("Erro ao conectar ao servidor. Tente novamente.");
-      return;
-    }
-
-    // 3) Sucesso: fecha modal e entra no app logado
-    setIsPlanoModalOpen(false);
-    setPlanoForm({ usuario: "", senha: "" });
-    handlePlanoLoginSuccess();
   };
 
   return (
@@ -180,12 +130,13 @@ export default function Landing({ onNavigate }) {
 
           {/* Área da direita */}
           <div className="flex items-center gap-3">
+            {/* 🔐 Botão Meu Plano -> leva para a página de Login */}
             <button
               type="button"
-              onClick={() => setIsPlanoModalOpen(true)}
+              onClick={() => onNavigate?.("login")}
               className="hidden sm:inline-flex items-center rounded-xl bg-[#F5B60A] px-4 py-2 text-sm font-bold text-[#1f3548] shadow-sm hover:brightness-105 transition"
             >
-              Login
+              Meu Plano
             </button>
 
             <a
@@ -380,73 +331,6 @@ export default function Landing({ onNavigate }) {
                   className="bg-[#1f3548] px-5 py-2 rounded-xl font-semibold text-white hover:brightness-110 text-sm"
                 >
                   Enviar pelo WhatsApp
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Meu Plano */}
-      {isPlanoModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <div className="flex items-start justify-between">
-              <h2 className="text-lg font-bold text-[#1f3548]">
-                Acessar Meu Plano
-              </h2>
-              <button
-                onClick={() => {
-                  setIsPlanoModalOpen(false);
-                  setPlanoError("");
-                }}
-                className="ml-4 rounded-lg px-2 py-1 text-[#1f3548]/70 hover:bg-[#cfd6dc]/40"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handlePlanoSubmit} className="mt-4 space-y-3">
-              <input
-                name="usuario"
-                value={planoForm.usuario}
-                onChange={handlePlanoChange}
-                placeholder="Usuário"
-                className="w-full border rounded-xl px-3 py-2 text-sm"
-                required
-              />
-
-              <input
-                name="senha"
-                type="password"
-                value={planoForm.senha}
-                onChange={handlePlanoChange}
-                placeholder="Senha"
-                className="w-full border rounded-xl px-3 py-2 text-sm"
-                required
-              />
-
-              {planoError && (
-                <div className="text-sm text-red-600">{planoError}</div>
-              )}
-
-              <div className="flex justify-end gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsPlanoModalOpen(false);
-                    setPlanoError("");
-                  }}
-                  className="border px-4 py-2 rounded-xl text-sm"
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  type="submit"
-                  className="bg-[#1f3548] px-5 py-2 rounded-xl font-semibold text-white hover:brightness-110 text-sm"
-                >
-                  Entrar
                 </button>
               </div>
             </form>
