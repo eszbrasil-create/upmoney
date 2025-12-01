@@ -216,7 +216,7 @@ export default function EditAtivosModal({
         {/* TÍTULOS DAS COLUNAS */}
         <div className="grid grid-cols-[2fr_1fr_60px] gap-0 px-6 mt-6 text-xs font-semibold text-gray-600 uppercase">
           <div className="border-b border-gray-300 pb-1">Nome do Ativo</div>
-          <div className="border-b border-gray-300 pb-1 text-right">Valor</div>
+          <div className="border-b border-gray-300 pb-1 text-left">Valor</div> {/* ← agora alinhado à ESQUERDA */}
           <div className="border-b border-gray-300 pb-1 text-center">Ação</div>
         </div>
 
@@ -227,7 +227,7 @@ export default function EditAtivosModal({
               key={l.id}
               className="grid grid-cols-[2fr_1fr_60px] gap-0 items-center border-b border-gray-200 py-2"
             >
-              {/* NOME — com borda vertical */}
+              {/* NOME — borda vertical */}
               <div className="pr-3 border-r border-gray-300">
                 <input
                   className="w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
@@ -237,10 +237,10 @@ export default function EditAtivosModal({
                 />
               </div>
 
-              {/* VALOR — com borda vertical */}
+              {/* VALOR — AGORA ALINHADO À ESQUERDA */}
               <div className="pl-3 pr-3 border-r border-gray-300">
                 <input
-                  className="w-full text-right bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
+                  className="w-full text-left bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
                   inputMode="decimal"
                   placeholder="0,00"
                   value={l.valor}
