@@ -357,8 +357,7 @@ export default function EditAtivosModal({
           id: crypto.randomUUID(),
           nome: l.nome || "",
           valor: formatPtBr(toNum(l.valor)),
-        })
-        )
+        }))
       );
     } else {
       // primeiro preenchimento → 4 linhas vazias
