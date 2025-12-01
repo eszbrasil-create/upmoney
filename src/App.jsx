@@ -1,5 +1,5 @@
 // src/App.jsx
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AppLayout from "./layouts/AppLayout";
 
 import CardResumo from "./components/cards/CardResumo";
@@ -27,6 +27,9 @@ import CashControlHome from "./pages/CashControlHome";
 
 // ✅ página de login
 import Login from "./pages/Login.jsx";
+
+// 🔐 Supabase (para saber se tem usuário logado)
+import { supabase } from "./lib/supabaseClient";
 
 // ---- Mapa dos meses
 const MES_IDX = {
@@ -149,8 +152,62 @@ function Mercado() {
 
 // ------------------ App ------------------
 export default function App() {
-  // 🔹 Por enquanto iniciamos em "login" para testar a tela de autenticação
   const [view, setView] = useState("landing");
+  const [user, setUser] = useState(null);
+  const [authLoaded, setAuthLoaded] = useState(false);
+
+  // 🔐 Carrega usuário atual e ouve mudanças de sessão
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadUser() {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (!cancelled) {
+          setUser(data?.user ?? null);
+        }
+      } catch (err) {
+        console.error("Erro ao obter usuário atual:", err);
+        if (!cancelled) {
+          setUser(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setAuthLoaded(true);
+        }
+      }
+    }
+
+    loadUser();
+
+    const { data: sub } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => {
+      cancelled = true;
+      sub?.subscription?.unsubscribe?.();
+    };
+  }, []);
+
+  const PROTECTED_VIEWS = [
+    "dashboard",
+    "cursos-dashboard",
+    "carteira",
+    "despesas",
+    "relatorios",
+    "mercado",
+  ];
+
+  // Se tentar acessar uma tela protegida sem estar logado, manda pro login
+  useEffect(() => {
+    if (!authLoaded) return;
+    if (!user && PROTECTED_VIEWS.includes(view)) {
+      setView("login");
+    }
+  }, [authLoaded, user, view]);
 
   const SCREEN = {
     // FULL-SCREEN (sem sidebar)
@@ -164,7 +221,7 @@ export default function App() {
     // Tela de Login (full-screen também)
     login: <Login onNavigate={setView} />,
 
-    // PAINEL COM SIDEBAR
+    // PAINEL COM SIDEBAR (protegido)
     dashboard: <DashboardMain />,
     "cursos-dashboard": <CursosPage />,
     carteira: <CarteiraCash />,
@@ -183,6 +240,15 @@ export default function App() {
     "login", // login também é full-screen
   ];
 
+  // Enquanto não sabemos se há sessão, mostra apenas uma tela de loading simples
+  if (!authLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-300">
+        <span className="text-sm">Carregando...</span>
+      </div>
+    );
+  }
+
   if (FULLSCREEN_VIEWS.includes(view)) {
     return SCREEN[view] ?? SCREEN.landing;
   }
@@ -193,4 +259,3 @@ export default function App() {
     </AppLayout>
   );
 }
-
