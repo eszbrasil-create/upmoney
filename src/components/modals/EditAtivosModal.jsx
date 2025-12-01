@@ -2,27 +2,45 @@
 import React, {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { Trash2 } from "lucide-react";
 
-/* --------------------------------------------------
-      SELECTOR DE MÊS / ANO
--------------------------------------------------- */
+/* ---------------------------
+   Month / Year Picker
+---------------------------- */
 function MesAnoPicker({ value, onChange }) {
   const meses = [
-    "Jan","Fev","Mar","Abr","Mai","Jun",
-    "Jul","Ago","Set","Out","Nov","Dez"
+    "Jan",
+    "Fev",
+    "Mar",
+    "Abr",
+    "Mai",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Set",
+    "Out",
+    "Nov",
+    "Dez",
   ];
 
   const [mesAtual, anoAtualStr] = String(value || "").split("/");
   const anoInicial = Number(anoAtualStr) || new Date().getFullYear();
+
   const [open, setOpen] = useState(false);
   const [ano, setAno] = useState(anoInicial);
 
-  const ref = useRef(null);
+  // sincroniza ano quando o value muda
+  useEffect(() => {
+    const [, a] = String(value || "").split("/");
+    if (a) setAno(Number(a));
+  }, [value]);
 
+  // fecha clicando fora
+  const ref = useRef(null);
   useEffect(() => {
     function onDocClick(e) {
       if (!ref.current) return;
@@ -32,11 +50,6 @@ function MesAnoPicker({ value, onChange }) {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [open]);
 
-  useEffect(() => {
-    const [, a] = String(value || "").split("/");
-    if (a) setAno(Number(a));
-  }, [value]);
-
   return (
     <div className="relative" ref={ref}>
       <button
@@ -45,7 +58,7 @@ function MesAnoPicker({ value, onChange }) {
         className="inline-flex items-center gap-2 rounded-lg bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 hover:bg-gray-200 transition"
       >
         <span>{value}</span>
-        ▾
+        <span>▾</span>
       </button>
 
       {open && (
@@ -98,9 +111,9 @@ function MesAnoPicker({ value, onChange }) {
   );
 }
 
-/* --------------------------------------------------
-      MODAL PRINCIPAL
--------------------------------------------------- */
+/* ---------------------------
+      Modal principal
+---------------------------- */
 export default function EditAtivosModal({
   open,
   onClose,
@@ -117,22 +130,42 @@ export default function EditAtivosModal({
   ],
   mesAnoInicial,
   linhasIniciais = [],
-  // usado para sugerir o último ativo ao adicionar linha
-  linhasMesAnterior = [],
 }) {
   const backdropRef = useRef(null);
 
+  // trava scroll do body quando o modal estiver aberto
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // ----- mês / ano padrão -----
   const mesesLista = [
-    "Jan","Fev","Mar","Abr","Mai","Jun",
-    "Jul","Ago","Set","Out","Nov","Dez"
+    "Jan",
+    "Fev",
+    "Mar",
+    "Abr",
+    "Mai",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Set",
+    "Out",
+    "Nov",
+    "Dez",
   ];
   const hoje = new Date();
   const mesBase = hoje.getMonth();
   const anoBase = hoje.getFullYear();
-
   const padraoMesAno = mesAnoInicial || `${mesesLista[mesBase]}/${anoBase}`;
+
   const [mesAno, setMesAno] = useState(padraoMesAno);
 
+  // helpers de valor
   const toNum = (x) => {
     if (x === "" || x == null) return 0;
     const n = Number(String(x).replace(/\./g, "").replace(",", "."));
@@ -145,27 +178,37 @@ export default function EditAtivosModal({
       maximumFractionDigits: 2,
     });
 
+  // ----- linhas -----
   const [linhas, setLinhas] = useState([
     { id: crypto.randomUUID(), nome: "", valor: "" },
   ]);
 
-  // 🔒 Travar scroll do fundo enquanto o modal está aberto
+  // autocomplete
+  const [focoId, setFocoId] = useState(null);
+  const [query, setQuery] = useState("");
+
+  const uniqAtivos = useMemo(() => {
+    return Array.from(
+      new Map(
+        ativosExistentes.map((n) => [String(n).toLowerCase(), String(n)])
+      ).values()
+    ).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [ativosExistentes]);
+
+  const sugestoes = useMemo(() => {
+    if (!query) return uniqAtivos.slice(0, 12);
+    const q = query.toLowerCase();
+    return uniqAtivos
+      .filter((n) => n.toLowerCase().includes(q))
+      .slice(0, 12);
+  }, [query, uniqAtivos]);
+
   useEffect(() => {
     if (!open) return;
-    const original = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = original;
-    };
-  }, [open]);
-
-  // carregar dados ao abrir
-  useEffect(() => {
-    if (!open) return;
-
     setMesAno(padraoMesAno);
 
     if (Array.isArray(linhasIniciais) && linhasIniciais.length > 0) {
+      // edição de mês já salvo
       setLinhas(
         linhasIniciais.map((l) => ({
           id: crypto.randomUUID(),
@@ -174,24 +217,19 @@ export default function EditAtivosModal({
         }))
       );
     } else {
-      setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
+      // primeiro preenchimento → 4 linhas vazias
+      setLinhas([
+        { id: crypto.randomUUID(), nome: "", valor: "" },
+        { id: crypto.randomUUID(), nome: "", valor: "" },
+        { id: crypto.randomUUID(), nome: "", valor: "" },
+        { id: crypto.randomUUID(), nome: "", valor: "" },
+      ]);
     }
   }, [open, padraoMesAno, linhasIniciais]);
 
-  // adicionar linha NOVA no topo, usando referência do mês anterior
   const adicionarLinha = () => {
-    let base = { nome: "", valor: "" };
-
-    if (Array.isArray(linhasMesAnterior) && linhasMesAnterior.length > 0) {
-      const ultimo = linhasMesAnterior[0]; // primeiro da lista anterior
-      base = {
-        nome: ultimo?.nome || "",
-        valor: formatPtBr(toNum(ultimo?.valor || 0)),
-      };
-    }
-
     setLinhas((prev) => [
-      { id: crypto.randomUUID(), ...base },
+      { id: crypto.randomUUID(), nome: "", valor: "" },
       ...prev,
     ]);
   };
@@ -199,9 +237,11 @@ export default function EditAtivosModal({
   const removerLinha = (id) => {
     setLinhas((prev) => {
       const novo = prev.filter((l) => l.id !== id);
-      return novo.length
-        ? novo
-        : [{ id: crypto.randomUUID(), nome: "", valor: "" }];
+      if (novo.length === 0) {
+        // mantém ao menos 1 linha
+        return [{ id: crypto.randomUUID(), nome: "", valor: "" }];
+      }
+      return novo;
     });
   };
 
@@ -209,6 +249,12 @@ export default function EditAtivosModal({
     setLinhas((prev) =>
       prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l))
     );
+  };
+
+  const selecionarSugestao = (id, nome) => {
+    atualizarCampo(id, "nome", nome);
+    setFocoId(null);
+    setQuery("");
   };
 
   const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
@@ -231,10 +277,10 @@ export default function EditAtivosModal({
     <div
       ref={backdropRef}
       onMouseDown={(e) => e.target === backdropRef.current && onClose?.()}
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-hidden"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
     >
       <div
-        className="w-[900px] max-w-[96vw] max-h-[90vh] rounded-xl bg-white shadow-2xl flex flex-col"
+        className="w-[900px] max-w-[96vw] rounded-xl bg-white shadow-2xl"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
@@ -249,86 +295,110 @@ export default function EditAtivosModal({
           </button>
         </div>
 
-        {/* CONTEÚDO: cabeçalho + tabela COM SCROLL INTERNO */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-          {/* Topo: mês + adicionar linha */}
-          <div className="px-6 mt-4 flex items-center gap-4">
-            <MesAnoPicker value={mesAno} onChange={setMesAno} />
+        {/* TOPO DA TABELA */}
+        <div className="px-6 mt-4 flex items-center gap-4">
+          <MesAnoPicker value={mesAno} onChange={setMesAno} />
 
-            <button
-              onClick={adicionarLinha}
-              className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+          <button
+            onClick={adicionarLinha}
+            className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+          >
+            + Adicionar linha
+          </button>
+        </div>
+
+        {/* TÍTULOS DAS COLUNAS */}
+        <div className="grid grid-cols-[2fr_1fr_60px] gap-0 px-6 mt-6 text-[11px] font-semibold text-gray-600 uppercase">
+          <div className="border-b border-gray-300 pb-1">Nome do Ativo</div>
+          <div className="border-b border-gray-300 pb-1 text-left">Valor</div>
+          <div className="border-b border-gray-300 pb-1 text-center">Ação</div>
+        </div>
+
+        {/* LINHAS (SCROLL APENAS AQUI) */}
+        <div className="px-6 mt-2 max-h-[380px] overflow-y-auto">
+          {linhas.map((l) => (
+            <div
+              key={l.id}
+              className="grid grid-cols-[2fr_1fr_60px] gap-0 items-center border-b border-gray-200 py-2"
             >
-              + Adicionar linha
-            </button>
-          </div>
+              {/* NOME DO ATIVO */}
+              <div className="pr-3 border-r border-gray-300 relative">
+                <input
+                  className="w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
+                  placeholder="Digite um ativo"
+                  value={l.nome}
+                  onChange={(e) => {
+                    atualizarCampo(l.id, "nome", e.target.value);
+                    setFocoId(l.id);
+                    setQuery(e.target.value);
+                  }}
+                  onFocus={(e) => {
+                    setFocoId(l.id);
+                    setQuery(e.target.value || "");
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      setFocoId((prev) => (prev === l.id ? null : prev));
+                      setQuery("");
+                    }, 120);
+                  }}
+                />
 
-          {/* Cabeçalho de colunas */}
-          <div className="grid grid-cols-[2fr_1fr_60px] gap-0 px-6 mt-6 text-xs font-semibold text-gray-600 uppercase">
-            <div className="border-b border-gray-300 pb-1">Nome do Ativo</div>
-            {/* 👉 Valor alinhado à esquerda (sem text-right) */}
-            <div className="border-b border-gray-300 pb-1">Valor</div>
-            <div className="border-b border-gray-300 pb-1 text-center">Ação</div>
-          </div>
-
-          {/* LINHAS com SCROLL INTERNO */}
-          <div className="px-6 mt-2 flex-1 overflow-y-auto">
-            {linhas.map((l) => (
-              <div
-                key={l.id}
-                className="grid grid-cols-[2fr_1fr_60px] items-center border-b border-gray-200 py-2"
-              >
-                {/* Nome */}
-                <div className="pr-3 border-r border-gray-300">
-                  <input
-                    className="w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
-                    placeholder="Digite um ativo"
-                    value={l.nome}
-                    onChange={(e) =>
-                      atualizarCampo(l.id, "nome", e.target.value)
-                    }
-                  />
-                </div>
-
-                {/* Valor – alinhado à esquerda */}
-                <div className="pl-3 pr-3 border-r border-gray-300">
-                  <input
-                    className="w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
-                    inputMode="decimal"
-                    placeholder="0,00"
-                    value={l.valor}
-                    onChange={(e) => {
-                      const raw = e.target.value;
-                      if (/^[0-9.,]*$/.test(raw)) {
-                        atualizarCampo(l.id, "valor", raw);
-                      }
-                    }}
-                    onBlur={(e) =>
-                      atualizarCampo(
-                        l.id,
-                        "valor",
-                        formatPtBr(toNum(e.target.value))
-                      )
-                    }
-                  />
-                </div>
-
-                {/* Ação */}
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => removerLinha(l.id)}
-                    className="text-gray-500 hover:text-red-500"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+                {focoId === l.id && sugestoes.length > 0 && (
+                  <div className="absolute left-0 right-0 z-20 mt-1 max-h-48 overflow-auto rounded-lg border border-gray-300 bg-white shadow-lg">
+                    {sugestoes.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => selecionarSugestao(l.id, s)}
+                        className="w-full px-3 py-2 text-left text-sm text-gray-900 hover:bg-gray-100"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
+
+              {/* VALOR */}
+              <div className="pl-3 pr-3 border-r border-gray-300">
+                <input
+                  className="w-full text-left bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
+                  inputMode="decimal"
+                  placeholder="0,00"
+                  value={l.valor}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (/^[0-9.,]*$/.test(raw)) {
+                      atualizarCampo(l.id, "valor", raw);
+                    }
+                  }}
+                  onBlur={(e) =>
+                    atualizarCampo(
+                      l.id,
+                      "valor",
+                      formatPtBr(toNum(e.target.value))
+                    )
+                  }
+                />
+              </div>
+
+              {/* AÇÃO */}
+              <div className="flex justify-center">
+                <button
+                  onClick={() => removerLinha(l.id)}
+                  className="text-gray-500 hover:text-red-500"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* TOTAL */}
-        <div className="px-6 py-4 flex justify-between border-t border-gray-300">
+        <div className="px-6 py-4 flex justify-between border-t border-gray-300 mt-4">
           <span className="font-semibold text-gray-900">Total:</span>
           <span className="font-semibold text-emerald-600">
             {total.toLocaleString("pt-BR", {
@@ -338,8 +408,8 @@ export default function EditAtivosModal({
           </span>
         </div>
 
-        {/* FOOTER */}
-        <div className="px-6 py-4 flex justify-end gap-3 border-t border-gray-200 rounded-b-xl">
+        {/* RODAPÉ */}
+        <div className="px-6 py-4 flex justify-end gap-3 border-t border-gray-200">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
