@@ -339,11 +339,11 @@ export default function EditAtivosModal({
   }, [ativosExistentes]);
 
   const sugestoes = useMemo(() => {
-    if (!query) return uniqAtivos.slice(0, 12);
+    if (!query) return uniqAtivos.slice(0, 8);
     const q = query.toLowerCase();
     return uniqAtivos
       .filter((n) => n.toLowerCase().includes(q))
-      .slice(0, 12);
+      .slice(0, 8);
   }, [query, uniqAtivos]);
 
   useEffect(() => {
