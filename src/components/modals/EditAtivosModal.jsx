@@ -8,66 +8,79 @@ import React, {
 } from "react";
 import { Trash2 } from "lucide-react";
 
-/* ------------------------------
-   Seletor Mês/Ano minimalista
------------------------------- */
+/* ---------------------------
+   Month/Year Picker
+---------------------------- */
 function MesAnoPicker({ value, onChange }) {
   const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-  const [mesAtual, anoAtual] = String(value || "").split("/");
-  const [open, setOpen] = useState(false);
+  const [mesAtual, anoAtualStr] = String(value || "").split("/");
+  const anoInicial = Number(anoAtualStr) || new Date().getFullYear();
 
-  const anos = [];
-  for (let y = 2022; y <= 2032; y++) anos.push(y);
+  const [open, setOpen] = useState(false);
+  const [ano, setAno] = useState(anoInicial);
+
+  const ref = useRef(null);
+
+  // fecha clicando fora
+  useEffect(() => {
+    function onDocClick(e) {
+      if (!ref.current) return;
+      if (!ref.current.contains(e.target)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button
-        onClick={() => setOpen(v => !v)}
-        className="px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-800 hover:bg-gray-100"
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 hover:bg-gray-100"
       >
-        {value}
+        <span className="font-semibold">{value}</span>
+        <span className="text-gray-500">▾</span>
       </button>
 
       {open && (
-        <div className="absolute mt-2 bg-white border border-gray-200 rounded-xl shadow-lg p-3 z-50 w-44">
-          <div className="text-sm font-medium text-gray-700 mb-1 px-1">Mês</div>
-          <div className="grid grid-cols-3 gap-1 mb-3">
-            {meses.map((m) => (
-              <button
-                key={m}
-                onClick={() => {
-                  onChange(`${m}/${anoAtual}`);
-                  setOpen(false);
-                }}
-                className={`text-sm py-1 rounded-md ${
-                  m === mesAtual
-                    ? "bg-emerald-500 text-white"
-                    : "hover:bg-gray-100 text-gray-800"
-                }`}
-              >
-                {m}
-              </button>
-            ))}
+        <div className="absolute left-0 mt-2 w-52 rounded-lg border border-gray-300 bg-white shadow-xl z-50 p-3">
+          {/* Header ano */}
+          <div className="flex items-center justify-between mb-2 text-gray-900">
+            <button
+              onClick={() => setAno((a) => a - 1)}
+              className="h-7 w-7 rounded-md bg-gray-200 hover:bg-gray-300"
+            >
+              ←
+            </button>
+
+            <div className="font-semibold">{ano}</div>
+
+            <button
+              onClick={() => setAno((a) => a + 1)}
+              className="h-7 w-7 rounded-md bg-gray-200 hover:bg-gray-300"
+            >
+              →
+            </button>
           </div>
 
-          <div className="text-sm font-medium text-gray-700 mb-1 px-1">Ano</div>
-          <div className="grid grid-cols-3 gap-1">
-            {anos.map((a) => (
-              <button
-                key={a}
-                onClick={() => {
-                  onChange(`${mesAtual}/${a}`);
-                  setOpen(false);
-                }}
-                className={`text-sm py-1 rounded-md ${
-                  a == anoAtual
-                    ? "bg-emerald-500 text-white"
-                    : "hover:bg-gray-100 text-gray-800"
-                }`}
-              >
-                {a}
-              </button>
-            ))}
+          <div className="grid grid-cols-3 gap-2">
+            {meses.map((m) => {
+              const selected = m === mesAtual && ano === anoInicial;
+              return (
+                <button
+                  key={m}
+                  onClick={() => {
+                    onChange?.(`${m}/${ano}`);
+                    setOpen(false);
+                  }}
+                  className={`px-2 py-2 rounded-md text-sm transition ${
+                    selected ? "bg-blue-600 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                  }`}
+                >
+                  {m}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -75,201 +88,185 @@ function MesAnoPicker({ value, onChange }) {
   );
 }
 
-/* -----------------------------------
-   MODAL PRINCIPAL — LAYOUT EXCEL/NUMBERS
------------------------------------ */
+/* ---------------------------
+      Modal principal
+---------------------------- */
 export default function EditAtivosModal({
   open,
   onClose,
   onSave,
-  ativosExistentes = [],
+  ativosExistentes = ["Ações", "Renda Fixa", "Cripto", "FIIs", "Caixa", "Banco"],
   mesAnoInicial,
   linhasIniciais = [],
 }) {
-  const refBackdrop = useRef(null);
+  const backdropRef = useRef(null);
 
+  const mesesLista = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
   const hoje = new Date();
-  const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-  const mesPadrao = `${meses[hoje.getMonth()]}/${hoje.getFullYear()}`;
+  const mesBase = hoje.getMonth();
+  const anoBase = hoje.getFullYear();
 
-  const [mesAno, setMesAno] = useState(mesAnoInicial || mesPadrao);
+  const padraoMesAno = mesAnoInicial || `${mesesLista[mesBase]}/${anoBase}`;
+  const [mesAno, setMesAno] = useState(padraoMesAno);
 
-  const toNum = (x) => {
+  function toNum(x) {
     if (!x) return 0;
     return Number(String(x).replace(/\./g, "").replace(",", ".")) || 0;
-  };
+  }
 
-  const fmt = (n) =>
-    n.toLocaleString("pt-BR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+  function formatPtBr(n) {
+    return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
 
-  /* ---------------- linhas ---------------- */
-  const [linhas, setLinhas] = useState([]);
+  // Linhas
+  const [linhas, setLinhas] = useState([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
 
   useEffect(() => {
     if (!open) return;
+    setMesAno(padraoMesAno);
 
-    if (linhasIniciais.length > 0) {
+    if (linhasIniciais.length) {
       setLinhas(
         linhasIniciais.map((l) => ({
           id: crypto.randomUUID(),
-          nome: l.nome,
-          valor: fmt(toNum(l.valor)),
+          nome: l.nome || "",
+          valor: formatPtBr(toNum(l.valor)),
         }))
       );
     } else {
       setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
     }
-  }, [open, linhasIniciais]);
-
-  const adicionarLinhaTopo = () => {
-    setLinhas((prev) => [
-      { id: crypto.randomUUID(), nome: "", valor: "" },
-      ...prev,
-    ]);
-  };
-
-  const remover = (id) => {
-    const novo = linhas.filter((l) => l.id !== id);
-    setLinhas(novo.length ? novo : [{ id: crypto.randomUUID(), nome: "", valor: "" }]);
-  };
-
-  const atualizar = (id, campo, v) => {
-    setLinhas((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, [campo]: v } : l))
-    );
-  };
+  }, [open, mesAnoInicial]);
 
   const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
 
-  const salvar = useCallback(() => {
+  const adicionarLinha = () => {
+    setLinhas([...linhas, { id: crypto.randomUUID(), nome: "", valor: "" }]);
+  };
+
+  const removerLinha = (id) => {
+    let novo = linhas.filter((l) => l.id !== id);
+    if (!novo.length) novo = [{ id: crypto.randomUUID(), nome: "", valor: "" }];
+    setLinhas(novo);
+  };
+
+  const atualizarCampo = (id, campo, valor) => {
+    setLinhas(linhas.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)));
+  };
+
+  const salvar = () => {
     const itens = linhas
       .filter((l) => l.nome.trim() !== "")
-      .map((l) => ({ nome: l.nome.trim(), valor: toNum(l.valor) }))
-      .sort((a, b) => b.valor - a.valor);
+      .map((l) => ({ nome: l.nome.trim(), valor: toNum(l.valor) }));
 
-    onSave?.({
-      mesAno,
-      itens,
-      total: itens.reduce((acc, i) => acc + i.valor, 0),
-    });
-
+    onSave?.({ mesAno, itens, total });
     onClose?.();
-  }, [linhas, mesAno, onSave, onClose]);
+  };
 
   if (!open) return null;
 
   return (
     <div
-      ref={refBackdrop}
-      onMouseDown={(e) => e.target === refBackdrop.current && onClose?.()}
-      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+      ref={backdropRef}
+      onMouseDown={(e) => e.target === backdropRef.current && onClose?.()}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
     >
       <div
         onMouseDown={(e) => e.stopPropagation()}
-        className="w-[900px] max-w-[95vw] bg-white rounded-2xl shadow-xl border border-gray-200"
+        className="bg-white w-[900px] max-w-[95vw] rounded-2xl shadow-2xl border border-gray-300"
       >
-        {/* ---------------- HEADER CINZA ---------------- */}
-        <div className="px-6 py-4 bg-[#F2F2F2] border-b border-gray-300 rounded-t-2xl flex items-center justify-between">
-          <div className="text-lg font-semibold text-gray-900">Editar Ativos</div>
-
-          <button
-            onClick={onClose}
-            className="text-gray-700 hover:text-black text-2xl leading-none px-2"
-          >
-            ×
-          </button>
+        {/* ---------------- HEADER ---------------- */}
+        <div className="px-6 py-4 border-b border-gray-300 bg-gray-100 rounded-t-2xl">
+          <h2 className="text-lg font-semibold text-gray-900">Editar Ativos</h2>
         </div>
 
-        {/* ---------------- AÇÕES: DATA + ADICIONAR LINHA ---------------- */}
-        <div className="px-6 pt-4 flex items-center gap-4">
+        {/* ----------- TOOLBAR (data + add + fechar + salvar) ----------- */}
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center gap-3">
           <MesAnoPicker value={mesAno} onChange={setMesAno} />
 
           <button
-            onClick={adicionarLinhaTopo}
-            className="inline-flex items-center gap-2 text-sm font-medium text-emerald-700 hover:text-emerald-900"
+            onClick={adicionarLinha}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-500"
           >
-            <span className="text-lg">＋</span> Adicionar linha
+            + Adicionar linha
+          </button>
+
+          <div className="flex-1"></div>
+
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg text-sm hover:bg-gray-300"
+          >
+            Fechar
+          </button>
+
+          <button
+            onClick={salvar}
+            className="px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-500"
+          >
+            Salvar
           </button>
         </div>
 
-        {/* ---------------- TABELA EXCEL ---------------- */}
-        <div className="px-6 mt-4 max-h-[420px] overflow-y-auto">
-
-          {/* Cabeçalho */}
-          <div className="grid grid-cols-[2fr_1fr_40px] text-xs font-semibold text-gray-600 border-b border-gray-300 pb-2">
+        {/* ---------------- TABELA ---------------- */}
+        <div className="px-6 pb-6 pt-4">
+          {/* Cabeçalho da tabela */}
+          <div className="grid grid-cols-[2fr_1fr_70px] border-b border-gray-300 pb-2 mb-2 font-semibold text-sm text-gray-700">
             <span>Nome do Ativo</span>
             <span className="text-right">Valor</span>
-            <span></span>
+            <span className="text-center">Ação</span>
           </div>
 
           {/* Linhas */}
-          <div className="mt-2">
+          <div className="max-h-[430px] overflow-y-auto">
             {linhas.map((l) => (
               <div
                 key={l.id}
-                className="grid grid-cols-[2fr_1fr_40px] items-center py-2 border-b border-gray-200"
+                className="grid grid-cols-[2fr_1fr_70px] items-center border-b border-gray-200 py-2"
               >
                 {/* Nome */}
                 <input
+                  className="bg-white border border-gray-300 rounded-md px-3 py-2 text-sm w-full text-gray-900"
                   value={l.nome}
-                  onChange={(e) => atualizar(l.id, "nome", e.target.value)}
-                  placeholder="Ativo"
-                  className="text-sm px-1 py-1 border-b border-gray-300 focus:border-emerald-500 focus:outline-none text-gray-900"
+                  placeholder="Digite um ativo"
+                  onChange={(e) => atualizarCampo(l.id, "nome", e.target.value)}
                 />
 
                 {/* Valor */}
                 <input
+                  className="bg-white border border-gray-300 rounded-md px-3 py-2 text-sm w-full text-right text-gray-900"
                   value={l.valor}
-                  onChange={(e) => {
-                    if (/^[0-9.,]*$/.test(e.target.value)) {
-                      atualizar(l.id, "valor", e.target.value);
-                    }
-                  }}
-                  onBlur={(e) =>
-                    atualizar(l.id, "valor", fmt(toNum(e.target.value)))
-                  }
                   placeholder="0,00"
-                  className="text-sm px-1 py-1 text-right border-b border-gray-300 focus:border-emerald-500 focus:outline-none text-gray-900"
+                  inputMode="decimal"
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (/^[0-9.,]*$/.test(raw)) atualizarCampo(l.id, "valor", raw);
+                  }}
+                  onBlur={(e) => {
+                    atualizarCampo(l.id, "valor", formatPtBr(toNum(e.target.value)));
+                  }}
                 />
 
                 {/* Remover */}
                 <button
-                  onClick={() => remover(l.id)}
-                  className="h-8 w-8 flex items-center justify-center text-gray-400 hover:text-red-500"
+                  onClick={() => removerLinha(l.id)}
+                  className="flex items-center justify-center h-9 w-9 rounded-lg bg-red-50 hover:bg-red-100 text-red-500"
                 >
                   <Trash2 size={16} />
                 </button>
               </div>
             ))}
           </div>
-        </div>
 
-        {/* ---------------- TOTAL + BOTÕES ---------------- */}
-        <div className="px-6 py-4 flex items-center justify-between border-t border-gray-300 mt-2">
-          <div className="text-sm font-medium text-gray-800">
-            Total:{" "}
-            <span className="font-semibold text-emerald-700">
-              {fmt(total)}
+          {/* Total */}
+          <div className="mt-4 flex justify-between border-t pt-3 border-gray-300">
+            <span className="font-semibold text-gray-800">Total:</span>
+            <span className="font-semibold text-emerald-600">
+              {total.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
             </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200"
-            >
-              Fechar
-            </button>
-
-            <button
-              onClick={salvar}
-              className="px-5 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-500"
-            >
-              Salvar
-            </button>
           </div>
         </div>
       </div>
