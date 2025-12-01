@@ -2,7 +2,6 @@
 import React, {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -155,14 +154,14 @@ export default function EditAtivosModal({
   }, [open, padraoMesAno, linhasIniciais]);
 
   /* -----------------------------------------
-      ADICIONAR LINHA — COMO PRIMEIRA LINHA
-      + traz itens do mês anterior como base
+      ADICIONAR LINHA — PRIMEIRA LINHA
+      + base no mês anterior
   ------------------------------------------ */
   const adicionarLinha = () => {
     let base = { nome: "", valor: "" };
 
     if (linhasMesAnterior?.length > 0) {
-      const ultimo = linhasMesAnterior[0]; // pega o primeiro do mês anterior
+      const ultimo = linhasMesAnterior[0];
       base = {
         nome: ultimo.nome || "",
         valor: formatPtBr(toNum(ultimo.valor || 0)),
@@ -214,7 +213,7 @@ export default function EditAtivosModal({
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
     >
       <div
-        className="w-[900px] max-w-[96vw] rounded-xl bg-white shadow-2xl"
+        className="w-[900px] max-w-[96vw] max-h-[90vh] rounded-xl bg-white shadow-2xl flex flex-col"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
@@ -229,28 +228,29 @@ export default function EditAtivosModal({
           </button>
         </div>
 
-        {/* TOPO DA TABELA */}
-        <div className="px-6 mt-4 flex items-center gap-4">
-          <MesAnoPicker value={mesAno} onChange={setMesAno} />
+        {/* CONTEÚDO SCROLLÁVEL (LINHAS) */}
+        <div className="flex-1 overflow-hidden flex flex-col">
+          {/* TOPO DA TABELA */}
+          <div className="px-6 mt-4 flex items-center gap-4">
+            <MesAnoPicker value={mesAno} onChange={setMesAno} />
 
-          <button
-            onClick={adicionarLinha}
-            className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 text-sm font-medium"
-          >
-            + Adicionar linha
-          </button>
-        </div>
+            <button
+              onClick={adicionarLinha}
+              className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+            >
+              + Adicionar linha
+            </button>
+          </div>
 
-        {/* TÍTULOS DAS COLUNAS */}
-        <div className="grid grid-cols-[2fr_1fr_60px] gap-0 px-6 mt-6 text-xs font-semibold text-gray-600 uppercase">
-          <div className="border-b border-gray-300 pb-1">Nome do Ativo</div>
-          <div className="border-b border-gray-300 pb-1 text-right">Valor</div>
-          <div className="border-b border-gray-300 pb-1 text-center">Ação</div>
-        </div>
+          {/* TÍTULOS DAS COLUNAS */}
+          <div className="grid grid-cols-[2fr_1fr_60px] gap-0 px-6 mt-6 text-xs font-semibold text-gray-600 uppercase">
+            <div className="border-b border-gray-300 pb-1">Nome do Ativo</div>
+            <div className="border-b border-gray-300 pb-1 text-right">Valor</div>
+            <div className="border-b border-gray-300 pb-1 text-center">Ação</div>
+          </div>
 
-        {/* LINHAS — com scroll interno */}
-        <div className="px-6 mt-2">
-          <div className="max-h-[420px] overflow-y-auto">
+          {/* LINHAS — SCROLL AQUI */}
+          <div className="px-6 mt-2 flex-1 overflow-y-auto">
             {linhas.map((l) => (
               <div
                 key={l.id}
@@ -306,7 +306,7 @@ export default function EditAtivosModal({
         </div>
 
         {/* TOTAL */}
-        <div className="px-6 py-4 flex justify-between border-t border-gray-300 mt-4">
+        <div className="px-6 py-4 flex justify-between border-t border-gray-300">
           <span className="font-semibold text-gray-900">Total:</span>
           <span className="font-semibold text-emerald-600">
             {total.toLocaleString("pt-BR", {
