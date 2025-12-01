@@ -2,11 +2,46 @@
 import React, {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { Trash2 } from "lucide-react";
+
+/* ---------------------------
+   Hook para dropdown flutuante
+---------------------------- */
+function useFloatingDropdown(ref, offset = 4) {
+  const [style, setStyle] = useState({});
+
+  useLayoutEffect(() => {
+    function update() {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+
+      setStyle({
+        position: "absolute",
+        top: rect.bottom + offset + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+        zIndex: 9999,
+      });
+    }
+
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [ref, offset]);
+
+  return style;
+}
 
 /* ---------------------------
    Month / Year Picker
@@ -107,6 +142,114 @@ function MesAnoPicker({ value, onChange }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ---------------------------
+   Linha da tabela com autocomplete
+---------------------------- */
+function LinhaAtivo({
+  linha,
+  focoId,
+  setFocoId,
+  sugestoes,
+  selecionarSugestao,
+  atualizarCampo,
+  removerLinha,
+  setQuery,
+  formatPtBr,
+  toNum,
+}) {
+  const inputRef = useRef(null);
+  const dropdownStyle = useFloatingDropdown(inputRef, 4);
+
+  return (
+    <div
+      className={`grid grid-cols-[2fr_1fr_60px] gap-0 items-center border-b border-gray-200 py-2 ${
+        focoId === linha.id ? "relative z-20 bg-white" : ""
+      }`}
+    >
+      {/* NOME DO ATIVO */}
+      <div className="pr-3 border-r border-gray-300 relative">
+        <input
+          ref={inputRef}
+          className="w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
+          placeholder="Digite um ativo"
+          value={linha.nome}
+          onChange={(e) => {
+            atualizarCampo(linha.id, "nome", e.target.value);
+            setFocoId(linha.id);
+            setQuery(e.target.value);
+          }}
+          onFocus={(e) => {
+            setFocoId(linha.id);
+            setQuery(e.target.value || "");
+          }}
+          onBlur={() => {
+            setTimeout(() => {
+              setFocoId((prev) => (prev === linha.id ? null : prev));
+              setQuery("");
+            }, 120);
+          }}
+        />
+
+        {focoId === linha.id &&
+          sugestoes.length > 0 &&
+          typeof document !== "undefined" &&
+          createPortal(
+            <div
+              style={dropdownStyle}
+              className="max-h-48 overflow-auto rounded-lg border border-gray-300 bg-white shadow-2xl"
+            >
+              {sugestoes.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => selecionarSugestao(linha.id, s)}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-900 hover:bg-gray-100"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>,
+            document.body
+          )}
+      </div>
+
+      {/* VALOR */}
+      <div className="pl-3 pr-3 border-r border-gray-300">
+        <input
+          className="w-full text-left bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
+          inputMode="decimal"
+          placeholder="0,00"
+          value={linha.valor}
+          onChange={(e) => {
+            const raw = e.target.value;
+            if (/^[0-9.,]*$/.test(raw)) {
+              atualizarCampo(linha.id, "valor", raw);
+            }
+          }}
+          onBlur={(e) =>
+            atualizarCampo(
+              linha.id,
+              "valor",
+              formatPtBr(toNum(e.target.value))
+            )
+          }
+        />
+      </div>
+
+      {/* AÇÃO */}
+      <div className="flex justify-center">
+        <button
+          onClick={() => removerLinha(linha.id)}
+          className="text-gray-500 hover:text-red-500"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -214,7 +357,8 @@ export default function EditAtivosModal({
           id: crypto.randomUUID(),
           nome: l.nome || "",
           valor: formatPtBr(toNum(l.valor)),
-        }))
+        })
+        )
       );
     } else {
       // primeiro preenchimento → 4 linhas vazias
@@ -317,83 +461,19 @@ export default function EditAtivosModal({
         {/* LINHAS (SCROLL APENAS AQUI) */}
         <div className="px-6 mt-2 max-h-[380px] overflow-y-auto">
           {linhas.map((l) => (
-            <div
+            <LinhaAtivo
               key={l.id}
-              className="grid grid-cols-[2fr_1fr_60px] gap-0 items-center border-b border-gray-200 py-2"
-            >
-              {/* NOME DO ATIVO */}
-              <div className="pr-3 border-r border-gray-300 relative">
-                <input
-                  className="w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
-                  placeholder="Digite um ativo"
-                  value={l.nome}
-                  onChange={(e) => {
-                    atualizarCampo(l.id, "nome", e.target.value);
-                    setFocoId(l.id);
-                    setQuery(e.target.value);
-                  }}
-                  onFocus={(e) => {
-                    setFocoId(l.id);
-                    setQuery(e.target.value || "");
-                  }}
-                  onBlur={() => {
-                    setTimeout(() => {
-                      setFocoId((prev) => (prev === l.id ? null : prev));
-                      setQuery("");
-                    }, 120);
-                  }}
-                />
-
-                {focoId === l.id && sugestoes.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1 z-50 max-h-48 overflow-auto rounded-lg border border-gray-300 bg-white shadow-lg">
-                    {sugestoes.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => selecionarSugestao(l.id, s)}
-                        className="w-full px-3 py-2 text-left text-sm text-gray-900 hover:bg-gray-100"
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* VALOR */}
-              <div className="pl-3 pr-3 border-r border-gray-300">
-                <input
-                  className="w-full text-left bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
-                  inputMode="decimal"
-                  placeholder="0,00"
-                  value={l.valor}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (/^[0-9.,]*$/.test(raw)) {
-                      atualizarCampo(l.id, "valor", raw);
-                    }
-                  }}
-                  onBlur={(e) =>
-                    atualizarCampo(
-                      l.id,
-                      "valor",
-                      formatPtBr(toNum(e.target.value))
-                    )
-                  }
-                />
-              </div>
-
-              {/* AÇÃO */}
-              <div className="flex justify-center">
-                <button
-                  onClick={() => removerLinha(l.id)}
-                  className="text-gray-500 hover:text-red-500"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
+              linha={l}
+              focoId={focoId}
+              setFocoId={setFocoId}
+              sugestoes={sugestoes}
+              selecionarSugestao={selecionarSugestao}
+              atualizarCampo={atualizarCampo}
+              removerLinha={removerLinha}
+              setQuery={setQuery}
+              formatPtBr={formatPtBr}
+              toNum={toNum}
+            />
           ))}
         </div>
 
