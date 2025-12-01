@@ -345,7 +345,7 @@ export default function EditAtivosModal({
                 />
 
                 {focoId === l.id && sugestoes.length > 0 && (
-                  <div className="absolute left-0 right-0 z-20 mt-1 max-h-48 overflow-auto rounded-lg border border-gray-300 bg-white shadow-lg">
+                  <div className="absolute left-0 right-0 top-full mt-1 z-50 max-h-48 overflow-auto rounded-lg border border-gray-300 bg-white shadow-lg">
                     {sugestoes.map((s) => (
                       <button
                         key={s}
