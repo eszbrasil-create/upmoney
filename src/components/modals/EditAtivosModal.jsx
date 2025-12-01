@@ -2,16 +2,17 @@
 import React, {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { Trash2 } from "lucide-react";
 
+/* -----------------------------------
+   COMPONENTE: Mês / Ano Picker
+----------------------------------- */
 function MesAnoPicker({ value, onChange }) {
-  const meses = [
-    "Jan","Fev","Mar","Abr","Mai","Jun",
-    "Jul","Ago","Set","Out","Nov","Dez"
-  ];
+  const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
   const [mesAtual, anoAtualStr] = String(value || "").split("/");
   const anoInicial = Number(anoAtualStr) || new Date().getFullYear();
@@ -20,6 +21,7 @@ function MesAnoPicker({ value, onChange }) {
 
   const ref = useRef(null);
 
+  // fechar clicando fora
   useEffect(() => {
     function onDocClick(e) {
       if (!ref.current) return;
@@ -29,11 +31,6 @@ function MesAnoPicker({ value, onChange }) {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [open]);
 
-  useEffect(() => {
-    const [, a] = String(value || "").split("/");
-    if (a) setAno(Number(a));
-  }, [value]);
-
   return (
     <div className="relative" ref={ref}>
       <button
@@ -41,12 +38,12 @@ function MesAnoPicker({ value, onChange }) {
         onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center gap-2 rounded-lg bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 hover:bg-gray-200 transition"
       >
-        <span>{value}</span>
-        ▾
+        <span>{value}</span> ▾
       </button>
 
       {open && (
         <div className="absolute left-0 mt-2 w-[240px] rounded-xl border border-gray-300 bg-white shadow-xl p-3 z-50">
+          {/* Ano */}
           <div className="flex items-center justify-between mb-2">
             <button
               type="button"
@@ -67,27 +64,21 @@ function MesAnoPicker({ value, onChange }) {
             </button>
           </div>
 
+          {/* Meses */}
           <div className="grid grid-cols-3 gap-2">
-            {meses.map((m) => {
-              const selected = m === mesAtual && ano === anoInicial;
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => {
-                    onChange?.(`${m}/${ano}`);
-                    setOpen(false);
-                  }}
-                  className={`rounded-lg px-3 py-2 text-sm transition ${
-                    selected
-                      ? "bg-emerald-500 text-white"
-                      : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                  }`}
-                >
-                  {m}
-                </button>
-              );
-            })}
+            {meses.map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => {
+                  onChange?.(`${m}/${ano}`);
+                  setOpen(false);
+                }}
+                className="rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-800 hover:bg-gray-200 transition"
+              >
+                {m}
+              </button>
+            ))}
           </div>
         </div>
       )}
@@ -95,42 +86,31 @@ function MesAnoPicker({ value, onChange }) {
   );
 }
 
+/* -----------------------------------
+       MODAL PRINCIPAL COMPLETO
+----------------------------------- */
 export default function EditAtivosModal({
   open,
   onClose,
   onSave,
-  ativosExistentes = [
-    "Ações",
-    "Renda Fixa",
-    "Cripto",
-    "FIIs",
-    "Caixa",
-    "Banco",
-    "Viagem",
-    "Cofre",
-  ],
+  ativosExistentes = ["Ações","Renda Fixa","Cripto","FIIs","Caixa","Banco","Viagem","Cofre"],
   mesAnoInicial,
   linhasIniciais = [],
-  // ✅ NOVO: lista do mês anterior (opcional)
-  linhasMesAnterior = [],
 }) {
   const backdropRef = useRef(null);
 
-  const mesesLista = [
-    "Jan","Fev","Mar","Abr","Mai","Jun",
-    "Jul","Ago","Set","Out","Nov","Dez"
-  ];
+  // --- Mês/Ano ---
+  const mesesLista = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
   const hoje = new Date();
-  const mesBase = hoje.getMonth();
-  const anoBase = hoje.getFullYear();
+  const padraoMesAno =
+    mesAnoInicial || `${mesesLista[hoje.getMonth()]}/${hoje.getFullYear()}`;
 
-  const padraoMesAno = mesAnoInicial || `${mesesLista[mesBase]}/${anoBase}`;
   const [mesAno, setMesAno] = useState(padraoMesAno);
 
+  // --- Helpers ---
   const toNum = (x) => {
-    if (x === "" || x == null) return 0;
-    const n = Number(String(x).replace(/\./g, "").replace(",", "."));
-    return Number.isFinite(n) ? n : 0;
+    if (!x) return 0;
+    return Number(String(x).replace(/\./g, "").replace(",", ".")) || 0;
   };
 
   const formatPtBr = (n) =>
@@ -139,50 +119,50 @@ export default function EditAtivosModal({
       maximumFractionDigits: 2,
     });
 
+  // --- Lista de linhas ---
   const [linhas, setLinhas] = useState([
     { id: crypto.randomUUID(), nome: "", valor: "" },
   ]);
 
+  // ref para scroll automático
+  const listaRef = useRef(null);
+
   useEffect(() => {
     if (!open) return;
+
     setMesAno(padraoMesAno);
 
-    // ✅ Prioridade:
-    // 1) linhasIniciais (mês atual já salvo)
-    // 2) linhasMesAnterior (duplicar automaticamente o último registro)
-    // 3) linha vazia
     if (Array.isArray(linhasIniciais) && linhasIniciais.length > 0) {
       setLinhas(
         linhasIniciais.map((l) => ({
           id: crypto.randomUUID(),
-          nome: l.nome || "",
-          valor: formatPtBr(toNum(l.valor)),
-        }))
-      );
-    } else if (
-      Array.isArray(linhasMesAnterior) &&
-      linhasMesAnterior.length > 0
-    ) {
-      setLinhas(
-        linhasMesAnterior.map((l) => ({
-          id: crypto.randomUUID(),
-          nome: l.nome || "",
+          nome: l.nome,
           valor: formatPtBr(toNum(l.valor)),
         }))
       );
     } else {
       setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
     }
-  }, [open, padraoMesAno, linhasIniciais, linhasMesAnterior]);
+  }, [open, padraoMesAno, linhasIniciais]);
 
-  // ✅ NOVA LINHA VAI PARA O TOPO
+  // --- Adicionar linha no topo ---
   const adicionarLinha = () => {
-    setLinhas((prev) => [
-      { id: crypto.randomUUID(), nome: "", valor: "" },
-      ...prev,
-    ]);
+    setLinhas((prev) => {
+      const nova = [
+        { id: crypto.randomUUID(), nome: "", valor: "" },
+        ...prev,
+      ];
+
+      // scroll para o topo
+      setTimeout(() => {
+        if (listaRef.current) listaRef.current.scrollTop = 0;
+      }, 0);
+
+      return nova;
+    });
   };
 
+  // --- Remover linha ---
   const removerLinha = (id) => {
     setLinhas((prev) => {
       const novo = prev.filter((l) => l.id !== id);
@@ -192,6 +172,7 @@ export default function EditAtivosModal({
     });
   };
 
+  // --- Atualizar campos ---
   const atualizarCampo = (id, campo, valor) => {
     setLinhas((prev) =>
       prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l))
@@ -200,15 +181,16 @@ export default function EditAtivosModal({
 
   const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
 
+  // --- Salvar ---
   const salvar = useCallback(() => {
-    const itensLimpos = linhas
+    const itens = linhas
       .filter((l) => l.nome.trim() !== "")
       .map((l) => ({
         nome: l.nome.trim(),
         valor: toNum(l.valor),
       }));
 
-    onSave?.({ mesAno, itens: itensLimpos, total });
+    onSave?.({ mesAno, itens, total });
     onClose?.();
   }, [mesAno, linhas, total, onSave, onClose]);
 
@@ -236,7 +218,7 @@ export default function EditAtivosModal({
           </button>
         </div>
 
-        {/* TOPO DA TABELA */}
+        {/* TOPO DA AÇÃO */}
         <div className="px-6 mt-4 flex items-center gap-4">
           <MesAnoPicker value={mesAno} onChange={setMesAno} />
 
@@ -248,21 +230,24 @@ export default function EditAtivosModal({
           </button>
         </div>
 
-        {/* TÍTULOS DAS COLUNAS */}
-        <div className="grid grid-cols-[2fr_1fr_60px] gap-0 px-6 mt-6 text-xs font-semibold text-gray-600 uppercase">
+        {/* TITULOS DAS COLUNAS */}
+        <div className="grid grid-cols-[2fr_1fr_60px] px-6 mt-6 text-xs font-semibold text-gray-600 uppercase">
           <div className="border-b border-gray-300 pb-1">Nome do Ativo</div>
-          <div className="border-b border-gray-300 pb-1 text-left">Valor</div>
+          <div className="border-b border-gray-300 pb-1 text-right">Valor</div>
           <div className="border-b border-gray-300 pb-1 text-center">Ação</div>
         </div>
 
         {/* LINHAS */}
-        <div className="px-6 mt-2 max-h-[420px] overflow-y-auto">
+        <div
+          ref={listaRef}
+          className="px-6 mt-2 max-h-[420px] overflow-y-auto"
+        >
           {linhas.map((l) => (
             <div
               key={l.id}
-              className="grid grid-cols-[2fr_1fr_60px] gap-0 items-center border-b border-gray-200 py-2"
+              className="grid grid-cols-[2fr_1fr_60px] items-center border-b border-gray-200 py-2"
             >
-              {/* NOME */}
+              {/* Nome */}
               <div className="pr-3 border-r border-gray-300">
                 <input
                   className="w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
@@ -272,17 +257,16 @@ export default function EditAtivosModal({
                 />
               </div>
 
-              {/* VALOR — alinhado à ESQUERDA */}
+              {/* Valor */}
               <div className="pl-3 pr-3 border-r border-gray-300">
                 <input
-                  className="w-full text-left bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
-                  inputMode="decimal"
+                  className="w-full text-right bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
                   placeholder="0,00"
+                  inputMode="decimal"
                   value={l.valor}
                   onChange={(e) => {
-                    const raw = e.target.value;
-                    if (/^[0-9.,]*$/.test(raw)) {
-                      atualizarCampo(l.id, "valor", raw);
+                    if (/^[0-9.,]*$/.test(e.target.value)) {
+                      atualizarCampo(l.id, "valor", e.target.value);
                     }
                   }}
                   onBlur={(e) =>
@@ -295,7 +279,7 @@ export default function EditAtivosModal({
                 />
               </div>
 
-              {/* AÇÃO */}
+              {/* Ação */}
               <div className="flex justify-center">
                 <button
                   onClick={() => removerLinha(l.id)}
@@ -319,7 +303,7 @@ export default function EditAtivosModal({
           </span>
         </div>
 
-        {/* BARRA FINAL */}
+        {/* BOTÕES FINAIS */}
         <div className="px-6 py-4 flex justify-end gap-3 border-t border-gray-200">
           <button
             onClick={onClose}
