@@ -200,7 +200,7 @@ function LinhaAtivo({
           createPortal(
             <div
               style={dropdownStyle}
-              className="max-h-48 overflow-auto rounded-lg border border-gray-300 bg-white shadow-2xl"
+              className="rounded-lg border border-gray-300 bg-white shadow-2xl"
             >
               {sugestoes.map((s) => (
                 <button
