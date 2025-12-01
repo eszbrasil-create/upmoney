@@ -8,9 +8,9 @@ import React, {
 } from "react";
 import { Trash2 } from "lucide-react";
 
-/* ---------------------------
-   Month/Year Picker minimal
----------------------------- */
+/* ------------------------------
+   Seletor Mês/Ano minimalista
+------------------------------ */
 function MesAnoPicker({ value, onChange }) {
   const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
   const [mesAtual, anoAtual] = String(value || "").split("/");
@@ -22,18 +22,15 @@ function MesAnoPicker({ value, onChange }) {
   return (
     <div className="relative">
       <button
-        type="button"
         onClick={() => setOpen(v => !v)}
-        className="px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-100"
+        className="px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-800 hover:bg-gray-100"
       >
         {value}
       </button>
 
       {open && (
         <div className="absolute mt-2 bg-white border border-gray-200 rounded-xl shadow-lg p-3 z-50 w-44">
-          <div className="text-sm font-medium text-gray-600 mb-1 px-1">
-            Mês
-          </div>
+          <div className="text-sm font-medium text-gray-700 mb-1 px-1">Mês</div>
           <div className="grid grid-cols-3 gap-1 mb-3">
             {meses.map((m) => (
               <button
@@ -43,7 +40,9 @@ function MesAnoPicker({ value, onChange }) {
                   setOpen(false);
                 }}
                 className={`text-sm py-1 rounded-md ${
-                  m === mesAtual ? "bg-emerald-500 text-white" : "hover:bg-gray-100"
+                  m === mesAtual
+                    ? "bg-emerald-500 text-white"
+                    : "hover:bg-gray-100 text-gray-800"
                 }`}
               >
                 {m}
@@ -51,9 +50,7 @@ function MesAnoPicker({ value, onChange }) {
             ))}
           </div>
 
-          <div className="text-sm font-medium text-gray-600 mb-1 px-1">
-            Ano
-          </div>
+          <div className="text-sm font-medium text-gray-700 mb-1 px-1">Ano</div>
           <div className="grid grid-cols-3 gap-1">
             {anos.map((a) => (
               <button
@@ -63,7 +60,9 @@ function MesAnoPicker({ value, onChange }) {
                   setOpen(false);
                 }}
                 className={`text-sm py-1 rounded-md ${
-                  a == anoAtual ? "bg-emerald-500 text-white" : "hover:bg-gray-100"
+                  a == anoAtual
+                    ? "bg-emerald-500 text-white"
+                    : "hover:bg-gray-100 text-gray-800"
                 }`}
               >
                 {a}
@@ -76,9 +75,9 @@ function MesAnoPicker({ value, onChange }) {
   );
 }
 
-/* ---------------------------
-   MODAL PRINCIPAL
----------------------------- */
+/* -----------------------------------
+   MODAL PRINCIPAL — LAYOUT EXCEL/NUMBERS
+----------------------------------- */
 export default function EditAtivosModal({
   open,
   onClose,
@@ -91,23 +90,22 @@ export default function EditAtivosModal({
 
   const hoje = new Date();
   const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-
   const mesPadrao = `${meses[hoje.getMonth()]}/${hoje.getFullYear()}`;
+
   const [mesAno, setMesAno] = useState(mesAnoInicial || mesPadrao);
 
-  /* ------------ helpers num ------------ */
   const toNum = (x) => {
     if (!x) return 0;
     return Number(String(x).replace(/\./g, "").replace(",", ".")) || 0;
   };
 
-  const format = (n) =>
+  const fmt = (n) =>
     n.toLocaleString("pt-BR", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
 
-  /* ------------ linhas ------------ */
+  /* ---------------- linhas ---------------- */
   const [linhas, setLinhas] = useState([]);
 
   useEffect(() => {
@@ -118,7 +116,7 @@ export default function EditAtivosModal({
         linhasIniciais.map((l) => ({
           id: crypto.randomUUID(),
           nome: l.nome,
-          valor: format(toNum(l.valor)),
+          valor: fmt(toNum(l.valor)),
         }))
       );
     } else {
@@ -138,15 +136,14 @@ export default function EditAtivosModal({
     setLinhas(novo.length ? novo : [{ id: crypto.randomUUID(), nome: "", valor: "" }]);
   };
 
-  const atualizar = (id, campo, valor) => {
+  const atualizar = (id, campo, v) => {
     setLinhas((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l))
+      prev.map((l) => (l.id === id ? { ...l, [campo]: v } : l))
     );
   };
 
   const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
 
-  /* ------------ salvar ------------ */
   const salvar = useCallback(() => {
     const itens = linhas
       .filter((l) => l.nome.trim() !== "")
@@ -174,24 +171,22 @@ export default function EditAtivosModal({
         onMouseDown={(e) => e.stopPropagation()}
         className="w-[900px] max-w-[95vw] bg-white rounded-2xl shadow-xl border border-gray-200"
       >
-        {/* ---------------- HEADER ---------------- */}
-        <div className="flex items-center justify-between px-6 py-4 bg-[#F2F2F2] rounded-t-2xl border-b border-gray-300">
-          <div className="flex items-center gap-3">
-            <div className="text-lg font-semibold text-gray-800">Editar Ativos</div>
-
-            <MesAnoPicker value={mesAno} onChange={setMesAno} />
-          </div>
+        {/* ---------------- HEADER CINZA ---------------- */}
+        <div className="px-6 py-4 bg-[#F2F2F2] border-b border-gray-300 rounded-t-2xl flex items-center justify-between">
+          <div className="text-lg font-semibold text-gray-900">Editar Ativos</div>
 
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-900 text-2xl leading-none px-2"
+            className="text-gray-700 hover:text-black text-2xl leading-none px-2"
           >
             ×
           </button>
         </div>
 
-        {/* ---------------- BOTÃO ADICIONAR LINHA (TOPO) ---------------- */}
-        <div className="px-6 pt-4">
+        {/* ---------------- AÇÕES: DATA + ADICIONAR LINHA ---------------- */}
+        <div className="px-6 pt-4 flex items-center gap-4">
+          <MesAnoPicker value={mesAno} onChange={setMesAno} />
+
           <button
             onClick={adicionarLinhaTopo}
             className="inline-flex items-center gap-2 text-sm font-medium text-emerald-700 hover:text-emerald-900"
@@ -200,17 +195,18 @@ export default function EditAtivosModal({
           </button>
         </div>
 
-        {/* ---------------- TABELA ---------------- */}
-        <div className="px-6 mt-3 max-h-[420px] overflow-y-auto">
+        {/* ---------------- TABELA EXCEL ---------------- */}
+        <div className="px-6 mt-4 max-h-[420px] overflow-y-auto">
+
           {/* Cabeçalho */}
-          <div className="grid grid-cols-[2fr_1fr_40px] text-xs font-semibold text-gray-500 border-b border-gray-300 pb-1">
+          <div className="grid grid-cols-[2fr_1fr_40px] text-xs font-semibold text-gray-600 border-b border-gray-300 pb-2">
             <span>Nome do Ativo</span>
             <span className="text-right">Valor</span>
             <span></span>
           </div>
 
           {/* Linhas */}
-          <div className="mt-2 space-y-1">
+          <div className="mt-2">
             {linhas.map((l) => (
               <div
                 key={l.id}
@@ -221,7 +217,7 @@ export default function EditAtivosModal({
                   value={l.nome}
                   onChange={(e) => atualizar(l.id, "nome", e.target.value)}
                   placeholder="Ativo"
-                  className="text-sm px-1 py-1 border-b border-gray-300 focus:outline-none focus:border-emerald-500"
+                  className="text-sm px-1 py-1 border-b border-gray-300 focus:border-emerald-500 focus:outline-none text-gray-900"
                 />
 
                 {/* Valor */}
@@ -232,9 +228,11 @@ export default function EditAtivosModal({
                       atualizar(l.id, "valor", e.target.value);
                     }
                   }}
-                  onBlur={(e) => atualizar(l.id, "valor", format(toNum(e.target.value)))}
+                  onBlur={(e) =>
+                    atualizar(l.id, "valor", fmt(toNum(e.target.value)))
+                  }
                   placeholder="0,00"
-                  className="text-sm px-1 py-1 text-right border-b border-gray-300 focus:outline-none focus:border-emerald-500"
+                  className="text-sm px-1 py-1 text-right border-b border-gray-300 focus:border-emerald-500 focus:outline-none text-gray-900"
                 />
 
                 {/* Remover */}
@@ -251,10 +249,10 @@ export default function EditAtivosModal({
 
         {/* ---------------- TOTAL + BOTÕES ---------------- */}
         <div className="px-6 py-4 flex items-center justify-between border-t border-gray-300 mt-2">
-          <div className="text-sm font-medium text-gray-700">
+          <div className="text-sm font-medium text-gray-800">
             Total:{" "}
             <span className="font-semibold text-emerald-700">
-              {format(total)}
+              {fmt(total)}
             </span>
           </div>
 
