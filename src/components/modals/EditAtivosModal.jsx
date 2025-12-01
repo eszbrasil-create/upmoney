@@ -2,14 +2,16 @@
 import React, {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
 import { Trash2 } from "lucide-react";
 
 function MesAnoPicker({ value, onChange }) {
-  const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const meses = [
+    "Jan","Fev","Mar","Abr","Mai","Jun",
+    "Jul","Ago","Set","Out","Nov","Dez"
+  ];
 
   const [mesAtual, anoAtualStr] = String(value || "").split("/");
   const anoInicial = Number(anoAtualStr) || new Date().getFullYear();
@@ -17,6 +19,7 @@ function MesAnoPicker({ value, onChange }) {
   const [ano, setAno] = useState(anoInicial);
 
   const ref = useRef(null);
+
   useEffect(() => {
     function onDocClick(e) {
       if (!ref.current) return;
@@ -96,13 +99,27 @@ export default function EditAtivosModal({
   open,
   onClose,
   onSave,
-  ativosExistentes = ["Ações","Renda Fixa","Cripto","FIIs","Caixa","Banco","Viagem","Cofre"],
+  ativosExistentes = [
+    "Ações",
+    "Renda Fixa",
+    "Cripto",
+    "FIIs",
+    "Caixa",
+    "Banco",
+    "Viagem",
+    "Cofre",
+  ],
   mesAnoInicial,
   linhasIniciais = [],
+  // ✅ NOVO: lista do mês anterior (opcional)
+  linhasMesAnterior = [],
 }) {
   const backdropRef = useRef(null);
 
-  const mesesLista = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const mesesLista = [
+    "Jan","Fev","Mar","Abr","Mai","Jun",
+    "Jul","Ago","Set","Out","Nov","Dez"
+  ];
   const hoje = new Date();
   const mesBase = hoje.getMonth();
   const anoBase = hoje.getFullYear();
@@ -130,6 +147,10 @@ export default function EditAtivosModal({
     if (!open) return;
     setMesAno(padraoMesAno);
 
+    // ✅ Prioridade:
+    // 1) linhasIniciais (mês atual já salvo)
+    // 2) linhasMesAnterior (duplicar automaticamente o último registro)
+    // 3) linha vazia
     if (Array.isArray(linhasIniciais) && linhasIniciais.length > 0) {
       setLinhas(
         linhasIniciais.map((l) => ({
@@ -138,22 +159,36 @@ export default function EditAtivosModal({
           valor: formatPtBr(toNum(l.valor)),
         }))
       );
+    } else if (
+      Array.isArray(linhasMesAnterior) &&
+      linhasMesAnterior.length > 0
+    ) {
+      setLinhas(
+        linhasMesAnterior.map((l) => ({
+          id: crypto.randomUUID(),
+          nome: l.nome || "",
+          valor: formatPtBr(toNum(l.valor)),
+        }))
+      );
     } else {
       setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
     }
-  }, [open, padraoMesAno, linhasIniciais]);
+  }, [open, padraoMesAno, linhasIniciais, linhasMesAnterior]);
 
+  // ✅ NOVA LINHA VAI PARA O TOPO
   const adicionarLinha = () => {
     setLinhas((prev) => [
-      ...prev,
       { id: crypto.randomUUID(), nome: "", valor: "" },
+      ...prev,
     ]);
   };
 
   const removerLinha = (id) => {
     setLinhas((prev) => {
       const novo = prev.filter((l) => l.id !== id);
-      return novo.length ? novo : [{ id: crypto.randomUUID(), nome: "", valor: "" }];
+      return novo.length
+        ? novo
+        : [{ id: crypto.randomUUID(), nome: "", valor: "" }];
     });
   };
 
@@ -216,7 +251,7 @@ export default function EditAtivosModal({
         {/* TÍTULOS DAS COLUNAS */}
         <div className="grid grid-cols-[2fr_1fr_60px] gap-0 px-6 mt-6 text-xs font-semibold text-gray-600 uppercase">
           <div className="border-b border-gray-300 pb-1">Nome do Ativo</div>
-          <div className="border-b border-gray-300 pb-1 text-left">Valor</div> {/* ← agora alinhado à ESQUERDA */}
+          <div className="border-b border-gray-300 pb-1 text-left">Valor</div>
           <div className="border-b border-gray-300 pb-1 text-center">Ação</div>
         </div>
 
@@ -227,7 +262,7 @@ export default function EditAtivosModal({
               key={l.id}
               className="grid grid-cols-[2fr_1fr_60px] gap-0 items-center border-b border-gray-200 py-2"
             >
-              {/* NOME — borda vertical */}
+              {/* NOME */}
               <div className="pr-3 border-r border-gray-300">
                 <input
                   className="w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
@@ -237,7 +272,7 @@ export default function EditAtivosModal({
                 />
               </div>
 
-              {/* VALOR — AGORA ALINHADO À ESQUERDA */}
+              {/* VALOR — alinhado à ESQUERDA */}
               <div className="pl-3 pr-3 border-r border-gray-300">
                 <input
                   className="w-full text-left bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
