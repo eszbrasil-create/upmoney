@@ -270,9 +270,9 @@ function LinhaAtivo({
 ---------------------------- */
 export default function EditAtivosModal({
   open,
-  isOpen, // alias opcional
+  isOpen, // alias
   onClose,
-  onSave, // opcional: pai pode reagir depois do salvamento
+  onSave,
   ativosExistentes = [
     "Ações",
     "Renda Fixa",
@@ -287,7 +287,6 @@ export default function EditAtivosModal({
   linhasIniciais = [],
 }) {
   const backdropRef = useRef(null);
-
   const visible = Boolean(open ?? isOpen);
 
   // usuário logado
@@ -362,11 +361,9 @@ export default function EditAtivosModal({
     { id: crypto.randomUUID(), nome: "", valor: "" },
   ]);
 
-  // estado de salvamento / erro global
   const [isSaving, setIsSaving] = useState(false);
   const [erroGlobal, setErroGlobal] = useState("");
 
-  // autocomplete (compartilhado entre as linhas)
   const [focoId, setFocoId] = useState(null);
   const [query, setQuery] = useState("");
 
@@ -379,14 +376,13 @@ export default function EditAtivosModal({
   }, [ativosExistentes]);
 
   const sugestoes = useMemo(() => {
-    if (!query) return uniqAtivos.slice(0, 8); // pré-lista com 8 itens
+    if (!query) return uniqAtivos.slice(0, 8);
     const q = query.toLowerCase();
     return uniqAtivos
       .filter((n) => n.toLowerCase().includes(q))
       .slice(0, 8);
   }, [query, uniqAtivos]);
 
-  // quando abrir o modal, configura linhas
   useEffect(() => {
     if (!visible) return;
     setMesAno(padraoMesAno);
@@ -394,7 +390,6 @@ export default function EditAtivosModal({
     setIsSaving(false);
 
     if (Array.isArray(linhasIniciais) && linhasIniciais.length > 0) {
-      // edição de mês já salvo (vindo do pai)
       setLinhas(
         linhasIniciais.map((l) => ({
           id: crypto.randomUUID(),
@@ -403,7 +398,6 @@ export default function EditAtivosModal({
         }))
       );
     } else {
-      // primeiro preenchimento → 4 linhas vazias
       setLinhas([
         { id: crypto.randomUUID(), nome: "", valor: "" },
         { id: crypto.randomUUID(), nome: "", valor: "" },
@@ -424,7 +418,6 @@ export default function EditAtivosModal({
     setLinhas((prev) => {
       const novo = prev.filter((l) => l.id !== id);
       if (novo.length === 0) {
-        // mantém ao menos 1 linha
         return [{ id: crypto.randomUUID(), nome: "", valor: "" }];
       }
       return novo;
@@ -468,24 +461,25 @@ export default function EditAtivosModal({
 
       const uid = user.id;
 
-      // 1) Verifica se já existe registro para (uid, s_ano)
-      const { data: existente, error: selectError } = await supabase
+      // 1) BUSCA SIMPLES: se já existe cabeçalho para (uid, s_ano)
+      const { data: rows, error: selectError } = await supabase
         .from("registros_ativos")
         .select("*")
         .eq("uid", uid)
         .eq("s_ano", mesAno)
-        .maybeSingle();
+        .limit(1);
 
-      if (selectError && selectError.code !== "PGRST116") {
-        // PGRST116 = no rows found; o maybeSingle usa isso
+      if (selectError) {
         console.error("Erro ao buscar cabeçalho de ativos:", selectError);
         throw new Error("Erro ao buscar cabeçalho de ativos.");
       }
 
+      const existente = rows && rows.length > 0 ? rows[0] : null;
+
       let registroId;
 
       if (existente) {
-        // 2a) Já existe: atualiza
+        // 2a) Atualiza registro existente
         const { data: atualizado, error: updateError } = await supabase
           .from("registros_ativos")
           .update({
@@ -503,7 +497,7 @@ export default function EditAtivosModal({
 
         registroId = atualizado.id;
       } else {
-        // 2b) Não existe: cria
+        // 2b) Cria novo cabeçalho
         const { data: criado, error: insertHeaderError } = await supabase
           .from("registros_ativos")
           .insert({
@@ -554,7 +548,6 @@ export default function EditAtivosModal({
         }
       }
 
-      // 5) callback opcional pro pai
       if (onSave) {
         await onSave({ mesAno, itens: itensLimpos, total });
       }
@@ -617,7 +610,7 @@ export default function EditAtivosModal({
           <div className="border-b border-gray-300 pb-1 text-center">Ação</div>
         </div>
 
-        {/* LINHAS (SCROLL APENAS AQUI) */}
+        {/* LINHAS */}
         <div className="px-6 mt-2 max-h-[380px] overflow-y-auto">
           {linhas.map((l) => (
             <LinhaAtivo
