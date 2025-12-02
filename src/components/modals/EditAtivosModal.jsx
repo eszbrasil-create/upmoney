@@ -1,4 +1,4 @@
-// src/components/modals/
+// src/components/modals/EditAtivosModal.jsx
 import React, {
   useEffect,
   useLayoutEffect,
@@ -9,7 +9,6 @@ import React, {
 import { createPortal } from "react-dom";
 import { Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
-import { salvarRegistroAtivos } from "../../lib/salvarRegistroAtivos"; // ajuste o caminho se necessário
 
 /* ---------------------------
    Hook para dropdown flutuante
@@ -45,7 +44,20 @@ function useFloatingDropdown(ref, offset = 4) {
    Month / Year Picker
 ---------------------------- */
 function MesAnoPicker({ value, onChange }) {
-  const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  const meses = [
+    "Jan",
+    "Fev",
+    "Mar",
+    "Abr",
+    "Mai",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Set",
+    "Out",
+    "Nov",
+    "Dez",
+  ];
   const [mesAtual, anoAtualStr] = String(value || "").split("/");
   const anoInicial = Number(anoAtualStr) || new Date().getFullYear();
 
@@ -71,18 +83,28 @@ function MesAnoPicker({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-2 rounded-lg bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 hover:bg-gray-200 transition"
+        className="inline-flex items-center justify-between gap-2 rounded-lg bg-white/70 border border-gray-300/70 px-3 py-2 text-xs sm:text-sm text-gray-800 hover:bg-white/90 shadow-sm transition w-full"
       >
-        <span>{value}</span>
-        <span>▼</span>
+        <span>{value || "Mês/Ano"}</span>
+        <span className="text-[10px]">▼</span>
       </button>
 
       {open && (
-        <div className="absolute left-0 mt-2 w-60 rounded-xl border border-gray-300 bg-white shadow-xl p-4 z-50">
+        <div className="absolute left-0 mt-2 w-56 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-sm shadow-2xl p-4 z-50">
           <div className="flex items-center justify-between mb-3">
-            <button onClick={() => setAno((a) => a - 1)} className="w-8 h-8 rounded hover:bg-gray-200">←</button>
+            <button
+              onClick={() => setAno((a) => a - 1)}
+              className="w-8 h-8 rounded hover:bg-gray-100"
+            >
+              ←
+            </button>
             <span className="font-semibold">{ano}</span>
-            <button onClick={() => setAno((a) => a + 1)} className="w-8 h-8 rounded hover:bg-gray-200">→</button>
+            <button
+              onClick={() => setAno((a) => a + 1)}
+              className="w-8 h-8 rounded hover:bg-gray-100"
+            >
+              →
+            </button>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {meses.map((m) => (
@@ -132,7 +154,19 @@ function LinhaAtivo({
   const erroValorSemNome = hasValor && !hasNome;
 
   return (
-    <div className={`grid grid-cols-[2fr_1fr_60px] gap-0 items-center border-b border-gray-200 py-2 ${focoId === linha.id ? "relative z-20 bg-white" : ""}`}>
+    <div
+      className={`grid grid-cols-[130px_2fr_1fr_60px] gap-0 items-center border-b border-gray-200 py-2 ${
+        focoId === linha.id ? "relative z-20 bg-white" : ""
+      }`}
+    >
+      {/* DATA (MÊS/ANO) */}
+      <div className="pr-3 border-r border-gray-300">
+        <MesAnoPicker
+          value={linha.data || ""}
+          onChange={(val) => atualizarCampo(linha.id, "data", val)}
+        />
+      </div>
+
       {/* NOME */}
       <div className="pr-3 border-r border-gray-300 relative">
         <input
@@ -149,22 +183,28 @@ function LinhaAtivo({
           onBlur={() => setTimeout(() => setFocoId(null), 150)}
         />
 
-        {focoId === linha.id && sugestoes.length > 0 && typeof document !== "undefined" && createPortal(
-          <div style={dropdownStyle} className="bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-            {sugestoes.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => selecionarSugestao(linha.id, s)}
-                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-              >
-                {s}
-              </button>
-            ))}
-          </div>,
-          document.body
-        )}
+        {focoId === linha.id &&
+          sugestoes.length > 0 &&
+          typeof document !== "undefined" &&
+          createPortal(
+            <div
+              style={dropdownStyle}
+              className="bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto"
+            >
+              {sugestoes.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => selecionarSugestao(linha.id, s)}
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>,
+            document.body
+          )}
       </div>
 
       {/* VALOR */}
@@ -180,14 +220,25 @@ function LinhaAtivo({
               atualizarCampo(linha.id, "valor", raw);
             }
           }}
-          onBlur={(e) => atualizarCampo(linha.id, "valor", formatPtBr(toNum(e.target.value)))}
+          onBlur={(e) =>
+            atualizarCampo(
+              linha.id,
+              "valor",
+              formatPtBr(toNum(e.target.value))
+            )
+          }
         />
-        {erroValorSemNome && <p className="mt-1 text-xs text-red-500">Nome obrigatório</p>}
+        {erroValorSemNome && (
+          <p className="mt-1 text-xs text-red-500">Nome obrigatório</p>
+        )}
       </div>
 
       {/* LIXO */}
       <div className="flex justify-center">
-        <button onClick={() => removerLinha(linha.id)} className="text-gray-500 hover:text-red-600">
+        <button
+          onClick={() => removerLinha(linha)}
+          className="text-gray-500 hover:text-red-600"
+        >
           <Trash2 size={16} />
         </button>
       </div>
@@ -196,14 +247,23 @@ function LinhaAtivo({
 }
 
 /* ---------------------------
-   MODAL PRINCIPAL – FINAL E INQUEBRÁVEL
+   MODAL PRINCIPAL
 ---------------------------- */
 export default function EditAtivosModal({
   open,
   isOpen,
   onClose,
   onSave,
-  ativosExistentes = ["Ações", "Renda Fixa", "Cripto", "FIIs", "Caixa", "Banco", "Viagem", "Cofre"],
+  ativosExistentes = [
+    "Ações",
+    "Renda Fixa",
+    "Cripto",
+    "FIIs",
+    "Caixa",
+    "Banco",
+    "Viagem",
+    "Cofre",
+  ],
   mesAnoInicial,
 }) {
   const visible = Boolean(open ?? isOpen);
@@ -215,36 +275,76 @@ export default function EditAtivosModal({
   const [focoId, setFocoId] = useState(null);
   const [query, setQuery] = useState("");
 
-  const toNum = (v) => Number(String(v).replace(/\./g, "").replace(",", ".")) || 0;
-  const formatPtBr = (n) => Number(n).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const toNum = (v) =>
+    Number(String(v).replace(/\./g, "").replace(",", ".")) || 0;
+  const formatPtBr = (n) =>
+    Number(n).toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
   const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
 
   const sugestoes = useMemo(() => {
     if (!query.trim()) return ativosExistentes.slice(0, 8);
-    return ativosExistentes.filter(a => a.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
+    return ativosExistentes
+      .filter((a) => a.toLowerCase().includes(query.toLowerCase()))
+      .slice(0, 8);
   }, [query, ativosExistentes]);
+
+  const criarLinhasVazias = (mesRef) => {
+    const dataBase = mesRef || "";
+    return [
+      { id: crypto.randomUUID(), data: dataBase, nome: "", valor: "" },
+      { id: crypto.randomUUID(), data: dataBase, nome: "", valor: "" },
+      { id: crypto.randomUUID(), data: dataBase, nome: "", valor: "" },
+      { id: crypto.randomUUID(), data: dataBase, nome: "", valor: "" },
+    ];
+  };
 
   // CARREGA DADOS AO ABRIR
   useEffect(() => {
     if (!visible) return;
 
     const carregarDados = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      let currentUser = user;
+      if (!currentUser) {
+        const { data } = await supabase.auth.getUser();
+        currentUser = data?.user || null;
+        setUser(currentUser);
+      }
 
       const hoje = new Date();
-      const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-      const mesAnoPadrao = mesAnoInicial || `${meses[hoje.getMonth()]}/${hoje.getFullYear()}`;
-      setMesAno(mesAnoPadrao);
+      const meses = [
+        "Jan",
+        "Fev",
+        "Mar",
+        "Abr",
+        "Mai",
+        "Jun",
+        "Jul",
+        "Ago",
+        "Set",
+        "Out",
+        "Nov",
+        "Dez",
+      ];
+      const mesAnoPadrao =
+        mesAnoInicial || `${meses[hoje.getMonth()]}/${hoje.getFullYear()}`;
 
-      if (!user) return;
+      const mesRef = mesAno || mesAnoPadrao;
+      if (!mesAno) setMesAno(mesRef);
+
+      if (!currentUser) {
+        setLinhas(criarLinhasVazias(mesRef));
+        return;
+      }
 
       const { data: cabecalho } = await supabase
         .from("registros_ativos")
         .select("id")
-        .eq("user_id", user.id)
-        .eq("mes_ano", mesAnoPadrao)
+        .eq("user_id", currentUser.id)
+        .eq("mes_ano", mesRef)
         .maybeSingle();
 
       if (cabecalho) {
@@ -254,6 +354,282 @@ export default function EditAtivosModal({
           .eq("registro_id", cabecalho.id);
 
         if (itens?.length > 0) {
-          setLinhas(itens.map(i => ({
-            id: crypto.randomUUID(),
-            nome: i
+          setLinhas(
+            itens.map((i) => ({
+              id: crypto.randomUUID(),
+              data: mesRef,
+              nome: i.nome_ativo,
+              valor: formatPtBr(i.valor),
+            }))
+          );
+          return;
+        }
+
+        setLinhas(criarLinhasVazias(mesRef));
+        return;
+      }
+
+      setLinhas(criarLinhasVazias(mesRef));
+    };
+
+    carregarDados();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, mesAnoInicial]);
+
+  const adicionarLinha = () =>
+    setLinhas((prev) => [
+      { id: crypto.randomUUID(), data: mesAno || "", nome: "", valor: "" },
+      ...prev,
+    ]);
+
+  // REMOVER LINHA -> também apaga registros_ativos desse mês
+  const removerLinha = async (linha) => {
+    // 1) Atualiza UI
+    const novasLinhas = linhas.filter((l) => l.id !== linha.id);
+    setLinhas(novasLinhas.length === 0 ? criarLinhasVazias(mesAno) : novasLinhas);
+
+    if (!user) return;
+
+    // 2) Descobre o mês/ano alvo: usa a data da linha ou o mesAno interno
+    const mesRef = linha.data || mesAno;
+    if (!mesRef) return;
+
+    try {
+      // Busca cabeçalho desse mês
+      const { data: cabecalho, error } = await supabase
+        .from("registros_ativos")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("mes_ano", mesRef)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!cabecalho) return;
+
+      // Apaga todos os itens ligados a esse registro
+      await supabase
+        .from("registros_ativos_itens")
+        .delete()
+        .eq("registro_id", cabecalho.id);
+
+      // Apaga o próprio registro_ativos
+      await supabase
+        .from("registros_ativos")
+        .delete()
+        .eq("id", cabecalho.id);
+    } catch (err) {
+      console.error(
+        "Erro ao excluir registros_ativos ao remover linha:",
+        err
+      );
+    }
+  };
+
+  const atualizarCampo = (id, campo, valor) =>
+    setLinhas((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l))
+    );
+
+  const selecionarSugestao = (id, nome) => {
+    atualizarCampo(id, "nome", nome);
+    setQuery("");
+    setFocoId(null);
+  };
+
+  const salvar = async () => {
+    if (isSaving || !user) return;
+    setIsSaving(true);
+    setErroGlobal("");
+
+    const itensValidos = linhas.filter(
+      (l) => l.nome?.trim() !== "" && l.valor?.trim() !== ""
+    );
+
+    const totalCalculado = itensValidos.reduce(
+      (acc, l) => acc + toNum(l.valor),
+      0
+    );
+
+    try {
+      const userId = user.id;
+      const agora = new Date().toISOString();
+
+      const { data: cabecalhos } = await supabase
+        .from("registros_ativos")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("mes_ano", mesAno)
+        .limit(1);
+
+      const registroExistente = cabecalhos?.[0];
+
+      if (itensValidos.length === 0) {
+        if (registroExistente) {
+          await supabase
+            .from("registros_ativos_itens")
+            .delete()
+            .eq("registro_id", registroExistente.id);
+          await supabase
+            .from("registros_ativos")
+            .delete()
+            .eq("id", registroExistente.id);
+        }
+        onSave?.({ mesAno, itens: [], total: 0, deleted: true });
+        onClose?.();
+        setIsSaving(false);
+        return;
+      }
+
+      let registroIdLocal = registroExistente?.id;
+
+      if (!registroIdLocal) {
+        const { data: novo } = await supabase
+          .from("registros_ativos")
+          .insert({
+            user_id: userId,
+            mes_ano: mesAno,
+            total: totalCalculado,
+            created_at: agora,
+            atualizado_em: agora,
+          })
+          .select()
+          .single();
+
+        registroIdLocal = novo.id;
+      }
+
+      await supabase
+        .from("registros_ativos_itens")
+        .delete()
+        .eq("registro_id", registroIdLocal);
+
+      const payload = itensValidos.map((l) => ({
+        registro_id: registroIdLocal,
+        user_id: userId,
+        nome_ativo: l.nome.trim(),
+        valor: toNum(l.valor),
+        created_at: agora,
+        atualizado_em: agora,
+      }));
+
+      await supabase.from("registros_ativos_itens").insert(payload);
+
+      await supabase
+        .from("registros_ativos")
+        .update({ total: totalCalculado, atualizado_em: agora })
+        .eq("id", registroIdLocal);
+
+      onSave?.({
+        mesAno,
+        itens: itensValidos.map((l) => ({
+          data: l.data,
+          nome: l.nome.trim(),
+          valor: toNum(l.valor),
+        })),
+        total: totalCalculado,
+        deleted: false,
+      });
+      onClose?.();
+    } catch (err) {
+      console.error(err);
+      setErroGlobal("Erro ao salvar: " + (err.message || "Tente novamente"));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (!visible) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-[900px] max-w-[96vw] bg-white rounded-xl shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Barra de cima translúcida */}
+        <div className="px-6 py-4 border-b border-gray-200/60 bg-white/70 backdrop-blur-sm rounded-t-xl flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-800">
+            Editar Ativos
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-3xl text-gray-500 hover:text-gray-800"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-xs sm:text-sm text-gray-500">
+              Use o campo de data (mês/ano) na primeira coluna para organizar
+              seus registros.
+            </span>
+            <button
+              onClick={adicionarLinha}
+              className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+            >
+              + Adicionar linha
+            </button>
+          </div>
+
+          <div className="grid grid-cols-[130px_2fr_1fr_60px] text-xs font-bold text-gray-600 uppercase mb-2">
+            <div>Data (mês/ano)</div>
+            <div>Nome do Ativo</div>
+            <div className="text-right">Valor</div>
+            <div></div>
+          </div>
+
+          <div className="max-h-96 overflow-y-auto -mx-6 px-6">
+            {linhas.map((l) => (
+              <LinhaAtivo
+                key={l.id}
+                linha={l}
+                focoId={focoId}
+                setFocoId={setFocoId}
+                sugestoes={sugestoes}
+                selecionarSugestao={selecionarSugestao}
+                atualizarCampo={atualizarCampo}
+                removerLinha={removerLinha}
+                setQuery={setQuery}
+                formatPtBr={formatPtBr}
+                toNum={toNum}
+              />
+            ))}
+          </div>
+
+          <div className="mt-6 pt-4 border-t flex justify-end text-lg font-bold text-emerald-600">
+            Total: R${" "}
+            {total.toLocaleString("pt-BR", {
+              minimumFractionDigits: 2,
+            })}
+          </div>
+
+          {erroGlobal && (
+            <div className="text-red-600 text-sm mt-2">{erroGlobal}</div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-xl">
+          <button
+            onClick={onClose}
+            disabled={isSaving}
+            className="px-5 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+          >
+            Fechar
+          </button>
+          <button
+            onClick={salvar}
+            disabled={isSaving}
+            className="px-6 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
+          >
+            {isSaving ? "Salvando…" : "Salvar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
