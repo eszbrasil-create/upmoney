@@ -1,5 +1,5 @@
-// salvarRegistroAtivos.js
-import { supabase } from "../lib/supabaseClient"; // ajuste o caminho se for diferente
+// src/utils/salvarRegistroAtivos.js
+import { supabase } from "../lib/supabaseClient"; // mantém assim
 
 export async function salvarRegistroAtivos({ mesAno, itens, total }) {
   // 1. pegar usuário logado
@@ -34,12 +34,8 @@ export async function salvarRegistroAtivos({ mesAno, itens, total }) {
      CASO 1: NENHUM ITEM -> APAGAR TUDO
      ================================ */
   if (!itens || itens.length === 0) {
-    // Se não existir registro, não há nada pra apagar
-    if (!registroId) {
-      return null;
-    }
+    if (!registroId) return null;
 
-    // Apaga itens desse registro
     const { error: deleteItensError } = await supabase
       .from("registros_ativos_itens")
       .delete()
@@ -50,7 +46,6 @@ export async function salvarRegistroAtivos({ mesAno, itens, total }) {
       throw new Error("Erro ao limpar itens anteriores.");
     }
 
-    // Apaga o cabeçalho em registros_ativos
     const { error: deleteHeaderError } = await supabase
       .from("registros_ativos")
       .delete()
@@ -61,15 +56,14 @@ export async function salvarRegistroAtivos({ mesAno, itens, total }) {
       throw new Error("Erro ao apagar registro de ativos.");
     }
 
-    // Nada mais a fazer
     return null;
   }
 
   /* ================================
      CASO 2: TEM ITENS -> CRIAR/ATUALIZAR
      ================================ */
+  const agora = new Date().toISOString();
 
-  // 3. se não existir, cria; se existir, atualiza total
   if (!registroId) {
     const { data, error: insertError } = await supabase
       .from("registros_ativos")
@@ -77,8 +71,8 @@ export async function salvarRegistroAtivos({ mesAno, itens, total }) {
         user_id: userId,
         mes_ano: mesAno,
         total,
-        created_at: new Date().toISOString(),
-        atualizado_em: new Date().toISOString(),
+        created_at: agora,
+        atualizado_em: agora,
       })
       .select("id")
       .single();
@@ -94,7 +88,7 @@ export async function salvarRegistroAtivos({ mesAno, itens, total }) {
       .from("registros_ativos")
       .update({
         total,
-        atualizado_em: new Date().toISOString(),
+        atualizado_em: agora,
       })
       .eq("id", registroId);
 
@@ -119,7 +113,7 @@ export async function salvarRegistroAtivos({ mesAno, itens, total }) {
   const payload = itens.map((item) => ({
     registro_id: registroId,
     nome_ativo: item.nome,
-    valor: item.valor, // já vem como número do modal
+    valor: item.valor,
   }));
 
   const { error: insertItensError } = await supabase
