@@ -131,7 +131,21 @@ function LinhaAtivo({
   const erroValorSemNome = hasValor && !hasNome;
 
   return (
-    <div className={`grid grid-cols-[2fr_1fr_60px] gap-0 items-center border-b border-gray-200 py-2 ${focoId === linha.id ? "relative z-20 bg-white" : ""}`}>
+    <div
+      className={`grid grid-cols-[130px_2fr_1fr_60px] gap-0 items-center border-b border-gray-200 py-2 ${
+        focoId === linha.id ? "relative z-20 bg-white" : ""
+      }`}
+    >
+      {/* DATA */}
+      <div className="pr-3 border-r border-gray-300">
+        <input
+          type="date"
+          className="w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
+          value={linha.data || ""}
+          onChange={(e) => atualizarCampo(linha.id, "data", e.target.value)}
+        />
+      </div>
+
       {/* NOME */}
       <div className="pr-3 border-r border-gray-300 relative">
         <input
@@ -148,22 +162,28 @@ function LinhaAtivo({
           onBlur={() => setTimeout(() => setFocoId(null), 150)}
         />
 
-        {focoId === linha.id && sugestoes.length > 0 && typeof document !== "undefined" && createPortal(
-          <div style={dropdownStyle} className="bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto">
-            {sugestoes.map((s) => (
-              <button
-                key={s}
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => selecionarSugestao(linha.id, s)}
-                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-              >
-                {s}
-              </button>
-            ))}
-          </div>,
-          document.body
-        )}
+        {focoId === linha.id &&
+          sugestoes.length > 0 &&
+          typeof document !== "undefined" &&
+          createPortal(
+            <div
+              style={dropdownStyle}
+              className="bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto"
+            >
+              {sugestoes.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => selecionarSugestao(linha.id, s)}
+                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>,
+            document.body
+          )}
       </div>
 
       {/* VALOR */}
@@ -179,14 +199,25 @@ function LinhaAtivo({
               atualizarCampo(linha.id, "valor", raw);
             }
           }}
-          onBlur={(e) => atualizarCampo(linha.id, "valor", formatPtBr(toNum(e.target.value)))}
+          onBlur={(e) =>
+            atualizarCampo(
+              linha.id,
+              "valor",
+              formatPtBr(toNum(e.target.value))
+            )
+          }
         />
-        {erroValorSemNome && <p className="mt-1 text-xs text-red-500">Nome obrigatório</p>}
+        {erroValorSemNome && (
+          <p className="mt-1 text-xs text-red-500">Nome obrigatório</p>
+        )}
       </div>
 
       {/* LIXO */}
       <div className="flex justify-center">
-        <button onClick={() => removerLinha(linha)} className="text-gray-500 hover:text-red-600">
+        <button
+          onClick={() => removerLinha(linha)}
+          className="text-gray-500 hover:text-red-600"
+        >
           <Trash2 size={16} />
         </button>
       </div>
@@ -195,14 +226,23 @@ function LinhaAtivo({
 }
 
 /* ---------------------------
-   MODAL PRINCIPAL – BUG DO MÊS FANTASMA 100% MORTO
+   MODAL PRINCIPAL
 ---------------------------- */
 export default function EditAtivosModal({
   open,
   isOpen,
   onClose,
   onSave,
-  ativosExistentes = ["Ações", "Renda Fixa", "Cripto", "FIIs", "Caixa", "Banco", "Viagem", "Cofre"],
+  ativosExistentes = [
+    "Ações",
+    "Renda Fixa",
+    "Cripto",
+    "FIIs",
+    "Caixa",
+    "Banco",
+    "Viagem",
+    "Cofre",
+  ],
   mesAnoInicial,
 }) {
   const visible = Boolean(open ?? isOpen);
@@ -215,8 +255,13 @@ export default function EditAtivosModal({
   const [query, setQuery] = useState("");
   const [registroId, setRegistroId] = useState(null);
 
-  const toNum = (v) => Number(String(v).replace(/\./g, "").replace(",", ".")) || 0;
-  const formatPtBr = (n) => Number(n).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const toNum = (v) =>
+    Number(String(v).replace(/\./g, "").replace(",", ".")) || 0;
+  const formatPtBr = (n) =>
+    Number(n).toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
   const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
 
@@ -227,12 +272,12 @@ export default function EditAtivosModal({
       .slice(0, 8);
   }, [query, ativosExistentes]);
 
-  const criarLinhasVazias = () => ([
-    { id: crypto.randomUUID(), nome: "", valor: "" },
-    { id: crypto.randomUUID(), nome: "", valor: "" },
-    { id: crypto.randomUUID(), nome: "", valor: "" },
-    { id: crypto.randomUUID(), nome: "", valor: "" },
-  ]);
+  const criarLinhasVazias = () => [
+    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+  ];
 
   // CARREGA DADOS AO ABRIR E QUANDO MÊS MUDA
   useEffect(() => {
@@ -248,7 +293,20 @@ export default function EditAtivosModal({
       }
 
       const hoje = new Date();
-      const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+      const meses = [
+        "Jan",
+        "Fev",
+        "Mar",
+        "Abr",
+        "Mai",
+        "Jun",
+        "Jul",
+        "Ago",
+        "Set",
+        "Out",
+        "Nov",
+        "Dez",
+      ];
       const mesAnoPadrao =
         mesAnoInicial || `${meses[hoje.getMonth()]}/${hoje.getFullYear()}`;
 
@@ -281,6 +339,7 @@ export default function EditAtivosModal({
           setLinhas(
             itens.map((i) => ({
               id: crypto.randomUUID(),
+              data: "", // aqui você pode, no futuro, preencher com uma coluna de data se existir na tabela
               nome: i.nome_ativo,
               valor: formatPtBr(i.valor),
             }))
@@ -288,7 +347,7 @@ export default function EditAtivosModal({
           return;
         }
 
-        // Cabeçalho existe mas sem itens → limpa linhas
+        // Cabeçalho existe mas sem itens → linhas vazias
         setLinhas(criarLinhasVazias());
         return;
       }
@@ -299,12 +358,14 @@ export default function EditAtivosModal({
     };
 
     carregarDados();
-    // não dependemos de user para evitar loop extra
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, mesAnoInicial, mesAno]);
 
   const adicionarLinha = () =>
-    setLinhas((prev) => [{ id: crypto.randomUUID(), nome: "", valor: "" }, ...prev]);
+    setLinhas((prev) => [
+      { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+      ...prev,
+    ]);
 
   // REMOVER LINHA (ATUALIZA ESTADO + SUPABASE)
   const removerLinha = async (linha) => {
@@ -321,7 +382,7 @@ export default function EditAtivosModal({
     if (!nomeLimpo) return;
 
     try {
-      // Remove item correspondente na tabela de itens
+      // Remove item correspondente na tabela de itens (por nome)
       await supabase
         .from("registros_ativos_itens")
         .delete()
@@ -338,11 +399,7 @@ export default function EditAtivosModal({
 
       // Se não houver mais itens, apaga também o cabeçalho (registro_ativos)
       if (!restantes || restantes.length === 0) {
-        await supabase
-          .from("registros_ativos")
-          .delete()
-          .eq("id", registroId);
-
+        await supabase.from("registros_ativos").delete().eq("id", registroId);
         setRegistroId(null);
       }
     } catch (err) {
@@ -362,7 +419,7 @@ export default function EditAtivosModal({
     setFocoId(null);
   };
 
-  // SALVAR – VERSÃO FINAL (LINHAS EM BRANCO NÃO CONTAM)
+  // SALVAR – LINHAS EM BRANCO NÃO CONTAM
   const salvar = async () => {
     if (isSaving || !user) return;
     setIsSaving(true);
@@ -437,7 +494,7 @@ export default function EditAtivosModal({
         .delete()
         .eq("registro_id", registroIdLocal);
 
-      // Insere novos
+      // Insere novos (data ainda não vai para o banco, só nome/valor)
       const payload = itensValidos.map((l) => ({
         registro_id: registroIdLocal,
         user_id: userId,
@@ -458,6 +515,7 @@ export default function EditAtivosModal({
       onSave?.({
         mesAno,
         itens: itensValidos.map((l) => ({
+          data: l.data,
           nome: l.nome.trim(),
           valor: toNum(l.valor),
         })),
@@ -505,7 +563,8 @@ export default function EditAtivosModal({
             </button>
           </div>
 
-          <div className="grid grid-cols-[2fr_1fr_60px] text-xs font-bold text-gray-600 uppercase mb-2">
+          <div className="grid grid-cols-[130px_2fr_1fr_60px] text-xs font-bold text-gray-600 uppercase mb-2">
+            <div>Data</div>
             <div>Nome do Ativo</div>
             <div className="text-right">Valor</div>
             <div></div>
@@ -530,7 +589,9 @@ export default function EditAtivosModal({
           </div>
 
           <div className="mt-6 pt-4 border-t flex justify-end text-lg font-bold text-emerald-600">
-            Total: R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            Total: R$ {total.toLocaleString("pt-BR", {
+              minimumFractionDigits: 2,
+            })}
           </div>
 
           {erroGlobal && (
