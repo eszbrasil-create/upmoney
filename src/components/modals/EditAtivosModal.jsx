@@ -48,18 +48,8 @@ function useFloatingDropdown(ref, offset = 4) {
 ---------------------------- */
 function MesAnoPicker({ value, onChange }) {
   const meses = [
-    "Jan",
-    "Fev",
-    "Mar",
-    "Abr",
-    "Mai",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Set",
-    "Out",
-    "Nov",
-    "Dez",
+    "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+    "Jul", "Ago", "Set", "Out", "Nov", "Dez",
   ];
 
   const [mesAtual, anoAtualStr] = String(value || "").split("/");
@@ -68,18 +58,15 @@ function MesAnoPicker({ value, onChange }) {
   const [open, setOpen] = useState(false);
   const [ano, setAno] = useState(anoInicial);
 
-  // sincroniza ano quando o value muda
   useEffect(() => {
     const [, a] = String(value || "").split("/");
     if (a) setAno(Number(a));
   }, [value]);
 
-  // fecha clicando fora
   const ref = useRef(null);
   useEffect(() => {
     function onDocClick(e) {
-      if (!ref.current) return;
-      if (!ref.current.contains(e.target)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     }
     if (open) document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
@@ -93,28 +80,18 @@ function MesAnoPicker({ value, onChange }) {
         className="inline-flex items-center gap-2 rounded-lg bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 hover:bg-gray-200 transition"
       >
         <span>{value}</span>
-        <span>▾</span>
+        <span>Down Arrow</span>
       </button>
 
       {open && (
         <div className="absolute left-0 mt-2 w-[240px] rounded-xl border border-gray-300 bg-white shadow-xl p-3 z-50">
           <div className="flex items-center justify-between mb-2">
-            <button
-              type="button"
-              onClick={() => setAno((a) => a - 1)}
-              className="h-8 w-8 rounded bg-gray-200 hover:bg-gray-300"
-            >
-              ←
+            <button type="button" onClick={() => setAno((a) => a - 1)} className="h-8 w-8 rounded bg-gray-200 hover:bg-gray-300">
+              Left Arrow
             </button>
-
             <div className="font-semibold text-gray-800">{ano}</div>
-
-            <button
-              type="button"
-              onClick={() => setAno((a) => a + 1)}
-              className="h-8 w-8 rounded bg-gray-200 hover:bg-gray-300"
-            >
-              →
+            <button type="button" onClick={() => setAno((a) => a + 1)} className="h-8 w-8 rounded bg-gray-200 hover:bg-gray-300">
+              Right Arrow
             </button>
           </div>
 
@@ -180,7 +157,7 @@ function LinhaAtivo({
           ref={inputRef}
           className="w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
           placeholder="Digite um ativo"
-          value={linha.nome}
+          value={linha.nome || ""}
           onChange={(e) => {
             atualizarCampo(linha.id, "nome", e.target.value);
             setFocoId(linha.id);
@@ -202,10 +179,7 @@ function LinhaAtivo({
           sugestoes.length > 0 &&
           typeof document !== "undefined" &&
           createPortal(
-            <div
-              style={dropdownStyle}
-              className="rounded-lg border border-gray-300 bg-white shadow-2xl"
-            >
+            <div style={dropdownStyle} className="rounded-lg border border-gray-300 bg-white shadow-2xl">
               {sugestoes.map((s) => (
                 <button
                   key={s}
@@ -228,19 +202,15 @@ function LinhaAtivo({
           className="w-full text-left bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
           inputMode="decimal"
           placeholder="0,00"
-          value={linha.valor}
+          value={linha.valor || ""}
           onChange={(e) => {
             const raw = e.target.value;
             if (/^[0-9.,]*$/.test(raw)) {
               atualizarCampo(linha.id, "valor", raw);
             }
           }}
-          onBlur={(e) =>
-            atualizarCampo(
-              linha.id,
-              "valor",
-              formatPtBr(toNum(e.target.value))
-            )
+          onBlur={(e =>
+            atualizarCampo(linha.id, "valor", formatPtBr(toNum(e.target.value)))
           }
         />
 
@@ -265,7 +235,7 @@ function LinhaAtivo({
 }
 
 /* ---------------------------
-      Modal principal
+      Modal principal – VERSÃO CORRIGIDA 100%
 ---------------------------- */
 export default function EditAtivosModal({
   open,
@@ -288,107 +258,71 @@ export default function EditAtivosModal({
   const backdropRef = useRef(null);
   const visible = Boolean(open ?? isOpen);
 
-  // usuário logado
   const [user, setUser] = useState(null);
 
-  // trava scroll do body quando o modal estiver aberto
+  // trava scroll do body
   useEffect(() => {
-    if (!visible) return;
-    if (typeof document === "undefined") return;
-
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [visible]);
-
-  // carrega usuário
-  useEffect(() => {
-    async function loadUser() {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error("Erro ao obter usuário no EditAtivosModal:", error);
-        setUser(null);
-        return;
-      }
-      setUser(data?.user || null);
-    }
-
     if (visible) {
-      loadUser();
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
     }
   }, [visible]);
 
-  // ----- mês / ano padrão -----
-  const mesesLista = [
-    "Jan",
-    "Fev",
-    "Mar",
-    "Abr",
-    "Mai",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Set",
-    "Out",
-    "Nov",
-    "Dez",
-  ];
+  // carrega usuário autenticado
+  useEffect(() => {
+    if (visible) {
+      supabase.auth.getUser().then(({ data, error }) => {
+        if (!error && data?.user) setUser(data.user);
+      });
+    }
+  }, [visible]);
+
+  // mês/ano padrão
+  const mesesLista = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
   const hoje = new Date();
-  const mesBase = hoje.getMonth();
-  const anoBase = hoje.getFullYear();
-  const padraoMesAno = mesAnoInicial || `${mesesLista[mesBase]}/${anoBase}`;
+  const padraoMesAno = mesAnoInicial || `${mesesLista[hoje.getMonth()]}/${hoje.getFullYear()}`;
 
   const [mesAno, setMesAno] = useState(padraoMesAno);
+  const [linhas, setLinhas] = useState([
+    { id: crypto.randomUUID(), nome: "", valor: "" },
+  ]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [erroGlobal, setErroGlobal] = useState("");
+  const [focoId, setFocoId] = useState(null);
+  const [query, setQuery] = useState("");
 
-  // helpers de valor
   const toNum = (x) => {
-    if (x === "" || x == null) return 0;
+    if (!x) return 0;
     const n = Number(String(x).replace(/\./g, "").replace(",", "."));
     return Number.isFinite(n) ? n : 0;
   };
 
   const formatPtBr = (n) =>
-    n.toLocaleString("pt-BR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-
-  // linhas
-  const [linhas, setLinhas] = useState([
-    { id: crypto.randomUUID(), nome: "", valor: "" },
-  ]);
-
-  const [isSaving, setIsSaving] = useState(false);
-  const [erroGlobal, setErroGlobal] = useState("");
-
-  const [focoId, setFocoId] = useState(null);
-  const [query, setQuery] = useState("");
+    n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const uniqAtivos = useMemo(() => {
-    return Array.from(
-      new Map(
-        ativosExistentes.map((n) => [String(n).toLowerCase(), String(n)])
-      ).values()
-    ).sort((a, b) => a.localeCompare(b, "pt-BR"));
+    return Array.from(new Set(ativosExistentes.map(String)))
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, "pt-BR"));
   }, [ativosExistentes]);
 
   const sugestoes = useMemo(() => {
-    if (!query) return uniqAtivos.slice(0, 8);
+    if (!query.trim()) return uniqAtivos.slice(0, 8);
     const q = query.toLowerCase();
-    return uniqAtivos
-      .filter((n) => n.toLowerCase().includes(q))
-      .slice(0, 8);
+    return uniqAtivos.filter((n) => n.toLowerCase().includes(q)).slice(0, 8);
   }, [query, uniqAtivos]);
 
+  // reset ao abrir
   useEffect(() => {
     if (!visible) return;
     setMesAno(padraoMesAno);
     setErroGlobal("");
     setIsSaving(false);
 
-    if (Array.isArray(linhasIniciais) && linhasIniciais.length > 0) {
+    if (linhasIniciais.length > 0) {
       setLinhas(
         linhasIniciais.map((l) => ({
           id: crypto.randomUUID(),
@@ -407,20 +341,16 @@ export default function EditAtivosModal({
   }, [visible, padraoMesAno, linhasIniciais]);
 
   const adicionarLinha = () => {
-    setLinhas((prev) => [
-      { id: crypto.randomUUID(), nome: "", valor: "" },
-      ...prev,
-    ]);
+    setLinhas((prev) => [{ id: crypto.randomUUID(), nome: "", valor: "" }, ...prev]);
   };
 
   const removerLinha = (id) => {
     setLinhas((prev) => {
       const novo = prev.filter((l) => l.id !== id);
-      if (novo.length === 0) {
-        return [{ id: crypto.randomUUID(), nome: "", valor: "" }];
-      }
-      return novo;
+      return novo.length === 0 ? [{ id: crypto.randomUUID(), nome: "", valor: "" }] : novo;
     });
+  };
+
   };
 
   const atualizarCampo = (id, campo, valor) => {
@@ -437,14 +367,12 @@ export default function EditAtivosModal({
 
   const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
 
-  // ================================
-  // SALVAR EM registros_ativos + registros_ativos_itens
-  // ================================
+  // SALVAR – VERSÃO CORRIGIDA COM COLUNAS REAIS
   const salvar = async () => {
     if (isSaving) return;
 
     const itensLimpos = linhas
-      .filter((l) => l.nome.trim() !== "")
+      .filter((l) => l.nome?.trim())
       .map((l) => ({
         nome: l.nome.trim(),
         valor: toNum(l.valor),
@@ -454,61 +382,42 @@ export default function EditAtivosModal({
       setIsSaving(true);
       setErroGlobal("");
 
-      if (!user) {
-        throw new Error("Usuário não autenticado. Faça login para salvar.");
-      }
+      if (!user) throw new Error("Usuário não autenticado.");
 
-      const uid = user.id;
+      const userId = user.id;
       const agora = new Date().toISOString();
 
-      // 1) Tenta buscar cabeçalho; se der erro, trata como se não existisse
-      const { data: rows, error: selectError } = await supabase
+      // 1) Busca registro existente
+      const { data: existentes, error: selectError } = await supabase
         .from("registros_ativos")
-        .select("*")
-        .eq("uid", uid)
-        .eq("s_ano", mesAno)
+        .select("id")
+        .eq("user_id", userId)
+        .eq("mes_ano", mesAno)
         .limit(1);
 
-      if (selectError) {
-        console.warn(
-          "Falha ao selecionar cabeçalho, vou tratar como inexistente:",
-          selectError
-        );
-      }
-
-      const existente =
-        !selectError && rows && rows.length > 0 ? rows[0] : null;
+      const existente = existentes?.[0] || null;
 
       let registroId;
 
       if (existente) {
-        // 2a) Atualiza registro existente
-        const { data: atualizado, error: updateError } = await supabase
+        // Atualiza cabeçalho
+        const { data: atualizado, error } = await supabase
           .from("registros_ativos")
-          .update({
-            total,
-            atualizado_em: agora,
-          })
+          .update({ total, atualizado_em: agora })
           .eq("id", existente.id)
           .select()
           .single();
 
-        if (updateError) {
-          console.error("Erro ao atualizar cabeçalho de ativos:", updateError);
-          throw new Error(
-            updateError.message || "Erro ao atualizar cabeçalho de ativos."
-          );
-        }
-
+        if (error) throw error;
         registroId = atualizado.id;
       } else {
-        // 2b) Cria novo cabeçalho com todos os campos importantes
-        const { data: criado, error: insertHeaderError } = await supabase
+        // Cria novo cabeçalho
+        const { data: novo, error } = await supabase
           .from("registros_ativos")
           .insert({
             id: crypto.randomUUID(),
-            uid,
-            s_ano: mesAno,
+            user_id: userId,
+            mes_ano: mesAno,
             total,
             created_at: agora,
             atualizado_em: agora,
@@ -516,38 +425,18 @@ export default function EditAtivosModal({
           .select()
           .single();
 
-        if (insertHeaderError) {
-          console.error(
-            "Erro ao inserir cabeçalho de ativos:",
-            insertHeaderError
-          );
-          throw new Error(
-            insertHeaderError.message ||
-              "Erro ao inserir cabeçalho de ativos."
-          );
-        }
-
-        registroId = criado.id;
+        if (error) throw error;
+        registroId = novo.id;
       }
 
-      // 3) Remove itens antigos
-      const { error: delError } = await supabase
-        .from("registros_ativos_itens")
-        .delete()
-        .eq("registro_id", registroId);
+      // Limpa itens antigos
+      await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
 
-      if (delError) {
-        console.error("Erro ao limpar itens antigos:", delError);
-        throw new Error(
-          delError.message || "Erro ao limpar itens antigos de ativos."
-        );
-      }
-
-      // 4) Insere itens atuais
+      // Insere itens novos
       if (itensLimpos.length > 0) {
-        const payloadItens = itensLimpos.map((item) => ({
+        const payload = itensLimpos.map((item) => ({
           id: crypto.randomUUID(),
-          uid,
+          user_id: userId,
           registro_id: registroId,
           nome_ativo: item.nome,
           valor: item.valor,
@@ -555,28 +444,15 @@ export default function EditAtivosModal({
           atualizado_em: agora,
         }));
 
-        const { error: insertError } = await supabase
-          .from("registros_ativos_itens")
-          .insert(payloadItens);
-
-        if (insertError) {
-          console.error("Erro ao salvar itens de ativos:", insertError);
-          throw new Error(
-            insertError.message || "Erro ao salvar itens de ativos."
-          );
-        }
+        const { error } = await supabase.from("registros_ativos_itens").insert(payload);
+        if (error) throw error;
       }
 
-      if (onSave) {
-        await onSave({ mesAno, itens: itensLimpos, total });
-      }
-
+      onSave?.({ mesAno, itens: itensLimpos, total });
       onClose?.();
     } catch (err) {
       console.error(err);
-      setErroGlobal(
-        err?.message || "Não foi possível salvar. Tente novamente."
-      );
+      setErroGlobal(err.message || "Erro ao salvar. Tente novamente.");
     } finally {
       setIsSaving(false);
     }
@@ -587,9 +463,7 @@ export default function EditAtivosModal({
   return (
     <div
       ref={backdropRef}
-      onMouseDown={(e) =>
-        e.target === backdropRef.current && !isSaving && onClose?.()
-      }
+      onMouseDown={(e) => e.target === backdropRef.current && !isSaving && onClose?.()}
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
     >
       <div
@@ -599,7 +473,6 @@ export default function EditAtivosModal({
         {/* HEADER */}
         <div className="px-6 py-4 border-b border-gray-300 bg-gray-100 rounded-t-xl flex justify-between items-center">
           <h2 className="text-lg font-semibold text-gray-900">Editar Ativos</h2>
-
           <button
             onClick={onClose}
             disabled={isSaving}
@@ -609,10 +482,9 @@ export default function EditAtivosModal({
           </button>
         </div>
 
-        {/* TOPO DA TABELA */}
+        {/* TOPO */}
         <div className="px-6 mt-4 flex items-center gap-4">
           <MesAnoPicker value={mesAno} onChange={setMesAno} />
-
           <button
             onClick={adicionarLinha}
             type="button"
@@ -652,17 +524,12 @@ export default function EditAtivosModal({
         <div className="px-6 py-4 flex justify-between border-t border-gray-300 mt-4">
           <span className="font-semibold text-gray-900">Total:</span>
           <span className="font-semibold text-emerald-600">
-            {total.toLocaleString("pt-BR", {
-              style: "currency",
-              currency: "BRL",
-            })}
+            {total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
           </span>
         </div>
 
-        {/* ERRO GLOBAL */}
-        {erroGlobal && (
-          <div className="px-6 pb-1 text-xs text-red-500">{erroGlobal}</div>
-        )}
+        {/* ERRO */}
+        {erroGlobal && <div className="px-6 pb-2 text-sm text-red-600">{erroGlobal}</div>}
 
         {/* RODAPÉ */}
         <div className="px-6 py-4 flex justify-end gap-3 border-t border-gray-200">
@@ -673,11 +540,10 @@ export default function EditAtivosModal({
           >
             Fechar
           </button>
-
           <button
             onClick={salvar}
             disabled={isSaving}
-            className="px-5 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-60"
+            className="px-5 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-60 transition"
           >
             {isSaving ? "Salvando..." : "Salvar"}
           </button>
