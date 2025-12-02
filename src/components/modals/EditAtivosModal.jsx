@@ -269,6 +269,7 @@ function LinhaAtivo({
 ---------------------------- */
 export default function EditAtivosModal({
   open,
+  isOpen, // alias opcional, caso o pai esteja usando esse nome
   onClose,
   onSave,
   ativosExistentes = [
@@ -286,15 +287,20 @@ export default function EditAtivosModal({
 }) {
   const backdropRef = useRef(null);
 
+  // normaliza: se o pai passar `open` ou `isOpen`, ambos funcionam
+  const visible = Boolean(open ?? isOpen);
+
   // trava scroll do body quando o modal estiver aberto
   useEffect(() => {
-    if (!open) return;
+    if (!visible) return;
+    if (typeof document === "undefined") return;
+
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [open]);
+  }, [visible]);
 
   // ----- mês / ano padrão -----
   const mesesLista = [
@@ -361,7 +367,7 @@ export default function EditAtivosModal({
   }, [query, uniqAtivos]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!visible) return;
     setMesAno(padraoMesAno);
     setErroGlobal("");
     setIsSaving(false);
@@ -384,7 +390,7 @@ export default function EditAtivosModal({
         { id: crypto.randomUUID(), nome: "", valor: "" },
       ]);
     }
-  }, [open, padraoMesAno, linhasIniciais]);
+  }, [visible, padraoMesAno, linhasIniciais]);
 
   const adicionarLinha = () => {
     setLinhas((prev) => [
@@ -449,12 +455,14 @@ export default function EditAtivosModal({
     }
   };
 
-  if (!open) return null;
+  if (!visible) return null;
 
   return (
     <div
       ref={backdropRef}
-      onMouseDown={(e) => e.target === backdropRef.current && !isSaving && onClose?.()}
+      onMouseDown={(e) =>
+        e.target === backdropRef.current && !isSaving && onClose?.()
+      }
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
     >
       <div
@@ -550,3 +558,4 @@ export default function EditAtivosModal({
       </div>
     </div>
   );
+}
