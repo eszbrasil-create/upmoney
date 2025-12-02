@@ -9,7 +9,6 @@ import React, {
 import { createPortal } from "react-dom";
 import { Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
-import { toast } from "react-hot-toast"; // se você usa react-hot-toast (recomendo)
 
 /* ---------------------------
    Hook para dropdown flutuante
@@ -196,7 +195,7 @@ function LinhaAtivo({
 }
 
 /* ---------------------------
-   MODAL FINAL – 100% CORRIGIDO E INQUEBRÁVEL
+   Modal Principal – VERSÃO FINAL CORRIGIDA
 ---------------------------- */
 export default function EditAtivosModal({
   open,
@@ -225,7 +224,7 @@ export default function EditAtivosModal({
     return ativosExistentes.filter(a => a.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
   }, [query, ativosExistentes]);
 
-  // CARREGA DADOS AO ABRIR
+  // ==== CARREGA DADOS EXISTENTES AO ABRIR ====
   useEffect(() => {
     if (!visible) return;
 
@@ -240,6 +239,7 @@ export default function EditAtivosModal({
 
       if (!user) return;
 
+      // Busca cabeçalho + itens
       const { data: cabecalho } = await supabase
         .from("registros_ativos")
         .select("id")
@@ -263,6 +263,7 @@ export default function EditAtivosModal({
         }
       }
 
+      // Se não existir → linhas em branco
       setLinhas([
         { id: crypto.randomUUID(), nome: "", valor: "" },
         { id: crypto.randomUUID(), nome: "", valor: "" },
@@ -275,12 +276,10 @@ export default function EditAtivosModal({
   }, [visible, mesAnoInicial]);
 
   const adicionarLinha = () => setLinhas(prev => [{ id: crypto.randomUUID(), nome: "", valor: "" }, ...prev]);
-  
   const removerLinha = (id) => setLinhas(prev => {
     const novo = prev.filter(l => l.id !== id);
     return novo.length === 0 ? [{ id: crypto.randomUUID(), nome: "", valor: "" }] : novo;
   });
-
   const atualizarCampo = (id, campo, valor) => setLinhas(prev => prev.map(l => l.id === id ? { ...l, [campo]: valor } : l));
   const selecionarSugestao = (id, nome) => {
     atualizarCampo(id, "nome", nome);
@@ -288,7 +287,7 @@ export default function EditAtivosModal({
     setFocoId(null);
   };
 
-  // SALVAR – VERSÃO FINAL (a única que você vai usar pra sempre)
+  // === FUNÇÃO SALVAR CORRIGIDA (A ÚNICA MUDANÇA) ===
   const salvar = async () => {
     if (isSaving || !user) return;
     setIsSaving(true);
@@ -304,7 +303,6 @@ export default function EditAtivosModal({
       const userId = user.id;
       const agora = new Date().toISOString();
 
-      // Busca cabeçalho existente
       const { data: cabecalhos } = await supabase
         .from("registros_ativos")
         .select("id")
@@ -314,19 +312,18 @@ export default function EditAtivosModal({
 
       const registroExistente = cabecalhos?.[0];
 
-      // CASO 1: Zerou tudo → apaga o mês inteiro
+      // Se zerou tudo → apaga o mês inteiro
       if (itensValidos.length === 0) {
         if (registroExistente) {
           await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroExistente.id);
           await supabase.from("registros_ativos").delete().eq("id", registroExistente.id);
         }
-        toast.success("Mês zerado com sucesso!");
         onSave?.({ mesAno, itens: [], total: 0 });
         onClose?.();
+        setIsSaving(false);
         return;
       }
 
-      // CASO 2: Tem ativos → salva normalmente
       let registroId = registroExistente?.id;
 
       if (!registroId) {
@@ -344,10 +341,8 @@ export default function EditAtivosModal({
         registroId = novo.id;
       }
 
-      // Limpa itens antigos
       await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
 
-      // Insere novos
       const payload = itensValidos.map(i => ({
         registro_id: registroId,
         user_id: userId,
@@ -356,20 +351,19 @@ export default function EditAtivosModal({
         created_at: agora,
         atualizado_em: agora,
       }));
+
       await supabase.from("registros_ativos_itens").insert(payload);
 
-      // Atualiza total
       await supabase
         .from("registros_ativos")
         .update({ total: totalCalculado, atualizado_em: agora })
         .eq("id", registroId);
 
-      toast.success("Ativos salvos com sucesso!");
       onSave?.({ mesAno, itens: itensValidos, total: totalCalculado });
       onClose?.();
     } catch (err) {
-      console.error("Erro ao salvar:", err);
-      toast.error("Erro ao salvar. Tente novamente.");
+      console.error(err);
+      setErroGlobal("Erro ao salvar: " + (err.message || "Tente novamente"));
     } finally {
       setIsSaving(false);
     }
@@ -379,9 +373,10 @@ export default function EditAtivosModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="w-[900px] max-w-[96vw] bg-white rounded-xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        {/* header, body e footer iguais ao seu original */}
-        {/* ... (mantive exatamente igual) */}
+      <div
+        className="w-[900px] max-w-[96vw] bg-white rounded-xl shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="px-6 py-4 border-b bg-gray-50 rounded-t-xl flex justify-between items-center">
           <h2 className="text-xl font-semibold">Editar Ativos</h2>
           <button onClick={onClose} className="text-3xl text-gray-500 hover:text-gray-800">×</button>
