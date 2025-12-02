@@ -269,7 +269,7 @@ function LinhaAtivo({
 ---------------------------- */
 export default function EditAtivosModal({
   open,
-  isOpen, // alias opcional, caso o pai esteja usando esse nome
+  isOpen, // alias opcional
   onClose,
   onSave,
   ativosExistentes = [
@@ -424,7 +424,7 @@ export default function EditAtivosModal({
 
   const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
 
-  // agora salvar aceita onSave assíncrono e não fecha se der erro
+  // salvar: usa onSave assíncrono do pai, não fecha se der erro
   const salvar = async () => {
     if (isSaving) return;
 
@@ -440,7 +440,6 @@ export default function EditAtivosModal({
       setErroGlobal("");
 
       if (onSave) {
-        // se onSave retornar uma Promise (ex: Supabase), aguardamos
         await onSave({ mesAno, itens: itensLimpos, total });
       }
 
