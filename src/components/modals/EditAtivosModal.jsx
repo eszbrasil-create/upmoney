@@ -9,7 +9,6 @@ import React, {
 import { createPortal } from "react-dom";
 import { Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
-import { salvarRegistroAtivos } from "../../utils/salvarRegistroAtivos";
 
 /* ---------------------------
    Hook para dropdown flutuante
@@ -293,15 +292,12 @@ export default function EditAtivosModal({
       .slice(0, 8);
   }, [query, ativosExistentes]);
 
-  const criarLinhasVazias = () => {
-    // linhas iniciais sem data, pra forçar o usuário a escolher se quiser salvar
-    return [
-      { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
-      { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
-      { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
-      { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
-    ];
-  };
+  const criarLinhasVazias = () => [
+    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+  ];
 
   // CARREGA DADOS AO ABRIR
   useEffect(() => {
@@ -358,7 +354,7 @@ export default function EditAtivosModal({
           setLinhas(
             itens.map((i) => ({
               id: crypto.randomUUID(),
-              data: mesRef, // preenche com o mês/ano desse registro
+              data: mesRef,
               nome: i.nome_ativo,
               valor: formatPtBr(i.valor),
             }))
@@ -383,7 +379,7 @@ export default function EditAtivosModal({
       ...prev,
     ]);
 
-  // REMOVER LINHA – agora zera data + nome + valor, não remove a linha
+  // Lixeira: zera data + nome + valor da linha (não remove do array)
   const removerLinha = (linha) => {
     setLinhas((prev) =>
       prev.map((l) =>
@@ -403,13 +399,13 @@ export default function EditAtivosModal({
     setFocoId(null);
   };
 
-  // SALVAR – usa helper salvarRegistroAtivos
+  // SALVAR – fala direto com o Supabase
   const salvar = async () => {
     if (isSaving) return;
     setIsSaving(true);
     setErroGlobal("");
 
-    // só conta linhas que tiverem data, nome e valor
+    // Só considera linhas com data + nome + valor
     const itensValidos = linhas.filter(
       (l) =>
         l.data?.trim() !== "" &&
@@ -417,22 +413,110 @@ export default function EditAtivosModal({
         l.valor?.trim() !== ""
     );
 
-    const payloadItens = itensValidos.map((l) => ({
-      nome: l.nome.trim(),
-      valor: toNum(l.valor),
-    }));
-
-    const totalCalculado = payloadItens.reduce(
-      (acc, item) => acc + item.valor,
+    const totalCalculado = itensValidos.reduce(
+      (acc, l) => acc + toNum(l.valor),
       0
     );
 
     try {
-      await salvarRegistroAtivos({
-        mesAno,
-        itens: payloadItens,
-        total: totalCalculado,
-      });
+      let currentUser = user;
+      if (!currentUser) {
+        const { data } = await supabase.auth.getUser();
+        currentUser = data?.user || null;
+        setUser(currentUser);
+      }
+
+      if (!currentUser) {
+        throw new Error("Usuário não autenticado.");
+      }
+
+      const userId = currentUser.id;
+      const agora = new Date().toISOString();
+
+      const { data: existente, error: selectError } = await supabase
+        .from("registros_ativos")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("mes_ano", mesAno)
+        .maybeSingle();
+
+      if (selectError && selectError.code !== "PGRST116") {
+        throw selectError;
+      }
+
+      let registroId = existente?.id;
+
+      // CASO 1: sem itens válidos -> apaga cabeçalho + itens desse mês
+      if (itensValidos.length === 0) {
+        if (registroId) {
+          await supabase
+            .from("registros_ativos_itens")
+            .delete()
+            .eq("registro_id", registroId);
+
+          await supabase
+            .from("registros_ativos")
+            .delete()
+            .eq("id", registroId);
+        }
+
+        onSave?.({ mesAno, itens: [], total: 0, deleted: true });
+        onClose?.();
+        setIsSaving(false);
+        return;
+      }
+
+      // CASO 2: tem itens -> cria/atualiza registro_ativos
+      if (!registroId) {
+        const { data: novo, error: insertError } = await supabase
+          .from("registros_ativos")
+          .insert({
+            user_id: userId,
+            mes_ano: mesAno,
+            total: totalCalculado,
+            created_at: agora,
+            atualizado_em: agora,
+          })
+          .select("id")
+          .single();
+
+        if (insertError) throw insertError;
+        registroId = novo.id;
+      } else {
+        const { error: updateError } = await supabase
+          .from("registros_ativos")
+          .update({
+            total: totalCalculado,
+            atualizado_em: agora,
+          })
+          .eq("id", registroId);
+
+        if (updateError) throw updateError;
+      }
+
+      // Limpa itens antigos
+      const { error: deleteError } = await supabase
+        .from("registros_ativos_itens")
+        .delete()
+        .eq("registro_id", registroId);
+
+      if (deleteError) throw deleteError;
+
+      // Insere novos itens
+      const payload = itensValidos.map((l) => ({
+        registro_id: registroId,
+        user_id: userId,
+        nome_ativo: l.nome.trim(),
+        valor: toNum(l.valor),
+        created_at: agora,
+        atualizado_em: agora,
+      }));
+
+      const { error: insertItensError } = await supabase
+        .from("registros_ativos_itens")
+        .insert(payload);
+
+      if (insertItensError) throw insertItensError;
 
       onSave?.({
         mesAno,
@@ -442,7 +526,7 @@ export default function EditAtivosModal({
           valor: toNum(l.valor),
         })),
         total: totalCalculado,
-        deleted: payloadItens.length === 0,
+        deleted: false,
       });
 
       onClose?.();
