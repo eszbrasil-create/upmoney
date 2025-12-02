@@ -288,7 +288,6 @@ export default function EditAtivosModal({
 }) {
   const backdropRef = useRef(null);
 
-  // normaliza: se o pai passar `open` ou `isOpen`, ambos funcionam
   const visible = Boolean(open ?? isOpen);
 
   // usuário logado
@@ -469,42 +468,78 @@ export default function EditAtivosModal({
 
       const uid = user.id;
 
-      // 1) cria/atualiza cabeçalho em registros_ativos
-      const { data: registro, error: upsertError } = await supabase
+      // 1) Verifica se já existe registro para (uid, s_ano)
+      const { data: existente, error: selectError } = await supabase
         .from("registros_ativos")
-        .upsert(
-          {
+        .select("*")
+        .eq("uid", uid)
+        .eq("s_ano", mesAno)
+        .maybeSingle();
+
+      if (selectError && selectError.code !== "PGRST116") {
+        // PGRST116 = no rows found; o maybeSingle usa isso
+        console.error("Erro ao buscar cabeçalho de ativos:", selectError);
+        throw new Error("Erro ao buscar cabeçalho de ativos.");
+      }
+
+      let registroId;
+
+      if (existente) {
+        // 2a) Já existe: atualiza
+        const { data: atualizado, error: updateError } = await supabase
+          .from("registros_ativos")
+          .update({
+            total,
+            atualizado_em: new Date().toISOString(),
+          })
+          .eq("id", existente.id)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error("Erro ao atualizar cabeçalho de ativos:", updateError);
+          throw new Error("Erro ao atualizar cabeçalho de ativos.");
+        }
+
+        registroId = atualizado.id;
+      } else {
+        // 2b) Não existe: cria
+        const { data: criado, error: insertHeaderError } = await supabase
+          .from("registros_ativos")
+          .insert({
             uid,
             s_ano: mesAno,
             total,
-          },
-          {
-            onConflict: "uid,s_ano", // UNIQUE(uid, s_ano)
-          }
-        )
-        .select()
-        .single();
+          })
+          .select()
+          .single();
 
-      if (upsertError) {
-        console.error("Erro ao salvar cabeçalho de ativos:", upsertError);
-        throw new Error("Erro ao salvar cabeçalho de ativos.");
+        if (insertHeaderError) {
+          console.error(
+            "Erro ao inserir cabeçalho de ativos:",
+            insertHeaderError
+          );
+          throw new Error("Erro ao inserir cabeçalho de ativos.");
+        }
+
+        registroId = criado.id;
       }
 
-      // 2) remove itens antigos
+      // 3) Remove itens antigos
       const { error: delError } = await supabase
         .from("registros_ativos_itens")
         .delete()
-        .eq("registro_id", registro.id);
+        .eq("registro_id", registroId);
 
       if (delError) {
         console.error("Erro ao limpar itens antigos:", delError);
         throw new Error("Erro ao limpar itens antigos.");
       }
 
-      // 3) insere itens atuais
+      // 4) Insere itens atuais
       if (itensLimpos.length > 0) {
         const payloadItens = itensLimpos.map((item) => ({
-          registro_id: registro.id,
+          registro_id: registroId,
           nome_ativo: item.nome,
           valor: item.valor,
         }));
@@ -519,7 +554,7 @@ export default function EditAtivosModal({
         }
       }
 
-      // 4) callback opcional pro pai
+      // 5) callback opcional pro pai
       if (onSave) {
         await onSave({ mesAno, itens: itensLimpos, total });
       }
