@@ -459,8 +459,9 @@ export default function EditAtivosModal({
       }
 
       const uid = user.id;
+      const agora = new Date().toISOString();
 
-      // 1) Tenta buscar cabeçalho; se der erro, apenas loga e trata como se não existisse
+      // 1) Tenta buscar cabeçalho; se der erro, trata como se não existisse
       const { data: rows, error: selectError } = await supabase
         .from("registros_ativos")
         .select("*")
@@ -486,7 +487,7 @@ export default function EditAtivosModal({
           .from("registros_ativos")
           .update({
             total,
-            atualizado_em: new Date().toISOString(),
+            atualizado_em: agora,
           })
           .eq("id", existente.id)
           .select()
@@ -494,18 +495,23 @@ export default function EditAtivosModal({
 
         if (updateError) {
           console.error("Erro ao atualizar cabeçalho de ativos:", updateError);
-          throw new Error("Erro ao atualizar cabeçalho de ativos.");
+          throw new Error(
+            updateError.message || "Erro ao atualizar cabeçalho de ativos."
+          );
         }
 
         registroId = atualizado.id;
       } else {
-        // 2b) Cria novo cabeçalho
+        // 2b) Cria novo cabeçalho com todos os campos importantes
         const { data: criado, error: insertHeaderError } = await supabase
           .from("registros_ativos")
           .insert({
+            id: crypto.randomUUID(),
             uid,
             s_ano: mesAno,
             total,
+            created_at: agora,
+            atualizado_em: agora,
           })
           .select()
           .single();
@@ -515,7 +521,10 @@ export default function EditAtivosModal({
             "Erro ao inserir cabeçalho de ativos:",
             insertHeaderError
           );
-          throw new Error("Erro ao inserir cabeçalho de ativos.");
+          throw new Error(
+            insertHeaderError.message ||
+              "Erro ao inserir cabeçalho de ativos."
+          );
         }
 
         registroId = criado.id;
@@ -529,15 +538,21 @@ export default function EditAtivosModal({
 
       if (delError) {
         console.error("Erro ao limpar itens antigos:", delError);
-        throw new Error("Erro ao limpar itens antigos.");
+        throw new Error(
+          delError.message || "Erro ao limpar itens antigos de ativos."
+        );
       }
 
       // 4) Insere itens atuais
       if (itensLimpos.length > 0) {
         const payloadItens = itensLimpos.map((item) => ({
+          id: crypto.randomUUID(),
+          uid,
           registro_id: registroId,
           nome_ativo: item.nome,
           valor: item.valor,
+          created_at: agora,
+          atualizado_em: agora,
         }));
 
         const { error: insertError } = await supabase
@@ -546,7 +561,9 @@ export default function EditAtivosModal({
 
         if (insertError) {
           console.error("Erro ao salvar itens de ativos:", insertError);
-          throw new Error("Erro ao salvar itens de ativos.");
+          throw new Error(
+            insertError.message || "Erro ao salvar itens de ativos."
+          );
         }
       }
 
