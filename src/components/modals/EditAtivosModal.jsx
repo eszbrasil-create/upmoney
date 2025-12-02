@@ -1,6 +1,5 @@
 // src/components/modals/EditAtivosModal.jsx
 import React, {
-  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -234,7 +233,6 @@ function LinhaAtivo({
             const raw = e.target.value;
             if (/^[0-9.,]*$/.test(raw)) {
               atualizarCampo(linha.id, "valor", raw);
-              // erro é recalculado automaticamente a cada render
             }
           }}
           onBlur={(e) =>
@@ -338,6 +336,10 @@ export default function EditAtivosModal({
     { id: crypto.randomUUID(), nome: "", valor: "" },
   ]);
 
+  // estado de salvamento / erro global
+  const [isSaving, setIsSaving] = useState(false);
+  const [erroGlobal, setErroGlobal] = useState("");
+
   // autocomplete (compartilhado entre as linhas)
   const [focoId, setFocoId] = useState(null);
   const [query, setQuery] = useState("");
@@ -351,7 +353,7 @@ export default function EditAtivosModal({
   }, [ativosExistentes]);
 
   const sugestoes = useMemo(() => {
-    if (!query) return uniqAtivos.slice(0, 8);
+    if (!query) return uniqAtivos.slice(0, 8); // pré-lista com 8 itens
     const q = query.toLowerCase();
     return uniqAtivos
       .filter((n) => n.toLowerCase().includes(q))
@@ -361,6 +363,8 @@ export default function EditAtivosModal({
   useEffect(() => {
     if (!open) return;
     setMesAno(padraoMesAno);
+    setErroGlobal("");
+    setIsSaving(false);
 
     if (Array.isArray(linhasIniciais) && linhasIniciais.length > 0) {
       // edição de mês já salvo
@@ -414,7 +418,10 @@ export default function EditAtivosModal({
 
   const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
 
-  const salvar = useCallback(() => {
+  // agora salvar aceita onSave assíncrono e não fecha se der erro
+  const salvar = async () => {
+    if (isSaving) return;
+
     const itensLimpos = linhas
       .filter((l) => l.nome.trim() !== "")
       .map((l) => ({
@@ -422,16 +429,32 @@ export default function EditAtivosModal({
         valor: toNum(l.valor),
       }));
 
-    onSave?.({ mesAno, itens: itensLimpos, total });
-    onClose?.();
-  }, [mesAno, linhas, total, onSave, onClose]);
+    try {
+      setIsSaving(true);
+      setErroGlobal("");
+
+      if (onSave) {
+        // se onSave retornar uma Promise (ex: Supabase), aguardamos
+        await onSave({ mesAno, itens: itensLimpos, total });
+      }
+
+      onClose?.();
+    } catch (err) {
+      console.error(err);
+      setErroGlobal(
+        err?.message || "Não foi possível salvar. Tente novamente."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (!open) return null;
 
   return (
     <div
       ref={backdropRef}
-      onMouseDown={(e) => e.target === backdropRef.current && onClose?.()}
+      onMouseDown={(e) => e.target === backdropRef.current && !isSaving && onClose?.()}
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
     >
       <div
@@ -444,7 +467,8 @@ export default function EditAtivosModal({
 
           <button
             onClick={onClose}
-            className="text-gray-700 hover:text-black text-xl"
+            disabled={isSaving}
+            className="text-gray-700 hover:text-black text-xl disabled:opacity-50"
           >
             ×
           </button>
@@ -456,6 +480,7 @@ export default function EditAtivosModal({
 
           <button
             onClick={adicionarLinha}
+            type="button"
             className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 text-sm font-medium"
           >
             + Adicionar linha
@@ -499,20 +524,27 @@ export default function EditAtivosModal({
           </span>
         </div>
 
+        {/* ERRO GLOBAL */}
+        {erroGlobal && (
+          <div className="px-6 pb-1 text-xs text-red-500">{erroGlobal}</div>
+        )}
+
         {/* RODAPÉ */}
         <div className="px-6 py-4 flex justify-end gap-3 border-t border-gray-200">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300"
+            disabled={isSaving}
+            className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
           >
             Fechar
           </button>
 
           <button
             onClick={salvar}
-            className="px-5 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500"
+            disabled={isSaving}
+            className="px-5 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-60"
           >
-            Salvar
+            {isSaving ? "Salvando..." : "Salvar"}
           </button>
         </div>
       </div>
