@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { Trash2 } from "lucide-react";
+import { supabase } from "../../lib/supabaseClient";
 
 /* ---------------------------
    Hook para dropdown flutuante
@@ -67,13 +68,11 @@ function MesAnoPicker({ value, onChange }) {
   const [open, setOpen] = useState(false);
   const [ano, setAno] = useState(anoInicial);
 
-  // sincroniza ano quando o value muda
   useEffect(() => {
     const [, a] = String(value || "").split("/");
     if (a) setAno(Number(a));
   }, [value]);
 
-  // fecha clicando fora
   const ref = useRef(null);
   useEffect(() => {
     function onDocClick(e) {
@@ -119,7 +118,7 @@ function MesAnoPicker({ value, onChange }) {
 
           <div className="grid grid-cols-3 gap-2">
             {meses.map((m) => {
-              const selected = m === mesAtual && ano === anoAtualStr;
+              const selected = m === mesAtual && ano === anoInicial;
               return (
                 <button
                   key={m}
@@ -163,7 +162,6 @@ function LinhaAtivo({
   const inputRef = useRef(null);
   const dropdownStyle = useFloatingDropdown(inputRef, 4);
 
-  // regra: se há valor e não há nome, mostra aviso
   const hasNome = (linha.nome || "").trim() !== "";
   const hasValor = String(linha.valor ?? "").trim() !== "";
   const erroValorSemNome = hasValor && !hasNome;
@@ -286,7 +284,16 @@ export default function EditAtivosModal({
 }) {
   const backdropRef = useRef(null);
 
-  // trava scroll do body quando o modal estiver aberto
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      setUser(data?.user || null);
+    }
+    loadUser();
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -296,7 +303,6 @@ export default function EditAtivosModal({
     };
   }, [open]);
 
-  // ----- mês / ano padrão -----
   const mesesLista = [
     "Jan",
     "Fev",
@@ -318,7 +324,6 @@ export default function EditAtivosModal({
 
   const [mesAno, setMesAno] = useState(padraoMesAno);
 
-  // helpers de valor
   const toNum = (x) => {
     if (x === "" || x == null) return 0;
     const n = Number(String(x).replace(/\./g, "").replace(",", "."));
@@ -331,16 +336,13 @@ export default function EditAtivosModal({
       maximumFractionDigits: 2,
     });
 
-  // ----- linhas -----
   const [linhas, setLinhas] = useState([
     { id: crypto.randomUUID(), nome: "", valor: "" },
   ]);
 
-  // estado de salvamento / erro global
   const [isSaving, setIsSaving] = useState(false);
   const [erroGlobal, setErroGlobal] = useState("");
 
-  // autocomplete (compartilhado entre as linhas)
   const [focoId, setFocoId] = useState(null);
   const [query, setQuery] = useState("");
 
@@ -353,7 +355,7 @@ export default function EditAtivosModal({
   }, [ativosExistentes]);
 
   const sugestoes = useMemo(() => {
-    if (!query) return uniqAtivos.slice(0, 8); // pré-lista com 8 itens
+    if (!query) return uniqAtivos.slice(0, 8);
     const q = query.toLowerCase();
     return uniqAtivos
       .filter((n) => n.toLowerCase().includes(q))
@@ -367,7 +369,6 @@ export default function EditAtivosModal({
     setIsSaving(false);
 
     if (Array.isArray(linhasIniciais) && linhasIniciais.length > 0) {
-      // edição de mês já salvo
       setLinhas(
         linhasIniciais.map((l) => ({
           id: crypto.randomUUID(),
@@ -376,7 +377,6 @@ export default function EditAtivosModal({
         }))
       );
     } else {
-      // primeiro preenchimento → 4 linhas vazias
       setLinhas([
         { id: crypto.randomUUID(), nome: "", valor: "" },
         { id: crypto.randomUUID(), nome: "", valor: "" },
@@ -397,7 +397,6 @@ export default function EditAtivosModal({
     setLinhas((prev) => {
       const novo = prev.filter((l) => l.id !== id);
       if (novo.length === 0) {
-        // mantém ao menos 1 linha
         return [{ id: crypto.randomUUID(), nome: "", valor: "" }];
       }
       return novo;
@@ -418,7 +417,6 @@ export default function EditAtivosModal({
 
   const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
 
-  // salvar aceita onSave assíncrono e não fecha se der erro
   const salvar = async () => {
     if (isSaving) return;
 
@@ -439,13 +437,77 @@ export default function EditAtivosModal({
       return;
     }
 
+    if (!user) {
+      setErroGlobal("Usuário não identificado.");
+      return;
+    }
+
     try {
       setIsSaving(true);
       setErroGlobal("");
 
+      // 1) Busca ou cria registro_ativos para esse mês
+      const { data: existentes, error: errBusca } = await supabase
+        .from("registros_ativos")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("mes_ano", mesAno)
+        .limit(1);
+
+      if (errBusca) throw errBusca;
+
+      let registroId;
+
+      if (existentes && existentes.length > 0) {
+        registroId = existentes[0].id;
+
+        const { error: errUpdate } = await supabase
+          .from("registros_ativos")
+          .update({ total })
+          .eq("id", registroId);
+
+        if (errUpdate) throw errUpdate;
+
+        const { error: errDel } = await supabase
+          .from("registros_ativos_itens")
+          .delete()
+          .eq("registro_ativo_id", registroId);
+
+        if (errDel) throw errDel;
+      } else {
+        const { data: inserted, error: errInsert } = await supabase
+          .from("registros_ativos")
+          .insert({
+            user_id: user.id,
+            mes_ano: mesAno,
+            total,
+          })
+          .select()
+          .single();
+
+        if (errInsert) throw errInsert;
+        registroId = inserted.id;
+      }
+
+      // 2) Insere itens
+      if (itensLimpos.length > 0) {
+        const itensPayload = itensLimpos.map((it) => ({
+          registro_ativo_id: registroId,
+          user_id: user.id,
+          nome: it.nome,
+          valor: it.valor,
+        }));
+
+        const { error: errItens } = await supabase
+          .from("registros_ativos_itens")
+          .insert(itensPayload);
+
+        if (errItens) throw errItens;
+      }
+
+      // mantém compatibilidade com quem usa onSave no front
       if (onSave) {
-        // se onSave retornar uma Promise (ex: Supabase), aguardamos
-        await onSave({ mesAno, itens: itensLimpos, total });
+        await onSave({ mesAno, itens: itensLimpos, total, registroId });
       }
 
       onClose?.();
@@ -506,7 +568,7 @@ export default function EditAtivosModal({
           <div className="border-b border-gray-300 pb-1 text-center">Ação</div>
         </div>
 
-        {/* LINHAS (SCROLL APENAS AQUI) */}
+        {/* LINHAS */}
         <div className="px-6 mt-2 max-h-[380px] overflow-y-auto">
           {linhas.map((l) => (
             <LinhaAtivo
