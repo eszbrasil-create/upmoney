@@ -401,13 +401,13 @@ export default function EditAtivosModal({
     setFocoId(null);
   };
 
-  // SALVAR – fala direto com o Supabase (inclui lógica de APAGAR cabeçalho)
+  // SALVAR – cria/atualiza ou APAGA cabeçalho + itens desse mês
   const salvar = async () => {
     if (isSaving) return;
     setIsSaving(true);
     setErroGlobal("");
 
-    // ignora linhas vazias (sem nome ou sem valor)
+    // Apenas linhas preenchidas (nome e valor)
     const itensValidos = linhas.filter(
       (l) => l.nome?.trim() !== "" && l.valor?.trim() !== ""
     );
@@ -418,18 +418,21 @@ export default function EditAtivosModal({
     );
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      let currentUser = user;
+      if (!currentUser) {
+        const { data } = await supabase.auth.getUser();
+        currentUser = data?.user || null;
+        setUser(currentUser);
+      }
 
-      if (!user) {
+      if (!currentUser) {
         throw new Error("Usuário não autenticado.");
       }
 
-      const userId = user.id;
+      const userId = currentUser.id;
       const agora = new Date().toISOString();
 
-      // Verificar se já existe registro para esse mês/usuário
+      // Busca registro existente (apenas desse user + mesAno)
       const { data: existente, error: selectError } = await supabase
         .from("registros_ativos")
         .select("id")
@@ -444,15 +447,17 @@ export default function EditAtivosModal({
       let registroId = existente?.id;
 
       // ==========================
-      // CASO 1: NENHUM ITEM -> APAGAR
+      // CASO 1: SEM ITENS -> APAGAR
       // ==========================
       if (itensValidos.length === 0) {
         if (registroId) {
+          // apaga itens desse registro
           await supabase
             .from("registros_ativos_itens")
             .delete()
             .eq("registro_id", registroId);
 
+          // apaga cabeçalho desse mês/usuário
           await supabase
             .from("registros_ativos")
             .delete()
@@ -465,6 +470,7 @@ export default function EditAtivosModal({
           total: 0,
           deleted: true,
         });
+
         onClose?.();
         setIsSaving(false);
         return;
