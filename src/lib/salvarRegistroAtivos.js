@@ -1,5 +1,5 @@
 // src/utils/salvarRegistroAtivos.js
-import { supabase } from "../lib/supabaseClient"; // mantém assim
+import { supabase } from "../lib/supabaseClient";
 
 export async function salvarRegistroAtivos({ mesAno, itens, total }) {
   // 1. pegar usuário logado
@@ -32,10 +32,15 @@ export async function salvarRegistroAtivos({ mesAno, itens, total }) {
 
   /* ================================
      CASO 1: NENHUM ITEM -> APAGAR TUDO
+     (apaga itens + cabeçalho apenas desse mês/usuário)
      ================================ */
   if (!itens || itens.length === 0) {
-    if (!registroId) return null;
+    if (!registroId) {
+      // não tem nada pra apagar
+      return null;
+    }
 
+    // Apaga itens desse registro
     const { error: deleteItensError } = await supabase
       .from("registros_ativos_itens")
       .delete()
@@ -46,6 +51,7 @@ export async function salvarRegistroAtivos({ mesAno, itens, total }) {
       throw new Error("Erro ao limpar itens anteriores.");
     }
 
+    // Apaga o cabeçalho em registros_ativos
     const { error: deleteHeaderError } = await supabase
       .from("registros_ativos")
       .delete()
@@ -64,6 +70,7 @@ export async function salvarRegistroAtivos({ mesAno, itens, total }) {
      ================================ */
   const agora = new Date().toISOString();
 
+  // 3. se não existir, cria; se existir, atualiza total
   if (!registroId) {
     const { data, error: insertError } = await supabase
       .from("registros_ativos")
@@ -112,8 +119,11 @@ export async function salvarRegistroAtivos({ mesAno, itens, total }) {
   // 5. inserir os novos itens (agora com certeza length > 0)
   const payload = itens.map((item) => ({
     registro_id: registroId,
+    user_id: userId,
     nome_ativo: item.nome,
-    valor: item.valor,
+    valor: item.valor, // já vem como número do modal
+    created_at: agora,
+    atualizado_em: agora,
   }));
 
   const { error: insertItensError } = await supabase
