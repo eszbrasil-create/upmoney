@@ -71,7 +71,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
   }, [user]);
 
   // ================================
-  // 3) Alterar campos
+  // 3) Alterar campos do formulário
   // ================================
   function handleChange(e) {
     const { name, value } = e.target;
@@ -83,14 +83,23 @@ export default function ModalLancamentos({ isOpen, onClose }) {
   // ================================
   async function handleSalvar(e) {
     e.preventDefault();
-    if (!user) return alert("Usuário não identificado.");
 
-    const tickerUpper = (novo.ticker || "").toUpperCase();
-    const tipo = novo.tipo || "ACOES";
+    if (!user) {
+      alert("Usuário não identificado.");
+      return;
+    }
+
+    const tickerUpper = (novo.ticker || "").toUpperCase().trim();
+    const tipo = (novo.tipo || "ACOES").trim();
     const quantidade = toNum(novo.qtd);
     const precoUnit = toNum(novo.price);
 
-    // Se não tiver data informada, usa hoje (para não quebrar NOT NULL)
+    if (!tickerUpper || !tipo || quantidade <= 0 || precoUnit <= 0) {
+      alert("Preencha ticker, tipo, quantidade e preço corretamente.");
+      return;
+    }
+
+    // Se não tiver data informada, usa hoje
     const hojeISO = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
     const dataEntradaISO = novo.dataEntrada || hojeISO;
 
@@ -99,16 +108,16 @@ export default function ModalLancamentos({ isOpen, onClose }) {
     const payload = {
       user_id: user.id,
 
-      // "modelo novo"
-      qtd: quantidade,
-      price: precoUnit,
+      // 🔹 modelo "novo"
       asset_name: tickerUpper,
       category: tipo,
       purchase_date: dataEntradaISO,
+      qtd: quantidade,
+      price: precoUnit,
 
-      // campos legados que ainda existem na tabela
+      // 🔹 campos legados (usados hoje na carteira)
       ticker: tickerUpper,
-      tipo: tipo,
+      tipo,
       nome: tickerUpper,
       data_entrada: dataEntradaISO,
       valor: valorTotal,
@@ -122,7 +131,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
       return;
     }
 
-    // reload
+    // Recarrega lista de lançamentos
     const { data, error: errorReload } = await supabase
       .from("wallet_items")
       .select("*")
@@ -135,7 +144,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
       setLancamentos(data || []);
     }
 
-    // Reset
+    // Limpa formulário
     setNovo({
       ticker: "",
       tipo: "",
@@ -165,7 +174,7 @@ export default function ModalLancamentos({ isOpen, onClose }) {
   }
 
   // ================================
-  // 6) Ordenação local (por data_entrada / purchase_date)
+  // 6) Ordenação local
   // ================================
   const lancOrdenados = useMemo(() => {
     const arr = [...(lancamentos || [])];
