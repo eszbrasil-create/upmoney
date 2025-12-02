@@ -41,7 +41,7 @@ function useFloatingDropdown(ref, offset = 4) {
 }
 
 /* ---------------------------
-   Month / Year Picker (mesmo modelo do seletor principal)
+   Month / Year Picker
 ---------------------------- */
 function MesAnoPicker({ value, onChange }) {
   const meses = [
@@ -274,7 +274,6 @@ export default function EditAtivosModal({
   const [erroGlobal, setErroGlobal] = useState("");
   const [focoId, setFocoId] = useState(null);
   const [query, setQuery] = useState("");
-  const [registroId, setRegistroId] = useState(null);
 
   const toNum = (v) =>
     Number(String(v).replace(/\./g, "").replace(",", ".")) || 0;
@@ -308,7 +307,6 @@ export default function EditAtivosModal({
     if (!visible) return;
 
     const carregarDados = async () => {
-      // Garante usuário
       let currentUser = user;
       if (!currentUser) {
         const { data } = await supabase.auth.getUser();
@@ -334,12 +332,10 @@ export default function EditAtivosModal({
       const mesAnoPadrao =
         mesAnoInicial || `${meses[hoje.getMonth()]}/${hoje.getFullYear()}`;
 
-      // Define mesAno interno (mesmo sem seletor externo)
       const mesRef = mesAno || mesAnoPadrao;
       if (!mesAno) setMesAno(mesRef);
 
       if (!currentUser) {
-        setRegistroId(null);
         setLinhas(criarLinhasVazias(mesRef));
         return;
       }
@@ -352,8 +348,6 @@ export default function EditAtivosModal({
         .maybeSingle();
 
       if (cabecalho) {
-        setRegistroId(cabecalho.id);
-
         const { data: itens } = await supabase
           .from("registros_ativos_itens")
           .select("nome_ativo, valor")
@@ -375,7 +369,6 @@ export default function EditAtivosModal({
         return;
       }
 
-      setRegistroId(null);
       setLinhas(criarLinhasVazias(mesRef));
     };
 
@@ -389,39 +382,46 @@ export default function EditAtivosModal({
       ...prev,
     ]);
 
-  // REMOVER LINHA (ATUALIZA ESTADO + SUPABASE)
+  // REMOVER LINHA -> também apaga registros_ativos desse mês
   const removerLinha = async (linha) => {
-    // Atualiza estado local imediatamente
-    setLinhas((prev) => {
-      const novo = prev.filter((l) => l.id !== linha.id);
-      return novo.length === 0 ? criarLinhasVazias(mesAno) : novo;
-    });
+    // 1) Atualiza UI
+    const novasLinhas = linhas.filter((l) => l.id !== linha.id);
+    setLinhas(novasLinhas.length === 0 ? criarLinhasVazias(mesAno) : novasLinhas);
 
-    if (!user || !registroId) return;
+    if (!user) return;
 
-    const nomeLimpo = linha.nome?.trim();
-    if (!nomeLimpo) return;
+    // 2) Descobre o mês/ano alvo: usa a data da linha ou o mesAno interno
+    const mesRef = linha.data || mesAno;
+    if (!mesRef) return;
 
     try {
+      // Busca cabeçalho desse mês
+      const { data: cabecalho, error } = await supabase
+        .from("registros_ativos")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("mes_ano", mesRef)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!cabecalho) return;
+
+      // Apaga todos os itens ligados a esse registro
       await supabase
         .from("registros_ativos_itens")
         .delete()
-        .eq("registro_id", registroId)
-        .eq("nome_ativo", nomeLimpo);
+        .eq("registro_id", cabecalho.id);
 
-      const { data: restantes, error: restantesError } = await supabase
-        .from("registros_ativos_itens")
-        .select("id")
-        .eq("registro_id", registroId);
-
-      if (restantesError) throw restantesError;
-
-      if (!restantes || restantes.length === 0) {
-        await supabase.from("registros_ativos").delete().eq("id", registroId);
-        setRegistroId(null);
-      }
+      // Apaga o próprio registro_ativos
+      await supabase
+        .from("registros_ativos")
+        .delete()
+        .eq("id", cabecalho.id);
     } catch (err) {
-      console.error("Erro ao remover linha no banco:", err);
+      console.error(
+        "Erro ao excluir registros_ativos ao remover linha:",
+        err
+      );
     }
   };
 
@@ -436,7 +436,6 @@ export default function EditAtivosModal({
     setFocoId(null);
   };
 
-  // SALVAR
   const salvar = async () => {
     if (isSaving || !user) return;
     setIsSaving(true);
@@ -475,7 +474,6 @@ export default function EditAtivosModal({
             .delete()
             .eq("id", registroExistente.id);
         }
-        setRegistroId(null);
         onSave?.({ mesAno, itens: [], total: 0, deleted: true });
         onClose?.();
         setIsSaving(false);
@@ -498,7 +496,6 @@ export default function EditAtivosModal({
           .single();
 
         registroIdLocal = novo.id;
-        setRegistroId(registroIdLocal);
       }
 
       await supabase
@@ -552,7 +549,7 @@ export default function EditAtivosModal({
         className="w-[900px] max-w-[96vw] bg-white rounded-xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Barra de cima com mais transparência */}
+        {/* Barra de cima translúcida */}
         <div className="px-6 py-4 border-b border-gray-200/60 bg-white/70 backdrop-blur-sm rounded-t-xl flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-800">
             Editar Ativos
@@ -566,7 +563,6 @@ export default function EditAtivosModal({
         </div>
 
         <div className="p-6">
-          {/* Linha de ações (sem seletor externo de mês/ano) */}
           <div className="flex items-center justify-between mb-6">
             <span className="text-xs sm:text-sm text-gray-500">
               Use o campo de data (mês/ano) na primeira coluna para organizar
