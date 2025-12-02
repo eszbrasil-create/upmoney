@@ -91,7 +91,7 @@ function MesAnoPicker({ value, onChange }) {
         onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center gap-2 rounded-lg bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 hover:bg-gray-200 transition"
       >
-        <span>{value}</span>
+        <span>{value || "Selecione o mês"}</span>
         <span>▾</span>
       </button>
 
@@ -119,7 +119,7 @@ function MesAnoPicker({ value, onChange }) {
 
           <div className="grid grid-cols-3 gap-2">
             {meses.map((m) => {
-              const selected = m === mesAtual && ano === anoInicial;
+              const selected = m === mesAtual && ano === anoAtualStr;
               return (
                 <button
                   key={m}
@@ -418,16 +418,26 @@ export default function EditAtivosModal({
 
   const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
 
-  // agora salvar aceita onSave assíncrono e não fecha se der erro
+  // salvar aceita onSave assíncrono e não fecha se der erro
   const salvar = async () => {
     if (isSaving) return;
 
     const itensLimpos = linhas
-      .filter((l) => l.nome.trim() !== "")
+      .filter((l) => l.nome.trim() !== "" && toNum(l.valor) > 0)
       .map((l) => ({
         nome: l.nome.trim(),
         valor: toNum(l.valor),
       }));
+
+    if (!mesAno) {
+      setErroGlobal("Escolha um mês antes de salvar.");
+      return;
+    }
+
+    if (itensLimpos.length === 0) {
+      setErroGlobal("Adicione pelo menos um ativo com nome e valor.");
+      return;
+    }
 
     try {
       setIsSaving(true);
@@ -454,7 +464,9 @@ export default function EditAtivosModal({
   return (
     <div
       ref={backdropRef}
-      onMouseDown={(e) => e.target === backdropRef.current && !isSaving && onClose?.()}
+      onMouseDown={(e) =>
+        e.target === backdropRef.current && !isSaving && onClose?.()
+      }
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
     >
       <div
