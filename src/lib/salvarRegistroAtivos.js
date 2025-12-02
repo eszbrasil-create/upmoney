@@ -30,6 +30,45 @@ export async function salvarRegistroAtivos({ mesAno, itens, total }) {
 
   let registroId = existente?.id;
 
+  /* ================================
+     CASO 1: NENHUM ITEM -> APAGAR TUDO
+     ================================ */
+  if (!itens || itens.length === 0) {
+    // Se não existir registro, não há nada pra apagar
+    if (!registroId) {
+      return null;
+    }
+
+    // Apaga itens desse registro
+    const { error: deleteItensError } = await supabase
+      .from("registros_ativos_itens")
+      .delete()
+      .eq("registro_id", registroId);
+
+    if (deleteItensError) {
+      console.error(deleteItensError);
+      throw new Error("Erro ao limpar itens anteriores.");
+    }
+
+    // Apaga o cabeçalho em registros_ativos
+    const { error: deleteHeaderError } = await supabase
+      .from("registros_ativos")
+      .delete()
+      .eq("id", registroId);
+
+    if (deleteHeaderError) {
+      console.error(deleteHeaderError);
+      throw new Error("Erro ao apagar registro de ativos.");
+    }
+
+    // Nada mais a fazer
+    return null;
+  }
+
+  /* ================================
+     CASO 2: TEM ITENS -> CRIAR/ATUALIZAR
+     ================================ */
+
   // 3. se não existir, cria; se existir, atualiza total
   if (!registroId) {
     const { data, error: insertError } = await supabase
@@ -38,6 +77,8 @@ export async function salvarRegistroAtivos({ mesAno, itens, total }) {
         user_id: userId,
         mes_ano: mesAno,
         total,
+        created_at: new Date().toISOString(),
+        atualizado_em: new Date().toISOString(),
       })
       .select("id")
       .single();
@@ -74,22 +115,20 @@ export async function salvarRegistroAtivos({ mesAno, itens, total }) {
     throw new Error("Erro ao limpar itens anteriores.");
   }
 
-  // 5. inserir os novos itens (se houver)
-  if (itens.length > 0) {
-    const payload = itens.map((item) => ({
-      registro_id: registroId,
-      nome_ativo: item.nome,
-      valor: item.valor, // já vem como número do modal
-    }));
+  // 5. inserir os novos itens (agora com certeza length > 0)
+  const payload = itens.map((item) => ({
+    registro_id: registroId,
+    nome_ativo: item.nome,
+    valor: item.valor, // já vem como número do modal
+  }));
 
-    const { error: insertItensError } = await supabase
-      .from("registros_ativos_itens")
-      .insert(payload);
+  const { error: insertItensError } = await supabase
+    .from("registros_ativos_itens")
+    .insert(payload);
 
-    if (insertItensError) {
-      console.error(insertItensError);
-      throw new Error("Erro ao salvar itens de ativos.");
-    }
+  if (insertItensError) {
+    console.error(insertItensError);
+    throw new Error("Erro ao salvar itens de ativos.");
   }
 
   return registroId;
