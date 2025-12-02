@@ -9,6 +9,7 @@ import React, {
 import { createPortal } from "react-dom";
 import { Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
+import { salvarRegistroAtivos } from "../../utils/salvarRegistroAtivos"; // ajuste o caminho se precisar
 
 /* ---------------------------
    Hook para dropdown flutuante
@@ -382,47 +383,12 @@ export default function EditAtivosModal({
       ...prev,
     ]);
 
-  // REMOVER LINHA -> também apaga registros_ativos desse mês
-  const removerLinha = async (linha) => {
-    // 1) Atualiza UI
-    const novasLinhas = linhas.filter((l) => l.id !== linha.id);
-    setLinhas(novasLinhas.length === 0 ? criarLinhasVazias(mesAno) : novasLinhas);
-
-    if (!user) return;
-
-    // 2) Descobre o mês/ano alvo: usa a data da linha ou o mesAno interno
-    const mesRef = linha.data || mesAno;
-    if (!mesRef) return;
-
-    try {
-      // Busca cabeçalho desse mês
-      const { data: cabecalho, error } = await supabase
-        .from("registros_ativos")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("mes_ano", mesRef)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (!cabecalho) return;
-
-      // Apaga todos os itens ligados a esse registro
-      await supabase
-        .from("registros_ativos_itens")
-        .delete()
-        .eq("registro_id", cabecalho.id);
-
-      // Apaga o próprio registro_ativos
-      await supabase
-        .from("registros_ativos")
-        .delete()
-        .eq("id", cabecalho.id);
-    } catch (err) {
-      console.error(
-        "Erro ao excluir registros_ativos ao remover linha:",
-        err
-      );
-    }
+  // REMOVER LINHA – só estado local (DB é resolvido no salvar)
+  const removerLinha = (linha) => {
+    setLinhas((prev) => {
+      const novo = prev.filter((l) => l.id !== linha.id);
+      return novo.length === 0 ? criarLinhasVazias(mesAno) : novo;
+    });
   };
 
   const atualizarCampo = (id, campo, valor) =>
@@ -436,88 +402,33 @@ export default function EditAtivosModal({
     setFocoId(null);
   };
 
+  // SALVAR – usa helper salvarRegistroAtivos
   const salvar = async () => {
-    if (isSaving || !user) return;
+    if (isSaving) return;
     setIsSaving(true);
     setErroGlobal("");
 
+    // apenas linhas realmente preenchidas
     const itensValidos = linhas.filter(
       (l) => l.nome?.trim() !== "" && l.valor?.trim() !== ""
     );
 
-    const totalCalculado = itensValidos.reduce(
-      (acc, l) => acc + toNum(l.valor),
+    const payloadItens = itensValidos.map((l) => ({
+      nome: l.nome.trim(),
+      valor: toNum(l.valor),
+    }));
+
+    const totalCalculado = payloadItens.reduce(
+      (acc, item) => acc + item.valor,
       0
     );
 
     try {
-      const userId = user.id;
-      const agora = new Date().toISOString();
-
-      const { data: cabecalhos } = await supabase
-        .from("registros_ativos")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("mes_ano", mesAno)
-        .limit(1);
-
-      const registroExistente = cabecalhos?.[0];
-
-      if (itensValidos.length === 0) {
-        if (registroExistente) {
-          await supabase
-            .from("registros_ativos_itens")
-            .delete()
-            .eq("registro_id", registroExistente.id);
-          await supabase
-            .from("registros_ativos")
-            .delete()
-            .eq("id", registroExistente.id);
-        }
-        onSave?.({ mesAno, itens: [], total: 0, deleted: true });
-        onClose?.();
-        setIsSaving(false);
-        return;
-      }
-
-      let registroIdLocal = registroExistente?.id;
-
-      if (!registroIdLocal) {
-        const { data: novo } = await supabase
-          .from("registros_ativos")
-          .insert({
-            user_id: userId,
-            mes_ano: mesAno,
-            total: totalCalculado,
-            created_at: agora,
-            atualizado_em: agora,
-          })
-          .select()
-          .single();
-
-        registroIdLocal = novo.id;
-      }
-
-      await supabase
-        .from("registros_ativos_itens")
-        .delete()
-        .eq("registro_id", registroIdLocal);
-
-      const payload = itensValidos.map((l) => ({
-        registro_id: registroIdLocal,
-        user_id: userId,
-        nome_ativo: l.nome.trim(),
-        valor: toNum(l.valor),
-        created_at: agora,
-        atualizado_em: agora,
-      }));
-
-      await supabase.from("registros_ativos_itens").insert(payload);
-
-      await supabase
-        .from("registros_ativos")
-        .update({ total: totalCalculado, atualizado_em: agora })
-        .eq("id", registroIdLocal);
+      await salvarRegistroAtivos({
+        mesAno,
+        itens: payloadItens,
+        total: totalCalculado,
+      });
 
       onSave?.({
         mesAno,
@@ -527,8 +438,9 @@ export default function EditAtivosModal({
           valor: toNum(l.valor),
         })),
         total: totalCalculado,
-        deleted: false,
+        deleted: payloadItens.length === 0,
       });
+
       onClose?.();
     } catch (err) {
       console.error(err);
@@ -602,7 +514,7 @@ export default function EditAtivosModal({
           </div>
 
           <div className="mt-6 pt-4 border-t flex justify-end text-lg font-bold text-emerald-600">
-            Total: R${" "}
+            Total: R{"$ "}
             {total.toLocaleString("pt-BR", {
               minimumFractionDigits: 2,
             })}
