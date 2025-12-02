@@ -9,7 +9,6 @@ import React, {
 import { createPortal } from "react-dom";
 import { Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
-import { salvarRegistroAtivos } from "../../utils/salvarRegistroAtivos";
 
 /* ---------------------------
    Hook para dropdown flutuante
@@ -383,7 +382,7 @@ export default function EditAtivosModal({
       ...prev,
     ]);
 
-  // REMOVER LINHA – só estado local (DB é resolvido no salvar)
+  // REMOVER LINHA – só estado local
   const removerLinha = (linha) => {
     setLinhas((prev) => {
       const novo = prev.filter((l) => l.id !== linha.id);
@@ -402,33 +401,128 @@ export default function EditAtivosModal({
     setFocoId(null);
   };
 
-  // SALVAR – usa helper salvarRegistroAtivos
+  // SALVAR – fala direto com o Supabase (inclui lógica de APAGAR cabeçalho)
   const salvar = async () => {
     if (isSaving) return;
     setIsSaving(true);
     setErroGlobal("");
 
-    // apenas linhas realmente preenchidas
+    // ignora linhas vazias (sem nome ou sem valor)
     const itensValidos = linhas.filter(
       (l) => l.nome?.trim() !== "" && l.valor?.trim() !== ""
     );
 
-    const payloadItens = itensValidos.map((l) => ({
-      nome: l.nome.trim(),
-      valor: toNum(l.valor),
-    }));
-
-    const totalCalculado = payloadItens.reduce(
-      (acc, item) => acc + item.valor,
+    const totalCalculado = itensValidos.reduce(
+      (acc, l) => acc + toNum(l.valor),
       0
     );
 
     try {
-      await salvarRegistroAtivos({
-        mesAno,
-        itens: payloadItens,
-        total: totalCalculado,
-      });
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error("Usuário não autenticado.");
+      }
+
+      const userId = user.id;
+      const agora = new Date().toISOString();
+
+      // Verificar se já existe registro para esse mês/usuário
+      const { data: existente, error: selectError } = await supabase
+        .from("registros_ativos")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("mes_ano", mesAno)
+        .maybeSingle();
+
+      if (selectError && selectError.code !== "PGRST116") {
+        throw selectError;
+      }
+
+      let registroId = existente?.id;
+
+      // ==========================
+      // CASO 1: NENHUM ITEM -> APAGAR
+      // ==========================
+      if (itensValidos.length === 0) {
+        if (registroId) {
+          await supabase
+            .from("registros_ativos_itens")
+            .delete()
+            .eq("registro_id", registroId);
+
+          await supabase
+            .from("registros_ativos")
+            .delete()
+            .eq("id", registroId);
+        }
+
+        onSave?.({
+          mesAno,
+          itens: [],
+          total: 0,
+          deleted: true,
+        });
+        onClose?.();
+        setIsSaving(false);
+        return;
+      }
+
+      // ==========================
+      // CASO 2: TEM ITENS -> CRIAR/ATUALIZAR
+      // ==========================
+      if (!registroId) {
+        const { data: novo, error: insertError } = await supabase
+          .from("registros_ativos")
+          .insert({
+            user_id: userId,
+            mes_ano: mesAno,
+            total: totalCalculado,
+            created_at: agora,
+            atualizado_em: agora,
+          })
+          .select("id")
+          .single();
+
+        if (insertError) throw insertError;
+        registroId = novo.id;
+      } else {
+        const { error: updateError } = await supabase
+          .from("registros_ativos")
+          .update({
+            total: totalCalculado,
+            atualizado_em: agora,
+          })
+          .eq("id", registroId);
+
+        if (updateError) throw updateError;
+      }
+
+      // Limpa itens antigos
+      const { error: deleteError } = await supabase
+        .from("registros_ativos_itens")
+        .delete()
+        .eq("registro_id", registroId);
+
+      if (deleteError) throw deleteError;
+
+      // Insere novos itens
+      const payload = itensValidos.map((l) => ({
+        registro_id: registroId,
+        user_id: userId,
+        nome_ativo: l.nome.trim(),
+        valor: toNum(l.valor),
+        created_at: agora,
+        atualizado_em: agora,
+      }));
+
+      const { error: insertItensError } = await supabase
+        .from("registros_ativos_itens")
+        .insert(payload);
+
+      if (insertItensError) throw insertItensError;
 
       onSave?.({
         mesAno,
@@ -438,7 +532,7 @@ export default function EditAtivosModal({
           valor: toNum(l.valor),
         })),
         total: totalCalculado,
-        deleted: payloadItens.length === 0,
+        deleted: false,
       });
 
       onClose?.();
