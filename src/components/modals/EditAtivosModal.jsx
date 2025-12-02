@@ -164,7 +164,6 @@ function LinhaAtivo({
   const inputRef = useRef(null);
   const dropdownStyle = useFloatingDropdown(inputRef, 4);
 
-  // regra: se há valor e não há nome, mostra aviso
   const hasNome = (linha.nome || "").trim() !== "";
   const hasValor = String(linha.valor ?? "").trim() !== "";
   const erroValorSemNome = hasValor && !hasNome;
@@ -270,7 +269,7 @@ function LinhaAtivo({
 ---------------------------- */
 export default function EditAtivosModal({
   open,
-  isOpen, // alias
+  isOpen,
   onClose,
   onSave,
   ativosExistentes = [
@@ -356,7 +355,7 @@ export default function EditAtivosModal({
       maximumFractionDigits: 2,
     });
 
-  // ----- linhas -----
+  // linhas
   const [linhas, setLinhas] = useState([
     { id: crypto.randomUUID(), nome: "", valor: "" },
   ]);
@@ -461,7 +460,7 @@ export default function EditAtivosModal({
 
       const uid = user.id;
 
-      // 1) BUSCA SIMPLES: se já existe cabeçalho para (uid, s_ano)
+      // 1) Tenta buscar cabeçalho; se der erro, apenas loga e trata como se não existisse
       const { data: rows, error: selectError } = await supabase
         .from("registros_ativos")
         .select("*")
@@ -470,11 +469,14 @@ export default function EditAtivosModal({
         .limit(1);
 
       if (selectError) {
-        console.error("Erro ao buscar cabeçalho de ativos:", selectError);
-        throw new Error("Erro ao buscar cabeçalho de ativos.");
+        console.warn(
+          "Falha ao selecionar cabeçalho, vou tratar como inexistente:",
+          selectError
+        );
       }
 
-      const existente = rows && rows.length > 0 ? rows[0] : null;
+      const existente =
+        !selectError && rows && rows.length > 0 ? rows[0] : null;
 
       let registroId;
 
@@ -603,7 +605,7 @@ export default function EditAtivosModal({
           </button>
         </div>
 
-        {/* TÍTULOS DAS COLUNAS */}
+        {/* TÍTULOS */}
         <div className="grid grid-cols-[2fr_1fr_60px] gap-0 px-6 mt-6 text-[11px] font-semibold text-gray-600 uppercase">
           <div className="border-b border-gray-300 pb-1">Nome do Ativo</div>
           <div className="border-b border-gray-300 pb-1 text-left">Valor</div>
