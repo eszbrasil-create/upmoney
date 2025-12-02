@@ -44,7 +44,20 @@ function useFloatingDropdown(ref, offset = 4) {
    Month / Year Picker
 ---------------------------- */
 function MesAnoPicker({ value, onChange }) {
-  const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  const meses = [
+    "Jan",
+    "Fev",
+    "Mar",
+    "Abr",
+    "Mai",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Set",
+    "Out",
+    "Nov",
+    "Dez",
+  ];
   const [mesAtual, anoAtualStr] = String(value || "").split("/");
   const anoInicial = Number(anoAtualStr) || new Date().getFullYear();
 
@@ -70,18 +83,28 @@ function MesAnoPicker({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-2 rounded-lg bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 hover:bg-gray-200 transition"
+        className="inline-flex items-center justify-between gap-2 rounded-lg bg-gray-100 border border-gray-300 px-3 py-2 text-xs sm:text-sm text-gray-800 hover:bg-gray-200 transition w-full"
       >
-        <span>{value}</span>
-        <span>▼</span>
+        <span>{value || "Mês/Ano"}</span>
+        <span className="text-[10px]">▼</span>
       </button>
 
       {open && (
-        <div className="absolute left-0 mt-2 w-60 rounded-xl border border-gray-300 bg-white shadow-xl p-4 z-50">
+        <div className="absolute left-0 mt-2 w-56 rounded-xl border border-gray-300 bg-white shadow-xl p-4 z-50">
           <div className="flex items-center justify-between mb-3">
-            <button onClick={() => setAno((a) => a - 1)} className="w-8 h-8 rounded hover:bg-gray-200">←</button>
+            <button
+              onClick={() => setAno((a) => a - 1)}
+              className="w-8 h-8 rounded hover:bg-gray-200"
+            >
+              ←
+            </button>
             <span className="font-semibold">{ano}</span>
-            <button onClick={() => setAno((a) => a + 1)} className="w-8 h-8 rounded hover:bg-gray-200">→</button>
+            <button
+              onClick={() => setAno((a) => a + 1)}
+              className="w-8 h-8 rounded hover:bg-gray-200"
+            >
+              →
+            </button>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {meses.map((m) => (
@@ -136,13 +159,11 @@ function LinhaAtivo({
         focoId === linha.id ? "relative z-20 bg-white" : ""
       }`}
     >
-      {/* DATA */}
+      {/* DATA (MÊS/ANO) */}
       <div className="pr-3 border-r border-gray-300">
-        <input
-          type="date"
-          className="w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
+        <MesAnoPicker
           value={linha.data || ""}
-          onChange={(e) => atualizarCampo(linha.id, "data", e.target.value)}
+          onChange={(val) => atualizarCampo(linha.id, "data", val)}
         />
       </div>
 
@@ -272,12 +293,15 @@ export default function EditAtivosModal({
       .slice(0, 8);
   }, [query, ativosExistentes]);
 
-  const criarLinhasVazias = () => [
-    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
-    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
-    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
-    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
-  ];
+  const criarLinhasVazias = (mesRef) => {
+    const dataBase = mesRef || "";
+    return [
+      { id: crypto.randomUUID(), data: dataBase, nome: "", valor: "" },
+      { id: crypto.randomUUID(), data: dataBase, nome: "", valor: "" },
+      { id: crypto.randomUUID(), data: dataBase, nome: "", valor: "" },
+      { id: crypto.randomUUID(), data: dataBase, nome: "", valor: "" },
+    ];
+  };
 
   // CARREGA DADOS AO ABRIR E QUANDO MÊS MUDA
   useEffect(() => {
@@ -316,7 +340,7 @@ export default function EditAtivosModal({
 
       if (!currentUser) {
         setRegistroId(null);
-        setLinhas(criarLinhasVazias());
+        setLinhas(criarLinhasVazias(mesRef));
         return;
       }
 
@@ -339,7 +363,7 @@ export default function EditAtivosModal({
           setLinhas(
             itens.map((i) => ({
               id: crypto.randomUUID(),
-              data: "", // aqui você pode, no futuro, preencher com uma coluna de data se existir na tabela
+              data: mesRef, // data da linha = mês/ano atual
               nome: i.nome_ativo,
               valor: formatPtBr(i.valor),
             }))
@@ -348,13 +372,13 @@ export default function EditAtivosModal({
         }
 
         // Cabeçalho existe mas sem itens → linhas vazias
-        setLinhas(criarLinhasVazias());
+        setLinhas(criarLinhasVazias(mesRef));
         return;
       }
 
       // Não há cabeçalho para esse mês
       setRegistroId(null);
-      setLinhas(criarLinhasVazias());
+      setLinhas(criarLinhasVazias(mesRef));
     };
 
     carregarDados();
@@ -363,7 +387,7 @@ export default function EditAtivosModal({
 
   const adicionarLinha = () =>
     setLinhas((prev) => [
-      { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+      { id: crypto.randomUUID(), data: mesAno || "", nome: "", valor: "" },
       ...prev,
     ]);
 
@@ -372,7 +396,7 @@ export default function EditAtivosModal({
     // Atualiza estado local imediatamente
     setLinhas((prev) => {
       const novo = prev.filter((l) => l.id !== linha.id);
-      return novo.length === 0 ? criarLinhasVazias() : novo;
+      return novo.length === 0 ? criarLinhasVazias(mesAno) : novo;
     });
 
     // Se não tiver user ou registroId, não mexe no banco (por segurança)
@@ -494,7 +518,7 @@ export default function EditAtivosModal({
         .delete()
         .eq("registro_id", registroIdLocal);
 
-      // Insere novos (data ainda não vai para o banco, só nome/valor)
+      // Insere novos (data de mês/ano ainda NÃO vai pro banco, só na UI)
       const payload = itensValidos.map((l) => ({
         registro_id: registroIdLocal,
         user_id: userId,
@@ -564,7 +588,7 @@ export default function EditAtivosModal({
           </div>
 
           <div className="grid grid-cols-[130px_2fr_1fr_60px] text-xs font-bold text-gray-600 uppercase mb-2">
-            <div>Data</div>
+            <div>Data (mês/ano)</div>
             <div>Nome do Ativo</div>
             <div className="text-right">Valor</div>
             <div></div>
