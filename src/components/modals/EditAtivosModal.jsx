@@ -41,7 +41,7 @@ function useFloatingDropdown(ref, offset = 4) {
 }
 
 /* ---------------------------
-   Month / Year Picker
+   Month / Year Picker (mesmo modelo do seletor principal)
 ---------------------------- */
 function MesAnoPicker({ value, onChange }) {
   const meses = [
@@ -83,25 +83,25 @@ function MesAnoPicker({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center justify-between gap-2 rounded-lg bg-gray-100 border border-gray-300 px-3 py-2 text-xs sm:text-sm text-gray-800 hover:bg-gray-200 transition w-full"
+        className="inline-flex items-center justify-between gap-2 rounded-lg bg-white/70 border border-gray-300/70 px-3 py-2 text-xs sm:text-sm text-gray-800 hover:bg-white/90 shadow-sm transition w-full"
       >
         <span>{value || "Mês/Ano"}</span>
         <span className="text-[10px]">▼</span>
       </button>
 
       {open && (
-        <div className="absolute left-0 mt-2 w-56 rounded-xl border border-gray-300 bg-white shadow-xl p-4 z-50">
+        <div className="absolute left-0 mt-2 w-56 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-sm shadow-2xl p-4 z-50">
           <div className="flex items-center justify-between mb-3">
             <button
               onClick={() => setAno((a) => a - 1)}
-              className="w-8 h-8 rounded hover:bg-gray-200"
+              className="w-8 h-8 rounded hover:bg-gray-100"
             >
               ←
             </button>
             <span className="font-semibold">{ano}</span>
             <button
               onClick={() => setAno((a) => a + 1)}
-              className="w-8 h-8 rounded hover:bg-gray-200"
+              className="w-8 h-8 rounded hover:bg-gray-100"
             >
               →
             </button>
@@ -303,7 +303,7 @@ export default function EditAtivosModal({
     ];
   };
 
-  // CARREGA DADOS AO ABRIR E QUANDO MÊS MUDA
+  // CARREGA DADOS AO ABRIR
   useEffect(() => {
     if (!visible) return;
 
@@ -334,7 +334,7 @@ export default function EditAtivosModal({
       const mesAnoPadrao =
         mesAnoInicial || `${meses[hoje.getMonth()]}/${hoje.getFullYear()}`;
 
-      // Se ainda não temos mesAno, define o padrão
+      // Define mesAno interno (mesmo sem seletor externo)
       const mesRef = mesAno || mesAnoPadrao;
       if (!mesAno) setMesAno(mesRef);
 
@@ -363,7 +363,7 @@ export default function EditAtivosModal({
           setLinhas(
             itens.map((i) => ({
               id: crypto.randomUUID(),
-              data: mesRef, // data da linha = mês/ano atual
+              data: mesRef,
               nome: i.nome_ativo,
               valor: formatPtBr(i.valor),
             }))
@@ -371,19 +371,17 @@ export default function EditAtivosModal({
           return;
         }
 
-        // Cabeçalho existe mas sem itens → linhas vazias
         setLinhas(criarLinhasVazias(mesRef));
         return;
       }
 
-      // Não há cabeçalho para esse mês
       setRegistroId(null);
       setLinhas(criarLinhasVazias(mesRef));
     };
 
     carregarDados();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, mesAnoInicial, mesAno]);
+  }, [visible, mesAnoInicial]);
 
   const adicionarLinha = () =>
     setLinhas((prev) => [
@@ -399,21 +397,18 @@ export default function EditAtivosModal({
       return novo.length === 0 ? criarLinhasVazias(mesAno) : novo;
     });
 
-    // Se não tiver user ou registroId, não mexe no banco (por segurança)
     if (!user || !registroId) return;
 
     const nomeLimpo = linha.nome?.trim();
     if (!nomeLimpo) return;
 
     try {
-      // Remove item correspondente na tabela de itens (por nome)
       await supabase
         .from("registros_ativos_itens")
         .delete()
         .eq("registro_id", registroId)
         .eq("nome_ativo", nomeLimpo);
 
-      // Verifica se ainda restam itens para esse registro
       const { data: restantes, error: restantesError } = await supabase
         .from("registros_ativos_itens")
         .select("id")
@@ -421,14 +416,12 @@ export default function EditAtivosModal({
 
       if (restantesError) throw restantesError;
 
-      // Se não houver mais itens, apaga também o cabeçalho (registro_ativos)
       if (!restantes || restantes.length === 0) {
         await supabase.from("registros_ativos").delete().eq("id", registroId);
         setRegistroId(null);
       }
     } catch (err) {
       console.error("Erro ao remover linha no banco:", err);
-      // opcional: setErroGlobal("Erro ao remover ativo. Tente novamente.");
     }
   };
 
@@ -443,13 +436,12 @@ export default function EditAtivosModal({
     setFocoId(null);
   };
 
-  // SALVAR – LINHAS EM BRANCO NÃO CONTAM
+  // SALVAR
   const salvar = async () => {
     if (isSaving || !user) return;
     setIsSaving(true);
     setErroGlobal("");
 
-    // ignora linhas completamente vazias (nome e valor em branco)
     const itensValidos = linhas.filter(
       (l) => l.nome?.trim() !== "" && l.valor?.trim() !== ""
     );
@@ -463,7 +455,6 @@ export default function EditAtivosModal({
       const userId = user.id;
       const agora = new Date().toISOString();
 
-      // Busca registro existente
       const { data: cabecalhos } = await supabase
         .from("registros_ativos")
         .select("id")
@@ -473,7 +464,6 @@ export default function EditAtivosModal({
 
       const registroExistente = cabecalhos?.[0];
 
-      // SE NÃO TEM NENHUMA LINHA PREENCHIDA → APAGA O MÊS INTEIRO
       if (itensValidos.length === 0) {
         if (registroExistente) {
           await supabase
@@ -492,7 +482,6 @@ export default function EditAtivosModal({
         return;
       }
 
-      // Tem linhas válidas → salva normalmente
       let registroIdLocal = registroExistente?.id;
 
       if (!registroIdLocal) {
@@ -512,13 +501,11 @@ export default function EditAtivosModal({
         setRegistroId(registroIdLocal);
       }
 
-      // Limpa itens antigos
       await supabase
         .from("registros_ativos_itens")
         .delete()
         .eq("registro_id", registroIdLocal);
 
-      // Insere novos (data de mês/ano ainda NÃO vai pro banco, só na UI)
       const payload = itensValidos.map((l) => ({
         registro_id: registroIdLocal,
         user_id: userId,
@@ -530,7 +517,6 @@ export default function EditAtivosModal({
 
       await supabase.from("registros_ativos_itens").insert(payload);
 
-      // Atualiza total
       await supabase
         .from("registros_ativos")
         .update({ total: totalCalculado, atualizado_em: agora })
@@ -566,8 +552,11 @@ export default function EditAtivosModal({
         className="w-[900px] max-w-[96vw] bg-white rounded-xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b bg-gray-50 rounded-t-xl flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Editar Ativos</h2>
+        {/* Barra de cima com mais transparência */}
+        <div className="px-6 py-4 border-b border-gray-200/60 bg-white/70 backdrop-blur-sm rounded-t-xl flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-800">
+            Editar Ativos
+          </h2>
           <button
             onClick={onClose}
             className="text-3xl text-gray-500 hover:text-gray-800"
@@ -577,8 +566,12 @@ export default function EditAtivosModal({
         </div>
 
         <div className="p-6">
+          {/* Linha de ações (sem seletor externo de mês/ano) */}
           <div className="flex items-center justify-between mb-6">
-            <MesAnoPicker value={mesAno} onChange={setMesAno} />
+            <span className="text-xs sm:text-sm text-gray-500">
+              Use o campo de data (mês/ano) na primeira coluna para organizar
+              seus registros.
+            </span>
             <button
               onClick={adicionarLinha}
               className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
@@ -613,7 +606,8 @@ export default function EditAtivosModal({
           </div>
 
           <div className="mt-6 pt-4 border-t flex justify-end text-lg font-bold text-emerald-600">
-            Total: R$ {total.toLocaleString("pt-BR", {
+            Total: R${" "}
+            {total.toLocaleString("pt-BR", {
               minimumFractionDigits: 2,
             })}
           </div>
