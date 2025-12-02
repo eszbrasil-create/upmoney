@@ -1,382 +1,552 @@
-// src/modules/carteiraCash/ModalLancamentos.jsx
-import React, { useMemo, useState, useEffect } from "react";
-import { supabase } from "../../lib/supabaseClient";
+// src/components/modals/EditAtivosModal.jsx
+import React, {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
+import { Trash2 } from "lucide-react";
 
-// Helpers
-function toNum(x) {
-  if (x === "" || x === null || x === undefined) return 0;
-  const n = Number(String(x).replace(",", "."));
-  return Number.isFinite(n) ? n : 0;
-}
+/* ---------------------------
+   Hook para dropdown flutuante
+---------------------------- */
+function useFloatingDropdown(ref, offset = 4) {
+  const [style, setStyle] = useState({});
 
-function formatDateBR(iso) {
-  if (!iso) return "—";
-  const parts = String(iso).split("-");
-  if (parts.length !== 3) return iso;
-  const [y, m, d] = parts;
-  return `${d}/${m}/${y}`;
-}
+  useLayoutEffect(() => {
+    function update() {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
 
-export default function ModalLancamentos({ isOpen, onClose }) {
-  if (!isOpen) return null;
-
-  // Estado do formulário
-  const [novo, setNovo] = useState({
-    ticker: "",
-    tipo: "",
-    dataEntrada: "",
-    qtd: "",
-    price: "",
-  });
-
-  // Lista REAL dos lançamentos do Supabase
-  const [lancamentos, setLancamentos] = useState([]);
-
-  // Usuário logado
-  const [user, setUser] = useState(null);
-
-  // ================================
-  // 1) Obter usuário logado
-  // ================================
-  useEffect(() => {
-    async function loadUser() {
-      const { data } = await supabase.auth.getUser();
-      setUser(data?.user || null);
-    }
-    loadUser();
-  }, []);
-
-  // ================================
-  // 2) Carregar lançamentos do Supabase
-  // ================================
-  useEffect(() => {
-    if (!user) return;
-
-    async function loadLanc() {
-      const { data, error } = await supabase
-        .from("wallet_items")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("data_entrada", { ascending: false });
-
-      if (error) {
-        console.error("Erro ao carregar lançamentos:", error);
-        return;
-      }
-
-      setLancamentos(data || []);
+      setStyle({
+        position: "absolute",
+        top: rect.bottom + offset + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+        zIndex: 9999,
+      });
     }
 
-    loadLanc();
-  }, [user]);
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
 
-  // ================================
-  // 3) Alterar campos do formulário
-  // ================================
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setNovo((old) => ({ ...old, [name]: value }));
-  }
-
-  // ================================
-  // 4) Salvar no Supabase
-  // ================================
-  async function handleSalvar(e) {
-    e.preventDefault();
-
-    if (!user) {
-      alert("Usuário não identificado.");
-      return;
-    }
-
-    const tickerUpper = (novo.ticker || "").toUpperCase().trim();
-    const tipo = (novo.tipo || "ACOES").trim();
-    const quantidade = toNum(novo.qtd);
-    const precoUnit = toNum(novo.price);
-
-    if (!tickerUpper || !tipo || quantidade <= 0 || precoUnit <= 0) {
-      alert("Preencha ticker, tipo, quantidade e preço corretamente.");
-      return;
-    }
-
-    // Se não tiver data informada, usa hoje
-    const hojeISO = new Date().toISOString().slice(0, 10); // yyyy-mm-dd
-    const dataEntradaISO = novo.dataEntrada || hojeISO;
-
-    const valorTotal = quantidade * precoUnit;
-
-    const payload = {
-      user_id: user.id,
-
-      // 🔹 modelo "novo"
-      asset_name: tickerUpper,
-      category: tipo,
-      purchase_date: dataEntradaISO,
-      qtd: quantidade,
-      price: precoUnit,
-
-      // 🔹 campos legados (usados hoje na carteira)
-      ticker: tickerUpper,
-      tipo,
-      nome: tickerUpper,
-      data_entrada: dataEntradaISO,
-      valor: valorTotal,
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
     };
+  }, [ref, offset]);
 
-    const { error } = await supabase.from("wallet_items").insert(payload);
+  return style;
+}
 
-    if (error) {
-      console.error("Erro ao salvar ativo:", error);
-      alert("Erro ao salvar ativo. Veja o console para detalhes.");
-      return;
+/* ---------------------------
+   Month / Year Picker
+---------------------------- */
+function MesAnoPicker({ value, onChange }) {
+  const meses = [
+    "Jan",
+    "Fev",
+    "Mar",
+    "Abr",
+    "Mai",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Set",
+    "Out",
+    "Nov",
+    "Dez",
+  ];
+
+  const [mesAtual, anoAtualStr] = String(value || "").split("/");
+  const anoInicial = Number(anoAtualStr) || new Date().getFullYear();
+
+  const [open, setOpen] = useState(false);
+  const [ano, setAno] = useState(anoInicial);
+
+  // sincroniza ano quando o value muda
+  useEffect(() => {
+    const [, a] = String(value || "").split("/");
+    if (a) setAno(Number(a));
+  }, [value]);
+
+  // fecha clicando fora
+  const ref = useRef(null);
+  useEffect(() => {
+    function onDocClick(e) {
+      if (!ref.current) return;
+      if (!ref.current.contains(e.target)) setOpen(false);
     }
-
-    // Recarrega lista de lançamentos
-    const { data, error: errorReload } = await supabase
-      .from("wallet_items")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("data_entrada", { ascending: false });
-
-    if (errorReload) {
-      console.error("Erro ao recarregar lançamentos:", errorReload);
-    } else {
-      setLancamentos(data || []);
-    }
-
-    // Limpa formulário
-    setNovo({
-      ticker: "",
-      tipo: "",
-      dataEntrada: "",
-      qtd: "",
-      price: "",
-    });
-  }
-
-  // ================================
-  // 5) Excluir lançamento
-  // ================================
-  async function handleDelete(id) {
-    const { error } = await supabase
-      .from("wallet_items")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", user.id);
-
-    if (error) {
-      console.error(error);
-      alert("Erro ao excluir.");
-      return;
-    }
-
-    setLancamentos((old) => old.filter((l) => l.id !== id));
-  }
-
-  // ================================
-  // 6) Ordenação local
-  // ================================
-  const lancOrdenados = useMemo(() => {
-    const arr = [...(lancamentos || [])];
-    return arr.sort((a, b) => {
-      const da = a.data_entrada || a.purchase_date || "";
-      const db = b.data_entrada || b.purchase_date || "";
-      if (da && db) return db.localeCompare(da);
-      if (da) return -1;
-      if (db) return 1;
-      return (b.id || 0) - (a.id || 0);
-    });
-  }, [lancamentos]);
+    if (open) document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
 
   return (
-    <div className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center p-4">
-      <div className="w-[75vw] h-[90vh] rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-6 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-slate-100 font-semibold text-lg">
-            Adicionar ativo à base
-          </h2>
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-2 rounded-lg bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 hover:bg-gray-200 transition"
+      >
+        <span>{value}</span>
+        <span>▾</span>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 mt-2 w-[240px] rounded-xl border border-gray-300 bg-white shadow-xl p-3 z-50">
+          <div className="flex items-center justify-between mb-2">
+            <button
+              type="button"
+              onClick={() => setAno((a) => a - 1)}
+              className="h-8 w-8 rounded bg-gray-200 hover:bg-gray-300"
+            >
+              ←
+            </button>
+
+            <div className="font-semibold text-gray-800">{ano}</div>
+
+            <button
+              type="button"
+              onClick={() => setAno((a) => a + 1)}
+              className="h-8 w-8 rounded bg-gray-200 hover:bg-gray-300"
+            >
+              →
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            {meses.map((m) => {
+              const selected = m === mesAtual && ano === anoInicial;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => {
+                    onChange?.(`${m}/${ano}`);
+                    setOpen(false);
+                  }}
+                  className={`rounded-lg px-3 py-2 text-sm transition ${
+                    selected
+                      ? "bg-emerald-500 text-white"
+                      : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                  }`}
+                >
+                  {m}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------
+   Linha da tabela com autocomplete
+---------------------------- */
+function LinhaAtivo({
+  linha,
+  focoId,
+  setFocoId,
+  sugestoes,
+  selecionarSugestao,
+  atualizarCampo,
+  removerLinha,
+  setQuery,
+  formatPtBr,
+  toNum,
+}) {
+  const inputRef = useRef(null);
+  const dropdownStyle = useFloatingDropdown(inputRef, 4);
+
+  // regra: se há valor e não há nome, mostra aviso
+  const hasNome = (linha.nome || "").trim() !== "";
+  const hasValor = String(linha.valor ?? "").trim() !== "";
+  const erroValorSemNome = hasValor && !hasNome;
+
+  return (
+    <div
+      className={`grid grid-cols-[2fr_1fr_60px] gap-0 items-center border-b border-gray-200 py-2 ${
+        focoId === linha.id ? "relative z-20 bg-white" : ""
+      }`}
+    >
+      {/* NOME DO ATIVO */}
+      <div className="pr-3 border-r border-gray-300 relative">
+        <input
+          ref={inputRef}
+          className="w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
+          placeholder="Digite um ativo"
+          value={linha.nome}
+          onChange={(e) => {
+            atualizarCampo(linha.id, "nome", e.target.value);
+            setFocoId(linha.id);
+            setQuery(e.target.value);
+          }}
+          onFocus={(e) => {
+            setFocoId(linha.id);
+            setQuery(e.target.value || "");
+          }}
+          onBlur={() => {
+            setTimeout(() => {
+              setFocoId((prev) => (prev === linha.id ? null : prev));
+              setQuery("");
+            }, 120);
+          }}
+        />
+
+        {focoId === linha.id &&
+          sugestoes.length > 0 &&
+          typeof document !== "undefined" &&
+          createPortal(
+            <div
+              style={dropdownStyle}
+              className="rounded-lg border border-gray-300 bg-white shadow-2xl"
+            >
+              {sugestoes.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => selecionarSugestao(linha.id, s)}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-900 hover:bg-gray-100"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>,
+            document.body
+          )}
+      </div>
+
+      {/* VALOR */}
+      <div className="pl-3 pr-3 border-r border-gray-300">
+        <input
+          className="w-full text-left bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
+          inputMode="decimal"
+          placeholder="0,00"
+          value={linha.valor}
+          onChange={(e) => {
+            const raw = e.target.value;
+            if (/^[0-9.,]*$/.test(raw)) {
+              atualizarCampo(linha.id, "valor", raw);
+            }
+          }}
+          onBlur={(e) =>
+            atualizarCampo(
+              linha.id,
+              "valor",
+              formatPtBr(toNum(e.target.value))
+            )
+          }
+        />
+
+        {erroValorSemNome && (
+          <p className="mt-1 text-xs text-red-500">
+            Informe o nome do ativo antes de registrar um valor.
+          </p>
+        )}
+      </div>
+
+      {/* AÇÃO */}
+      <div className="flex justify-center">
+        <button
+          onClick={() => removerLinha(linha.id)}
+          className="text-gray-500 hover:text-red-500"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------
+      Modal principal
+---------------------------- */
+export default function EditAtivosModal({
+  open,
+  onClose,
+  onSave,
+  ativosExistentes = [
+    "Ações",
+    "Renda Fixa",
+    "Cripto",
+    "FIIs",
+    "Caixa",
+    "Banco",
+    "Viagem",
+    "Cofre",
+  ],
+  mesAnoInicial,
+  linhasIniciais = [],
+}) {
+  const backdropRef = useRef(null);
+
+  // trava scroll do body quando o modal estiver aberto
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // ----- mês / ano padrão -----
+  const mesesLista = [
+    "Jan",
+    "Fev",
+    "Mar",
+    "Abr",
+    "Mai",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Set",
+    "Out",
+    "Nov",
+    "Dez",
+  ];
+  const hoje = new Date();
+  const mesBase = hoje.getMonth();
+  const anoBase = hoje.getFullYear();
+  const padraoMesAno = mesAnoInicial || `${mesesLista[mesBase]}/${anoBase}`;
+
+  const [mesAno, setMesAno] = useState(padraoMesAno);
+
+  // helpers de valor
+  const toNum = (x) => {
+    if (x === "" || x == null) return 0;
+    const n = Number(String(x).replace(/\./g, "").replace(",", "."));
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const formatPtBr = (n) =>
+    n.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+  // ----- linhas -----
+  const [linhas, setLinhas] = useState([
+    { id: crypto.randomUUID(), nome: "", valor: "" },
+  ]);
+
+  // estado de salvamento / erro global
+  const [isSaving, setIsSaving] = useState(false);
+  const [erroGlobal, setErroGlobal] = useState("");
+
+  // autocomplete (compartilhado entre as linhas)
+  const [focoId, setFocoId] = useState(null);
+  const [query, setQuery] = useState("");
+
+  const uniqAtivos = useMemo(() => {
+    return Array.from(
+      new Map(
+        ativosExistentes.map((n) => [String(n).toLowerCase(), String(n)])
+      ).values()
+    ).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [ativosExistentes]);
+
+  const sugestoes = useMemo(() => {
+    if (!query) return uniqAtivos.slice(0, 8); // pré-lista com 8 itens
+    const q = query.toLowerCase();
+    return uniqAtivos
+      .filter((n) => n.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [query, uniqAtivos]);
+
+  useEffect(() => {
+    if (!open) return;
+    setMesAno(padraoMesAno);
+    setErroGlobal("");
+    setIsSaving(false);
+
+    if (Array.isArray(linhasIniciais) && linhasIniciais.length > 0) {
+      // edição de mês já salvo
+      setLinhas(
+        linhasIniciais.map((l) => ({
+          id: crypto.randomUUID(),
+          nome: l.nome || "",
+          valor: formatPtBr(toNum(l.valor)),
+        }))
+      );
+    } else {
+      // primeiro preenchimento → 4 linhas vazias
+      setLinhas([
+        { id: crypto.randomUUID(), nome: "", valor: "" },
+        { id: crypto.randomUUID(), nome: "", valor: "" },
+        { id: crypto.randomUUID(), nome: "", valor: "" },
+        { id: crypto.randomUUID(), nome: "", valor: "" },
+      ]);
+    }
+  }, [open, padraoMesAno, linhasIniciais]);
+
+  const adicionarLinha = () => {
+    setLinhas((prev) => [
+      { id: crypto.randomUUID(), nome: "", valor: "" },
+      ...prev,
+    ]);
+  };
+
+  const removerLinha = (id) => {
+    setLinhas((prev) => {
+      const novo = prev.filter((l) => l.id !== id);
+      if (novo.length === 0) {
+        // mantém ao menos 1 linha
+        return [{ id: crypto.randomUUID(), nome: "", valor: "" }];
+      }
+      return novo;
+    });
+  };
+
+  const atualizarCampo = (id, campo, valor) => {
+    setLinhas((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l))
+    );
+  };
+
+  const selecionarSugestao = (id, nome) => {
+    atualizarCampo(id, "nome", nome);
+    setFocoId(null);
+    setQuery("");
+  };
+
+  const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
+
+  // agora salvar aceita onSave assíncrono e não fecha se der erro
+  const salvar = async () => {
+    if (isSaving) return;
+
+    const itensLimpos = linhas
+      .filter((l) => l.nome.trim() !== "")
+      .map((l) => ({
+        nome: l.nome.trim(),
+        valor: toNum(l.valor),
+      }));
+
+    try {
+      setIsSaving(true);
+      setErroGlobal("");
+
+      if (onSave) {
+        // se onSave retornar uma Promise (ex: Supabase), aguardamos
+        await onSave({ mesAno, itens: itensLimpos, total });
+      }
+
+      onClose?.();
+    } catch (err) {
+      console.error(err);
+      setErroGlobal(
+        err?.message || "Não foi possível salvar. Tente novamente."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div
+      ref={backdropRef}
+      onMouseDown={(e) => e.target === backdropRef.current && !isSaving && onClose?.()}
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    >
+      <div
+        className="w-[900px] max-w-[96vw] rounded-xl bg-white shadow-2xl"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        {/* HEADER */}
+        <div className="px-6 py-4 border-b border-gray-300 bg-gray-100 rounded-t-xl flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-gray-900">Editar Ativos</h2>
+
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-100 text-xl"
+            disabled={isSaving}
+            className="text-gray-700 hover:text-black text-xl disabled:opacity-50"
           >
             ×
           </button>
         </div>
 
-        {/* Formulário */}
-        <form onSubmit={handleSalvar} className="flex flex-col gap-4">
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            <div className="flex flex-col flex-[0_0_130px]">
-              <label className="text-[11px] text-slate-300 mb-1">
-                Ativo (ticker)
-              </label>
-              <input
-                name="ticker"
-                value={novo.ticker}
-                onChange={handleChange}
-                placeholder="VALE3"
-                className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-              />
-            </div>
+        {/* TOPO DA TABELA */}
+        <div className="px-6 mt-4 flex items-center gap-4">
+          <MesAnoPicker value={mesAno} onChange={setMesAno} />
 
-            <div className="flex flex-col flex-[0_0_130px]">
-              <label className="text-[11px] text-slate-300 mb-1">Tipo</label>
-              <select
-                name="tipo"
-                value={novo.tipo}
-                onChange={handleChange}
-                className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100"
-              >
-                <option value="">Selecione...</option>
-                <option value="ACOES">Ações</option>
-                <option value="FII">FII</option>
-                <option value="RF">Renda Fixa</option>
-                <option value="CAIXA">Caixa</option>
-                <option value="OUTROS">Outros</option>
-              </select>
-            </div>
+          <button
+            onClick={adicionarLinha}
+            type="button"
+            className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+          >
+            + Adicionar linha
+          </button>
+        </div>
 
-            <div className="flex flex-col flex-[0_0_150px]">
-              <label className="text-[11px] text-slate-300 mb-1">
-                Data de entrada
-              </label>
-              <input
-                type="date"
-                name="dataEntrada"
-                value={novo.dataEntrada}
-                onChange={handleChange}
-                className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100"
-              />
-            </div>
+        {/* TÍTULOS DAS COLUNAS */}
+        <div className="grid grid-cols-[2fr_1fr_60px] gap-0 px-6 mt-6 text-[11px] font-semibold text-gray-600 uppercase">
+          <div className="border-b border-gray-300 pb-1">Nome do Ativo</div>
+          <div className="border-b border-gray-300 pb-1 text-left">Valor</div>
+          <div className="border-b border-gray-300 pb-1 text-center">Ação</div>
+        </div>
 
-            <div className="flex flex-col flex-[0_0_120px]">
-              <label className="text-[11px] text-slate-300 mb-1">
-                Quantidade
-              </label>
-              <input
-                name="qtd"
-                value={novo.qtd}
-                onChange={handleChange}
-                inputMode="decimal"
-                className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-              />
-            </div>
+        {/* LINHAS (SCROLL APENAS AQUI) */}
+        <div className="px-6 mt-2 max-h-[380px] overflow-y-auto">
+          {linhas.map((l) => (
+            <LinhaAtivo
+              key={l.id}
+              linha={l}
+              focoId={focoId}
+              setFocoId={setFocoId}
+              sugestoes={sugestoes}
+              selecionarSugestao={selecionarSugestao}
+              atualizarCampo={atualizarCampo}
+              removerLinha={removerLinha}
+              setQuery={setQuery}
+              formatPtBr={formatPtBr}
+              toNum={toNum}
+            />
+          ))}
+        </div>
 
-            <div className="flex flex-col flex-[0_0_160px]">
-              <label className="text-[11px] text-slate-300 mb-1">
-                Preço de compra (R$)
-              </label>
-              <input
-                name="price"
-                value={novo.price}
-                onChange={handleChange}
-                inputMode="decimal"
-                className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-              />
-            </div>
+        {/* TOTAL */}
+        <div className="px-6 py-4 flex justify-between border-t border-gray-300 mt-4">
+          <span className="font-semibold text-gray-900">Total:</span>
+          <span className="font-semibold text-emerald-600">
+            {total.toLocaleString("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            })}
+          </span>
+        </div>
 
-            <div className="flex flex-col flex-[0_0_auto]">
-              <label className="text-[11px] text-transparent mb-1">
-                &nbsp;
-              </label>
-              <button
-                type="submit"
-                className="px-2 py-2 flex-shrink-0 rounded-xl bg-emerald-500 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
-              >
-                Salvar lançamento
-              </button>
-            </div>
-          </div>
-        </form>
+        {/* ERRO GLOBAL */}
+        {erroGlobal && (
+          <div className="px-6 pb-1 text-xs text-red-500">{erroGlobal}</div>
+        )}
 
-        {/* Lista */}
-        <div className="mt-6 border-t border-slate-700 pt-4 flex-1 min-h-0 flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-slate-100 text-sm font-semibold">
-              Lançamentos cadastrados
-            </h3>
-            <span className="text-[11px] text-slate-400">
-              Total: {lancOrdenados.length}
-            </span>
-          </div>
+        {/* RODAPÉ */}
+        <div className="px-6 py-4 flex justify-end gap-3 border-t border-gray-200">
+          <button
+            onClick={onClose}
+            disabled={isSaving}
+            className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+          >
+            Fechar
+          </button>
 
-          <div className="rounded-xl border border-slate-700 bg-slate-950/60 flex-1 overflow-y-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-slate-800/80 text-slate-300">
-                <tr>
-                  <th className="px-3 py-2 text-left">#</th>
-                  <th className="px-3 py-2 text-left">Data</th>
-                  <th className="px-1 py-2 text-center"></th>
-                  <th className="px-3 py-2 text-left">Ticker</th>
-                  <th className="px-3 py-2 text-left">Tipo</th>
-                  <th className="px-3 py-2 text-right">Quantidade</th>
-                  <th className="px-3 py-2 text-right">Preço</th>
-                  <th className="px-3 py-2 text-right">Valor</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {lancOrdenados.map((l, idx) => {
-                  const qtd = toNum(l.qtd);
-                  const preco = toNum(l.price ?? l.preco);
-                  const valor = l.valor != null ? toNum(l.valor) : qtd * preco;
-
-                  return (
-                    <tr
-                      key={l.id}
-                      className="border-t border-slate-800 hover:bg-slate-800/40"
-                    >
-                      <td className="px-3 py-1.5 text-slate-400">
-                        {idx + 1}
-                      </td>
-
-                      <td className="px-3 py-1.5 text-slate-100">
-                        {formatDateBR(l.data_entrada || l.purchase_date)}
-                      </td>
-
-                      <td className="px-1 py-1.5 text-center">
-                        <button
-                          onClick={() => handleDelete(l.id)}
-                          className="h-6 w-6 rounded-full text-slate-400 hover:text-rose-100 hover:bg-rose-500/70"
-                        >
-                          🗑️
-                        </button>
-                      </td>
-
-                      <td className="px-3 py-1.5 text-slate-100">
-                        {l.ticker || l.asset_name}
-                      </td>
-
-                      <td className="px-3 py-1.5 text-slate-200">
-                        {l.tipo || l.category}
-                      </td>
-
-                      <td className="px-3 py-1.5 text-right text-slate-100">
-                        {qtd}
-                      </td>
-
-                      <td className="px-3 py-1.5 text-right text-slate-100">
-                        {preco.toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        })}
-                      </td>
-
-                      <td className="px-3 py-1.5 text-right text-slate-100">
-                        {valor.toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        })}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <button
+            onClick={salvar}
+            disabled={isSaving}
+            className="px-5 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-60"
+          >
+            {isSaving ? "Salvando..." : "Salvar"}
+          </button>
         </div>
       </div>
     </div>
   );
-}
