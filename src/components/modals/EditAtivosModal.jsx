@@ -186,7 +186,7 @@ function LinhaAtivo({
 
       {/* LIXO */}
       <div className="flex justify-center">
-        <button onClick={() => removerLinha(linha.id)} className="text-gray-500 hover:text-red-600">
+        <button onClick={() => removerLinha(linha)} className="text-gray-500 hover:text-red-600">
           <Trash2 size={16} />
         </button>
       </div>
@@ -213,6 +213,7 @@ export default function EditAtivosModal({
   const [erroGlobal, setErroGlobal] = useState("");
   const [focoId, setFocoId] = useState(null);
   const [query, setQuery] = useState("");
+  const [registroId, setRegistroId] = useState(null);
 
   const toNum = (v) => Number(String(v).replace(/\./g, "").replace(",", ".")) || 0;
   const formatPtBr = (n) => Number(n).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -221,84 +222,161 @@ export default function EditAtivosModal({
 
   const sugestoes = useMemo(() => {
     if (!query.trim()) return ativosExistentes.slice(0, 8);
-    return ativosExistentes.filter(a => a.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
+    return ativosExistentes
+      .filter((a) => a.toLowerCase().includes(query.toLowerCase()))
+      .slice(0, 8);
   }, [query, ativosExistentes]);
 
-  // CARREGA DADOS AO ABRIR
+  const criarLinhasVazias = () => ([
+    { id: crypto.randomUUID(), nome: "", valor: "" },
+    { id: crypto.randomUUID(), nome: "", valor: "" },
+    { id: crypto.randomUUID(), nome: "", valor: "" },
+    { id: crypto.randomUUID(), nome: "", valor: "" },
+  ]);
+
+  // CARREGA DADOS AO ABRIR E QUANDO MÊS MUDA
   useEffect(() => {
     if (!visible) return;
 
     const carregarDados = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      // Garante usuário
+      let currentUser = user;
+      if (!currentUser) {
+        const { data } = await supabase.auth.getUser();
+        currentUser = data?.user || null;
+        setUser(currentUser);
+      }
 
       const hoje = new Date();
       const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-      const mesAnoPadrao = mesAnoInicial || `${meses[hoje.getMonth()]}/${hoje.getFullYear()}`;
-      setMesAno(mesAnoPadrao);
+      const mesAnoPadrao =
+        mesAnoInicial || `${meses[hoje.getMonth()]}/${hoje.getFullYear()}`;
 
-      if (!user) return;
+      // Se ainda não temos mesAno, define o padrão
+      const mesRef = mesAno || mesAnoPadrao;
+      if (!mesAno) setMesAno(mesRef);
+
+      if (!currentUser) {
+        setRegistroId(null);
+        setLinhas(criarLinhasVazias());
+        return;
+      }
 
       const { data: cabecalho } = await supabase
         .from("registros_ativos")
         .select("id")
-        .eq("user_id", user.id)
-        .eq("mes_ano", mesAnoPadrao)
+        .eq("user_id", currentUser.id)
+        .eq("mes_ano", mesRef)
         .maybeSingle();
 
       if (cabecalho) {
+        setRegistroId(cabecalho.id);
+
         const { data: itens } = await supabase
           .from("registros_ativos_itens")
           .select("nome_ativo, valor")
           .eq("registro_id", cabecalho.id);
 
         if (itens?.length > 0) {
-          setLinhas(itens.map(i => ({
-            id: crypto.randomUUID(),
-            nome: i.nome_ativo,
-            valor: formatPtBr(i.valor),
-          })));
+          setLinhas(
+            itens.map((i) => ({
+              id: crypto.randomUUID(),
+              nome: i.nome_ativo,
+              valor: formatPtBr(i.valor),
+            }))
+          );
           return;
         }
+
+        // Cabeçalho existe mas sem itens → limpa linhas
+        setLinhas(criarLinhasVazias());
+        return;
       }
 
-      setLinhas([
-        { id: crypto.randomUUID(), nome: "", valor: "" },
-        { id: crypto.randomUUID(), nome: "", valor: "" },
-        { id: crypto.randomUUID(), nome: "", valor: "" },
-        { id: crypto.randomUUID(), nome: "", valor: "" },
-      ]);
+      // Não há cabeçalho para esse mês
+      setRegistroId(null);
+      setLinhas(criarLinhasVazias());
     };
 
     carregarDados();
-  }, [visible, mesAnoInicial]);
+    // não dependemos de user para evitar loop extra
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, mesAnoInicial, mesAno]);
 
-  const adicionarLinha = () => setLinhas(prev => [{ id: crypto.randomUUID(), nome: "", valor: "" }, ...prev]);
+  const adicionarLinha = () =>
+    setLinhas((prev) => [{ id: crypto.randomUUID(), nome: "", valor: "" }, ...prev]);
 
-  const removerLinha = (id) => setLinhas(prev => {
-    const novo = prev.filter(l => l.id !== id);
-    return novo.length === 0 ? [{ id: crypto.randomUUID(), nome: "", valor: "" }] : novo;
-  });
+  // REMOVER LINHA (ATUALIZA ESTADO + SUPABASE)
+  const removerLinha = async (linha) => {
+    // Atualiza estado local imediatamente
+    setLinhas((prev) => {
+      const novo = prev.filter((l) => l.id !== linha.id);
+      return novo.length === 0 ? criarLinhasVazias() : novo;
+    });
 
-  const atualizarCampo = (id, campo, valor) => setLinhas(prev => prev.map(l => l.id === id ? { ...l, [campo]: valor } : l));
+    // Se não tiver user ou registroId, não mexe no banco (por segurança)
+    if (!user || !registroId) return;
+
+    const nomeLimpo = linha.nome?.trim();
+    if (!nomeLimpo) return;
+
+    try {
+      // Remove item correspondente na tabela de itens
+      await supabase
+        .from("registros_ativos_itens")
+        .delete()
+        .eq("registro_id", registroId)
+        .eq("nome_ativo", nomeLimpo);
+
+      // Verifica se ainda restam itens para esse registro
+      const { data: restantes, error: restantesError } = await supabase
+        .from("registros_ativos_itens")
+        .select("id")
+        .eq("registro_id", registroId);
+
+      if (restantesError) throw restantesError;
+
+      // Se não houver mais itens, apaga também o cabeçalho (registro_ativos)
+      if (!restantes || restantes.length === 0) {
+        await supabase
+          .from("registros_ativos")
+          .delete()
+          .eq("id", registroId);
+
+        setRegistroId(null);
+      }
+    } catch (err) {
+      console.error("Erro ao remover linha no banco:", err);
+      // opcional: setErroGlobal("Erro ao remover ativo. Tente novamente.");
+    }
+  };
+
+  const atualizarCampo = (id, campo, valor) =>
+    setLinhas((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l))
+    );
+
   const selecionarSugestao = (id, nome) => {
     atualizarCampo(id, "nome", nome);
     setQuery("");
     setFocoId(null);
   };
 
-  // SALVAR – VERSÃO FINAL E INQUEBRÁVEL (LINHAS EM BRANCO NÃO CONTAM MAIS)
+  // SALVAR – VERSÃO FINAL (LINHAS EM BRANCO NÃO CONTAM)
   const salvar = async () => {
     if (isSaving || !user) return;
     setIsSaving(true);
     setErroGlobal("");
 
-    // CORREÇÃO FINAL: ignora linhas completamente vazias (nome e valor em branco)
-    const itensValidos = linhas.filter(l =>
-      l.nome?.trim() !== "" && l.valor?.trim() !== ""
+    // ignora linhas completamente vazias (nome e valor em branco)
+    const itensValidos = linhas.filter(
+      (l) => l.nome?.trim() !== "" && l.valor?.trim() !== ""
     );
 
-    const totalCalculado = itensValidos.reduce((acc, l) => acc + toNum(l.valor), 0);
+    const totalCalculado = itensValidos.reduce(
+      (acc, l) => acc + toNum(l.valor),
+      0
+    );
 
     try {
       const userId = user.id;
@@ -317,19 +395,26 @@ export default function EditAtivosModal({
       // SE NÃO TEM NENHUMA LINHA PREENCHIDA → APAGA O MÊS INTEIRO
       if (itensValidos.length === 0) {
         if (registroExistente) {
-          await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroExistente.id);
-          await supabase.from("registros_ativos").delete().eq("id", registroExistente.id);
+          await supabase
+            .from("registros_ativos_itens")
+            .delete()
+            .eq("registro_id", registroExistente.id);
+          await supabase
+            .from("registros_ativos")
+            .delete()
+            .eq("id", registroExistente.id);
         }
-        onSave?.({ mesAno, itens: [], total: 0 });
+        setRegistroId(null);
+        onSave?.({ mesAno, itens: [], total: 0, deleted: true });
         onClose?.();
         setIsSaving(false);
         return;
       }
 
       // Tem linhas válidas → salva normalmente
-      let registroId = registroExistente?.id;
+      let registroIdLocal = registroExistente?.id;
 
-      if (!registroId) {
+      if (!registroIdLocal) {
         const { data: novo } = await supabase
           .from("registros_ativos")
           .insert({
@@ -341,15 +426,20 @@ export default function EditAtivosModal({
           })
           .select()
           .single();
-        registroId = novo.id;
+
+        registroIdLocal = novo.id;
+        setRegistroId(registroIdLocal);
       }
 
       // Limpa itens antigos
-      await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
+      await supabase
+        .from("registros_ativos_itens")
+        .delete()
+        .eq("registro_id", registroIdLocal);
 
       // Insere novos
-      const payload = itensValidos.map(l => ({
-        registro_id: registroId,
+      const payload = itensValidos.map((l) => ({
+        registro_id: registroIdLocal,
         user_id: userId,
         nome_ativo: l.nome.trim(),
         valor: toNum(l.valor),
@@ -363,11 +453,18 @@ export default function EditAtivosModal({
       await supabase
         .from("registros_ativos")
         .update({ total: totalCalculado, atualizado_em: agora })
-        .eq("id", registroId);
+        .eq("id", registroIdLocal);
 
-      onSave?.({ mesAno, itens: itensValidos.map(l => ({ nome: l.nome.trim(), valor: toNum(l.valor) })), total: totalCalculado });
+      onSave?.({
+        mesAno,
+        itens: itensValidos.map((l) => ({
+          nome: l.nome.trim(),
+          valor: toNum(l.valor),
+        })),
+        total: totalCalculado,
+        deleted: false,
+      });
       onClose?.();
-
     } catch (err) {
       console.error(err);
       setErroGlobal("Erro ao salvar: " + (err.message || "Tente novamente"));
@@ -379,17 +476,31 @@ export default function EditAtivosModal({
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="w-[900px] max-w-[96vw] bg-white rounded-xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-[900px] max-w-[96vw] bg-white rounded-xl shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="px-6 py-4 border-b bg-gray-50 rounded-t-xl flex justify-between items-center">
           <h2 className="text-xl font-semibold">Editar Ativos</h2>
-          <button onClick={onClose} className="text-3xl text-gray-500 hover:text-gray-800">×</button>
+          <button
+            onClick={onClose}
+            className="text-3xl text-gray-500 hover:text-gray-800"
+          >
+            ×
+          </button>
         </div>
 
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <MesAnoPicker value={mesAno} onChange={setMesAno} />
-            <button onClick={adicionarLinha} className="text-emerald-600 hover:text-emerald-700 text-sm font-medium">
+            <button
+              onClick={adicionarLinha}
+              className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+            >
               + Adicionar linha
             </button>
           </div>
@@ -422,11 +533,17 @@ export default function EditAtivosModal({
             Total: R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </div>
 
-          {erroGlobal && <div className="text-red-600 text-sm mt-2">{erroGlobal}</div>}
+          {erroGlobal && (
+            <div className="text-red-600 text-sm mt-2">{erroGlobal}</div>
+          )}
         </div>
 
         <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-xl">
-          <button onClick={onClose} disabled={isSaving} className="px-5 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50">
+          <button
+            onClick={onClose}
+            disabled={isSaving}
+            className="px-5 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+          >
             Fechar
           </button>
           <button
