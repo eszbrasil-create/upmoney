@@ -292,15 +292,12 @@ export default function EditAtivosModal({
       .slice(0, 8);
   }, [query, ativosExistentes]);
 
-  const criarLinhasVazias = (mesRef) => {
-    const dataBase = mesRef || "";
-    return [
-      { id: crypto.randomUUID(), data: dataBase, nome: "", valor: "" },
-      { id: crypto.randomUUID(), data: dataBase, nome: "", valor: "" },
-      { id: crypto.randomUUID(), data: dataBase, nome: "", valor: "" },
-      { id: crypto.randomUUID(), data: dataBase, nome: "", valor: "" },
-    ];
-  };
+  const criarLinhasVazias = () => [
+    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
+  ];
 
   // CARREGA DADOS AO ABRIR
   useEffect(() => {
@@ -336,7 +333,7 @@ export default function EditAtivosModal({
       if (!mesAno) setMesAno(mesRef);
 
       if (!currentUser) {
-        setLinhas(criarLinhasVazias(mesRef));
+        setLinhas(criarLinhasVazias());
         return;
       }
 
@@ -365,11 +362,11 @@ export default function EditAtivosModal({
           return;
         }
 
-        setLinhas(criarLinhasVazias(mesRef));
+        setLinhas(criarLinhasVazias());
         return;
       }
 
-      setLinhas(criarLinhasVazias(mesRef));
+      setLinhas(criarLinhasVazias());
     };
 
     carregarDados();
@@ -378,51 +375,17 @@ export default function EditAtivosModal({
 
   const adicionarLinha = () =>
     setLinhas((prev) => [
-      { id: crypto.randomUUID(), data: mesAno || "", nome: "", valor: "" },
+      { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
       ...prev,
     ]);
 
-  // REMOVER LINHA -> também apaga registros_ativos desse mês
-  const removerLinha = async (linha) => {
-    // 1) Atualiza UI
-    const novasLinhas = linhas.filter((l) => l.id !== linha.id);
-    setLinhas(novasLinhas.length === 0 ? criarLinhasVazias(mesAno) : novasLinhas);
-
-    if (!user) return;
-
-    // 2) Descobre o mês/ano alvo: usa a data da linha ou o mesAno interno
-    const mesRef = linha.data || mesAno;
-    if (!mesRef) return;
-
-    try {
-      // Busca cabeçalho desse mês
-      const { data: cabecalho, error } = await supabase
-        .from("registros_ativos")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("mes_ano", mesRef)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (!cabecalho) return;
-
-      // Apaga todos os itens ligados a esse registro
-      await supabase
-        .from("registros_ativos_itens")
-        .delete()
-        .eq("registro_id", cabecalho.id);
-
-      // Apaga o próprio registro_ativos
-      await supabase
-        .from("registros_ativos")
-        .delete()
-        .eq("id", cabecalho.id);
-    } catch (err) {
-      console.error(
-        "Erro ao excluir registros_ativos ao remover linha:",
-        err
-      );
-    }
+  // Lixeira: zera data + nome + valor da linha (não remove do array)
+  const removerLinha = (linha) => {
+    setLinhas((prev) =>
+      prev.map((l) =>
+        l.id === linha.id ? { ...l, data: "", nome: "", valor: "" } : l
+      )
+    );
   };
 
   const atualizarCampo = (id, campo, valor) =>
@@ -436,13 +399,18 @@ export default function EditAtivosModal({
     setFocoId(null);
   };
 
+  // SALVAR – fala direto com o Supabase
   const salvar = async () => {
-    if (isSaving || !user) return;
+    if (isSaving) return;
     setIsSaving(true);
     setErroGlobal("");
 
+    // Só considera linhas com data + nome + valor
     const itensValidos = linhas.filter(
-      (l) => l.nome?.trim() !== "" && l.valor?.trim() !== ""
+      (l) =>
+        l.data?.trim() !== "" &&
+        l.nome?.trim() !== "" &&
+        l.valor?.trim() !== ""
     );
 
     const totalCalculado = itensValidos.reduce(
@@ -451,39 +419,56 @@ export default function EditAtivosModal({
     );
 
     try {
-      const userId = user.id;
+      let currentUser = user;
+      if (!currentUser) {
+        const { data } = await supabase.auth.getUser();
+        currentUser = data?.user || null;
+        setUser(currentUser);
+      }
+
+      if (!currentUser) {
+        throw new Error("Usuário não autenticado.");
+      }
+
+      const userId = currentUser.id;
       const agora = new Date().toISOString();
 
-      const { data: cabecalhos } = await supabase
+      const { data: existente, error: selectError } = await supabase
         .from("registros_ativos")
         .select("id")
         .eq("user_id", userId)
         .eq("mes_ano", mesAno)
-        .limit(1);
+        .maybeSingle();
 
-      const registroExistente = cabecalhos?.[0];
+      if (selectError && selectError.code !== "PGRST116") {
+        throw selectError;
+      }
 
+      let registroId = existente?.id;
+
+      // CASO 1: sem itens válidos -> apaga cabeçalho + itens desse mês
       if (itensValidos.length === 0) {
-        if (registroExistente) {
+        if (registroId) {
           await supabase
             .from("registros_ativos_itens")
             .delete()
-            .eq("registro_id", registroExistente.id);
+            .eq("registro_id", registroId);
+
           await supabase
             .from("registros_ativos")
             .delete()
-            .eq("id", registroExistente.id);
+            .eq("id", registroId);
         }
+
         onSave?.({ mesAno, itens: [], total: 0, deleted: true });
         onClose?.();
         setIsSaving(false);
         return;
       }
 
-      let registroIdLocal = registroExistente?.id;
-
-      if (!registroIdLocal) {
-        const { data: novo } = await supabase
+      // CASO 2: tem itens -> cria/atualiza registro_ativos
+      if (!registroId) {
+        const { data: novo, error: insertError } = await supabase
           .from("registros_ativos")
           .insert({
             user_id: userId,
@@ -492,19 +477,34 @@ export default function EditAtivosModal({
             created_at: agora,
             atualizado_em: agora,
           })
-          .select()
+          .select("id")
           .single();
 
-        registroIdLocal = novo.id;
+        if (insertError) throw insertError;
+        registroId = novo.id;
+      } else {
+        const { error: updateError } = await supabase
+          .from("registros_ativos")
+          .update({
+            total: totalCalculado,
+            atualizado_em: agora,
+          })
+          .eq("id", registroId);
+
+        if (updateError) throw updateError;
       }
 
-      await supabase
+      // Limpa itens antigos
+      const { error: deleteError } = await supabase
         .from("registros_ativos_itens")
         .delete()
-        .eq("registro_id", registroIdLocal);
+        .eq("registro_id", registroId);
 
+      if (deleteError) throw deleteError;
+
+      // Insere novos itens
       const payload = itensValidos.map((l) => ({
-        registro_id: registroIdLocal,
+        registro_id: registroId,
         user_id: userId,
         nome_ativo: l.nome.trim(),
         valor: toNum(l.valor),
@@ -512,12 +512,11 @@ export default function EditAtivosModal({
         atualizado_em: agora,
       }));
 
-      await supabase.from("registros_ativos_itens").insert(payload);
+      const { error: insertItensError } = await supabase
+        .from("registros_ativos_itens")
+        .insert(payload);
 
-      await supabase
-        .from("registros_ativos")
-        .update({ total: totalCalculado, atualizado_em: agora })
-        .eq("id", registroIdLocal);
+      if (insertItensError) throw insertItensError;
 
       onSave?.({
         mesAno,
@@ -529,6 +528,7 @@ export default function EditAtivosModal({
         total: totalCalculado,
         deleted: false,
       });
+
       onClose?.();
     } catch (err) {
       console.error(err);
@@ -602,7 +602,7 @@ export default function EditAtivosModal({
           </div>
 
           <div className="mt-6 pt-4 border-t flex justify-end text-lg font-bold text-emerald-600">
-            Total: R${" "}
+            Total: R$
             {total.toLocaleString("pt-BR", {
               minimumFractionDigits: 2,
             })}
