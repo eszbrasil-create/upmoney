@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { Trash2 } from "lucide-react";
+import { supabase } from "../../lib/supabaseClient";
 
 /* ---------------------------
    Hook para dropdown flutuante
@@ -271,7 +272,7 @@ export default function EditAtivosModal({
   open,
   isOpen, // alias opcional
   onClose,
-  onSave,
+  onSave, // opcional: pai pode reagir depois do salvamento
   ativosExistentes = [
     "Ações",
     "Renda Fixa",
@@ -290,6 +291,9 @@ export default function EditAtivosModal({
   // normaliza: se o pai passar `open` ou `isOpen`, ambos funcionam
   const visible = Boolean(open ?? isOpen);
 
+  // usuário logado
+  const [user, setUser] = useState(null);
+
   // trava scroll do body quando o modal estiver aberto
   useEffect(() => {
     if (!visible) return;
@@ -300,6 +304,23 @@ export default function EditAtivosModal({
     return () => {
       document.body.style.overflow = prev;
     };
+  }, [visible]);
+
+  // carrega usuário
+  useEffect(() => {
+    async function loadUser() {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error("Erro ao obter usuário no EditAtivosModal:", error);
+        setUser(null);
+        return;
+      }
+      setUser(data?.user || null);
+    }
+
+    if (visible) {
+      loadUser();
+    }
   }, [visible]);
 
   // ----- mês / ano padrão -----
@@ -366,6 +387,7 @@ export default function EditAtivosModal({
       .slice(0, 8);
   }, [query, uniqAtivos]);
 
+  // quando abrir o modal, configura linhas
   useEffect(() => {
     if (!visible) return;
     setMesAno(padraoMesAno);
@@ -373,7 +395,7 @@ export default function EditAtivosModal({
     setIsSaving(false);
 
     if (Array.isArray(linhasIniciais) && linhasIniciais.length > 0) {
-      // edição de mês já salvo
+      // edição de mês já salvo (vindo do pai)
       setLinhas(
         linhasIniciais.map((l) => ({
           id: crypto.randomUUID(),
@@ -424,7 +446,9 @@ export default function EditAtivosModal({
 
   const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
 
-  // salvar: usa onSave assíncrono do pai, não fecha se der erro
+  // ================================
+  // SALVAR EM registros_ativos + registros_ativos_itens
+  // ================================
   const salvar = async () => {
     if (isSaving) return;
 
@@ -439,6 +463,63 @@ export default function EditAtivosModal({
       setIsSaving(true);
       setErroGlobal("");
 
+      if (!user) {
+        throw new Error("Usuário não autenticado. Faça login para salvar.");
+      }
+
+      const uid = user.id;
+
+      // 1) cria/atualiza cabeçalho em registros_ativos
+      const { data: registro, error: upsertError } = await supabase
+        .from("registros_ativos")
+        .upsert(
+          {
+            uid,
+            s_ano: mesAno,
+            total,
+          },
+          {
+            onConflict: "uid,s_ano", // UNIQUE(uid, s_ano)
+          }
+        )
+        .select()
+        .single();
+
+      if (upsertError) {
+        console.error("Erro ao salvar cabeçalho de ativos:", upsertError);
+        throw new Error("Erro ao salvar cabeçalho de ativos.");
+      }
+
+      // 2) remove itens antigos
+      const { error: delError } = await supabase
+        .from("registros_ativos_itens")
+        .delete()
+        .eq("registro_id", registro.id);
+
+      if (delError) {
+        console.error("Erro ao limpar itens antigos:", delError);
+        throw new Error("Erro ao limpar itens antigos.");
+      }
+
+      // 3) insere itens atuais
+      if (itensLimpos.length > 0) {
+        const payloadItens = itensLimpos.map((item) => ({
+          registro_id: registro.id,
+          nome_ativo: item.nome,
+          valor: item.valor,
+        }));
+
+        const { error: insertError } = await supabase
+          .from("registros_ativos_itens")
+          .insert(payloadItens);
+
+        if (insertError) {
+          console.error("Erro ao salvar itens de ativos:", insertError);
+          throw new Error("Erro ao salvar itens de ativos.");
+        }
+      }
+
+      // 4) callback opcional pro pai
       if (onSave) {
         await onSave({ mesAno, itens: itensLimpos, total });
       }
