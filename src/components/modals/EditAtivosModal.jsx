@@ -9,7 +9,7 @@ import React, {
 import { createPortal } from "react-dom";
 import { Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
-import { salvarRegistroAtivos } from "../../utils/salvarRegistroAtivos"; // ajuste o caminho se precisar
+import { salvarRegistroAtivos } from "../../utils/salvarRegistroAtivos";
 
 /* ---------------------------
    Hook para dropdown flutuante
@@ -514,7 +514,7 @@ export default function EditAtivosModal({
           </div>
 
           <div className="mt-6 pt-4 border-t flex justify-end text-lg font-bold text-emerald-600">
-            Total: R{"$ "}
+            Total: R$
             {total.toLocaleString("pt-BR", {
               minimumFractionDigits: 2,
             })}
