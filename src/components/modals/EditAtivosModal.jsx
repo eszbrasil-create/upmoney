@@ -41,7 +41,7 @@ function useFloatingDropdown(ref, offset = 4) {
 }
 
 /* ---------------------------
-   Month / Year Picker (por linha, abrindo PARA CIMA)
+   Month / Year Picker (por linha, abrindo PARA CIMA e mais largo)
 ---------------------------- */
 function MesAnoPicker({ value, onChange }) {
   const meses = [
@@ -71,18 +71,19 @@ function MesAnoPicker({ value, onChange }) {
     if (a) setAno(Number(a));
   }, [value]);
 
-  // calcula posição: acima do botão
+  // calcula posição: acima do botão, mais largo
   useLayoutEffect(() => {
     if (!open || !btnRef.current) return;
 
     const rect = btnRef.current.getBoundingClientRect();
     const ESTIMATED_HEIGHT = 230; // altura aproximada do calendário
+    const width = Math.max(rect.width, 260); // deixa mais largo
 
     setDropdownStyle({
       position: "absolute",
       top: rect.top + window.scrollY - ESTIMATED_HEIGHT - 6, // 6px de offset
       left: rect.left + window.scrollX,
-      width: rect.width,
+      width,
       zIndex: 9999,
     });
   }, [open]);
