@@ -11,7 +11,7 @@ import { Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
 /* ---------------------------
-   Hook para dropdown flutuante (usado no autocomplete de ativos)
+   Hook para dropdown flutuante (autocomplete de ativos)
 ---------------------------- */
 function useFloatingDropdown(ref, offset = 4) {
   const [style, setStyle] = useState({});
@@ -77,7 +77,7 @@ function MesAnoPicker({ value, onChange }) {
 
     const rect = btnRef.current.getBoundingClientRect();
     const ESTIMATED_HEIGHT = 230; // altura aproximada do calendário
-    const width = Math.max(rect.width, 260); // deixa mais largo
+    const width = Math.max(rect.width, 260); // largura mínima maior
 
     setDropdownStyle({
       position: "absolute",
@@ -417,10 +417,19 @@ export default function EditAtivosModal({
     );
   };
 
+  // 🔑 Atualiza campo + mantém mesAno alinhado com a data escolhida
   const atualizarCampo = (id, campo, valor) =>
-    setLinhas((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l))
-    );
+    setLinhas((prev) => {
+      const atualizado = prev.map((l) =>
+        l.id === id ? { ...l, [campo]: valor } : l
+      );
+
+      if (campo === "data" && valor && valor.trim() !== "") {
+        setMesAno(valor);
+      }
+
+      return atualizado;
+    });
 
   const selecionarSugestao = (id, nome) => {
     atualizarCampo(id, "nome", nome);
