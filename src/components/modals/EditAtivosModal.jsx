@@ -41,7 +41,7 @@ function useFloatingDropdown(ref, offset = 4) {
 }
 
 /* ---------------------------
-   Month / Year Picker
+   Month / Year Picker (por linha)
 ---------------------------- */
 function MesAnoPicker({ value, onChange }) {
   const meses = [
@@ -70,12 +70,13 @@ function MesAnoPicker({ value, onChange }) {
     if (a) setAno(Number(a));
   }, [value]);
 
+  // fecha ao clicar fora (evento de click, mais estável)
   useEffect(() => {
     const handler = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     };
-    if (open) document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    if (open) document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
   }, [open]);
 
   return (
@@ -83,14 +84,14 @@ function MesAnoPicker({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center justify-between gap-2 rounded-lg bg-white/70 border border-gray-300/70 px-3 py-2 text-xs sm:text-sm text-gray-800 hover:bg-white/90 shadow-sm transition w-full"
+        className="inline-flex items-center justify-between gap-2 rounded-lg bg-white border border-gray-300 px-3 py-2 text-xs sm:text-sm text-gray-800 hover:bg-gray-50 shadow-sm transition w-full"
       >
         <span>{value || "Mês/Ano"}</span>
         <span className="text-[10px]">▼</span>
       </button>
 
       {open && (
-        <div className="absolute left-0 mt-2 w-56 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-sm shadow-2xl p-4 z-50">
+        <div className="absolute left-0 mt-2 w-56 rounded-xl border border-gray-300 bg-white shadow-2xl p-4 z-50">
           <div className="flex items-center justify-between mb-3">
             <button
               onClick={() => setAno((a) => a - 1)}
@@ -98,7 +99,7 @@ function MesAnoPicker({ value, onChange }) {
             >
               ←
             </button>
-            <span className="font-semibold">{ano}</span>
+            <span className="font-semibold text-gray-800">{ano}</span>
             <button
               onClick={() => setAno((a) => a + 1)}
               className="w-8 h-8 rounded hover:bg-gray-100"
@@ -118,7 +119,7 @@ function MesAnoPicker({ value, onChange }) {
                 className={`py-2 px-3 rounded text-sm transition ${
                   m === mesAtual && ano === anoInicial
                     ? "bg-emerald-500 text-white"
-                    : "hover:bg-gray-100"
+                    : "hover:bg-gray-100 text-gray-800"
                 }`}
               >
                 {m}
@@ -189,7 +190,7 @@ function LinhaAtivo({
           createPortal(
             <div
               style={dropdownStyle}
-              className="bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto"
+              className="bg-white/95 border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto"
             >
               {sugestoes.map((s) => (
                 <button
@@ -197,7 +198,7 @@ function LinhaAtivo({
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => selecionarSugestao(linha.id, s)}
-                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
                 >
                   {s}
                 </button>
@@ -549,8 +550,8 @@ export default function EditAtivosModal({
         className="w-[900px] max-w-[96vw] bg-white rounded-xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Barra de cima translúcida */}
-        <div className="px-6 py-4 border-b border-gray-200/60 bg-white/70 backdrop-blur-sm rounded-t-xl flex justify-between items-center">
+        {/* Barra de cima com cinza leve */}
+        <div className="px-6 py-4 border-b border-gray-200 bg-gray-100 rounded-t-xl flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-800">
             Editar Ativos
           </h2>
