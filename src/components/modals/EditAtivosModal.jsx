@@ -11,7 +11,7 @@ import { Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
 /* ---------------------------
-   Hook para dropdown flutuante
+   Hook para dropdown flutuante (usado no autocomplete de ativos)
 ---------------------------- */
 function useFloatingDropdown(ref, offset = 4) {
   const [style, setStyle] = useState({});
@@ -41,7 +41,7 @@ function useFloatingDropdown(ref, offset = 4) {
 }
 
 /* ---------------------------
-   Month / Year Picker (por linha, com PORTAL)
+   Month / Year Picker (por linha, abrindo PARA CIMA)
 ---------------------------- */
 function MesAnoPicker({ value, onChange }) {
   const meses = [
@@ -64,12 +64,28 @@ function MesAnoPicker({ value, onChange }) {
   const [open, setOpen] = useState(false);
   const [ano, setAno] = useState(anoInicial);
   const btnRef = useRef(null);
-  const dropdownStyle = useFloatingDropdown(btnRef, 4);
+  const [dropdownStyle, setDropdownStyle] = useState({});
 
   useEffect(() => {
     const [, a] = String(value || "").split("/");
     if (a) setAno(Number(a));
   }, [value]);
+
+  // calcula posição: acima do botão
+  useLayoutEffect(() => {
+    if (!open || !btnRef.current) return;
+
+    const rect = btnRef.current.getBoundingClientRect();
+    const ESTIMATED_HEIGHT = 230; // altura aproximada do calendário
+
+    setDropdownStyle({
+      position: "absolute",
+      top: rect.top + window.scrollY - ESTIMATED_HEIGHT - 6, // 6px de offset
+      left: rect.left + window.scrollX,
+      width: rect.width,
+      zIndex: 9999,
+    });
+  }, [open]);
 
   // fecha ao clicar fora
   useEffect(() => {
