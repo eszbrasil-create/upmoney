@@ -41,7 +41,7 @@ function useFloatingDropdown(ref, offset = 4) {
 }
 
 /* ---------------------------
-   Month / Year Picker (por linha)
+   Month / Year Picker (por linha, com PORTAL)
 ---------------------------- */
 function MesAnoPicker({ value, onChange }) {
   const meses = [
@@ -63,72 +63,83 @@ function MesAnoPicker({ value, onChange }) {
 
   const [open, setOpen] = useState(false);
   const [ano, setAno] = useState(anoInicial);
-  const ref = useRef(null);
+  const btnRef = useRef(null);
+  const dropdownStyle = useFloatingDropdown(btnRef, 4);
 
   useEffect(() => {
     const [, a] = String(value || "").split("/");
     if (a) setAno(Number(a));
   }, [value]);
 
-  // fecha ao clicar fora (evento de click, mais estável)
+  // fecha ao clicar fora
   useEffect(() => {
     const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (btnRef.current && !btnRef.current.contains(e.target)) {
+        setOpen(false);
+      }
     };
     if (open) document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
   }, [open]);
 
   return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center justify-between gap-2 rounded-lg bg-white border border-gray-300 px-3 py-2 text-xs sm:text-sm text-gray-800 hover:bg-gray-50 shadow-sm transition w-full"
-      >
-        <span>{value || "Mês/Ano"}</span>
-        <span className="text-[10px]">▼</span>
-      </button>
+    <>
+      <div ref={btnRef}>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="inline-flex items-center justify-between gap-2 rounded-lg bg-white border border-gray-300 px-3 py-2 text-xs sm:text-sm text-gray-800 hover:bg-gray-50 shadow-sm transition w-full"
+        >
+          <span>{value || "Mês/Ano"}</span>
+          <span className="text-[10px]">▼</span>
+        </button>
+      </div>
 
-      {open && (
-        <div className="absolute left-0 mt-2 w-56 rounded-xl border border-gray-300 bg-white shadow-2xl p-4 z-50">
-          <div className="flex items-center justify-between mb-3">
-            <button
-              onClick={() => setAno((a) => a - 1)}
-              className="w-8 h-8 rounded hover:bg-gray-100"
-            >
-              ←
-            </button>
-            <span className="font-semibold text-gray-800">{ano}</span>
-            <button
-              onClick={() => setAno((a) => a + 1)}
-              className="w-8 h-8 rounded hover:bg-gray-100"
-            >
-              →
-            </button>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {meses.map((m) => (
+      {open &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            style={dropdownStyle}
+            className="rounded-xl border border-gray-300 bg-white shadow-2xl p-4 z-[9999]"
+          >
+            <div className="flex items-center justify-between mb-3">
               <button
-                key={m}
-                type="button"
-                onClick={() => {
-                  onChange(`${m}/${ano}`);
-                  setOpen(false);
-                }}
-                className={`py-2 px-3 rounded text-sm transition ${
-                  m === mesAtual && ano === anoInicial
-                    ? "bg-emerald-500 text-white"
-                    : "hover:bg-gray-100 text-gray-800"
-                }`}
+                onClick={() => setAno((a) => a - 1)}
+                className="w-8 h-8 rounded hover:bg-gray-100"
               >
-                {m}
+                ←
               </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+              <span className="font-semibold text-gray-800">{ano}</span>
+              <button
+                onClick={() => setAno((a) => a + 1)}
+                className="w-8 h-8 rounded hover:bg-gray-100"
+              >
+                →
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {meses.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => {
+                    onChange(`${m}/${ano}`);
+                    setOpen(false);
+                  }}
+                  className={`py-2 px-3 rounded text-sm transition ${
+                    m === mesAtual && ano === anoInicial
+                      ? "bg-emerald-500 text-white"
+                      : "hover:bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   );
 }
 
