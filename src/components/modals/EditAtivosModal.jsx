@@ -1,4 +1,4 @@
-preciso de ajuda para ajustar o layout do modal de editar ativos// src/components/modals/EditAtivosModal.jsx
+src/components/modals/EditAtivosModal.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Trash2, Plus } from "lucide-react";
