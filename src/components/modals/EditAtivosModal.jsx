@@ -23,7 +23,7 @@ function MesAnoPickerTopo({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="px-8 py-4 bg-emerald-600 text-white text-lg font-semibold rounded-xl hover:bg-emerald-700 transition shadow-lg"
+        className="px-8 py-4 bg-emerald-600 text-white text-lg font-semibold rounded-xl hover:bg-emerald-700 transition shadow-lg w-full"
       >
         {value || "Selecione o mês"}
       </button>
@@ -31,11 +31,11 @@ function MesAnoPickerTopo({ value, onChange }) {
       {open &&
         createPortal(
           <div
-            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/40"
+            className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/40"
             onClick={() => setOpen(false)}
           >
             <div
-              className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-200"
+              className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-200 max-w-md w-full"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
@@ -92,7 +92,7 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
       .slice(0, 10);
   }, [query, ativosExistentes]);
 
-  // Posição fixa + z-index altíssimo
+  // Posição fixa + z-index altíssimo para ficar por cima de TUDO
   const dropdownStyle = inputRef.current
     ? {
         position: "fixed",
@@ -107,24 +107,28 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
     : {};
 
   return (
-    <div className="grid grid-cols-[2fr_1fr_70px] gap-4 items-center py-3 border-b border-gray-200">
+    <div className="grid grid-cols-[2fr_1fr_70px] gap-4 items-center py-4 border-b border-gray-200 last:border-b-0">
       {/* NOME DO ATIVO */}
       <div className="relative">
         <input
           ref={inputRef}
           type="text"
-          placeholder="Nome do ativo"
+          placeholder="Nome do ativo (ex: Ações)"
           value={linha.nome}
           onChange={(e) => {
-            onUpdate("nome", e.target.value);
-            setQuery(e.target.value);
+            const val = e.target.value;
+            onUpdate("nome", val);
+            setQuery(val);
             setShowDropdown(true);
           }}
-          onFocus={() => query && setShowDropdown(true)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+          onFocus={() => {
+            if (query.trim()) setShowDropdown(true);
+          }}
+          onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-base"
         />
 
-        {/* Dropdown de sugestões (sempre visível e opaco) */}
+        {/* Dropdown de sugestões (fundo branco puro, sempre visível) */}
         {showDropdown && sugestoes.length > 0 && inputRef.current && createPortal(
           <div
             style={dropdownStyle}
@@ -139,7 +143,7 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
                   setQuery("");
                   setShowDropdown(false);
                 }}
-                className="block w-full text-left px-5 py-3 hover:bg-emerald-50 text-gray-800 font-medium transition"
+                className="block w-full text-left px-5 py-3 hover:bg-emerald-50 text-gray-800 font-medium transition border-b last:border-b-0 border-gray-100"
               >
                 {s}
               </button>
@@ -169,13 +173,13 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
             );
           }
         }}
-        className="px-4 py-3 border border-gray-300 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+        className="px-4 py-3 border border-gray-300 rounded-xl text-right focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition text-base"
       />
 
       {/* LIXEIRA */}
       <button
         onClick={onRemove}
-        className="text-red-500 hover:text-red-700 transition"
+        className="text-red-500 hover:text-red-700 transition p-2"
       >
         <Trash2 size={22} />
       </button>
@@ -204,17 +208,33 @@ export default function EditAtivosModal({
     return acc + v;
   }, 0);
 
-  // Carrega dados do mês selecionado
+  // Define mês atual ao abrir e carrega dados
   useEffect(() => {
-    if (!open || !mesAno) {
-      setLinhas([]);
+    if (!open) return;
+
+    // Define mês atual se não tiver inicial
+    if (!mesAno) {
+      const hoje = new Date();
+      const meses = [
+        "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+        "Jul", "Ago", "Set", "Out", "Nov", "Dez",
+      ];
+      const mesAtual = meses[hoje.getMonth()];
+      const anoAtual = hoje.getFullYear();
+      setMesAno(`${mesAtual}/${anoAtual}`);
       return;
     }
 
+    // Carrega dados do mês
     const carregar = async () => {
       setIsLoading(true);
+      setErro("");
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
+        setIsLoading(false);
+        return;
+      }
 
       const { data: reg } = await supabase
         .from("registros_ativos")
@@ -307,7 +327,7 @@ export default function EditAtivosModal({
             .delete()
             .eq("id", regExistente.id);
         }
-        onSave({ mesAno, deleted: true, total: 0 });
+        onSave?.({ mesAno, deleted: true, total: 0 });
         onClose();
         return;
       }
@@ -348,7 +368,7 @@ export default function EditAtivosModal({
         }))
       );
 
-      onSave({ mesAno, total: totalCalc, deleted: false });
+      onSave?.({ mesAno, total: totalCalc, deleted: false });
       onClose();
     } catch (err) {
       setErro("Erro ao salvar: " + err.message);
@@ -378,39 +398,45 @@ export default function EditAtivosModal({
         </div>
 
         {/* Body */}
-        <div className="p-8 flex-1 overflow-y-auto">
-          <div className="flex justify-center mb-8">
+        <div className="p-6 flex-1 overflow-y-auto space-y-6">
+          {/* Seletor de Mês */}
+          <div className="flex justify-center">
             <MesAnoPickerTopo value={mesAno} onChange={setMesAno} />
           </div>
 
-          {!mesAno ? (
-            <div className="text-center py-20 text-gray-500">
-              <p className="text-xl">Selecione o mês acima para começar</p>
-            </div>
-          ) : isLoading ? (
-            <p className="text-center">Carregando...</p>
+          {isLoading ? (
+            <p className="text-center text-gray-500">Carregando...</p>
           ) : (
             <>
-              {linhas.map((linha) => (
-                <LinhaAtivo
-                  key={linha.id}
-                  linha={linha}
-                  onUpdate={(campo, valor) =>
-                    atualizarLinha(linha.id, campo, valor)
-                  }
-                  onRemove={() => removerLinha(linha.id)}
-                  ativosExistentes={ativosExistentes}
-                />
-              ))}
+              {/* Linhas de Ativos */}
+              <div className="space-y-0">
+                {linhas.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">Nenhum ativo cadastrado.</p>
+                ) : (
+                  linhas.map((linha) => (
+                    <LinhaAtivo
+                      key={linha.id}
+                      linha={linha}
+                      onUpdate={(campo, valor) =>
+                        atualizarLinha(linha.id, campo, valor)
+                      }
+                      onRemove={() => removerLinha(linha.id)}
+                      ativosExistentes={ativosExistentes}
+                    />
+                  ))
+                )}
+              </div>
 
+              {/* Botão Adicionar */}
               <button
                 onClick={adicionarLinha}
-                className="w-full mt-6 py-4 border-2 border-dashed border-emerald-500 text-emerald-600 rounded-xl text-lg font-medium hover:bg-emerald-50 transition"
+                className="w-full py-4 border-2 border-dashed border-emerald-500 text-emerald-600 rounded-xl text-lg font-medium hover:bg-emerald-50 transition"
               >
                 + Adicionar novo ativo
               </button>
 
-              <div className="mt-8 text-right">
+              {/* Total */}
+              <div className="text-right pt-4 border-t border-gray-200">
                 <span className="text-3xl font-bold text-emerald-600">
                   Total: R${" "}
                   {total.toLocaleString("pt-BR", {
@@ -437,14 +463,14 @@ export default function EditAtivosModal({
           <div className="flex gap-4">
             <button
               onClick={onClose}
-              className="px-8 py-4 border border-gray-300 rounded-xl hover:bg-gray-100 font-medium"
+              className="px-8 py-3 border border-gray-300 rounded-xl hover:bg-gray-100 font-medium"
             >
               Cancelar
             </button>
             <button
               onClick={salvar}
               disabled={!mesAno || isLoading}
-              className="px-10 py-4 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 font-semibold text-lg"
+              className="px-10 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 font-semibold text-lg"
             >
               Salvar Alterações
             </button>
