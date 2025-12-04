@@ -1,6 +1,7 @@
 // src/components/cards/CardRegistro.jsx
 import React, { useMemo } from "react";
 import { Trash2 } from "lucide-react";
+import { deleteRegistroAtivosPorMesAno } from "../modals/EditAtivosModal"; // ✅ usa mesma lógica de delete
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
@@ -55,6 +56,20 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
   // largura reduzida para Ativos/Total
   const LEFT_COL_WIDTH = 130;
 
+  // ✅ Passo B + C: lixeira do card deleta no Supabase e avisa o pai
+  const handleDeleteClick = async (mesAno) => {
+    try {
+      // Apaga no Supabase usando a mesma lógica do modal
+      await deleteRegistroAtivosPorMesAno(mesAno);
+
+      // Avisa o componente pai para remover esse mês da UI
+      onDeleteMonth?.(mesAno);
+    } catch (err) {
+      console.error("Erro ao deletar registro de ativos do mês", mesAno, err);
+      // Se quiser depois, podemos trocar por um toast/alert visual
+    }
+  };
+
   return (
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[680px] h-[360px] p-4 overflow-hidden">
       
@@ -105,7 +120,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
                       {/* Botão excluir */}
                       <button
                         type="button"
-                        onClick={() => onDeleteMonth?.(m)}
+                        onClick={() => handleDeleteClick(m)}
                         className="p-1 rounded-md hover:bg-white/10 text-slate-400 hover:text-rose-400 transition"
                         aria-label={`Excluir mês ${m}`}
                         title={`Excluir mês ${m}`}
