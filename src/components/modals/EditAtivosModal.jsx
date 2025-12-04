@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
-/* ============== SELETOR DE MÊS/ANO ============== */
+/* SELETOR DE MÊS/ANO - TEXTO SEMPRE PRETO FORTE */
 function MesAnoPickerTopo({ value, onChange }) {
   const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
   const [open, setOpen] = useState(false);
@@ -19,30 +19,31 @@ function MesAnoPickerTopo({ value, onChange }) {
 
   return (
     <div className="relative">
+      {/* BOTÃO PRINCIPAL - VERDE COM TEXTO BRANCO */}
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-xl shadow-lg transition"
+        className="px-12 py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-2xl rounded-2xl shadow-2xl transition-all transform hover:scale-105 min-w-72"
       >
         {value || "Selecione o mês"}
       </button>
 
+      {/* CALENDÁRIO - TUDO PRETO FORTE */}
       {open && createPortal(
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70" onClick={() => setOpen(false)}>
           <div
-            className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full"
+            className="bg-white rounded-3xl shadow-3xl p-10 max-w-md w-full border-4 border-gray-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
-              <button onClick={() => setAno((a) => a - 1)} className="w-12 h-12 hover:bg-gray-100 rounded-full text-2xl">
-                ←
-              </button>
-              <span className="text-2xl font-bold">{ano}</span>
-              <button onClick={() => setAno((a) => a + 1)} className="w-12 h-12 hover:bg-gray-100 rounded-full text-2xl">
-                →
-              </button>
+            {/* ANO */}
+            <div className="flex items-center justify-between mb-10">
+              <button onClick={() => setAno(a => a - 1)} className="w-16 h-16 hover:bg-gray-100 rounded-full text-4xl font-black text-gray-900">←</button>
+              <span className="text-4xl font-black text-gray-900">{ano}</span>
+              <button onClick={() => setAno(a => a + 1)} className="w-16 h-16 hover:bg-gray-100 rounded-full text-4xl font-black text-gray-900">→</button>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+
+            {/* MESES - PRETO FORTE */}
+            <div className="grid grid-cols-3 gap-5">
               {meses.map((m) => (
                 <button
                   key={m}
@@ -50,8 +51,10 @@ function MesAnoPickerTopo({ value, onChange }) {
                     onChange(`${m}/${ano}`);
                     setOpen(false);
                   }}
-                  className={`py-4 rounded-xl font-semibold text-lg transition ${
-                    value?.startsWith(m) ? "bg-emerald-600 text-white" : "hover:bg-gray-100"
+                  className={`py-8 rounded-3xl font-black text-2xl transition-all transform hover:scale-110 shadow-lg ${
+                    value?.startsWith(m)
+                      ? "bg-emerald-600 text-white"
+                      : "bg-gray-50 text-gray-900 hover:bg-emerald-100"
                   }`}
                 >
                   {m}
@@ -66,7 +69,7 @@ function MesAnoPickerTopo({ value, onChange }) {
   );
 }
 
-/* ============== LINHA DE ATIVO - LETRAS PRETAS ============== */
+/* LINHA DE ATIVO - LETRAS PRETAS FORTES */
 function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
   const inputRef = useRef(null);
   const [query, setQuery] = useState("");
@@ -75,14 +78,14 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
   const sugestoes = useMemo(() => {
     if (!query.trim()) return [];
     return ativosExistentes
-      .filter((a) => a.toLowerCase().includes(query.toLowerCase()))
+      .filter(a => a.toLowerCase().includes(query.toLowerCase()))
       .slice(0, 10);
   }, [query, ativosExistentes]);
 
   const dropdownStyle = inputRef.current
     ? {
         position: "fixed",
-        top: inputRef.current.getBoundingClientRect().bottom + window.scrollY + 10,
+        top: inputRef.current.getBoundingClientRect().bottom + window.scrollY + 12,
         left: inputRef.current.getBoundingClientRect().left + window.scrollX,
         width: inputRef.current.offsetWidth,
         zIndex: 9999999,
@@ -90,7 +93,7 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
     : {};
 
   return (
-    <div className="grid grid-cols-[2fr_1fr_70px] gap-5 items-center py-4 border-b border-gray-200 last:border-b-0">
+    <div className="grid grid-cols-[2fr_1fr_80px] gap-6 items-center py-5 border-b border-gray-200 last:border-b-0">
       {/* NOME */}
       <div className="relative">
         <input
@@ -106,12 +109,11 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
           }}
           onFocus={() => query && setShowDropdown(true)}
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-          className="w-full px-5 py-4 bg-white border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition text-black font-medium text-lg placeholder-gray-500"
+          className="w-full px-6 py-5 bg-white border-2 border-gray-300 rounded-2xl focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 outline-none transition text-black font-bold text-xl placeholder-gray-600"
         />
 
-        {/* AUTOCOMPLETE */}
         {showDropdown && sugestoes.length > 0 && inputRef.current && createPortal(
-          <div style={dropdownStyle} className="bg-white border-2 border-gray-300 rounded-xl shadow-2xl overflow-hidden">
+          <div style={dropdownStyle} className="bg-white border-4 border-gray-300 rounded-2xl shadow-3xl overflow-hidden">
             {sugestoes.map((s) => (
               <button
                 key={s}
@@ -121,7 +123,7 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
                   setQuery("");
                   setShowDropdown(false);
                 }}
-                className="block w-full text-left px-5 py-4 hover:bg-emerald-50 text-black font-medium transition"
+                className="block w-full text-left px-6 py-5 hover:bg-emerald-100 text-black font-bold text-lg transition"
               >
                 {s}
               </button>
@@ -148,18 +150,17 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
             onUpdate("valor", num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
           }
         }}
-        className="px-5 py-4 bg-white border-2 border-gray-300 rounded-xl text-right outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition text-black font-medium text-lg placeholder-gray-500"
+        className="px-6 py-5 bg-white border-2 border-gray-300 rounded-2xl text-right outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 transition text-black font-bold text-xl placeholder-gray-600"
       />
 
-      {/* LIXEIRA */}
-      <button onClick={onRemove} className="text-red-600 hover:text-red-800 transition p-2">
-        <Trash2 size={26} />
+      <button onClick={onRemove} className="text-red-600 hover:text-red-800 transition p-3">
+        <Trash2 size={32} />
       </button>
     </div>
   );
 }
 
-/* ============== MODAL PRINCIPAL ============== */
+/* MODAL PRINCIPAL */
 export default function EditAtivosModal({
   open = false,
   onClose,
@@ -172,21 +173,14 @@ export default function EditAtivosModal({
   const [isLoading, setIsLoading] = useState(false);
   const [erro, setErro] = useState("");
 
-  const total = linhas.reduce((acc, l) => {
-    const v = Number(l.valor.replace(/\./g, "").replace(",", ".")) || 0;
-    return acc + v;
-  }, 0);
+  const total = linhas.reduce((acc, l) => acc + (Number(l.valor.replace(/\./g, "").replace(",", ".")) || 0), 0);
 
-  // Define mês atual + 2 linhas vazias ao abrir
   useEffect(() => {
     if (!open) return;
 
     const hoje = new Date();
     const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    const mesAtual = meses[hoje.getMonth()];
-    const anoAtual = hoje.getFullYear();
-
-    if (!mesAno) setMesAno(`${mesAtual}/${anoAtual}`);
+    if (!mesAno) setMesAno(`${meses[hoje.getMonth()]}/${hoje.getFullYear()}`);
 
     if (linhas.length === 0) {
       setLinhas([
@@ -194,19 +188,15 @@ export default function EditAtivosModal({
         { id: crypto.randomUUID(), nome: "", valor: "" },
       ]);
     }
-  }, [open, mesAno]);
+  }, [open, mesAno, linhas.length]);
 
-  // Carrega dados do Supabase
   useEffect(() => {
     if (!open || !mesAno) return;
 
     const carregar = async () => {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
+      if (!user) { setIsLoading(false); return; }
 
       const { data: reg } = await supabase
         .from("registros_ativos")
@@ -221,30 +211,28 @@ export default function EditAtivosModal({
           .select("nome_ativo, valor")
           .eq("registro_id", reg.id);
 
-        const novasLinhas = itens?.length > 0
-          ? itens.map((i) => ({
+        setLinhas(itens?.length > 0
+          ? itens.map(i => ({
               id: crypto.randomUUID(),
               nome: i.nome_ativo,
               valor: Number(i.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
             }))
-          : [{ id: crypto.randomUUID(), nome: "", valor: "" }];
-
-        setLinhas(novasLinhas);
+          : [{ id: crypto.randomUUID(), nome: "", valor: "" }]
+        );
       }
       setIsLoading(false);
     };
-
     carregar();
   }, [open, mesAno]);
 
-  const adicionarLinha = () => setLinhas((prev) => [...prev, { id: crypto.randomUUID(), nome: "", valor: "" }]);
-  const atualizarLinha = (id, campo, valor) => setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)));
-  const removerLinha = (id) => setLinhas((prev) => prev.filter((l) => l.id !== id));
+  const adicionarLinha = () => setLinhas(prev => [...prev, { id: crypto.randomUUID(), nome: "", valor: "" }]);
+  const atualizarLinha = (id, campo, valor) => setLinhas(prev => prev.map(l => l.id === id ? { ...l, [campo]: valor } : l));
+  const removerLinha = (id) => setLinhas(prev => prev.filter(l => l.id !== id));
 
   const salvar = async () => {
     if (!mesAno) return setErro("Selecione um mês");
 
-    const itensValidos = linhas.filter((l) => l.nome.trim() && l.valor.trim());
+    const itensValidos = linhas.filter(l => l.nome.trim() && l.valor.trim());
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -282,7 +270,7 @@ export default function EditAtivosModal({
       await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
       if (itensValidos.length > 0) {
         await supabase.from("registros_ativos_itens").insert(
-          itensValidos.map((l) => ({
+          itensValidos.map(l => ({
             registro_id: registroId,
             user_id: user.id,
             nome_ativo: l.nome.trim(),
@@ -301,25 +289,23 @@ export default function EditAtivosModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
-        <div className="p-8 border-b bg-gradient-to-r from-emerald-50 to-teal-50 flex justify-between items-center">
-          <h2 className="text-3xl font-bold text-gray-800">Editar Ativos</h2>
-          <button onClick={onClose} className="text-4xl text-gray-400 hover:text-gray-700">×</button>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[9999] flex items-center justify-center p-6" onClick={onClose}>
+      <div className="bg-white rounded-3xl shadow-3xl w-full max-w-5xl max-h-[94vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="p-10 bg-gradient-to-br from-emerald-50 to-teal-50 flex justify-between items-center border-b-4 border-emerald-200">
+          <h2 className="text-4xl font-black text-gray-900">Editar Ativos</h2>
+          <button onClick={onClose} className="text-5xl text-gray-500 hover:text-gray-800">×</button>
         </div>
 
-        {/* Body */}
-        <div className="p-8 flex-1 overflow-y-auto">
-          <div className="flex justify-center mb-10">
+        <div className="p-10 flex-1 overflow-y-auto space-y-8">
+          <div className="flex justify-center">
             <MesAnoPickerTopo value={mesAno} onChange={setMesAno} />
           </div>
 
           {isLoading ? (
-            <p className="text-center text-xl text-gray-600">Carregando dados...</p>
+            <p className="text-center text-2xl font-bold text-gray-700">Carregando...</p>
           ) : (
             <>
-              {linhas.map((linha) => (
+              {linhas.map(linha => (
                 <LinhaAtivo
                   key={linha.id}
                   linha={linha}
@@ -331,13 +317,13 @@ export default function EditAtivosModal({
 
               <button
                 onClick={adicionarLinha}
-                className="w-full mt-6 py-5 border-4 border-dashed border-emerald-300 text-emerald-700 rounded-2xl text-xl font-bold hover:bg-emerald-50 transition"
+                className="w-full py-6 border-4 border-dashed border-emerald-400 bg-emerald-50 text-emerald-700 rounded-3xl text-2xl font-black hover:bg-emerald-100 transition-all transform hover:scale-105"
               >
                 + Adicionar novo ativo
               </button>
 
-              <div className="mt-10 text-right">
-                <span className="text-4xl font-black text-emerald-600">
+              <div className="text-right pt-8 border-t-4 border-emerald-200">
+                <span className="text-5xl font-black text-emerald-600">
                   Total: R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </span>
               </div>
@@ -345,23 +331,21 @@ export default function EditAtivosModal({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-8 border-t bg-gray-50 flex justify-between items-center">
-          <button onClick={() => { setLinhas([]); salvar(); }} className="text-red-600 hover:text-red-800 font-bold text-xl">
+        <div className="p-10 bg-gray-50 border-t-4 border-gray-200 flex justify-between items-center">
+          <button onClick={() => { setLinhas([]); salvar(); }} className="text-red-600 hover:text-red-800 font-black text-2xl">
             Zerar Tudo
           </button>
-
-          <div className="flex gap-6">
-            <button onClick={onClose} className="px-10 py-4 border-2 border-gray-300 rounded-xl hover:bg-gray-100 font-bold text-lg">
+          <div className="flex gap-8">
+            <button onClick={onClose} className="px-12 py-5 border-4 border-gray-400 rounded-2xl hover:bg-gray-200 font-black text-xl transition">
               Cancelar
             </button>
-            <button onClick={salvar} className="px-12 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xl shadow-lg transition">
+            <button onClick={salvar} className="px-16 py-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-2xl shadow-2xl transition-all transform hover:scale-105">
               Salvar Alterações
             </button>
           </div>
         </div>
 
-        {erro && <div className="p-5 bg-red-100 text-red-700 text-center font-bold">{erro}</div>}
+        {erro && <div className="p-6 bg-red-100 text-red-800 text-center font-black text-xl">{erro}</div>}
       </div>
     </div>
   );
