@@ -203,7 +203,7 @@ export default function EditAtivosModal({
     if (!open) return;
     const hoje = new Date();
     const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    if (!mesAno) setMesAno(`${meses[hoje.getMonth()]}/${hoje.getFullYear()]`);
+    if (!mesAno) setMesAno(`${meses[hoje.getMonth()]}/${hoje.getFullYear()`);
     if (linhas.length === 0) {
       setLinhas([
         { id: crypto.randomUUID(), nome: "", valor: "" },
