@@ -1,30 +1,31 @@
 // src/components/modals/EditAtivosModal.jsx
-import React, {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
 /* ---------------------------
-   Hook para dropdown flutuante (autocomplete de ativos)
+   Hook para dropdown flutuante (autocomplete e picker)
 ---------------------------- */
-function useFloatingDropdown(ref, offset = 4) {
+function useFloatingStyle(ref, offset = 4, direction = "down") {
   const [style, setStyle] = useState({});
 
   useLayoutEffect(() => {
     function update() {
       if (!ref.current) return;
       const rect = ref.current.getBoundingClientRect();
+      const ESTIMATED_HEIGHT = 240;
+      const spaceAbove = rect.top;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const openUp = direction === "up" && spaceAbove > spaceBelow && spaceAbove > ESTIMATED_HEIGHT;
+
       setStyle({
         position: "absolute",
-        top: rect.bottom + offset + window.scrollY,
+        top: openUp
+          ? rect.top + window.scrollY - ESTIMATED_HEIGHT - offset
+          : rect.bottom + window.scrollY + offset,
         left: rect.left + window.scrollX,
-        width: rect.width,
+        width: Math.max(rect.width, 280),
         zIndex: 9999,
       });
     }
@@ -35,53 +36,32 @@ function useFloatingDropdown(ref, offset = 4) {
       window.removeEventListener("scroll", update, true);
       window.removeEventListener("resize", update);
     };
-  }, [ref, offset]);
+  }, [ref, offset, direction]);
 
   return style;
 }
 
 /* ---------------------------
-   Month / Year Picker (abre para cima, mais largo)
+   MesAnoPicker (abre preferencialmente pra cima, mas adapta)
 ---------------------------- */
 function MesAnoPicker({ value, onChange }) {
-  const meses = [
-    "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-    "Jul", "Ago", "Set", "Out", "Nov", "Dez",
-  ];
+  const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
   const [mesAtual, anoAtualStr] = String(value || "").split("/");
   const anoInicial = Number(anoAtualStr) || new Date().getFullYear();
 
   const [open, setOpen] = useState(false);
   const [ano, setAno] = useState(anoInicial);
   const btnRef = useRef(null);
-  const [dropdownStyle, setDropdownStyle] = useState({});
+  const dropdownStyle = useFloatingStyle(btnRef, 6, "up"); // prefere up
 
   useEffect(() => {
     const [, a] = String(value || "").split("/");
     if (a) setAno(Number(a));
   }, [value]);
 
-  useLayoutEffect(() => {
-    if (!open || !btnRef.current) return;
-
-    const rect = btnRef.current.getBoundingClientRect();
-    const ESTIMATED_HEIGHT = 230;
-    const width = Math.max(rect.width, 260);
-
-    setDropdownStyle({
-      position: "absolute",
-      top: rect.top + window.scrollY - ESTIMATED_HEIGHT - 6,
-      left: rect.left + window.scrollX,
-      width,
-      zIndex: 9999,
-    });
-  }, [open]);
-
   useEffect(() => {
     const handler = (e) => {
-      if (btnRef.current && !btnRef.current.contains(e.target)) {
-        setOpen(false);
-      }
+      if (btnRef.current && !btnRef.current.contains(e.target)) setOpen(false);
     };
     if (open) document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
@@ -92,160 +72,96 @@ function MesAnoPicker({ value, onChange }) {
       <div ref={btnRef}>
         <button
           type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="inline-flex items-center justify-between gap-2 rounded-lg bg-white border border-gray-300 px-3 py-2 text-xs sm:text-sm text-gray-800 hover:bg-gray-50 shadow-sm transition w-full"
+          onClick={() => setOpen(!open)}
+          className="flex items-center justify-between gap-2 rounded-lg bg-white border border-gray-300 px-3 py-2 text-sm text-gray-800 hover:bg-gray-50 w-full"
         >
           <span>{value || "Mês/Ano"}</span>
-          <span className="text-[10px]">▼</span>
+          <span className="text-xs">▼</span>
         </button>
       </div>
 
-      {open &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div
-            style={dropdownStyle}
-            className="rounded-xl border border-gray-300 bg-white shadow-2xl p-4 z-[9999]"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <button onClick={() => setAno((a) => a - 1)} className="w-8 h-8 rounded hover:bg-gray-100">
-                ←
+      {open && createPortal(
+        <div style={dropdownStyle} className="rounded-xl border border-gray-300 bg-white shadow-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <button onClick={() => setAno(a => a - 1)} className="w-8 h-8 rounded hover:bg-gray-100">←</button>
+            <span className="font-semibold text-gray-800">{ano}</span>
+            <button onClick={() => setAno(a => a + 1)} className="w-8 h-8 rounded hover:bg-gray-100">→</button>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {meses.map(m => (
+              <button
+                key={m}
+                onClick={() => { onChange(`${m}/${ano}`); setOpen(false); }}
+                className={`py-2 px-3 rounded text-sm ${m === mesAtual && ano === anoInicial ? "bg-emerald-500 text-white" : "hover:bg-gray-100 text-gray-800"}`}
+              >
+                {m}
               </button>
-              <span className="font-semibold text-gray-800">{ano}</span>
-              <button onClick={() => setAno((a) => a + 1)} className="w-8 h-8 rounded hover:bg-gray-100">
-                →
-              </button>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {meses.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => {
-                    onChange(`${m}/${ano}`);
-                    setOpen(false);
-                  }}
-                  className={`py-2 px-3 rounded text-sm transition ${
-                    m === mesAtual && ano === anoInicial
-                      ? "bg-emerald-500 text-white"
-                      : "hover:bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {m}
-                </button>
-              ))}
-            </div>
-          </div>,
-          document.body
-        )}
+            ))}
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 }
 
 /* ---------------------------
-   Linha da tabela
+   LinhaAtivo
 ---------------------------- */
-function LinhaAtivo({
-  linha,
-  focoId,
-  setFocoId,
-  sugestoes,
-  selecionarSugestao,
-  atualizarCampo,
-  removerLinha,
-  setQuery,
-  formatPtBr,
-  toNum,
-}) {
-  const inputRef = useRef(null);
-  const dropdownStyle = useFloatingDropdown(inputRef, 4);
+function LinhaAtivo({ linha, focoId, setFocoId, sugestoes, selecionarSugestao, atualizarCampo, removerLinha, setQuery, formatPtBr, toNum, onKeyDown }) {
+  const nomeRef = useRef(null);
+  const valorRef = useRef(null);
+  const dropdownStyle = useFloatingStyle(nomeRef, 4, "down");
 
-  const hasNome = (linha.nome || "").trim() !== "";
-  const hasValor = String(linha.valor ?? "").trim() !== "";
+  const hasNome = linha.nome.trim() !== "";
+  const hasValor = linha.valor.trim() !== "";
   const erroValorSemNome = hasValor && !hasNome;
 
   return (
-    <div
-      className={`grid grid-cols-[130px_2fr_1fr_60px] gap-0 items-center border-b border-gray-200 py-2 ${
-        focoId === linha.id ? "relative z-20 bg-white" : ""
-      }`}
-    >
-      {/* DATA (MÊS/ANO) */}
+    <div className={`grid grid-cols-[130px_2fr_1fr_60px] items-center border-b border-gray-200 py-2 ${focoId === linha.id ? "relative z-20 bg-white" : ""}`}>
       <div className="pr-3 border-r border-gray-300">
-        <MesAnoPicker
-          value={linha.data || ""}
-          onChange={(val) => atualizarCampo(linha.id, "data", val)}
-        />
+        <MesAnoPicker value={linha.data} onChange={val => atualizarCampo(linha.id, "data", val)} />
       </div>
-
-      {/* NOME */}
       <div className="pr-3 border-r border-gray-300 relative">
         <input
-          ref={inputRef}
+          ref={nomeRef}
           className="w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
           placeholder="Digite um ativo"
-          value={linha.nome || ""}
-          onChange={(e) => {
-            atualizarCampo(linha.id, "nome", e.target.value);
-            setFocoId(linha.id);
-            setQuery(e.target.value);
-          }}
+          value={linha.nome}
+          onChange={e => { atualizarCampo(linha.id, "nome", e.target.value); setFocoId(linha.id); setQuery(e.target.value); }}
           onFocus={() => setFocoId(linha.id)}
           onBlur={() => setTimeout(() => setFocoId(null), 150)}
+          onKeyDown={onKeyDown}
         />
-
-        {focoId === linha.id &&
-          sugestoes.length > 0 &&
-          typeof document !== "undefined" &&
-          createPortal(
-            <div
-              style={dropdownStyle}
-              className="bg-white/95 border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto"
-            >
-              {sugestoes.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => selecionarSugestao(linha.id, s)}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>,
-            document.body
-          )}
-      </div>
-
-      {/* VALOR */}
-      <div className="pl-3 pr-3 border-r border-gray-300">
-        <input
-          className="w-full text-left bg-transparent px-2 py-1 text-sm text-gray-900 outline-none"
-          inputMode="decimal"
-          placeholder="0,00"
-          value={linha.valor || ""}
-          onChange={(e) => {
-            const raw = e.target.value;
-            if (/^[0-9.,]*$/.test(raw)) {
-              atualizarCampo(linha.id, "valor", raw);
-            }
-          }}
-          onBlur={(e) =>
-            atualizarCampo(linha.id, "valor", formatPtBr(toNum(e.target.value)))
-          }
-        />
-        {erroValorSemNome && (
-          <p className="mt-1 text-xs text-red-500">Nome obrigatório</p>
+        {focoId === linha.id && sugestoes.length > 0 && createPortal(
+          <div style={dropdownStyle} className="bg-white/95 border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+            {sugestoes.map(s => (
+              <button key={s} onClick={() => selecionarSugestao(linha.id, s)} className="block w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">
+                {s}
+              </button>
+            ))}
+          </div>,
+          document.body
         )}
       </div>
-
-      {/* LIXEIRA */}
+      <div className="pl-3 pr-3 border-r border-gray-300">
+        <input
+          ref={valorRef}
+          className={`w-full bg-transparent px-2 py-1 text-sm text-gray-900 outline-none ${erroValorSemNome ? "border-red-500" : ""}`}
+          inputMode="decimal"
+          placeholder="0,00"
+          value={linha.valor}
+          onChange={e => {
+            const raw = e.target.value.replace(/[^0-9.,]/g, "").replace(".", ",");
+            atualizarCampo(linha.id, "valor", raw);
+          }}
+          onBlur={e => atualizarCampo(linha.id, "valor", formatPtBr(toNum(e.target.value)))}
+          onKeyDown={onKeyDown}
+        />
+        {erroValorSemNome && <p className="text-xs text-red-500">Nome obrigatório</p>}
+      </div>
       <div className="flex justify-center">
-        <button
-          onClick={() => removerLinha(linha)}
-          className="text-gray-500 hover:text-red-600 transition"
-        >
+        <button onClick={() => removerLinha(linha)} className="text-gray-500 hover:text-red-600">
           <Trash2 size={16} />
         </button>
       </div>
@@ -254,149 +170,95 @@ function LinhaAtivo({
 }
 
 /* ---------------------------
-   MODAL PRINCIPAL
+   Modal Principal (Reescrito)
 ---------------------------- */
 export default function EditAtivosModal({
   open,
-  isOpen,
   onClose,
   onSave,
-  ativosExistentes = [
-    "Ações", "Renda Fixa", "Cripto", "FIIs", "Caixa", "Banco", "Viagem", "Cofre",
-  ],
+  ativosExistentes = ["Ações", "Renda Fixa", "Cripto", "FIIs", "Caixa", "Banco", "Viagem", "Cofre"],
   mesAnoInicial,
 }) {
-  const visible = Boolean(open ?? isOpen);
+  const [visible, setVisible] = useState(open);
   const [user, setUser] = useState(null);
-  const [mesAno, setMesAno] = useState("");
+  const [mesAno, setMesAno] = useState(mesAnoInicial || "");
   const [linhas, setLinhas] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [erroGlobal, setErroGlobal] = useState("");
   const [focoId, setFocoId] = useState(null);
   const [query, setQuery] = useState("");
 
-  const toNum = (v) =>
-    Number(String(v).replace(/\./g, "").replace(",", ".")) || 0;
-  const formatPtBr = (n) =>
-    Number(n).toLocaleString("pt-BR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+  const toNum = v => Number(String(v).replace(/\./g, "").replace(",", ".")) || 0;
+  const formatPtBr = n => Number(n).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  // Total só de linhas com nome e valor preenchidos
-  const total = linhas
-    .filter((l) => l.nome?.trim() && l.valor?.trim())
-    .reduce((acc, l) => acc + toNum(l.valor), 0);
+  const total = useMemo(() => linhas.filter(l => l.nome.trim() && l.valor.trim()).reduce((acc, l) => acc + toNum(l.valor), 0), [linhas]);
 
   const sugestoes = useMemo(() => {
     if (!query.trim()) return ativosExistentes.slice(0, 8);
-    return ativosExistentes
-      .filter((a) => a.toLowerCase().includes(query.toLowerCase()))
-      .slice(0, 8);
+    return ativosExistentes.filter(a => a.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
   }, [query, ativosExistentes]);
 
-  const criarLinhasVazias = () => [
-    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
-    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
-    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
-    { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
-  ];
-
-  // CARREGA DADOS AO ABRIR
+  // Carrega dados ao abrir
   useEffect(() => {
     if (!visible) return;
 
-    const carregarDados = async () => {
-      let currentUser = user;
-      if (!currentUser) {
-        const { data } = await supabase.auth.getUser();
-        currentUser = data?.user || null;
-        setUser(currentUser);
-      }
+    const loadData = async () => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      setUser(currentUser);
 
       const hoje = new Date();
       const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-      const mesAnoPadrao = mesAnoInicial || `${meses[hoje.getMonth()]}/${hoje.getFullYear()}`;
-
-      const mesRef = mesAno || mesAnoPadrao;
-      if (!mesAno) setMesAno(mesRef);
+      const defaultMesAno = mesAnoInicial || `${meses[hoje.getMonth()]}/${hoje.getFullYear()}`;
+      setMesAno(defaultMesAno);
 
       if (!currentUser) {
-        setLinhas(criarLinhasVazias());
+        setLinhas(Array.from({ length: 4 }, () => ({ id: crypto.randomUUID(), data: "", nome: "", valor: "" })));
         return;
       }
 
-      const { data: cabecalho } = await supabase
-        .from("registros_ativos")
-        .select("id")
-        .eq("user_id", currentUser.id)
-        .eq("mes_ano", mesRef)
-        .maybeSingle();
+      const { data: cabecalho } = await supabase.from("registros_ativos").select("id").eq("user_id", currentUser.id).eq("mes_ano", defaultMesAno).maybeSingle();
 
       if (cabecalho) {
-        const { data: itens } = await supabase
-          .from("registros_ativos_itens")
-          .select("nome_ativo, valor")
-          .eq("registro_id", cabecalho.id);
-
-        if (itens?.length > 0) {
-          setLinhas(
-            itens.map((i) => ({
-              id: crypto.randomUUID(),
-              data: mesRef,
-              nome: i.nome_ativo,
-              valor: formatPtBr(i.valor),
-            }))
-          );
+        const { data: itens } = await supabase.from("registros_ativos_itens").select("nome_ativo, valor").eq("registro_id", cabecalho.id);
+        if (itens?.length) {
+          setLinhas(itens.map(i => ({ id: crypto.randomUUID(), data: defaultMesAno, nome: i.nome_ativo, valor: formatPtBr(i.valor) })));
           return;
         }
       }
 
-      setLinhas(criarLinhasVazias());
+      setLinhas(Array.from({ length: 4 }, () => ({ id: crypto.randomUUID(), data: "", nome: "", valor: "" })));
     };
 
-    carregarDados();
+    loadData();
   }, [visible, mesAnoInicial]);
 
-  const adicionarLinha = () =>
-    setLinhas((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), data: mesAno || "", nome: "", valor: "" },
-    ]);
+  // Foco automático na primeira linha vazia
+  useEffect(() => {
+    if (visible) {
+      const firstEmpty = linhas.find(l => !l.nome.trim());
+      if (firstEmpty) setFocoId(firstEmpty.id);
+    }
+  }, [visible, linhas]);
 
-  // REMOVER LINHA: limpa TODOS os campos (inclusive data) e se tudo vazio → limpa mesAno global
-  const removerLinha = (linha) => {
-    setLinhas((prev) => {
-      const novasLinhas = prev.map((l) =>
-        l.id === linha.id
-          ? { ...l, data: "", nome: "", valor: "" }
-          : l
-      );
+  // Esc fecha modal
+  useEffect(() => {
+    const handleEsc = e => { if (e.key === "Escape") onClose(); };
+    if (visible) document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [visible, onClose]);
 
-      const temConteudo = novasLinhas.some(
-        (l) => l.nome?.trim() !== "" || l.valor?.trim() !== ""
-      );
+  const adicionarLinha = () => setLinhas(prev => [...prev, { id: crypto.randomUUID(), data: mesAno, nome: "", valor: "" }]);
 
-      if (!temConteudo) {
-        setMesAno(""); // evita cabeçalho órfão no Supabase
-      }
-
-      return novasLinhas;
+  const removerLinha = linha => {
+    setLinhas(prev => {
+      const novas = prev.map(l => l.id === linha.id ? { ...l, data: "", nome: "", valor: "" } : l);
+      const temConteudo = novas.some(l => l.nome.trim() || l.valor.trim());
+      if (!temConteudo) setMesAno("");
+      return novas;
     });
   };
 
-  const atualizarCampo = (id, campo, valor) =>
-    setLinhas((prev) => {
-      const atualizado = prev.map((l) =>
-        l.id === id ? { ...l, [campo]: valor } : l
-      );
-
-      if (campo === "data" && valor && valor.trim() !== "") {
-        setMesAno(valor);
-      }
-
-      return atualizado;
-    });
+  const atualizarCampo = (id, campo, valor) => setLinhas(prev => prev.map(l => l.id === id ? { ...l, [campo]: valor } : l));
 
   const selecionarSugestao = (id, nome) => {
     atualizarCampo(id, "nome", nome);
@@ -404,83 +266,62 @@ export default function EditAtivosModal({
     setFocoId(null);
   };
 
-  // SALVAR
+  const zerarTudo = () => {
+    setLinhas(Array.from({ length: 4 }, () => ({ id: crypto.randomUUID(), data: "", nome: "", valor: "" })));
+    setMesAno("");
+  };
+
   const salvar = async () => {
-    if (isSaving) return;
     setIsSaving(true);
     setErroGlobal("");
 
-    const itensValidos = linhas.filter(
-      (l) =>
-        l.data?.trim() !== "" &&
-        l.nome?.trim() !== "" &&
-        l.valor?.trim() !== ""
-    );
-
-    const totalCalculado = itensValidos.reduce((acc, l) => acc + toNum(l.valor), 0);
-
     try {
-      let currentUser = user;
-      if (!currentUser) {
-        const { data } = await supabase.auth.getUser();
-        currentUser = data?.user || null;
-        setUser(currentUser);
-      }
-
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (!currentUser) throw new Error("Usuário não autenticado.");
 
-      const userId = currentUser.id;
-      const agora = new Date().toISOString();
+      const mesAnoAntigo = mesAno || linhas.find(l => l.data.trim())?.data || ""; // Captura mês antigo para deleção
+      const itensValidos = linhas.filter(l => l.data.trim() && l.nome.trim() && l.valor.trim());
+      const totalCalculado = itensValidos.reduce((acc, l) => acc + toNum(l.valor), 0);
+      const novoMesAno = itensValidos[0]?.data || "";
 
-      const { data: existente } = await supabase
-        .from("registros_ativos")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("mes_ano", mesAno)
-        .maybeSingle();
-
+      const { data: existente } = await supabase.from("registros_ativos").select("id").eq("user_id", currentUser.id).eq("mes_ano", mesAnoAntigo).maybeSingle();
       let registroId = existente?.id;
 
-      // Se não tem itens válidos → deleta tudo
       if (itensValidos.length === 0) {
         if (registroId) {
           await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
           await supabase.from("registros_ativos").delete().eq("id", registroId);
         }
-
-        onSave?.({ mesAno, itens: [], total: 0, deleted: true });
-        onClose?.();
-        setIsSaving(false);
+        onSave({ mesAno: mesAnoAntigo, itens: [], total: 0, deleted: true });
+        onClose();
         return;
       }
 
-      // Cria ou atualiza cabeçalho
-      if (!registroId) {
-        const { data: novo } = await supabase
-          .from("registros_ativos")
-          .insert({
-            user_id: userId,
-            mes_ano: mesAno,
-            total: totalCalculado,
-            created_at: agora,
-            atualizado_em: agora,
-          })
-          .select("id")
-          .single();
+      const agora = new Date().toISOString();
+
+      if (!registroId || mesAnoAntigo !== novoMesAno) {
+        const { data: novo } = await supabase.from("registros_ativos").insert({
+          user_id: currentUser.id,
+          mes_ano: novoMesAno,
+          total: totalCalculado,
+          created_at: agora,
+          atualizado_em: agora,
+        }).select("id").single();
         registroId = novo.id;
+
+        if (existente && mesAnoAntigo !== novoMesAno) {
+          await supabase.from("registros_ativos_itens").delete().eq("registro_id", existente.id);
+          await supabase.from("registros_ativos").delete().eq("id", existente.id);
+        }
       } else {
-        await supabase
-          .from("registros_ativos")
-          .update({ total: totalCalculado, atualizado_em: agora })
-          .eq("id", registroId);
+        await supabase.from("registros_ativos").update({ total: totalCalculado, atualizado_em: agora }).eq("id", registroId);
       }
 
-      // Limpa itens antigos e insere novos
       await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
 
-      const payload = itensValidos.map((l) => ({
+      const payload = itensValidos.map(l => ({
         registro_id: registroId,
-        user_id: userId,
+        user_id: currentUser.id,
         nome_ativo: l.nome.trim(),
         valor: toNum(l.valor),
         created_at: agora,
@@ -489,66 +330,52 @@ export default function EditAtivosModal({
 
       await supabase.from("registros_ativos_itens").insert(payload);
 
-      onSave?.({
-        mesAno,
-        itens: itensValidos.map((l) => ({
-          data: l.data,
-          nome: l.nome.trim(),
-          valor: toNum(l.valor),
-        })),
+      onSave({
+        mesAno: novoMesAno,
+        itens: itensValidos.map(l => ({ data: l.data, nome: l.nome.trim(), valor: toNum(l.valor) })),
         total: totalCalculado,
         deleted: false,
       });
-
-      onClose?.();
+      onClose();
     } catch (err) {
-      console.error(err);
-      setErroGlobal("Erro ao salvar: " + (err.message || "Tente novamente"));
+      setErroGlobal("Erro ao salvar: " + err.message);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleKeyDown = e => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      adicionarLinha();
     }
   };
 
   if (!visible) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-[900px] max-w-[96vw] bg-white rounded-xl shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-100 rounded-t-xl flex justify-between items-center">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="w-[900px] max-w-full bg-white rounded-xl shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b bg-gray-100 rounded-t-xl flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-800">Editar Ativos</h2>
-          <button onClick={onClose} className="text-3xl text-gray-500 hover:text-gray-800">
-            ×
-          </button>
+          <button onClick={onClose} className="text-3xl text-gray-500 hover:text-gray-800">×</button>
         </div>
-
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <span className="text-xs sm:text-sm text-gray-500">
-              Use o campo de data (mês/ano) na primeira coluna para organizar seus registros.
-            </span>
-            <button
-              onClick={adicionarLinha}
-              className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
-            >
-              + Adicionar linha
-            </button>
+            <span className="text-sm text-gray-500">Organize por mês/ano na primeira coluna.</span>
+            <div className="flex gap-4">
+              <button onClick={zerarTudo} className="text-red-600 hover:text-red-700 text-sm font-medium">Zerar Tudo</button>
+              <button onClick={adicionarLinha} className="text-emerald-600 hover:text-emerald-700 text-sm font-medium">+ Adicionar Linha</button>
+            </div>
           </div>
-
           <div className="grid grid-cols-[130px_2fr_1fr_60px] text-xs font-bold text-gray-600 uppercase mb-2">
             <div>Data (mês/ano)</div>
             <div>Nome do Ativo</div>
             <div className="text-right">Valor</div>
             <div></div>
           </div>
-
           <div className="max-h-96 overflow-y-auto -mx-6 px-6">
-            {linhas.map((l) => (
+            {linhas.map(l => (
               <LinhaAtivo
                 key={l.id}
                 linha={l}
@@ -561,31 +388,19 @@ export default function EditAtivosModal({
                 setQuery={setQuery}
                 formatPtBr={formatPtBr}
                 toNum={toNum}
+                onKeyDown={handleKeyDown}
               />
             ))}
           </div>
-
           <div className="mt-6 pt-4 border-t flex justify-end text-lg font-bold text-emerald-600">
-            Total: R${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            Total: R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </div>
-
           {erroGlobal && <div className="text-red-600 text-sm mt-2">{erroGlobal}</div>}
         </div>
-
         <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-xl">
-          <button
-            onClick={onClose}
-            disabled={isSaving}
-            className="px-5 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
-          >
-            Fechar
-          </button>
-          <button
-            onClick={salvar}
-            disabled={isSaving}
-            className="px-6 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60"
-          >
-            {isSaving ? "Salvando…" : "Salvar"}
+          <button onClick={onClose} disabled={isSaving} className="px-5 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 disabled:opacity-50">Fechar</button>
+          <button onClick={salvar} disabled={isSaving} className="px-6 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60">
+            {isSaving ? "Salvando..." : "Salvar"}
           </button>
         </div>
       </div>
