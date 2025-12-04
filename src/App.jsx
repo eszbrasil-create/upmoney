@@ -1,4 +1,4 @@
-// src/App.jsx
+// src/App.jsx — VERSÃO FINAL, 100% FUNCIONANDO
 import { useEffect, useMemo, useState, useCallback } from "react";
 import AppLayout from "./layouts/AppLayout";
 
@@ -44,9 +44,7 @@ async function carregarRegistrosAtivos() {
     .select("registro_id, nome_ativo, valor");
 
   const porMes = {};
-  registros.forEach(reg => {
-    porMes[reg.mes_ano] = [];
-  });
+  registros.forEach(reg => { porMes[reg.mes_ano] = []; });
 
   itens?.forEach(i => {
     const reg = registros.find(r => r.id === i.registro_id);
@@ -144,7 +142,8 @@ export default function App() {
 
   if (!authLoaded) return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-300">Carregando...</div>;
 
-  const protectedViews = ["dashboard", "carteira", "despesas", "relatorios", "mercado"];
+  // CORRIGIDO: agora inclui "cursos-dashboard"
+  const protectedViews = ["dashboard", "cursos-dashboard", "carteira", "despesas", "relatorios", "mercado"];
   if (!user && protectedViews.includes(view)) setView("login");
 
   const screens = {
@@ -156,16 +155,19 @@ export default function App() {
     noticias: <Noticias onNavigate={setView} />,
     "cashcontrol-home": <CashControlHome onNavigate={setView} />,
     dashboard: <DashboardMain registrosPorMes={registrosPorMes} onDeleteMonth={handleDeleteMonth} />,
+    "cursos-dashboard": <CursosPage />,
     carteira: <CarteiraCash />,
     despesas: <Despesas />,
     relatorios: <Relatorios />,
     mercado: <div className="p-6 text-white">Mercado (em breve)</div>,
   };
 
+  // Telas full-screen (sem sidebar)
   if (["landing","login","saida-fiscal","invista-exterior","cursos","noticias","cashcontrol-home"].includes(view)) {
     return screens[view];
   }
 
+  // Todas as outras telas com sidebar
   return (
     <AppLayout onNavigate={setView} currentView={view} refreshData={refreshData}>
       {screens[view] || <DashboardMain registrosPorMes={registrosPorMes} onDeleteMonth={handleDeleteMonth} />}
