@@ -27,53 +27,52 @@ function MesAnoPickerTopo({ value, onChange }) {
         {value || "Selecione o mês"}
       </button>
 
-      {open &&
-        createPortal(
+      {open && createPortal(
+        <div
+          className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70"
+          onClick={() => setOpen(false)}
+        >
           <div
-            className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70"
-            onClick={() => setOpen(false)}
+            className="bg-white rounded-3xl shadow-3xl p-10 max-w-md w-full border-4 border-gray-200"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="bg-white rounded-3xl shadow-3xl p-10 max-w-md w-full border-4 border-gray-200"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-10">
-                <button
-                  onClick={() => setAno((a) => a - 1)}
-                  className="w-14 h-14 hover:bg-gray-100 rounded-full text-3xl font-bold text-gray-900"
-                >
-                  ←
-                </button>
-                <span className="text-3xl font-black text-gray-900">{ano}</span>
-                <button
-                  onClick={() => setAno((a) => a + 1)}
-                  className="w-14 h-14 hover:bg-gray-100 rounded-full text-3xl font-bold text-gray-900"
-                >
-                  →
-                </button>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                {meses.map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => {
-                      onChange(`${m}/${ano}`);
-                      setOpen(false);
-                    }}
-                    className={`py-6 rounded-2xl font-bold text-xl transition-all ${
-                      value?.startsWith(m)
-                        ? "bg-emerald-600 text-white"
-                        : "bg-gray-50 text-gray-900 hover:bg-emerald-100"
-                    }`}
-                  >
-                    {m}
-                  </button>
-                ))}
-              </div>
+            <div className="flex items-center justify-between mb-10">
+              <button
+                onClick={() => setAno((a) => a - 1)}
+                className="w-14 h-14 hover:bg-gray-100 rounded-full text-3xl font-bold text-gray-900"
+              >
+                ←
+              </button>
+              <span className="text-3xl font-black text-gray-900">{ano}</span>
+              <button
+                onClick={() => setAno((a) => a + 1)}
+                className="w-14 h-14 hover:bg-gray-100 rounded-full text-3xl font-bold text-gray-900"
+              >
+                →
+              </button>
             </div>
-          </div>,
-          document.body
-        )}
+            <div className="grid grid-cols-3 gap-4">
+              {meses.map((m) => (
+                <button
+                  key={m}
+                  onClick={() => {
+                    onChange(`${m}/${ano}`);
+                    setOpen(false);
+                  }}
+                  className={`py-6 rounded-2xl font-bold text-xl transition-all ${
+                    value?.startsWith(m)
+                      ? "bg-emerald-600 text-white"
+                      : "bg-gray-50 text-gray-900 hover:bg-emerald-100"
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }
@@ -86,7 +85,9 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
 
   const sugestoes = useMemo(() => {
     if (!query.trim()) return [];
-    return ativosExistentes.filter((a) => a.toLowerCase().includes(query.toLowerCase())).slice(0, 10);
+    return ativosExistentes
+      .filter((a) => a.toLowerCase().includes(query.toLowerCase()))
+      .slice(0, 10);
   }, [query, ativosExistentes]);
 
   const dropdownStyle = inputRef.current
@@ -118,31 +119,28 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
           className="w-full px-6 py-5 text-xl font-medium text-gray-900 bg-gray-50 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition placeholder-gray-500"
         />
-        {showDropdown &&
-          sugestoes.length > 0 &&
-          inputRef.current &&
-          createPortal(
-            <div
-              style={dropdownStyle}
-              className="bg-white border-2 border-gray-300 rounded-xl shadow-2xl overflow-hidden"
-            >
-              {sugestoes.map((s) => (
-                <button
-                  key={s}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    onUpdate("nome", s);
-                    setQuery("");
-                    setShowDropdown(false);
-                  }}
-                  className="block w-full text-left px-6 py-4 hover:bg-emerald-50 text-gray-900 font-medium transition"
-                >
-                  {s}
-                </button>
-              ))}
-            </div>,
-            document.body
-          )}
+        {showDropdown && sugestoes.length > 0 && inputRef.current && createPortal(
+          <div
+            style={dropdownStyle}
+            className="bg-white border-2 border-gray-300 rounded-xl shadow-2xl overflow-hidden"
+          >
+            {sugestoes.map((s) => (
+              <button
+                key={s}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onUpdate("nome", s);
+                  setQuery("");
+                  setShowDropdown(false);
+                }}
+                className="block w-full text-left px-6 py-4 hover:bg-emerald-50 text-gray-900 font-medium transition"
+              >
+                {s}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )}
       </div>
 
       {/* VALOR */}
@@ -161,7 +159,10 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
           if (!isNaN(num)) {
             onUpdate(
               "valor",
-              num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+              num.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })
             );
           }
         }}
@@ -251,8 +252,10 @@ export default function EditAtivosModal({
 
   const adicionarLinha = () =>
     setLinhas((prev) => [...prev, { id: crypto.randomUUID(), nome: "", valor: "" }]);
+
   const atualizarLinha = (id, campo, valor) =>
     setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)));
+
   const removerLinha = (id) => setLinhas((prev) => prev.filter((l) => l.id !== id));
 
   const salvar = async () => {
@@ -295,7 +298,10 @@ export default function EditAtivosModal({
           .single();
         registroId = data.id;
       } else {
-        await supabase.from("registros_ativos").update({ total: totalCalc }).eq("id", registroId);
+        await supabase
+          .from("registros_ativos")
+          .update({ total: totalCalc })
+          .eq("id", registroId);
       }
 
       await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
@@ -380,10 +386,7 @@ export default function EditAtivosModal({
               Zerar Tudo
             </button>
             <span className="text-4xl font-black text-emerald-600">
-              Total: R${" "}
-              {total.toLocaleString("pt-BR", {
-                minimumFractionDigits: 2,
-              })}
+              Total: R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </span>
           </div>
 
@@ -407,11 +410,11 @@ export default function EditAtivosModal({
   );
 }
 
-/* ============== HELPER COMPARTILHADO PARA DELETE (Passo B) ============== */
+/* ============== HELPER COMPARTILHADO PARA DELETE ============== */
 /**
  * Deleta do Supabase o registro de ativos de um determinado mês/ano
- * (tabela registros_ativos + registros_ativos_itens) usando a MESMA lógica
- * do modal de edição.
+ * (tabela registros_ativos + registros_ativos_itens),
+ * para o usuário logado.
  *
  * Uso típico: botão de lixeira no card de registro.
  */
@@ -423,17 +426,25 @@ export async function deleteRegistroAtivosPorMesAno(mesAno) {
     throw new Error("Usuário não autenticado");
   }
 
-  const { data: regExistente } = await supabase
+  const { data: regExistente, error: regError } = await supabase
     .from("registros_ativos")
     .select("id")
     .eq("user_id", user.id)
     .eq("mes_ano", mesAno)
     .maybeSingle();
 
-  if (!regExistente) {
-    return;
-  }
+  if (regError) throw regError;
+  if (!regExistente) return;
 
-  await supabase.from("registros_ativos_itens").delete().eq("registro_id", regExistente.id);
-  await supabase.from("registros_ativos").delete().eq("id", regExistente.id);
+  const { error: itensError } = await supabase
+    .from("registros_ativos_itens")
+    .delete()
+    .eq("registro_id", regExistente.id);
+  if (itensError) throw itensError;
+
+  const { error: delRegError } = await supabase
+    .from("registros_ativos")
+    .delete()
+    .eq("id", regExistente.id);
+  if (delRegError) throw delRegError;
 }
