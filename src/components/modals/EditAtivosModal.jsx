@@ -41,22 +41,12 @@ function useFloatingDropdown(ref, offset = 4) {
 }
 
 /* ---------------------------
-   Month / Year Picker (por linha, abrindo PARA CIMA e mais largo)
+   Month / Year Picker (abre para cima, mais largo)
 ---------------------------- */
 function MesAnoPicker({ value, onChange }) {
   const meses = [
-    "Jan",
-    "Fev",
-    "Mar",
-    "Abr",
-    "Mai",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Set",
-    "Out",
-    "Nov",
-    "Dez",
+    "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+    "Jul", "Ago", "Set", "Out", "Nov", "Dez",
   ];
   const [mesAtual, anoAtualStr] = String(value || "").split("/");
   const anoInicial = Number(anoAtualStr) || new Date().getFullYear();
@@ -71,24 +61,22 @@ function MesAnoPicker({ value, onChange }) {
     if (a) setAno(Number(a));
   }, [value]);
 
-  // calcula posição: acima do botão, mais largo
   useLayoutEffect(() => {
     if (!open || !btnRef.current) return;
 
     const rect = btnRef.current.getBoundingClientRect();
-    const ESTIMATED_HEIGHT = 230; // altura aproximada do calendário
-    const width = Math.max(rect.width, 260); // largura mínima maior
+    const ESTIMATED_HEIGHT = 230;
+    const width = Math.max(rect.width, 260);
 
     setDropdownStyle({
       position: "absolute",
-      top: rect.top + window.scrollY - ESTIMATED_HEIGHT - 6, // 6px de offset
+      top: rect.top + window.scrollY - ESTIMATED_HEIGHT - 6,
       left: rect.left + window.scrollX,
       width,
       zIndex: 9999,
     });
   }, [open]);
 
-  // fecha ao clicar fora
   useEffect(() => {
     const handler = (e) => {
       if (btnRef.current && !btnRef.current.contains(e.target)) {
@@ -120,17 +108,11 @@ function MesAnoPicker({ value, onChange }) {
             className="rounded-xl border border-gray-300 bg-white shadow-2xl p-4 z-[9999]"
           >
             <div className="flex items-center justify-between mb-3">
-              <button
-                onClick={() => setAno((a) => a - 1)}
-                className="w-8 h-8 rounded hover:bg-gray-100"
-              >
+              <button onClick={() => setAno((a) => a - 1)} className="w-8 h-8 rounded hover:bg-gray-100">
                 ←
               </button>
               <span className="font-semibold text-gray-800">{ano}</span>
-              <button
-                onClick={() => setAno((a) => a + 1)}
-                className="w-8 h-8 rounded hover:bg-gray-100"
-              >
+              <button onClick={() => setAno((a) => a + 1)} className="w-8 h-8 rounded hover:bg-gray-100">
                 →
               </button>
             </div>
@@ -250,11 +232,7 @@ function LinhaAtivo({
             }
           }}
           onBlur={(e) =>
-            atualizarCampo(
-              linha.id,
-              "valor",
-              formatPtBr(toNum(e.target.value))
-            )
+            atualizarCampo(linha.id, "valor", formatPtBr(toNum(e.target.value)))
           }
         />
         {erroValorSemNome && (
@@ -262,11 +240,11 @@ function LinhaAtivo({
         )}
       </div>
 
-      {/* LIXO */}
+      {/* LIXEIRA */}
       <div className="flex justify-center">
         <button
           onClick={() => removerLinha(linha)}
-          className="text-gray-500 hover:text-red-600"
+          className="text-gray-500 hover:text-red-600 transition"
         >
           <Trash2 size={16} />
         </button>
@@ -284,14 +262,7 @@ export default function EditAtivosModal({
   onClose,
   onSave,
   ativosExistentes = [
-    "Ações",
-    "Renda Fixa",
-    "Cripto",
-    "FIIs",
-    "Caixa",
-    "Banco",
-    "Viagem",
-    "Cofre",
+    "Ações", "Renda Fixa", "Cripto", "FIIs", "Caixa", "Banco", "Viagem", "Cofre",
   ],
   mesAnoInicial,
 }) {
@@ -312,7 +283,10 @@ export default function EditAtivosModal({
       maximumFractionDigits: 2,
     });
 
-  const total = linhas.reduce((acc, l) => acc + toNum(l.valor), 0);
+  // Total só de linhas com nome e valor preenchidos
+  const total = linhas
+    .filter((l) => l.nome?.trim() && l.valor?.trim())
+    .reduce((acc, l) => acc + toNum(l.valor), 0);
 
   const sugestoes = useMemo(() => {
     if (!query.trim()) return ativosExistentes.slice(0, 8);
@@ -341,22 +315,8 @@ export default function EditAtivosModal({
       }
 
       const hoje = new Date();
-      const meses = [
-        "Jan",
-        "Fev",
-        "Mar",
-        "Abr",
-        "Mai",
-        "Jun",
-        "Jul",
-        "Ago",
-        "Set",
-        "Out",
-        "Nov",
-        "Dez",
-      ];
-      const mesAnoPadrao =
-        mesAnoInicial || `${meses[hoje.getMonth()]}/${hoje.getFullYear()}`;
+      const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+      const mesAnoPadrao = mesAnoInicial || `${meses[hoje.getMonth()]}/${hoje.getFullYear()}`;
 
       const mesRef = mesAno || mesAnoPadrao;
       if (!mesAno) setMesAno(mesRef);
@@ -390,34 +350,41 @@ export default function EditAtivosModal({
           );
           return;
         }
-
-        setLinhas(criarLinhasVazias());
-        return;
       }
 
       setLinhas(criarLinhasVazias());
     };
 
     carregarDados();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, mesAnoInicial]);
 
   const adicionarLinha = () =>
     setLinhas((prev) => [
-      { id: crypto.randomUUID(), data: "", nome: "", valor: "" },
       ...prev,
+      { id: crypto.randomUUID(), data: mesAno || "", nome: "", valor: "" },
     ]);
 
-  // Lixeira: zera data + nome + valor da linha (não remove do array)
+  // REMOVER LINHA: limpa TODOS os campos (inclusive data) e se tudo vazio → limpa mesAno global
   const removerLinha = (linha) => {
-    setLinhas((prev) =>
-      prev.map((l) =>
-        l.id === linha.id ? { ...l, data: "", nome: "", valor: "" } : l
-      )
-    );
+    setLinhas((prev) => {
+      const novasLinhas = prev.map((l) =>
+        l.id === linha.id
+          ? { ...l, data: "", nome: "", valor: "" }
+          : l
+      );
+
+      const temConteudo = novasLinhas.some(
+        (l) => l.nome?.trim() !== "" || l.valor?.trim() !== ""
+      );
+
+      if (!temConteudo) {
+        setMesAno(""); // evita cabeçalho órfão no Supabase
+      }
+
+      return novasLinhas;
+    });
   };
 
-  // 🔑 Atualiza campo + mantém mesAno alinhado com a data escolhida
   const atualizarCampo = (id, campo, valor) =>
     setLinhas((prev) => {
       const atualizado = prev.map((l) =>
@@ -437,13 +404,12 @@ export default function EditAtivosModal({
     setFocoId(null);
   };
 
-  // SALVAR – fala direto com o Supabase
+  // SALVAR
   const salvar = async () => {
     if (isSaving) return;
     setIsSaving(true);
     setErroGlobal("");
 
-    // Só considera linhas com data + nome + valor
     const itensValidos = linhas.filter(
       (l) =>
         l.data?.trim() !== "" &&
@@ -451,10 +417,7 @@ export default function EditAtivosModal({
         l.valor?.trim() !== ""
     );
 
-    const totalCalculado = itensValidos.reduce(
-      (acc, l) => acc + toNum(l.valor),
-      0
-    );
+    const totalCalculado = itensValidos.reduce((acc, l) => acc + toNum(l.valor), 0);
 
     try {
       let currentUser = user;
@@ -464,38 +427,25 @@ export default function EditAtivosModal({
         setUser(currentUser);
       }
 
-      if (!currentUser) {
-        throw new Error("Usuário não autenticado.");
-      }
+      if (!currentUser) throw new Error("Usuário não autenticado.");
 
       const userId = currentUser.id;
       const agora = new Date().toISOString();
 
-      const { data: existente, error: selectError } = await supabase
+      const { data: existente } = await supabase
         .from("registros_ativos")
         .select("id")
         .eq("user_id", userId)
         .eq("mes_ano", mesAno)
         .maybeSingle();
 
-      if (selectError && selectError.code !== "PGRST116") {
-        throw selectError;
-      }
-
       let registroId = existente?.id;
 
-      // CASO 1: sem itens válidos -> apaga cabeçalho + itens desse mês
+      // Se não tem itens válidos → deleta tudo
       if (itensValidos.length === 0) {
         if (registroId) {
-          await supabase
-            .from("registros_ativos_itens")
-            .delete()
-            .eq("registro_id", registroId);
-
-          await supabase
-            .from("registros_ativos")
-            .delete()
-            .eq("id", registroId);
+          await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
+          await supabase.from("registros_ativos").delete().eq("id", registroId);
         }
 
         onSave?.({ mesAno, itens: [], total: 0, deleted: true });
@@ -504,9 +454,9 @@ export default function EditAtivosModal({
         return;
       }
 
-      // CASO 2: tem itens -> cria/atualiza registro_ativos
+      // Cria ou atualiza cabeçalho
       if (!registroId) {
-        const { data: novo, error: insertError } = await supabase
+        const { data: novo } = await supabase
           .from("registros_ativos")
           .insert({
             user_id: userId,
@@ -517,30 +467,17 @@ export default function EditAtivosModal({
           })
           .select("id")
           .single();
-
-        if (insertError) throw insertError;
         registroId = novo.id;
       } else {
-        const { error: updateError } = await supabase
+        await supabase
           .from("registros_ativos")
-          .update({
-            total: totalCalculado,
-            atualizado_em: agora,
-          })
+          .update({ total: totalCalculado, atualizado_em: agora })
           .eq("id", registroId);
-
-        if (updateError) throw updateError;
       }
 
-      // Limpa itens antigos
-      const { error: deleteError } = await supabase
-        .from("registros_ativos_itens")
-        .delete()
-        .eq("registro_id", registroId);
+      // Limpa itens antigos e insere novos
+      await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
 
-      if (deleteError) throw deleteError;
-
-      // Insere novos itens
       const payload = itensValidos.map((l) => ({
         registro_id: registroId,
         user_id: userId,
@@ -550,11 +487,7 @@ export default function EditAtivosModal({
         atualizado_em: agora,
       }));
 
-      const { error: insertItensError } = await supabase
-        .from("registros_ativos_itens")
-        .insert(payload);
-
-      if (insertItensError) throw insertItensError;
+      await supabase.from("registros_ativos_itens").insert(payload);
 
       onSave?.({
         mesAno,
@@ -587,15 +520,9 @@ export default function EditAtivosModal({
         className="w-[900px] max-w-[96vw] bg-white rounded-xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Barra de cima com cinza leve */}
         <div className="px-6 py-4 border-b border-gray-200 bg-gray-100 rounded-t-xl flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-800">
-            Editar Ativos
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-3xl text-gray-500 hover:text-gray-800"
-          >
+          <h2 className="text-xl font-semibold text-gray-800">Editar Ativos</h2>
+          <button onClick={onClose} className="text-3xl text-gray-500 hover:text-gray-800">
             ×
           </button>
         </div>
@@ -603,8 +530,7 @@ export default function EditAtivosModal({
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <span className="text-xs sm:text-sm text-gray-500">
-              Use o campo de data (mês/ano) na primeira coluna para organizar
-              seus registros.
+              Use o campo de data (mês/ano) na primeira coluna para organizar seus registros.
             </span>
             <button
               onClick={adicionarLinha}
@@ -640,15 +566,10 @@ export default function EditAtivosModal({
           </div>
 
           <div className="mt-6 pt-4 border-t flex justify-end text-lg font-bold text-emerald-600">
-            Total: R$
-            {total.toLocaleString("pt-BR", {
-              minimumFractionDigits: 2,
-            })}
+            Total: R${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </div>
 
-          {erroGlobal && (
-            <div className="text-red-600 text-sm mt-2">{erroGlobal}</div>
-          )}
+          {erroGlobal && <div className="text-red-600 text-sm mt-2">{erroGlobal}</div>}
         </div>
 
         <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50 rounded-b-xl">
