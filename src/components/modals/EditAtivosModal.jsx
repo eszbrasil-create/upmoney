@@ -1,6 +1,6 @@
 // src/components/modals/EditAtivosModal.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal from "react-dom";
+import { createPortal } from "react-dom";
 import { Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
@@ -20,7 +20,6 @@ function MesAnoPickerTopo({ value, onChange }) {
   return (
     <div className="relative">
       <button
-      <button
         type="button"
         onClick={() => setOpen(true)}
         className="px-10 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-xl shadow-lg transition"
@@ -32,15 +31,19 @@ function MesAnoPickerTopo({ value, onChange }) {
         <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/50" onClick={() => setOpen(false)}>
           <div
             className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full"
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
-              <button onClick={() => setAno(a => a - 1)} className="w-12 h-12 hover:bg-gray-100 rounded-full text-2xl">←</button>
+              <button onClick={() => setAno((a) => a - 1)} className="w-12 h-12 hover:bg-gray-100 rounded-full text-2xl">
+                ←
+              </button>
               <span className="text-2xl font-bold">{ano}</span>
-              <button onClick={() => setAno(a => a + 1)} className="w-12 h-12 hover:bg-gray-100 rounded-full text-2xl">→</button>
+              <button onClick={() => setAno((a) => a + 1)} className="w-12 h-12 hover:bg-gray-100 rounded-full text-2xl">
+                →
+              </button>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              {meses.map(m => (
+              {meses.map((m) => (
                 <button
                   key={m}
                   onClick={() => {
@@ -63,7 +66,7 @@ function MesAnoPickerTopo({ value, onChange }) {
   );
 }
 
-/* ============== LINHA DE ATIVO - LETRAS PRETAS E VISÍVEIS ============== */
+/* ============== LINHA DE ATIVO - LETRAS PRETAS ============== */
 function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
   const inputRef = useRef(null);
   const [query, setQuery] = useState("");
@@ -72,21 +75,23 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
   const sugestoes = useMemo(() => {
     if (!query.trim()) return [];
     return ativosExistentes
-      .filter(a => a.toLowerCase().includes(query.toLowerCase()))
+      .filter((a) => a.toLowerCase().includes(query.toLowerCase()))
       .slice(0, 10);
   }, [query, ativosExistentes]);
 
-  const dropdownStyle = inputRef.current ? {
-    position: "fixed",
-    top: inputRef.current.getBoundingClientRect().bottom + window.scrollY + 10,
-    left: inputRef.current.getBoundingClientRect().left + window.scrollX,
-    width: inputRef.current.offsetWidth,
-    zIndex: 9999999,
-  } : {};
+  const dropdownStyle = inputRef.current
+    ? {
+        position: "fixed",
+        top: inputRef.current.getBoundingClientRect().bottom + window.scrollY + 10,
+        left: inputRef.current.getBoundingClientRect().left + window.scrollX,
+        width: inputRef.current.offsetWidth,
+        zIndex: 9999999,
+      }
+    : {};
 
   return (
     <div className="grid grid-cols-[2fr_1fr_70px] gap-5 items-center py-4 border-b border-gray-200 last:border-b-0">
-      {/* NOME DO ATIVO - LETRAS PRETAS */}
+      {/* NOME */}
       <div className="relative">
         <input
           ref={inputRef}
@@ -101,23 +106,22 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
           }}
           onFocus={() => query && setShowDropdown(true)}
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-          className="w-full px-5 py-4 bg-white border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition 
-                     text-black font-medium text-lg placeholder-gray-500"
+          className="w-full px-5 py-4 bg-white border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition text-black font-medium text-lg placeholder-gray-500"
         />
 
         {/* AUTOCOMPLETE */}
         {showDropdown && sugestoes.length > 0 && inputRef.current && createPortal(
           <div style={dropdownStyle} className="bg-white border-2 border-gray-300 rounded-xl shadow-2xl overflow-hidden">
-            {sugestoes.map(s => (
+            {sugestoes.map((s) => (
               <button
                 key={s}
-                onMouseDown={e => e.preventDefault()}
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   onUpdate("nome", s);
                   setQuery("");
                   setShowDropdown(false);
                 }}
-                className="block w-full text-left px-5 py-4 hover:bg-emerald-50 text-black font-medium text-base transition"
+                className="block w-full text-left px-5 py-4 hover:bg-emerald-50 text-black font-medium transition"
               >
                 {s}
               </button>
@@ -127,7 +131,7 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
         )}
       </div>
 
-      {/* VALOR - LETRAS PRETAS */}
+      {/* VALOR */}
       <input
         type="text"
         inputMode="decimal"
@@ -144,8 +148,7 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
             onUpdate("valor", num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
           }
         }}
-        className="px-5 py-4 bg-white border-2 border-gray-300 rounded-xl text-right outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition 
-                   text-black font-medium text-lg placeholder-gray-500"
+        className="px-5 py-4 bg-white border-2 border-gray-300 rounded-xl text-right outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition text-black font-medium text-lg placeholder-gray-500"
       />
 
       {/* LIXEIRA */}
@@ -174,7 +177,7 @@ export default function EditAtivosModal({
     return acc + v;
   }, 0);
 
-  // Abre com mês atual + 2 linhas vazias
+  // Define mês atual + 2 linhas vazias ao abrir
   useEffect(() => {
     if (!open) return;
 
@@ -183,20 +186,17 @@ export default function EditAtivosModal({
     const mesAtual = meses[hoje.getMonth()];
     const anoAtual = hoje.getFullYear();
 
-    if (!mesAno) {
-      setMesAno(`${mesAtual}/${anoAtual}`);
-    }
+    if (!mesAno) setMesAno(`${mesAtual}/${anoAtual}`);
 
-    // Garante pelo menos 2 linhas vazias
     if (linhas.length === 0) {
       setLinhas([
         { id: crypto.randomUUID(), nome: "", valor: "" },
         { id: crypto.randomUUID(), nome: "", valor: "" },
       ]);
     }
-  }, [open, mesAno, linhas.length]);
+  }, [open, mesAno]);
 
-  // Carrega dados do Supabase quando muda o mês
+  // Carrega dados do Supabase
   useEffect(() => {
     if (!open || !mesAno) return;
 
@@ -222,7 +222,7 @@ export default function EditAtivosModal({
           .eq("registro_id", reg.id);
 
         const novasLinhas = itens?.length > 0
-          ? itens.map(i => ({
+          ? itens.map((i) => ({
               id: crypto.randomUUID(),
               nome: i.nome_ativo,
               valor: Number(i.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
@@ -237,14 +237,14 @@ export default function EditAtivosModal({
     carregar();
   }, [open, mesAno]);
 
-  const adicionarLinha = () => setLinhas(prev => [...prev, { id: crypto.randomUUID(), nome: "", valor: "" }]);
-  const atualizarLinha = (id, campo, valor) => setLinhas(prev => prev.map(l => l.id === id ? { ...l, [campo]: valor } : l));
-  const removerLinha = (id) => setLinhas(prev => prev.filter(l => l.id !== id));
+  const adicionarLinha = () => setLinhas((prev) => [...prev, { id: crypto.randomUUID(), nome: "", valor: "" }]);
+  const atualizarLinha = (id, campo, valor) => setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)));
+  const removerLinha = (id) => setLinhas((prev) => prev.filter((l) => l.id !== id));
 
   const salvar = async () => {
     if (!mesAno) return setErro("Selecione um mês");
 
-    const itensValidos = linhas.filter(l => l.nome.trim() && l.valor.trim());
+    const itensValidos = linhas.filter((l) => l.nome.trim() && l.valor.trim());
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -282,7 +282,7 @@ export default function EditAtivosModal({
       await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
       if (itensValidos.length > 0) {
         await supabase.from("registros_ativos_itens").insert(
-          itensValidos.map(l => ({
+          itensValidos.map((l) => ({
             registro_id: registroId,
             user_id: user.id,
             nome_ativo: l.nome.trim(),
@@ -302,10 +302,7 @@ export default function EditAtivosModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4" onClick={onClose}>
-      <div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col"
-        onClick={e => e.stopPropagation()}
-      >
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="p-8 border-b bg-gradient-to-r from-emerald-50 to-teal-50 flex justify-between items-center">
           <h2 className="text-3xl font-bold text-gray-800">Editar Ativos</h2>
@@ -322,7 +319,7 @@ export default function EditAtivosModal({
             <p className="text-center text-xl text-gray-600">Carregando dados...</p>
           ) : (
             <>
-              {linhas.map(linha => (
+              {linhas.map((linha) => (
                 <LinhaAtivo
                   key={linha.id}
                   linha={linha}
@@ -350,10 +347,7 @@ export default function EditAtivosModal({
 
         {/* Footer */}
         <div className="p-8 border-t bg-gray-50 flex justify-between items-center">
-          <button
-            onClick={() => { setLinhas([]); salvar(); }}
-            className="text-red-600 hover:text-red-800 font-bold text-xl"
-          >
+          <button onClick={() => { setLinhas([]); salvar(); }} className="text-red-600 hover:text-red-800 font-bold text-xl">
             Zerar Tudo
           </button>
 
@@ -361,10 +355,7 @@ export default function EditAtivosModal({
             <button onClick={onClose} className="px-10 py-4 border-2 border-gray-300 rounded-xl hover:bg-gray-100 font-bold text-lg">
               Cancelar
             </button>
-            <button
-              onClick={salvar}
-              className="px-12 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xl shadow-lg transition"
-            >
+            <button onClick={salvar} className="px-12 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xl shadow-lg transition">
               Salvar Alterações
             </button>
           </div>
