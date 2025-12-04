@@ -22,7 +22,7 @@ function MesAnoPickerTopo({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-xl shadow-lg transition min-w-56"
+        className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-xl shadow-lg transition min-w-56"
       >
         {value || "Selecione o mês"}
       </button>
@@ -77,7 +77,7 @@ function MesAnoPickerTopo({ value, onChange }) {
   );
 }
 
-/* ============== LINHA DE ATIVO COM MAIS ESPAÇO ============== */
+/* ============== LINHA DE ATIVO COM MAIS ESPAÇO / RESPONSIVA ============== */
 function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
   const inputRef = useRef(null);
   const [query, setQuery] = useState("");
@@ -101,7 +101,7 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
     : {};
 
   return (
-    <div className="grid grid-cols-[3fr_2fr_70px] gap-6 items-center py-6 px-8 bg-white rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition">
+    <div className="grid grid-cols-1 md:grid-cols-[3fr_2fr_70px] gap-4 md:gap-6 items-center py-4 md:py-5 px-4 md:px-8 bg-white rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition">
       {/* NOME DO ATIVO */}
       <div className="relative">
         <input
@@ -117,7 +117,7 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
           }}
           onFocus={() => query && setShowDropdown(true)}
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-          className="w-full px-6 py-5 text-xl font-medium text-gray-900 bg-gray-50 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition placeholder-gray-500"
+          className="w-full px-6 py-4 text-lg md:text-xl font-medium text-gray-900 bg-gray-50 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition placeholder-gray-500"
         />
         {showDropdown && sugestoes.length > 0 && inputRef.current && createPortal(
           <div
@@ -166,12 +166,15 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
             );
           }
         }}
-        className="px-6 py-5 text-xl font-bold text-right text-emerald-700 bg-gray-50 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition placeholder-gray-500"
+        className="px-6 py-4 text-lg md:text-xl font-bold text-right text-emerald-700 bg-gray-50 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition placeholder-gray-500"
       />
 
       {/* LIXEIRA */}
-      <button onClick={onRemove} className="text-red-600 hover:text-red-800 transition p-3">
-        <Trash2 size={28} />
+      <button
+        onClick={onRemove}
+        className="text-red-600 hover:text-red-800 transition p-2 md:p-3 justify-self-end"
+      >
+        <Trash2 size={26} />
       </button>
     </div>
   );
@@ -200,7 +203,7 @@ export default function EditAtivosModal({
     if (!open) return;
     const hoje = new Date();
     const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    if (!mesAno) setMesAno(`${meses[hoje.getMonth()]}/${hoje.getFullYear()}`);
+    if (!mesAno) setMesAno(`${meses[hoje.getMonth()]}/${hoje.getFullYear()]`);
     if (linhas.length === 0) {
       setLinhas([
         { id: crypto.randomUUID(), nome: "", valor: "" },
@@ -331,33 +334,41 @@ export default function EditAtivosModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-3xl shadow-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-white rounded-3xl shadow-3xl w-full max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* HEADER */}
-        <div className="p-8 bg-gradient-to-r from-emerald-50 to-teal-50 flex justify-between items-center border-b">
-          <h2 className="text-3xl font-black text-gray-900">Editar Ativos</h2>
-          <button onClick={onClose} className="text-4xl text-gray-500 hover:text-gray-800">
-            ×
-          </button>
+        {/* HEADER - FAIXA MAIS BAIXA */}
+        <div className="px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-2xl md:text-3xl font-black text-gray-900">
+              Editar Ativos
+            </h2>
+            <button
+              onClick={onClose}
+              className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full text-2xl md:text-3xl text-gray-500 hover:text-gray-800 hover:bg-white/60 transition"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* MÊS + BOTÃO ADICIONAR */}
-        <div className="p-8 bg-gray-50 border-b">
-          <div className="flex items-center justify-center gap-6">
+        <div className="px-6 md:px-8 py-4 bg-gray-50 border-b">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6">
             <MesAnoPickerTopo value={mesAno} onChange={setMesAno} />
+
             <button
               onClick={adicionarLinha}
-              className="flex items-center gap-3 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-xl shadow-lg transition hover:scale-105"
+              className="flex items-center justify-center gap-3 px-6 md:px-8 py-3 md:py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-base md:text-lg rounded-xl shadow-lg transition hover:scale-105"
             >
-              <Plus size={28} />
+              <Plus size={24} className="md:w-7 md:h-7" />
               Adicionar ativo
             </button>
           </div>
         </div>
 
         {/* LISTA DE ATIVOS */}
-        <div className="p-8 flex-1 overflow-y-auto space-y-6">
+        <div className="p-6 md:p-8 flex-1 overflow-y-auto space-y-6">
           {isLoading ? (
             <p className="text-center text-xl text-gray-600">Carregando...</p>
           ) : (
@@ -373,30 +384,33 @@ export default function EditAtivosModal({
           )}
         </div>
 
-        {/* TOTAL + BOTÕES */}
-        <div className="p-8 bg-gray-50 border-t">
-          <div className="flex justify-between items-center mb-6">
-            <button
-              onClick={() => {
-                setLinhas([]);
-                salvar();
-              }}
-              className="text-red-600 hover:text-red-800 font-bold text-lg"
-            >
-              Zerar Tudo
-            </button>
-            <span className="text-4xl font-black text-emerald-600">
-              Total: R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-            </span>
-          </div>
+        {/* TOTAL + BOTÕES - FAIXA MAIS BAIXA */}
+        <div className="px-6 md:px-8 py-3 md:py-4 bg-gray-50 border-t">
+          <div className="flex flex-col gap-3 md:gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
+              <button
+                onClick={() => {
+                  setLinhas([]);
+                  salvar();
+                }}
+                className="self-start text-sm md:text-base font-semibold text-red-600 hover:text-red-800 hover:underline"
+              >
+                Zerar tudo
+              </button>
 
-          <div className="flex justify-end">
-            <button
-              onClick={salvar}
-              className="px-12 py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xl rounded-xl shadow-lg transition hover:scale-105"
-            >
-              Salvar Alterações
-            </button>
+              <span className="text-2xl md:text-3xl lg:text-4xl font-black text-emerald-600 text-right">
+                Total: R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={salvar}
+                className="w-full sm:w-auto px-8 md:px-10 py-3.5 md:py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg md:text-xl rounded-xl shadow-lg transition hover:scale-105"
+              >
+                Salvar alterações
+              </button>
+            </div>
           </div>
         </div>
 
