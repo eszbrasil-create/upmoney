@@ -1,4 +1,4 @@
-// src/components/modals/EditAtivosModal.jsx — VERSÃO FINAL CLEAN + PROFISSIONAL
+// src/components/modals/EditAtivosModal.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Trash2, Plus, X } from "lucide-react";
@@ -54,7 +54,7 @@ function MesAnoPickerTopo({ value, onChange }) {
   );
 }
 
-/* ============== MODAL PRINCIPAL (layout em tabela clean) ============== */
+/* ============== MODAL PRINCIPAL — FAIXAS REDUZIDAS E LINDO ============== */
 export default function EditAtivosModal({
   open = false,
   onClose,
@@ -181,81 +181,73 @@ export default function EditAtivosModal({
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[9999] flex items-center justify-center p-6" onClick={onClose}>
       <div className="bg-white rounded-3xl shadow-3xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-        
-        {/* Header */}
-        <div className="p-8 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white flex justify-between items-center">
-          <h2 className="text-4xl font-black">Editar Ativos</h2>
-          <button onClick={onClose} className="p-3 hover:bg-white/20 rounded-full transition"><X size={36} /></button>
+
+        {/* HEADER REDUZIDO */}
+        <div className="p-6 bg-emerald-600 text-white flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Editar Ativos</h2>
+          <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg transition">
+            <X size={28} />
+          </button>
         </div>
 
-        {/* Mês + Adicionar */}
-        <div className="p-8 bg-gray-50 border-b border-gray-200">
+        {/* MÊS + ADICIONAR */}
+        <div className="p-6 bg-gray-50 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <MesAnoPickerTopo value={mesAno} onChange={setMesAno} />
-            <button onClick={adicionarLinha} className="flex items-center gap-4 px-8 py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xl rounded-2xl shadow-xl transition hover:scale-105">
-              <Plus size={32} /> Adicionar ativo
+            <button onClick={adicionarLinha} className="flex items-center gap-3 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-2xl shadow-xl transition hover:scale-105">
+              <Plus size={28} /> Adicionar ativo
             </button>
           </div>
         </div>
 
-        {/* Tabela Clean */}
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="bg-white rounded-2xl shadow-inner border border-gray-200 overflow-hidden">
+        {/* TABELA */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="bg-white rounded-2xl shadow-inner border border-gray-200">
             <table className="w-full">
               <thead className="bg-gray-100 text-gray-700 font-bold text-lg border-b-2 border-gray-300">
                 <tr>
-                  <th className="px-8 py-6 text-left">Nome do Ativo</th>
-                  <th className="px-8 py-6 text-right">Valor (R$)</th>
+                  <th className="px-8 py-5 text-left">Nome do Ativo</th>
+                  <th className="px-8 py-5 text-right">Valor (R$)</th>
                   <th className="w-20"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {isLoading ? (
-                  <tr><td colSpan={3} className="text-center py-12 text-gray-500 text-xl">Carregando dados...</td></tr>
-                ) : linhas.length === 0 ? (
-                  <tr><td colSpan={3} className="text-center py-16 text-gray-400 text-xl">Nenhum ativo adicionado</td></tr>
-                ) : (
-                  linhas.map(linha => (
-                    <LinhaAtivoSimples
-                      key={linha.id}
-                      linha={linha}
-                      onUpdate={(c, v) => atualizarLinha(linha.id, c, v)}
-                      onRemove={() => removerLinha(linha.id)}
-                      ativosExistentes={ativosExistentes}
-                    />
-                  ))
-                )}
+                  <tr><td colSpan={3} className="text-center py-12 text-gray-500 text-xl">Carregando...</td></tr>
+                ) : linhas.map(linha => (
+                  <LinhaAtivoSimples key={linha.id} linha={linha} onUpdate={atualizarLinha} onRemove={() => removerLinha(linha.id)} ativosExistentes={ativosExistentes} />
+                ))}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Footer com Total e Salvar */}
-        <div className="p-8 bg-gray-50 border-t border-gray-300">
-          <div className="flex justify-between items-center mb-6">
-            <button onClick={() => { if (confirm("Zerar todos os ativos deste mês?")) { setLinhas([]); salvar(); } }} 
-                    className="text-red-600 hover:text-red-700 font-bold text-lg flex items-center gap-2">
-              <Trash2 size={24} /> Zerar este mês
+        {/* RODAPÉ COMPACTO E LINDO */}
+        <div className="p-5 bg-gray-50 border-t border-gray-200">
+          <div className="flex justify-between items-center mb-4">
+            <button onClick={() => { if (confirm("Zerar todos os ativos deste mês?")) { setLinhas([]); salvar(); } }}
+                    className="text-red-600 hover:text-red-700 font-medium flex items-center gap-2">
+              <Trash2 size={18} /> Zerar este mês
             </button>
             <div className="text-right">
-              <div className="text-xl text-gray-600 font-medium">Total do mês</div>
-              <div className="text-5xl font-black text-emerald-600">
+              <div className="text-sm text-gray-600">Total do mês</div>
+              <div className="text-3xl font-black text-emerald-600">
                 R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
               </div>
             </div>
           </div>
-          <button onClick={salvar} className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white text-2xl font-bold rounded-2xl shadow-2xl transition hover:scale-105">
+          <button onClick={salvar} className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xl font-bold rounded-xl transition shadow-lg">
             Salvar Alterações
           </button>
         </div>
 
-        {erro && <div className="p-6 bg-red-100 text-red-700 text-center font-bold text-xl">{erro}</div>}
+        {erro && <div className="p-5 bg-red-100 text-red-700 text-center font-bold">{erro}</div>}
       </div>
     </div>
   );
 }
 
-/* ============== LINHA SIMPLES E LIMPA (com autocompletar mantido) ============== */
+/* ============== LINHA DA TABELA (com autocompletar) ============== */
 function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
   const inputRef = useRef(null);
   const [query, setQuery] = useState("");
@@ -274,20 +266,20 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
             ref={inputRef}
             type="text"
             value={linha.nome}
-            onChange={(e) => { onUpdate("nome", e.target.value); setQuery(e.target.value); setShowDropdown(true); }}
+            onChange={(e) => { onUpdate(linha.id, "nome", e.target.value); setQuery(e.target.value); setShowDropdown(true); }}
             onFocus={() => query && setShowDropdown(true)}
             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
             placeholder="Ex: Petrobras, Tesouro Selic..."
             className="w-full px-6 py-4 text-lg font-medium bg-white border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none"
           />
           {showDropdown && sugestoes.length > 0 && createPortal(
-            <div className="fixed bg-white border-2 border-gray-300 rounded-xl shadow-2xl overflow-hidden z-[10" style={{
+            <div className="fixed bg-white border-2 border-gray-300 rounded-xl shadow-2xl overflow-hidden z-50" style={{
               top: inputRef.current?.getBoundingClientRect().bottom + window.scrollY + 8,
               left: inputRef.current?.getBoundingClientRect().left + window.scrollX,
               width: inputRef.current?.offsetWidth,
             }}>
               {sugestoes.map(s => (
-                <button key={s} onMouseDown={e => e.preventDefault()} onClick={() => { onUpdate("nome", s); setShowDropdown(false); }}
+                <button key={s} onMouseDown={e => e.preventDefault()} onClick={() => { onUpdate(linha.id, "nome", s); setShowDropdown(false); }}
                         className="block w-full text-left px-6 py-4 hover:bg-emerald-50 font-medium">
                   {s}
                 </button>
@@ -301,10 +293,10 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
         <input
           type="text"
           value={linha.valor}
-          onChange={(e) => /^[0-9.,]*$/.test(e.target.value) && onUpdate("valor", e.target.value)}
+          onChange={(e) => /^[0-9.,]*$/.test(e.target.value) && onUpdate(linha.id, "valor", e.target.value)}
           onBlur={(e) => {
             const num = Number(e.target.value.replace(/\./g, "").replace(",", "."));
-            if (!isNaN(num)) onUpdate("valor", num.toLocaleString("pt-BR", { minimumFractionDigits: 2 }));
+            if (!isNaN(num)) onUpdate(linha.id, "valor", num.toLocaleString("pt-BR", { minimumFractionDigits: 2 }));
           }}
           placeholder="0,00"
           className="w-full px-6 py-4 text-lg font-bold text-right text-emerald-700 bg-white border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none"
