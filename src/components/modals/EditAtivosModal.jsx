@@ -22,28 +22,35 @@ function MesAnoPickerTopo({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="px-12 py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-2xl rounded-2xl shadow-2xl transition-all hover:scale-105 min-w-72"
+        className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-xl shadow-lg transition min-w-56"
       >
         {value || "Selecione o mês"}
       </button>
 
       {open && createPortal(
         <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-black/70" onClick={() => setOpen(false)}>
-          <div className="bg-white rounded-3xl shadow-3xl p-10 max-w-md w-full border-4 border-gray-200" onClick={e => e.stopPropagation()}>
+          <div
+            className="bg-white rounded-3xl shadow-3xl p-10 max-w-md w-full border-4 border-gray-200"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-10">
-              <button onClick={() => setAno(a => a - 1)} className="w-16 h-16 hover:bg-gray-100 rounded-full text-4xl font-black text-gray-900">←</button>
-              <span className="text-4xl font-black text-gray-900">{ano}</span>
-              <button onClick={() => setAno(a => a + 1)} className="w-16 h-16 hover:bg-gray-100 rounded-full text-4xl font-black text-gray-900">→</button>
+              <button onClick={() => setAno((a) => a - 1)} className="w-14 h-14 hover:bg-gray-100 rounded-full text-3xl font-bold text-gray-900">
+                ←
+              </button>
+              <span className="text-3xl font-black text-gray-900">{ano}</span>
+              <button onClick={() => setAno((a) => a + 1)} className="w-14 h-14 hover:bg-gray-100 rounded-full text-3xl font-bold text-gray-900">
+                →
+              </button>
             </div>
-            <div className="grid grid-cols-3 gap-5">
-              {meses.map(m => (
+            <div className="grid grid-cols-3 gap-4">
+              {meses.map((m) => (
                 <button
                   key={m}
                   onClick={() => {
                     onChange(`${m}/${ano}`);
                     setOpen(false);
                   }}
-                  className={`py-8 rounded-3xl font-black text-2xl transition-all hover:scale-110 shadow-lg ${
+                  className={`py-6 rounded-2xl font-bold text-xl transition-all ${
                     value?.startsWith(m) ? "bg-emerald-600 text-white" : "bg-gray-50 text-gray-900 hover:bg-emerald-100"
                   }`}
                 >
@@ -59,7 +66,7 @@ function MesAnoPickerTopo({ value, onChange }) {
   );
 }
 
-/* ============== LINHA DE ATIVO ============== */
+/* ============== LINHA DE ATIVO COM MAIS ESPAÇO ============== */
 function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
   const inputRef = useRef(null);
   const [query, setQuery] = useState("");
@@ -67,13 +74,15 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
 
   const sugestoes = useMemo(() => {
     if (!query.trim()) return [];
-    return ativosExistentes.filter(a => a.toLowerCase().includes(query.toLowerCase())).slice(0, 10);
+    return ativosExistentes
+      .filter((a) => a.toLowerCase().includes(query.toLowerCase()))
+      .slice(0, 10);
   }, [query, ativosExistentes]);
 
   const dropdownStyle = inputRef.current
     ? {
         position: "fixed",
-        top: inputRef.current.getBoundingClientRect().bottom + window.scrollY + 12,
+        top: inputRef.current.getBoundingClientRect().bottom + window.scrollY + 10,
         left: inputRef.current.getBoundingClientRect().left + window.scrollX,
         width: inputRef.current.offsetWidth,
         zIndex: 9999999,
@@ -81,14 +90,15 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
     : {};
 
   return (
-    <div className="grid grid-cols-[2fr_1fr_80px] gap-6 items-center py-5 border-b border-gray-200 last:border-b-0">
+    <div className="grid grid-cols-[3fr_2fr_70px] gap-6 items-center py-6 px-8 bg-white rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition">
+      {/* NOME DO ATIVO */}
       <div className="relative">
         <input
           ref={inputRef}
           type="text"
           placeholder="Nome do ativo"
           value={linha.nome}
-          onChange={e => {
+          onChange={(e) => {
             const val = e.target.value;
             onUpdate("nome", val);
             setQuery(val);
@@ -96,20 +106,20 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
           }}
           onFocus={() => query && setShowDropdown(true)}
           onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-          className="w-full px-6 py-5 bg-white border-2 border-gray-300 rounded-2xl focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 outline-none transition text-black font-bold text-xl placeholder-gray-600"
+          className="w-full px-6 py-5 text-xl font-medium text-gray-900 bg-gray-50 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition placeholder-gray-500"
         />
         {showDropdown && sugestoes.length > 0 && inputRef.current && createPortal(
-          <div style={dropdownStyle} className="bg-white border-4 border-gray-300 rounded-2xl shadow-3xl overflow-hidden">
-            {sugestoes.map(s => (
+          <div style={dropdownStyle} className="bg-white border-2 border-gray-300 rounded-xl shadow-2xl overflow-hidden">
+            {sugestoes.map((s) => (
               <button
                 key={s}
-                onMouseDown={e => e.preventDefault()}
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   onUpdate("nome", s);
                   setQuery("");
                   setShowDropdown(false);
                 }}
-                className="block w-full text-left px-6 py-5 hover:bg-emerald-100 text-black font-bold text-lg transition"
+                className="block w-full text-left px-6 py-4 hover:bg-emerald-50 text-gray-900 font-medium transition"
               >
                 {s}
               </button>
@@ -119,21 +129,29 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
         )}
       </div>
 
+      {/* VALOR */}
       <input
         type="text"
         inputMode="decimal"
         placeholder="0,00"
         value={linha.valor}
-        onChange={e => /^[0-9.,]*$/.test(e.target.value) && onUpdate("valor", e.target.value)}
-        onBlur={e => {
-          const num = Number(e.target.value.replace(/\./g, "").replace(",", "."));
-          if (!isNaN(num)) onUpdate("valor", num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        onChange={(e) => {
+          if (/^[0-9.,]*$/.test(e.target.value)) {
+            onUpdate("valor", e.target.value);
+          }
         }}
-        className="px-6 py-5 bg-white border-2 border-gray-300 rounded-2xl text-right outline-none focus:border-emerald-600 focus:ring-4 focus:ring-emerald-100 transition text-black font-bold text-xl placeholder-gray-600"
+        onBlur={(e) => {
+          const num = Number(e.target.value.replace(/\./g, "").replace(",", "."));
+          if (!isNaN(num)) {
+            onUpdate("valor", num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+          }
+        }}
+        className="px-6 py-5 text-xl font-bold text-right text-emerald-700 bg-gray-50 border-2 border-gray-300 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 outline-none transition placeholder-gray-500"
       />
 
-      <button onClick={onRemove} className="text-red-600 hover:text-red-800 p-3">
-        <Trash2 size={32} />
+      {/* LIXEIRA */}
+      <button onClick={onRemove} className="text-red-600 hover:text-red-800 transition p-3">
+        <Trash2 size={28} />
       </button>
     </div>
   );
@@ -168,13 +186,16 @@ export default function EditAtivosModal({
     }
   }, [open]);
 
-  // Carregar dados do Supabase
+  // Carrega dados do Supabase
   useEffect(() => {
     if (!open || !mesAno) return;
     const carregar = async () => {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setIsLoading(false); return; }
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
 
       const { data: reg } = await supabase
         .from("registros_ativos")
@@ -189,13 +210,14 @@ export default function EditAtivosModal({
           .select("nome_ativo, valor")
           .eq("registro_id", reg.id);
 
-        setLinhas(itens?.length > 0
-          ? itens.map(i => ({
-              id: crypto.randomUUID(),
-              nome: i.nome_ativo,
-              valor: Number(i.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
-            }))
-          : [{ id: crypto.randomUUID(), nome: "", valor: "" }]
+        setLinhas(
+          itens?.length > 0
+            ? itens.map((i) => ({
+                id: crypto.randomUUID(),
+                nome: i.nome_ativo,
+                valor: Number(i.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
+              }))
+            : [{ id: crypto.randomUUID(), nome: "", valor: "" }]
         );
       }
       setIsLoading(false);
@@ -203,21 +225,14 @@ export default function EditAtivosModal({
     carregar();
   }, [open, mesAno]);
 
-  const adicionarLinha = () => {
-    setLinhas(prev => [...prev, { id: crypto.randomUUID(), nome: "", valor: "" }]);
-  };
-
-  const atualizarLinha = (id, campo, valor) => {
-    setLinhas(prev => prev.map(l => (l.id === id ? { ...l, [campo]: valor } : l)));
-  };
-
-  const removerLinha = (id) => {
-    setLinhas(prev => prev.filter(l => l.id !== id));
-  };
+  const adicionarLinha = () => setLinhas((prev) => [...prev, { id: crypto.randomUUID(), nome: "", valor: "" }]);
+  const atualizarLinha = (id, campo, valor) => setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)));
+  const removerLinha = (id) => setLinhas((prev) => prev.filter((l) => l.id !== id));
 
   const salvar = async () => {
     if (!mesAno) return setErro("Selecione um mês");
-    const itensValidos = linhas.filter(l => l.nome.trim() && l.valor.trim());
+
+    const itensValidos = linhas.filter((l) => l.nome.trim() && l.valor.trim());
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -232,7 +247,6 @@ export default function EditAtivosModal({
         .eq("mes_ano", mesAno)
         .maybeSingle();
 
-      // Zerar tudo
       if (itensValidos.length === 0 && regExistente) {
         await supabase.from("registros_ativos_itens").delete().eq("registro_id", regExistente.id);
         await supabase.from("registros_ativos").delete().eq("id", regExistente.id);
@@ -256,7 +270,7 @@ export default function EditAtivosModal({
       await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
       if (itensValidos.length > 0) {
         await supabase.from("registros_ativos_itens").insert(
-          itensValidos.map(l => ({
+          itensValidos.map((l) => ({
             registro_id: registroId,
             user_id: user.id,
             nome_ativo: l.nome.trim(),
@@ -276,33 +290,38 @@ export default function EditAtivosModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-[9999] flex items-center justify-center p-6" onClick={onClose}>
-      <div className="bg-white rounded-3xl shadow-3xl w-full max-w-5xl max-h-[94vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+      <div
+        className="bg-white rounded-3xl shadow-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* HEADER */}
-        <div className="p-10 bg-gradient-to-br from-emerald-50 to-teal-50 flex justify-between items-center border-b-4 border-emerald-200">
-          <h2 className="text-4xl font-black text-gray-900">Editar Ativos</h2>
-          <button onClick={onClose} className="text-5xl text-gray-500 hover:text-gray-800">×</button>
+        <div className="p-8 bg-gradient-to-r from-emerald-50 to-teal-50 flex justify-between items-center border-b">
+          <h2 className="text-3xl font-black text-gray-900">Editar Ativos</h2>
+          <button onClick={onClose} className="text-4xl text-gray-500 hover:text-gray-800">
+            ×
+          </button>
         </div>
 
-        {/* TOPO: MÊS + BOTÃO ADICIONAR */}
-        <div className="p-8 bg-gray-50 border-b-4 border-gray-200">
-          <div className="flex items-center justify-center gap-10 flex-wrap">
+        {/* MÊS + BOTÃO ADICIONAR */}
+        <div className="p-8 bg-gray-50 border-b">
+          <div className="flex items-center justify-center gap-6">
             <MesAnoPickerTopo value={mesAno} onChange={setMesAno} />
             <button
               onClick={adicionarLinha}
-              className="flex items-center gap-4 px-10 py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-2xl rounded-2xl shadow-2xl transition-all hover:scale-105"
+              className="flex items-center gap-3 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-lg rounded-xl shadow-lg transition hover:scale-105"
             >
-              <Plus size={38} />
+              <Plus size={28} />
               Adicionar ativo
             </button>
           </div>
         </div>
 
         {/* LISTA DE ATIVOS */}
-        <div className="p-10 flex-1 overflow-y-auto space-y-6">
+        <div className="p-8 flex-1 overflow-y-auto space-y-6">
           {isLoading ? (
-            <p className="text-center text-2xl font-bold text-gray-700">Carregando...</p>
+            <p className="text-center text-xl text-gray-600">Carregando...</p>
           ) : (
-            linhas.map(linha => (
+            linhas.map((linha) => (
               <LinhaAtivo
                 key={linha.id}
                 linha={linha}
@@ -314,30 +333,28 @@ export default function EditAtivosModal({
           )}
         </div>
 
-        {/* TOTAL + RODAPÉ */}
-        <div className="p-10 bg-gray-50 border-t-4 border-gray-200">
-          <div className="text-right mb-8">
-            <span className="text-5xl font-black text-emerald-600">
+        {/* TOTAL + BOTÕES */}
+        <div className="p-8 bg-gray-50 border-t">
+          <div className="flex justify-between items-center mb-6">
+            <button onClick={() => { setLinhas([]); salvar(); }} className="text-red-600 hover:text-red-800 font-bold text-lg">
+              Zerar Tudo
+            </button>
+            <span className="text-4xl font-black text-emerald-600">
               Total: R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </span>
           </div>
 
-          <div className="flex justify-between items-center">
-            <button onClick={() => { setLinhas([]); salvar(); }} className="text-red-600 hover:text-red-800 font-black text-2xl">
-              Zerar Tudo
-            </button>
-
-            {/* Só o botão Salvar + X no canto */}
+          <div className="flex justify-end">
             <button
               onClick={salvar}
-              className="px-16 py-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-2xl shadow-2xl transition-all hover:scale-105"
+              className="px-12 py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xl rounded-xl shadow-lg transition hover:scale-105"
             >
               Salvar Alterações
             </button>
           </div>
         </div>
 
-        {erro && <div className="p-6 bg-red-100 text-red-800 text-center font-black text-xl">{erro}</div>}
+        {erro && <div className="p-5 bg-red-100 text-red-700 text-center font-bold">{erro}</div>}
       </div>
     </div>
   );
