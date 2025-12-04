@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { Trash2, Plus } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
-/* SELETOR DE MÊS/ANO - TEXTO PRETO FORTE */
+/* ============== SELETOR DE MÊS/ANO ============== */
 function MesAnoPickerTopo({ value, onChange }) {
   const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
   const [open, setOpen] = useState(false);
@@ -22,7 +22,7 @@ function MesAnoPickerTopo({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="px-12 py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-2xl rounded-2xl shadow-2xl transition-all transform hover:scale-105 min-w-72"
+        className="px-12 py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-2xl rounded-2xl shadow-2xl transition-all hover:scale-105 min-w-72"
       >
         {value || "Selecione o mês"}
       </button>
@@ -36,17 +36,15 @@ function MesAnoPickerTopo({ value, onChange }) {
               <button onClick={() => setAno(a => a + 1)} className="w-16 h-16 hover:bg-gray-100 rounded-full text-4xl font-black text-gray-900">→</button>
             </div>
             <div className="grid grid-cols-3 gap-5">
-              {meses.map((m) => (
+              {meses.map(m => (
                 <button
                   key={m}
                   onClick={() => {
                     onChange(`${m}/${ano}`);
                     setOpen(false);
                   }}
-                  className={`py-8 rounded-3xl font-black text-2xl transition-all transform hover:scale-110 shadow-lg ${
-                    value?.startsWith(m)
-                      ? "bg-emerald-600 text-white"
-                      : "bg-gray-50 text-gray-900 hover:bg-emerald-100"
+                  className={`py-8 rounded-3xl font-black text-2xl transition-all hover:scale-110 shadow-lg ${
+                    value?.startsWith(m) ? "bg-emerald-600 text-white" : "bg-gray-50 text-gray-900 hover:bg-emerald-100"
                   }`}
                 >
                   {m}
@@ -61,7 +59,7 @@ function MesAnoPickerTopo({ value, onChange }) {
   );
 }
 
-/* LINHA DE ATIVO */
+/* ============== LINHA DE ATIVO ============== */
 function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
   const inputRef = useRef(null);
   const [query, setQuery] = useState("");
@@ -90,7 +88,7 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
           type="text"
           placeholder="Nome do ativo"
           value={linha.nome}
-          onChange={(e) => {
+          onChange={e => {
             const val = e.target.value;
             onUpdate("nome", val);
             setQuery(val);
@@ -102,7 +100,7 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
         />
         {showDropdown && sugestoes.length > 0 && inputRef.current && createPortal(
           <div style={dropdownStyle} className="bg-white border-4 border-gray-300 rounded-2xl shadow-3xl overflow-hidden">
-            {sugestoes.map((s) => (
+            {sugestoes.map(s => (
               <button
                 key={s}
                 onMouseDown={e => e.preventDefault()}
@@ -126,8 +124,8 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
         inputMode="decimal"
         placeholder="0,00"
         value={linha.valor}
-        onChange={(e) => /^[0-9.,]*$/.test(e.target.value) && onUpdate("valor", e.target.value)}
-        onBlur={(e) => {
+        onChange={e => /^[0-9.,]*$/.test(e.target.value) && onUpdate("valor", e.target.value)}
+        onBlur={e => {
           const num = Number(e.target.value.replace(/\./g, "").replace(",", "."));
           if (!isNaN(num)) onUpdate("valor", num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
         }}
@@ -141,7 +139,7 @@ function LinhaAtivo({ linha, onUpdate, onRemove, ativosExistentes }) {
   );
 }
 
-/* MODAL PRINCIPAL - BOTÃO ADICIONAR AO LADO DO MÊS */
+/* ============== MODAL PRINCIPAL ============== */
 export default function EditAtivosModal({
   open = false,
   onClose,
@@ -156,6 +154,7 @@ export default function EditAtivosModal({
 
   const total = linhas.reduce((acc, l) => acc + (Number(l.valor.replace(/\./g, "").replace(",", ".")) || 0), 0);
 
+  // Abre com mês atual + 2 linhas vazias
   useEffect(() => {
     if (!open) return;
     const hoje = new Date();
@@ -167,20 +166,35 @@ export default function EditAtivosModal({
         { id: crypto.randomUUID(), nome: "", valor: "" },
       ]);
     }
-  }, [open, mesAno]);
+  }, [open]);
 
-  // Carregar dados do Supabase (igual antes)
+  // Carregar dados do Supabase
   useEffect(() => {
     if (!open || !mesAno) return;
     const carregar = async () => {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setIsLoading(false); return; }
-      const { data: reg } = await supabase.from("registros_ativos").select("id").eq("user_id", user.id).eq("mes_ano", mesAno).maybeSingle();
+
+      const { data: reg } = await supabase
+        .from("registros_ativos")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("mes_ano", mesAno)
+        .maybeSingle();
+
       if (reg) {
-        const { data: itens } = await supabase.from("registros_ativos_itens").select("nome_ativo, valor").eq("registro_id", reg.id);
+        const { data: itens } = await supabase
+          .from("registros_ativos_itens")
+          .select("nome_ativo, valor")
+          .eq("registro_id", reg.id);
+
         setLinhas(itens?.length > 0
-          ? itens.map(i => ({ id: crypto.randomUUID(), nome: i.nome_ativo, valor: Number(i.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 }) }))
+          ? itens.map(i => ({
+              id: crypto.randomUUID(),
+              nome: i.nome_ativo,
+              valor: Number(i.valor).toLocaleString("pt-BR", { minimumFractionDigits: 2 }),
+            }))
           : [{ id: crypto.randomUUID(), nome: "", valor: "" }]
         );
       }
@@ -189,19 +203,36 @@ export default function EditAtivosModal({
     carregar();
   }, [open, mesAno]);
 
-  const adicionarLinha = () => setLinhas(prev => [...prev, { id: crypto.randomUUID(), nome: "", valor: "" }]);
-  const atualizarLinha = (id, campo, valor) => setLinhas(prev => prev.map(l => l.id === id ? { ...l, [campo]: valor } : l));
-  const removerLinha = (id) => setLinhas(prev => prev.filter(l => l.id !== id));
+  const adicionarLinha = () => {
+    setLinhas(prev => [...prev, { id: crypto.randomUUID(), nome: "", valor: "" }]);
+  };
 
-  const salvar = async () => { /* (mesmo código de salvar que já estava funcionando) */ 
+  const atualizarLinha = (id, campo, valor) => {
+    setLinhas(prev => prev.map(l => (l.id === id ? { ...l, [campo]: valor } : l)));
+  };
+
+  const removerLinha = (id) => {
+    setLinhas(prev => prev.filter(l => l.id !== id));
+  };
+
+  const salvar = async () => {
     if (!mesAno) return setErro("Selecione um mês");
     const itensValidos = linhas.filter(l => l.nome.trim() && l.valor.trim());
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
-      const totalCalc = itensValidos.reduce((acc, l) => acc + (Number(l.valor.replace(/\./g, "").replace(",", ".")) || 0), 0);
-      const { data: regExistente } = await supabase.from("registros_ativos").select("id").eq("user_id", user.id).eq("mes_ano", mesAno).maybeSingle();
 
+      const totalCalc = itensValidos.reduce((acc, l) => acc + (Number(l.valor.replace(/\./g, "").replace(",", ".")) || 0), 0);
+
+      const { data: regExistente } = await supabase
+        .from("registros_ativos")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("mes_ano", mesAno)
+        .maybeSingle();
+
+      // Zerar tudo
       if (itensValidos.length === 0 && regExistente) {
         await supabase.from("registros_ativos_itens").delete().eq("registro_id", regExistente.id);
         await supabase.from("registros_ativos").delete().eq("id", regExistente.id);
@@ -212,7 +243,11 @@ export default function EditAtivosModal({
 
       let registroId = regExistente?.id;
       if (!registroId) {
-        const { data } = await supabase.from("registros_ativos").insert({ user_id: user.id, mes_ano: mesAno, total: totalCalc }).select("id").single();
+        const { data } = await supabase
+          .from("registros_ativos")
+          .insert({ user_id: user.id, mes_ano: mesAno, total: totalCalc })
+          .select("id")
+          .single();
         registroId = data.id;
       } else {
         await supabase.from("registros_ativos").update({ total: totalCalc }).eq("id", registroId);
@@ -220,12 +255,14 @@ export default function EditAtivosModal({
 
       await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
       if (itensValidos.length > 0) {
-        await supabase.from("registros_ativos_itens").insert(itensValidos.map(l => ({
-          registro_id: registroId,
-          user_id: user.id,
-          nome_ativo: l.nome.trim(),
-          valor: Number(l.valor.replace(/\./g, "").replace(",", ".")),
-        })));
+        await supabase.from("registros_ativos_itens").insert(
+          itensValidos.map(l => ({
+            registro_id: registroId,
+            user_id: user.id,
+            nome_ativo: l.nome.trim(),
+            valor: Number(l.valor.replace(/\./g, "").replace(",", ".")),
+          }))
+        );
       }
 
       onSave?.({ mesAno, total: totalCalc, deleted: false });
@@ -246,15 +283,15 @@ export default function EditAtivosModal({
           <button onClick={onClose} className="text-5xl text-gray-500 hover:text-gray-800">×</button>
         </div>
 
-        {/* TOPO: MÊS + BOTÃO ADICIONAR NA MESMA LINHA */}
-        <div className="p-10 bg-gray-50 border-b-4 border-gray-200">
-          <div className="flex items-center justify-center gap-8 flex-wrap">
+        {/* TOPO: MÊS + BOTÃO ADICIONAR */}
+        <div className="p-8 bg-gray-50 border-b-4 border-gray-200">
+          <div className="flex items-center justify-center gap-10 flex-wrap">
             <MesAnoPickerTopo value={mesAno} onChange={setMesAno} />
             <button
               onClick={adicionarLinha}
-              className="flex items-center gap-3 px-10 py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-2xl rounded-2xl shadow-2xl transition-all transform hover:scale-105"
+              className="flex items-center gap-4 px-10 py-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-2xl rounded-2xl shadow-2xl transition-all hover:scale-105"
             >
-              <Plus size={36} />
+              <Plus size={38} />
               Adicionar ativo
             </button>
           </div>
@@ -289,14 +326,14 @@ export default function EditAtivosModal({
             <button onClick={() => { setLinhas([]); salvar(); }} className="text-red-600 hover:text-red-800 font-black text-2xl">
               Zerar Tudo
             </button>
-            <div className="flex gap-8">
-              <button onClick={onClose} className="px-12 py-5 border-4 border-gray-400 rounded-2xl hover:bg-gray-200 font-black text-xl transition">
-                Cancelar
-              </button>
-              <button onClick={salvar} className="px-16 py-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-2xl shadow-2xl transition-all transform hover:scale-105">
-                Salvar Alterações
-              </button>
-            </div>
+
+            {/* Só o botão Salvar + X no canto */}
+            <button
+              onClick={salvar}
+              className="px-16 py-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-2xl shadow-2xl transition-all hover:scale-105"
+            >
+              Salvar Alterações
+            </button>
           </div>
         </div>
 
