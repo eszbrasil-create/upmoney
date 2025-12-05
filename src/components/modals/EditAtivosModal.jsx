@@ -264,7 +264,7 @@ export default function EditAtivosModal({
           <div className="px-8 py-1 bg-white border-b border-gray-300">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-white whitespace-nowrap text-sm">
+                <span className="font-semibold text-gray-700 whitespace-nowrap text-sm">
                   Mês-Ano:
                 </span>
                 <MesAnoPickerTopo value={mesAno} onChange={setMesAno} />
@@ -397,7 +397,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
             onFocus={() => query && setShowDropdown(true)}
             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
             placeholder="Ex: Petrobras, Tesouro Selic..."
-            className="w-full px-3 py-1.5 text-xs font-medium bg-white border border-gray-300 rounded-md focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
+            className="w-full px-3 py-1.5 text-xs font-medium text-gray-800 bg-white border border-gray-300 rounded-md focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
           />
           {showDropdown &&
             sugestoes.length > 0 &&
