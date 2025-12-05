@@ -271,7 +271,7 @@ export default function EditAtivosModal({
               </div>
               <button
                 onClick={adicionarLinha}
-                className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-gray-800 font-semibold text-sm rounded-lg shadow transition"
+                className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-lg shadow transition"
               >
                 <Plus size={16} /> Adicionar ativo
               </button>
