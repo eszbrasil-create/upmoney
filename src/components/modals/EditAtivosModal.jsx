@@ -1,10 +1,10 @@
-// src/components/modals/EditAtivosModal.jsx — LAYOUT TIPO PLANILHA (compacto)
+// src/components/modals/EditAtivosModal.jsx — LAYOUT PLANILHA SUPER COMPACTO
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Trash2, Plus, X } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
-/* ============== SELETOR DE MÊS/ANO (mantido) ============== */
+/* ============== SELETOR DE MÊS/ANO ============== */
 function MesAnoPickerTopo({ value, onChange }) {
   const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
   const [open, setOpen] = useState(false);
@@ -22,7 +22,7 @@ function MesAnoPickerTopo({ value, onChange }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base rounded-xl shadow transition min-w-[150px]"
+        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-lg shadow transition min-w-[130px]"
       >
         {value || "Selecione o mês"}
       </button>
@@ -34,25 +34,25 @@ function MesAnoPickerTopo({ value, onChange }) {
             onClick={() => setOpen(false)}
           >
             <div
-              className="bg-white rounded-3xl shadow-3xl p-10 max-w-md w-full border-8 border-gray-100"
+              className="bg-white rounded-3xl shadow-3xl p-8 max-w-md w-full border-8 border-gray-100"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-10">
+              <div className="flex items-center justify-between mb-8">
                 <button
                   onClick={() => setAno((a) => a - 1)}
-                  className="w-12 h-12 hover:bg-gray-100 rounded-full text-3xl font-bold"
+                  className="w-10 h-10 hover:bg-gray-100 rounded-full text-2xl font-bold"
                 >
                   ←
                 </button>
-                <span className="text-3xl font-black text-emerald-600">{ano}</span>
+                <span className="text-2xl font-black text-emerald-600">{ano}</span>
                 <button
                   onClick={() => setAno((a) => a + 1)}
-                  className="w-12 h-12 hover:bg-gray-100 rounded-full text-3xl font-bold"
+                  className="w-10 h-10 hover:bg-gray-100 rounded-full text-2xl font-bold"
                 >
                   →
                 </button>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 {meses.map((m) => (
                   <button
                     key={m}
@@ -60,7 +60,7 @@ function MesAnoPickerTopo({ value, onChange }) {
                       onChange(`${m}/${ano}`);
                       setOpen(false);
                     }}
-                    className={`py-4 rounded-2xl font-semibold text-lg transition-all ${
+                    className={`py-3 rounded-2xl font-semibold text-base transition-all ${
                       value?.startsWith(m)
                         ? "bg-emerald-600 text-white shadow-xl scale-105"
                         : "bg-gray-50 hover:bg-emerald-100"
@@ -78,7 +78,7 @@ function MesAnoPickerTopo({ value, onChange }) {
   );
 }
 
-/* ============== MODAL PRINCIPAL (layout tipo tabela Numbers) ============== */
+/* ============== MODAL PRINCIPAL ============== */
 export default function EditAtivosModal({
   open = false,
   onClose,
@@ -247,44 +247,46 @@ export default function EditAtivosModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-white rounded-3xl shadow-3xl border border-gray-300 overflow-hidden flex flex-col relative">
-          {/* Botão fechar no canto superior direito */}
+          {/* Botão fechar */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 text-gray-500"
+            className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-gray-100 text-gray-500"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
 
-          {/* Linha 1 - Título (como título da tabela do Numbers) */}
-          <div className="bg-gray-200 px-8 py-4 border-b border-gray-300">
-            <h2 className="text-xl font-bold text-gray-800 text-center">Editar Ativos</h2>
+          {/* Linha 1 - Título */}
+          <div className="bg-gray-200 px-8 py-2 border-b border-gray-300">
+            <h2 className="text-lg font-bold text-gray-800 text-center">Editar Ativos</h2>
           </div>
 
-          {/* Linha 2 - Mês/Ano + Adicionar Ativo (faixa compacta) */}
-          <div className="px-8 py-1.5 bg-white border-b border-gray-300">
+          {/* Linha 2 - Mês/Ano + Adicionar (super compacta) */}
+          <div className="px-8 py-1 bg-white border-b border-gray-300">
             <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="font-semibold text-gray-700 whitespace-nowrap">Mês-Ano:</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold text-gray-700 whitespace-nowrap text-sm">
+                  Mês-Ano:
+                </span>
                 <MesAnoPickerTopo value={mesAno} onChange={setMesAno} />
               </div>
               <button
                 onClick={adicionarLinha}
-                className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base rounded-xl shadow transition"
+                className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-lg shadow transition"
               >
-                <Plus size={20} /> Adicionar ativo
+                <Plus size={16} /> Adicionar ativo
               </button>
             </div>
           </div>
 
-          {/* Linha 3 - Tabela de Ativos (scroll interno) */}
-          <div className="px-8 py-4 bg-white flex-1 max-h-[50vh] overflow-y-auto">
+          {/* Linha 3 - Tabela */}
+          <div className="px-8 py-2 bg-white flex-1 max-h-[50vh] overflow-y-auto">
             <div className="border border-gray-300 rounded-2xl overflow-hidden">
               <table className="w-full border-collapse">
-                <thead className="bg-gray-100 text-gray-700 font-semibold text-sm border-b border-gray-300">
+                <thead className="bg-gray-100 text-gray-700 font-semibold text-xs border-b border-gray-300">
                   <tr>
-                    <th className="px-4 py-3 text-left">Nome do Ativo</th>
-                    <th className="px-4 py-3 text-right">Valor (R$)</th>
-                    <th className="px-4 py-3 w-16 text-center">Lixeira</th>
+                    <th className="px-3 py-2 text-left">Nome do Ativo</th>
+                    <th className="px-3 py-2 text-right">Valor (R$)</th>
+                    <th className="px-3 py-2 w-12 text-center">Lixeira</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -292,7 +294,7 @@ export default function EditAtivosModal({
                     <tr>
                       <td
                         colSpan={3}
-                        className="text-center py-10 text-gray-500 text-sm font-medium"
+                        className="text-center py-8 text-gray-500 text-xs font-medium"
                       >
                         Carregando dados...
                       </td>
@@ -301,7 +303,7 @@ export default function EditAtivosModal({
                     <tr>
                       <td
                         colSpan={3}
-                        className="text-center py-10 text-gray-400 text-sm font-medium"
+                        className="text-center py-8 text-gray-400 text-xs font-medium"
                       >
                         Nenhum ativo adicionado
                       </td>
@@ -322,8 +324,8 @@ export default function EditAtivosModal({
             </div>
           </div>
 
-          {/* Linha 4 - Zerar mês + Total do mês (faixa compacta) */}
-          <div className="px-8 py-1.5 bg-white border-t border-gray-300 flex items-center justify-between flex-wrap gap-4">
+          {/* Linha 4 - Zerar + Total (super compacta) */}
+          <div className="px-8 py-1 bg-white border-t border-gray-300 flex items-center justify-between flex-wrap gap-2">
             <button
               onClick={() => {
                 if (confirm("Zerar todos os ativos deste mês?")) {
@@ -331,25 +333,25 @@ export default function EditAtivosModal({
                   salvar();
                 }
               }}
-              className="text-red-600 hover:text-red-700 font-semibold text-sm flex items-center gap-2"
+              className="text-red-600 hover:text-red-700 font-semibold text-xs flex items-center gap-1.5"
             >
-              <Trash2 size={18} /> Zerar este mês
+              <Trash2 size={14} /> Zerar este mês
             </button>
             <div className="text-right">
-              <div className="text-xs text-gray-600 uppercase tracking-wide">
+              <div className="text-[10px] text-gray-600 uppercase tracking-wide">
                 Total do mês
               </div>
-              <div className="text-2xl font-bold text-emerald-700">
+              <div className="text-xl font-bold text-emerald-700">
                 R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
               </div>
             </div>
           </div>
 
-          {/* Linha 5 - Botão Salvar Alterações (mesmas medidas do Adicionar) */}
-          <div className="px-8 pb-4 pt-2 bg-white border-t border-gray-300">
+          {/* Linha 5 - Salvar Alterações (mesmas medidas do Adicionar) */}
+          <div className="px-8 pb-3 pt-1 bg-white border-t border-gray-300">
             <button
               onClick={salvar}
-              className="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base rounded-xl shadow transition"
+              className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-lg shadow transition"
             >
               Salvar Alterações
             </button>
@@ -357,7 +359,7 @@ export default function EditAtivosModal({
         </div>
 
         {erro && (
-          <div className="mt-3 p-4 bg-red-100 text-red-700 text-center font-semibold text-sm rounded-2xl shadow">
+          <div className="mt-2 p-3 bg-red-100 text-red-700 text-center font-semibold text-xs rounded-2xl shadow">
             {erro}
           </div>
         )}
@@ -366,7 +368,7 @@ export default function EditAtivosModal({
   );
 }
 
-/* ============== LINHA SIMPLES E LIMPA (com autocompletar mantido) ============== */
+/* ============== LINHA DA TABELA ============== */
 function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
   const inputRef = useRef(null);
   const [query, setQuery] = useState("");
@@ -381,7 +383,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
 
   return (
     <tr className="hover:bg-gray-50 transition">
-      <td className="px-4 py-3">
+      <td className="px-3 py-2">
         <div className="relative">
           <input
             ref={inputRef}
@@ -395,7 +397,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
             onFocus={() => query && setShowDropdown(true)}
             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
             placeholder="Ex: Petrobras, Tesouro Selic..."
-            className="w-full px-4 py-2 text-sm font-medium bg-white border border-gray-300 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
+            className="w-full px-3 py-1.5 text-xs font-medium bg-white border border-gray-300 rounded-md focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
           />
           {showDropdown &&
             sugestoes.length > 0 &&
@@ -416,7 +418,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
                       onUpdate("nome", s);
                       setShowDropdown(false);
                     }}
-                    className="block w-full text-left px-4 py-2 hover:bg-emerald-50 text-sm font-medium"
+                    className="block w-full text-left px-3 py-1.5 hover:bg-emerald-50 text-xs font-medium"
                   >
                     {s}
                   </button>
@@ -426,7 +428,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
             )}
         </div>
       </td>
-      <td className="px-4 py-3">
+      <td className="px-3 py-2">
         <input
           type="text"
           value={linha.valor}
@@ -441,15 +443,15 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
             }
           }}
           placeholder="0,00"
-          className="w-full px-4 py-2 text-sm font-bold text-right text-emerald-700 bg-white border border-gray-300 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
+          className="w-full px-3 py-1.5 text-xs font-bold text-right text-emerald-700 bg-white border border-gray-300 rounded-md focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
         />
       </td>
-      <td className="px-4 py-3 text-center">
+      <td className="px-3 py-2 text-center">
         <button
           onClick={onRemove}
-          className="p-2 text-red-600 hover:bg-red-50 rounded-full transition"
+          className="p-1.5 text-red-600 hover:bg-red-50 rounded-full transition"
         >
-          <Trash2 size={18} />
+          <Trash2 size={14} />
         </button>
       </td>
     </tr>
