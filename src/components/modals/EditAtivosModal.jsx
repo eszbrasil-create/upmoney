@@ -403,7 +403,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
             sugestoes.length > 0 &&
             createPortal(
               <div
-                className="fixed bg-white border-2 border-gray-300 rounded-xl shadow-2xl overflow-hidden z-[9999]"
+                className="fixed bg-white border-2 border-gray-300 rounded-xl shadow-2xl overflow-hidden z-[9999] text-emerald-700"
                 style={{
                   top: inputRef.current?.getBoundingClientRect().bottom + window.scrollY + 8,
                   left: inputRef.current?.getBoundingClientRect().left + window.scrollX,
@@ -418,7 +418,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
                       onUpdate("nome", s);
                       setShowDropdown(false);
                     }}
-                    className="block w-full text-left px-3 py-1.5 hover:bg-emerald-50 text-xs font-medium"
+                    className="block w-full text-left px-3 py-1.5 hover:bg-emerald-50 text-xs font-medium text-emerald-700"
                   >
                     {s}
                   </button>
