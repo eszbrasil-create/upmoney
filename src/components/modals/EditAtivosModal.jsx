@@ -1,4 +1,4 @@
-// src/components/modals/EditAtivosModal.jsx — LAYOUT TIPO PLANILHA (Numbers)
+// src/components/modals/EditAtivosModal.jsx — LAYOUT TIPO PLANILHA (compacto)
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Trash2, Plus, X } from "lucide-react";
@@ -260,8 +260,8 @@ export default function EditAtivosModal({
             <h2 className="text-xl font-bold text-gray-800 text-center">Editar Ativos</h2>
           </div>
 
-          {/* Linha 2 - Mês/Ano + Adicionar Ativo */}
-          <div className="px-8 py-4 bg-white border-b border-gray-300">
+          {/* Linha 2 - Mês/Ano + Adicionar Ativo (faixa compacta) */}
+          <div className="px-8 py-1.5 bg-white border-b border-gray-300">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 flex-wrap">
                 <span className="font-semibold text-gray-700 whitespace-nowrap">Mês-Ano:</span>
@@ -269,7 +269,7 @@ export default function EditAtivosModal({
               </div>
               <button
                 onClick={adicionarLinha}
-                className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow transition"
+                className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base rounded-xl shadow transition"
               >
                 <Plus size={20} /> Adicionar ativo
               </button>
@@ -322,8 +322,8 @@ export default function EditAtivosModal({
             </div>
           </div>
 
-          {/* Linha 4 - Zerar mês + Total do mês */}
-          <div className="px-8 py-4 bg-white border-t border-gray-300 flex items-center justify-between flex-wrap gap-4">
+          {/* Linha 4 - Zerar mês + Total do mês (faixa compacta) */}
+          <div className="px-8 py-1.5 bg-white border-t border-gray-300 flex items-center justify-between flex-wrap gap-4">
             <button
               onClick={() => {
                 if (confirm("Zerar todos os ativos deste mês?")) {
@@ -345,11 +345,11 @@ export default function EditAtivosModal({
             </div>
           </div>
 
-          {/* Linha 5 - Botão Salvar Alterações */}
-          <div className="px-8 pb-6 pt-2 bg-white border-t border-gray-300">
+          {/* Linha 5 - Botão Salvar Alterações (mesmas medidas do Adicionar) */}
+          <div className="px-8 pb-4 pt-2 bg-white border-t border-gray-300">
             <button
               onClick={salvar}
-              className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-bold rounded-xl shadow-md transition"
+              className="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base rounded-xl shadow transition"
             >
               Salvar Alterações
             </button>
