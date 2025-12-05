@@ -264,7 +264,7 @@ export default function EditAtivosModal({
           <div className="px-8 py-1 bg-white border-b border-gray-300">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-gray-700 whitespace-nowrap text-sm">
+                <span className="font-semibold text-white whitespace-nowrap text-sm">
                   Mês-Ano:
                 </span>
                 <MesAnoPickerTopo value={mesAno} onChange={setMesAno} />
