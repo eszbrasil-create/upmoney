@@ -140,7 +140,19 @@ export default function EditAtivosModal({
   const removerLinha = (id) =>
     setLinhas((prev) => prev.filter((l) => l.id !== id));
 
-  // Copiar mês anterior para o mês atual
+  // helper para converter "Jan/2025" -> chave numérica
+  const parseMesAnoKey = (mesAnoStr) => {
+    if (!mesAnoStr) return null;
+    const [mStr, anoStr] = mesAnoStr.split("/");
+    const idx = mesesAbrev.indexOf(mStr);
+    if (idx === -1) return null;
+    const anoNum = Number(anoStr);
+    if (Number.isNaN(anoNum)) return null;
+    return anoNum * 12 + idx; // ano * 12 + indiceMes
+  };
+
+  // Copiar "mês anterior" = último registro salvo ANTES do mês atual;
+  // se não tiver anterior, usa o último registro salvo do usuário.
   const copiarMesAnterior = async () => {
     if (!mesAno) {
       setErro("Selecione um mês para copiar.");
@@ -151,22 +163,6 @@ export default function EditAtivosModal({
       setIsLoading(true);
       setErro("");
 
-      const [mesStr, anoStr] = mesAno.split("/");
-      const idx = mesesAbrev.indexOf(mesStr);
-      if (idx === -1) {
-        setErro("Mês inválido.");
-        setIsLoading(false);
-        return;
-      }
-
-      let prevIdx = idx - 1;
-      let prevAno = Number(anoStr);
-      if (prevIdx < 0) {
-        prevIdx = 11;
-        prevAno -= 1;
-      }
-      const mesAnoAnterior = `${mesesAbrev[prevIdx]}/${prevAno}`;
-
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -176,27 +172,58 @@ export default function EditAtivosModal({
         return;
       }
 
-      const { data: regAnterior } = await supabase
+      // pega todos os registros do usuário
+      const { data: regs, error } = await supabase
         .from("registros_ativos")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("mes_ano", mesAnoAnterior)
-        .maybeSingle();
+        .select("id, mes_ano")
+        .eq("user_id", user.id);
 
-      if (!regAnterior) {
+      if (error) throw error;
+
+      if (!regs || regs.length === 0) {
         setIsLoading(false);
-        setErro(`Nenhum registro encontrado em ${mesAnoAnterior} para copiar.`);
+        setErro("Você ainda não possui nenhum mês salvo para copiar.");
         return;
       }
 
-      const { data: itens } = await supabase
+      const keyAtual = parseMesAnoKey(mesAno);
+
+      // transforma em { id, mes_ano, key }
+      let candidatos = regs
+        .map((r) => ({
+          ...r,
+          key: parseMesAnoKey(r.mes_ano),
+        }))
+        .filter((r) => r.key !== null);
+
+      if (candidatos.length === 0) {
+        setIsLoading(false);
+        setErro("Não foi possível interpretar as datas salvas para copiar.");
+        return;
+      }
+
+      // se temos uma data atual válida, limita aos anteriores
+      if (keyAtual !== null) {
+        const anteriores = candidatos.filter((r) => r.key < keyAtual);
+        if (anteriores.length > 0) {
+          candidatos = anteriores;
+        }
+      }
+
+      // ordena do mais recente pro mais antigo
+      candidatos.sort((a, b) => b.key - a.key);
+      const regEscolhido = candidatos[0];
+
+      const { data: itens, error: itensError } = await supabase
         .from("registros_ativos_itens")
         .select("nome_ativo, valor")
-        .eq("registro_id", regAnterior.id);
+        .eq("registro_id", regEscolhido.id);
+
+      if (itensError) throw itensError;
 
       if (!itens || itens.length === 0) {
         setIsLoading(false);
-        setErro(`Nenhum item encontrado em ${mesAnoAnterior} para copiar.`);
+        setErro(`Nenhum item encontrado em ${regEscolhido.mes_ano} para copiar.`);
         return;
       }
 
@@ -314,7 +341,7 @@ export default function EditAtivosModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-md z-[9999] flex items-center justify-center p-6"
+      className="fixed inset-0 bg-black/70 backdrop-blur-md z-[9999] flex items-center justifycenter p-6"
       onClick={onClose}
     >
       <div
