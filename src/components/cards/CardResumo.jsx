@@ -32,7 +32,7 @@ export default function CardResumo({ data = {} }) {
   ];
 
   return (
-    <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[640px] h-[440px] overflow-hidden shrink-0 flex flex-col">
+    <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[640px] h-[420px] overflow-hidden shrink-0 flex flex-col">
       {/* Cabeçalho (fixo) */}
       <div className="shrink-0 mb-3 flex items-center justify-between">
         <span className="text-slate-100 font-semibold text-lg">Resumo</span>
