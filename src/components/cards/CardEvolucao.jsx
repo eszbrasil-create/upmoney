@@ -3,18 +3,17 @@ import React, { useEffect, useMemo, useState } from "react";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
-// Normaliza "11/26", "nov/26", "Nov-2026" etc, para "Nov/2026"
+// Normaliza formatos "11/26", "Nov-26", etc. → "Nov/2026"
 function normalizeMesAno(str) {
   if (!str || !str.includes("/")) return str;
 
   let [mes, ano] = str.split("/").map((s) => s.trim());
 
-  // mês numérico -> MMM
+  // Mês numérico → abreviação
   if (/^\d+$/.test(mes)) {
     const idx = Number(mes) - 1;
     if (idx >= 0 && idx < 12) mes = MESES[idx];
   } else {
-    // mês texto -> MMM
     mes = mes.charAt(0).toUpperCase() + mes.slice(1, 3).toLowerCase();
     if (!MESES.includes(mes)) {
       const found = MESES.find((m) => m.toLowerCase() === mes.toLowerCase());
@@ -22,7 +21,7 @@ function normalizeMesAno(str) {
     }
   }
 
-  // ano 2 dígitos -> 4 dígitos
+  // Ano 2 dígitos → 4 dígitos
   if (/^\d{2}$/.test(ano)) ano = `20${ano}`;
 
   return `${mes}/${ano}`;
@@ -48,13 +47,12 @@ function Tooltip({ x, y, mes, ano, valor }) {
 }
 
 export default function CardEvolucao({ columns = [], rows = [] }) {
-  // Normaliza meses
   const normalizedColumns = useMemo(
     () => columns.map(normalizeMesAno),
     [columns]
   );
 
-  // Soma total por mês
+  // Total por mês
   const totals = useMemo(() => {
     return normalizedColumns.map((_, colIdx) =>
       rows.reduce((acc, r) => acc + (r.valores?.[colIdx] || 0), 0)
@@ -63,31 +61,33 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
 
   const max = Math.max(1, ...totals);
 
-  // Animação das barras
+  // Animação
   const [animate, setAnimate] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setAnimate(true), 50);
+    const t = setTimeout(() => setAnimate(true), 80);
     return () => clearTimeout(t);
   }, []);
 
-  // Tooltip
+  // Tooltip state
   const [tip, setTip] = useState(null);
 
-  // Altura máxima das barras dentro do container interno
-  const MAX_BAR_HEIGHT = 220; // px
+  // Altura das barras
+  const MAX_BAR_HEIGHT = 230;
 
   return (
-    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] overflow-hidden flex flex-col">
-      {/* HEADER */}
-      <div className="flex-none flex items-center justify-between mb-3">
+    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] flex flex-col">
+      
+      {/* Header */}
+      <div className="flex justify-between items-center mb-2">
         <span className="text-slate-100 font-semibold text-lg">Evolução</span>
-        <span className="text-xs px-2 py-1 rounded-lg bg-slate-700/60 text-slate-200">
+        <span className="text-xs px-2 py-1 rounded-lg bg-slate-700/60 text-slate-300">
           Mensal
         </span>
       </div>
 
-      {/* ÁREA DO GRÁFICO (se adapta ao card, com altura mínima) */}
-      <div className="flex-1 min-h-[340px] rounded-2xl border border-white/10 bg-slate-900/80 p-3 overflow-x-auto overflow-y-hidden">
+      {/* GRÁFICO — padding reduzido para colar as barras na borda */}
+      <div className="flex-1 min-h-[310px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-0 overflow-x-auto overflow-y-hidden">
+        
         <div className="flex items-end gap-1 min-w-max h-full">
           {totals.map((valor, i) => {
             const alturaReal = Math.max(
@@ -99,38 +99,33 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
             const [mes, ano] = normalizedColumns[i].split("/");
 
             return (
-              <div key={i} className="flex flex-col items-center gap-2 w-10">
+              <div key={i} className="flex flex-col items-center gap-1 w-10">
+
                 {/* Barra */}
                 <div
-                  className="w-full rounded-xl bg-sky-400/80 hover:bg-sky-300 transition-all duration-700 ease-out"
+                  className="w-full rounded-xl bg-sky-400/80 hover:bg-sky-300 transition-all duration-700 ease-out cursor-pointer"
                   style={{ height: `${altura}px` }}
                   onMouseEnter={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
                     setTip({
                       x: rect.left + rect.width / 2,
-                      y: rect.top - 8,
+                      y: rect.top - 10,
                       mes,
                       ano,
                       valor,
                     });
                   }}
                   onMouseMove={(e) => {
-                    setTip((prev) =>
-                      prev
-                        ? { ...prev, x: e.clientX, y: e.clientY - 12 }
-                        : prev
-                    );
+                    setTip((prev) => prev && { ...prev, x: e.clientX, y: e.clientY - 12 });
                   }}
                   onMouseLeave={() => setTip(null)}
                 />
 
-                {/* Labels */}
-                <div className="text-[13px] text-slate-200 text-center leading-tight whitespace-nowrap font-medium">
+                {/* Label */}
+                <div className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap">
                   {mes}
                   <br />
-                  <span className="text-[12px] opacity-70 font-normal text-slate-300">
-                    {ano}
-                  </span>
+                  <span className="text-[11px] opacity-70">{ano}</span>
                 </div>
               </div>
             );
@@ -138,16 +133,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
         </div>
       </div>
 
-      {/* Tooltip */}
-      {tip && (
-        <Tooltip
-          x={tip.x}
-          y={tip.y}
-          mes={tip.mes}
-          ano={tip.ano}
-          valor={tip.valor}
-        />
-      )}
+      {tip && <Tooltip {...tip} />}
     </div>
   );
 }
