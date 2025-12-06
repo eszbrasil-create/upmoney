@@ -224,7 +224,7 @@ export default function EditAtivosModal({
       if (!registroId) {
         const { data } = await supabase
           .from("registros_ativos")
-          .insert({ user_id: user.id, mes_ao: mesAno, total: totalCalc }) // <- cuidado se sua coluna é mes_ano
+          .insert({ user_id: user.id, mes_ano: mesAno, total: totalCalc })
           .select("id")
           .single();
         registroId = data.id;
@@ -402,11 +402,23 @@ export default function EditAtivosModal({
 /* ============== LINHA DA TABELA ============== */
 function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
   const inputRef = useRef(null);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(linha.nome || "");
   const [showDropdown, setShowDropdown] = useState(false);
 
+  // mantém query sincronizado com o valor da linha (útil ao editar)
+  useEffect(() => {
+    setQuery(linha.nome || "");
+  }, [linha.nome]);
+
   const sugestoes = useMemo(() => {
-    if (!query.trim()) return [];
+    if (!ativosExistentes || ativosExistentes.length === 0) return [];
+
+    // se o usuário ainda não digitou nada, mostra uma pré-lista
+    if (!query.trim()) {
+      return ativosExistentes.slice(0, 8);
+    }
+
+    // se já digitou, filtra pela digitação
     return ativosExistentes
       .filter((a) => a.toLowerCase().includes(query.toLowerCase()))
       .slice(0, 8);
@@ -425,7 +437,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
               setQuery(e.target.value);
               setShowDropdown(true);
             }}
-            onFocus={() => query && setShowDropdown(true)}
+            onFocus={() => setShowDropdown(true)} // sempre abre a lista ao focar
             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
             placeholder="Ex: Petrobras, Tesouro Selic..."
             className="w-full px-3 py-1.5 text-xs font-medium text-gray-800 bg-white border border-gray-300 rounded-md focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
@@ -447,6 +459,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       onUpdate("nome", s);
+                      setQuery(s);
                       setShowDropdown(false);
                     }}
                     className="block w-full text-left px-3 py-1.5 hover:bg-emerald-50 text-xs font-medium text-emerald-700"
