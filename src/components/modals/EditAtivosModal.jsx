@@ -110,10 +110,24 @@ export default function EditAtivosModal({
   const [isLoading, setIsLoading] = useState(false);
   const [erro, setErro] = useState("");
 
+  // estado para animação de entrada (fade + scale)
+  const [animar, setAnimar] = useState(false);
+
   const total = linhas.reduce(
     (acc, l) => acc + (Number(l.valor.replace(/\./g, "").replace(",", ".")) || 0),
     0
   );
+
+  // controla animação quando o modal abre/fecha
+  useEffect(() => {
+    if (open) {
+      setAnimar(false);
+      const t = setTimeout(() => setAnimar(true), 10);
+      return () => clearTimeout(t);
+    } else {
+      setAnimar(false);
+    }
+  }, [open]);
 
   // Ao abrir modal: define mês atual (se não tiver) e cria UMA linha virgem
   useEffect(() => {
@@ -137,8 +151,7 @@ export default function EditAtivosModal({
   const atualizarLinha = (id, campo, valor) =>
     setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)));
 
-  const removerLinha = (id) =>
-    setLinhas((prev) => prev.filter((l) => l.id !== id));
+  const removerLinha = (id) => setLinhas((prev) => prev.filter((l) => l.id !== id));
 
   // helper para converter "Jan/2025" -> chave numérica
   const parseMesAnoKey = (mesAnoStr) => {
@@ -341,14 +354,19 @@ export default function EditAtivosModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 backdrop-blur-md z-[9999] flex items-center justifycenter p-6"
+      className={`fixed inset-0 bg-black/70 backdrop-blur-md z-[9999] flex items-center justify-center p-6
+                  transition-opacity duration-200 ${animar ? "opacity-100" : "opacity-0"}`}
       onClick={onClose}
     >
       <div
         className="bg-transparent w-full max-w-5xl max-h-[90vh] flex flex-col mx-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="bg-white rounded-3xl shadow-3xl border border-gray-300 overflow-hidden flex flex-col relative">
+        <div
+          className={`bg-white rounded-3xl shadow-3xl border border-gray-300 overflow-hidden flex flex-col relative
+                      transform transition-all duration-200 ease-out
+                      ${animar ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}
+        >
           {/* Botão fechar */}
           <button
             onClick={onClose}
