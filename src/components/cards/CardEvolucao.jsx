@@ -1,7 +1,20 @@
 // src/components/cards/CardEvolucao.jsx
 import React, { useEffect, useMemo, useState } from "react";
 
-const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const MESES = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+];
 
 // Normaliza formatos "11/26", "Nov-26", etc. → "Nov/2026"
 function normalizeMesAno(str) {
@@ -76,7 +89,6 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
 
   return (
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] flex flex-col">
-      
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <span className="text-slate-100 font-semibold text-lg">Evolução</span>
@@ -85,10 +97,10 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
         </span>
       </div>
 
-      {/* GRÁFICO — padding reduzido para colar as barras na borda */}
-      <div className="flex-1 min-h-[345px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-0 overflow-x-auto overflow-y-hidden">
-        
-        <div className="flex items-end gap-1 min-w-max h-full">
+      {/* GRÁFICO — agora o conteúdo todo fica encostado na borda inferior */}
+      <div className="flex-1 min-h-[345px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-0 overflow-x-auto overflow-y-hidden flex items-end">
+        {/* linha de colunas/barras */}
+        <div className="flex items-end gap-1 min-w-max w-full">
           {totals.map((valor, i) => {
             const alturaReal = Math.max(
               6,
@@ -99,8 +111,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
             const [mes, ano] = normalizedColumns[i].split("/");
 
             return (
-              <div key={i} className="flex flex-col items-center gap-1 w-10">
-
+              <div key={i} className="flex flex-col items-center w-10">
                 {/* Barra */}
                 <div
                   className="w-full rounded-xl bg-sky-400/80 hover:bg-sky-300 transition-all duration-700 ease-out cursor-pointer"
@@ -116,13 +127,20 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
                     });
                   }}
                   onMouseMove={(e) => {
-                    setTip((prev) => prev && { ...prev, x: e.clientX, y: e.clientY - 12 });
+                    setTip(
+                      (prev) =>
+                        prev && {
+                          ...prev,
+                          x: e.clientX,
+                          y: e.clientY - 12,
+                        }
+                    );
                   }}
                   onMouseLeave={() => setTip(null)}
                 />
 
-                {/* Label */}
-                <div className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap">
+                {/* Label – grudadinha embaixo */}
+                <div className="mt-1 -mb-1 text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap">
                   {mes}
                   <br />
                   <span className="text-[11px] opacity-70">{ano}</span>
