@@ -21,12 +21,13 @@ const IconInstagram = (props) => (
   </svg>
 );
 
+// 🔹 Reduzimos o espaçamento aqui
 const SectionDivider = () => (
   <div className="w-full">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="h-px w-full bg-gradient-to-r from-transparent via-[#1f3548]/30 to-transparent" />
     </div>
-    <div className="h-10" />
+    <div className="h-4" /> {/* antes era h-10 */}
   </div>
 );
 
@@ -37,19 +38,14 @@ export default function Landing({ onNavigate }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({ nome: "", email: "", telefone: "" });
 
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
-  };
+  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const subject = "Novo agendamento — Meu Primeiro Dividendo";
-    const body = `Nome: ${form.nome}\nE-mail: ${form.email}\nTelefone: ${form.telefone}\nOrigem: Landing > Agendar avaliação gratuita`;
+    const body = `Nome: ${form.nome}\nE-mail: ${form.email}\nTelefone: ${form.telefone}`;
 
-    window.location.href = `mailto:${RECEIVER_EMAIL}?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:${RECEIVER_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
     window.open(
       `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(body)}`,
@@ -60,306 +56,97 @@ export default function Landing({ onNavigate }) {
   };
 
   const openWhatsAppDirect = () => {
-    const text =
-      "Olá! Quero conquistar meu primeiro dividendo. Podemos falar sobre a avaliação gratuita de 15 minutos?";
     window.open(
-      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`,
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+        "Olá! Quero conquistar meu primeiro dividendo."
+      )}`,
       "_blank"
     );
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-[#1f3548]">
-      {/* Header */}
+      
+      {/* -------------------------------- HEADER -------------------------------- */}
       <header className="sticky top-0 z-40 bg-[#1f3548] text-white/95">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => onNavigate?.("landing")}
-            className="font-semibold tracking-tight text-xl hover:opacity-90 transition-opacity"
-          >
+          <button onClick={() => onNavigate("landing")} className="text-xl font-bold">
             UpMoney
           </button>
 
-          {/* Botões do menu */}
-          <nav className="hidden md:flex items-center gap-8 text-[15px] font-semibold">
-            <a
-              href="#cursos"
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigate?.("cursos");
-              }}
-              className="hover:text-white font-semibold"
-            >
+          <nav className="hidden md:flex gap-8 text-[15px] font-semibold">
+            <button onClick={() => onNavigate("cursos")} className="hover:text-white">
               Cursos
-            </a>
-
-            <a
-              href="#upcontrol"
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigate?.("cashcontrol-home");
-              }}
-              className="hover:text-white font-semibold"
-            >
+            </button>
+            <button onClick={() => onNavigate("cashcontrol-home")} className="hover:text-white">
               UpControl
-            </a>
-
-            <a
-              href="#saida-fiscal"
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigate?.("saida-fiscal");
-              }}
-              className="hover:text-white font-semibold"
-            >
+            </button>
+            <button onClick={() => onNavigate("saida-fiscal")} className="hover:text-white">
               Saída Fiscal
-            </a>
-
-            <a
-              href="#invista-exterior"
-              onClick={(e) => {
-                e.preventDefault();
-                onNavigate?.("invista-exterior");
-              }}
-              className="hover:text-white font-semibold"
-            >
+            </button>
+            <button onClick={() => onNavigate("invista-exterior")} className="hover:text-white">
               Invista no Exterior
-            </a>
+            </button>
           </nav>
 
-          {/* Área da direita */}
-          <div className="flex items-center gap-3">
-            {/* 🔐 Botão Meu Plano -> leva para a página de Login */}
-            <button
-              type="button"
-              onClick={() => onNavigate?.("login")}
-              className="hidden sm:inline-flex items-center rounded-xl bg-[#F5B60A] px-4 py-2 text-sm font-bold text-[#1f3548] shadow-sm hover:brightness-105 transition"
-            >
-              Meu Plano
-            </button>
-
-            <a
-              href="https://youtube.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
-              aria-label="YouTube"
-            >
-              <IconYouTube className="h-4 w-4" />
-            </a>
-
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg:white/10 hover:bg-white/20"
-              aria-label="Instagram"
-            >
-              <IconInstagram className="h-4 w-4" />
-            </a>
-          </div>
+          <button
+            onClick={() => onNavigate("login")}
+            className="hidden sm:inline-flex items-center rounded-xl bg-[#F5B60A] px-4 py-2 text-sm font-bold text-[#1f3548]"
+          >
+            Meu Plano
+          </button>
         </div>
       </header>
 
-      {/* Hero principal */}
+      {/* ------------------------------ HERO PRINCIPAL ------------------------------ */}
       <main className="flex-1">
-        <section className="bg-white">
+        <section>
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-12 items-center">
-            {/* Imagem */}
-            <div className="order-2 md:order-1">
-              <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
-                <img
-                  src="/hero-hand-tree.png"
-                  alt="Mão com moedas e uma pequena árvore"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            </div>
+            <img src="/hero-hand-tree.png" className="rounded-xl object-cover" />
 
-            {/* Texto */}
-            <div className="order-1 md:order-2">
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1f3548] leading-tight">
+            <div>
+              <h1 className="text-4xl font-extrabold text-[#1f3548]">
                 Conquiste seu Primeiro Dividendo em 30 dias
               </h1>
 
-              <p className="mt-5 text-base sm:text-lg text-[#1f3548]/80 leading-relaxed">
-                Nada de complicação, termos difíceis ou teoria sem prática. Aqui
-                você aprende fazendo: passo a passo, no seu ritmo, com
-                orientação real e o suporte que faltava para finalmente entrar
-                no mundo dos investimentos.
+              <p className="mt-5 text-lg text-[#1f3548]/80">
+                Nada de complicação, teoria vazia ou enrolação. Você aprende fazendo.
               </p>
 
-              <div className="mt-7 flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#F5B60A] px-6 py-3 text-base font-bold text-[#1f3548] shadow-sm hover:brightness-105 transition"
-                >
-                  <IconWhatsApp className="h-5 w-5" />
+              <div className="mt-7 flex gap-3 flex-wrap">
+                <button onClick={() => setIsModalOpen(true)} className="bg-[#F5B60A] px-6 py-3 rounded-xl font-bold">
                   Agende sua avaliação gratuita
                 </button>
 
-                <button
-                  onClick={openWhatsAppDirect}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-6 py-3 text-base font-bold text-white shadow-sm hover:brightness-105 transition"
-                >
-                  <IconWhatsApp className="h-5 w-5" />
+                <button onClick={openWhatsAppDirect} className="bg-[#25D366] text-white px-6 py-3 rounded-xl font-bold">
                   Falar no WhatsApp
                 </button>
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-3 text-sm text-[#1f3548]/70">
-                <span>✔ Ideal para iniciantes</span>
-                <span>✔ Acompanhamento individual</span>
-                <span>✔ App UpControl incluído</span>
               </div>
             </div>
           </div>
         </section>
 
-        <div className="h-16 md:h-24"></div>
-
+        {/* 🔹 Agora só isso, sem aquele bloco grande */}
         <SectionDivider />
 
-        {/* Hero 2 — O Programa */}
-        <section className="bg-white">
+        {/* --------------------------- BLOCO 2 --------------------------- */}
+        <section>
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
-            <div className="order-1">
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1f3548]">
-                O Programa Completo para Viver seu Primeiro Dividendo
-              </h2>
-
-              <p className="mt-4 text-base sm:text-lg text-[#1f3548]/80">
-                Você terá acesso ao método que já ajudou muitas pessoas a
-                saírem do zero e conquistarem renda passiva real com segurança e
-                estratégia.
+            <div>
+              <h2 className="text-3xl font-bold">O Programa Completo</h2>
+              <p className="mt-4 text-lg text-[#1f3548]/80">
+                Método validado para sair do zero e construir renda passiva real.
               </p>
-
-              <ul className="mt-6 space-y-3 text-[#1f3548]/90 text-sm sm:text-base">
-                <li>📘 Curso completo de <strong>Renda Fixa</strong></li>
-                <li>
-                  📗 Curso de <strong>Ações</strong> — como escolher empresas
-                  boas pagadoras
-                </li>
-                <li>
-                  📙 Curso de <strong>FIIs</strong> — renda mensal na prática
-                </li>
-                <li>📂 Material exclusivo (PDFs, resumos e roteiros)</li>
-                <li>
-                  📊 Acesso ao <strong>UpControl</strong>
-                </li>
-                <li>📅 Acompanhamento pessoal</li>
-                <li>💬 Grupo exclusivo no WhatsApp</li>
-              </ul>
-
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#F5B60A] px-6 py-3 text-sm font-semibold text-[#1f3548] shadow hover:brightness-105 transition"
-              >
-                <IconWhatsApp className="h-4 w-4" />
-                Agende sua avaliação gratuita
-              </button>
             </div>
 
-            <div className="order-2">
-              <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#cfd6dc]/30 flex items-center justify-center">
-                <img
-                  src="/hero-dividendo.png"
-                  alt="Benefícios do programa"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            </div>
+            <img src="/hero-dividendo.png" className="rounded-xl object-cover" />
           </div>
         </section>
       </main>
 
-      {/* Modal de agendamento */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-            <div className="flex items-start justify-between">
-              <h2 className="text-lg font-bold text-[#1f3548]">
-                Agendar avaliação gratuita
-              </h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="ml-4 rounded-lg px-2 py-1 text-[#1f3548]/70 hover:bg-[#cfd6dc]/40"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-              <input
-                name="nome"
-                value={form.nome}
-                onChange={onChange}
-                placeholder="Seu nome"
-                className="w-full border rounded-xl px-3 py-2 text-sm"
-                required
-              />
-
-              <input
-                name="email"
-                value={form.email}
-                onChange={onChange}
-                placeholder="seu@email.com"
-                className="w-full border rounded-xl px-3 py-2 text-sm"
-                required
-              />
-
-              <input
-                name="telefone"
-                value={form.telefone}
-                onChange={onChange}
-                placeholder="(DDD) 90000-0000"
-                className="w-full border rounded-xl px-3 py-2 text-sm"
-                required
-              />
-
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="border px-4 py-2 rounded-xl text-sm"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="bg-[#1f3548] px-5 py-2 rounded-xl font-semibold text-white hover:brightness-110 text-sm"
-                >
-                  Enviar pelo WhatsApp
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Footer */}
-      <footer className="mt-10 bg-[#1f3548] text-white/95">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <nav className="flex items-center gap-6 text-sm">
-              <a href="#sobre" className="hover:text-white">
-                Sobre
-              </a>
-              <a href="#contato" className="hover:text-white">
-                Contato
-              </a>
-              <a href="#privacidade" className="hover:text-white">
-                Política de Privacidade
-              </a>
-            </nav>
-          </div>
-
-          <p className="mt-8 text-sm text-white/75">
-            UpMoney — Educação e controle financeiro para uma vida com
-            liberdade.
-          </p>
-        </div>
+      {/* ------------------------------ FOOTER ------------------------------ */}
+      <footer className="mt-10 bg-[#1f3548] text-white py-8 text-center">
+        <p>UpMoney © {new Date().getFullYear()}</p>
       </footer>
     </div>
   );
