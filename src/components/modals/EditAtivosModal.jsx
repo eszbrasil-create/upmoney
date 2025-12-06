@@ -37,38 +37,44 @@ function MesAnoPickerTopo({ value, onChange }) {
               className="bg-white rounded-3xl shadow-3xl p-8 max-w-md w-full border-8 border-gray-100"
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Ano + setas */}
               <div className="flex items-center justify-between mb-8">
                 <button
                   onClick={() => setAno((a) => a - 1)}
-                  className="w-10 h-10 hover:bg-gray-100 rounded-full text-2xl font-bold"
+                  className="w-10 h-10 hover:bg-gray-100 rounded-full text-2xl font-bold text-emerald-700"
                 >
                   ←
                 </button>
                 <span className="text-2xl font-black text-emerald-600">{ano}</span>
                 <button
                   onClick={() => setAno((a) => a + 1)}
-                  className="w-10 h-10 hover:bg-gray-100 rounded-full text-2xl font-bold"
+                  className="w-10 h-10 hover:bg-gray-100 rounded-full text-2xl font-bold text-emerald-700"
                 >
                   →
                 </button>
               </div>
+
+              {/* Meses */}
               <div className="grid grid-cols-3 gap-3">
-                {meses.map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => {
-                      onChange(`${m}/${ano}`);
-                      setOpen(false);
-                    }}
-                    className={`py-3 rounded-2xl font-semibold text-base transition-all ${
-                      value?.startsWith(m)
-                        ? "bg-emerald-600 text-white shadow-xl scale-105"
-                        : "bg-gray-50 hover:bg-emerald-100"
-                    }`}
-                  >
-                    {m}
-                  </button>
-                ))}
+                {meses.map((m) => {
+                  const selecionado = value?.startsWith(m);
+                  return (
+                    <button
+                      key={m}
+                      onClick={() => {
+                        onChange(`${m}/${ano}`);
+                        setOpen(false);
+                      }}
+                      className={
+                        selecionado
+                          ? "py-3 rounded-2xl font-semibold text-base transition-all bg-emerald-600 text-white shadow-xl scale-105"
+                          : "py-3 rounded-2xl font-semibold text-base transition-all bg-white text-emerald-700 border border-emerald-50 hover:bg-emerald-50 hover:border-emerald-200"
+                      }
+                    >
+                      {m}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>,
@@ -178,7 +184,7 @@ export default function EditAtivosModal({
     // 1) linhas parcialmente preenchidas (nome sem valor ou valor sem nome)
     const linhasParciais = linhas.filter((l) => {
       const nomeOk = l.nome.trim() !== "";
-      const valorOk = l.valor.trim() !== "";
+      the valorOk = l.valor.trim() !== "";
       return (nomeOk && !valorOk) || (!nomeOk && valorOk);
     });
 
