@@ -103,6 +103,8 @@ export default function EditAtivosModal({
     "Previdência",
   ],
 }) {
+  const mesesAbrev = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
   const [mesAno, setMesAno] = useState(mesAnoInicial);
   const [linhas, setLinhas] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -113,75 +115,112 @@ export default function EditAtivosModal({
     0
   );
 
+  // Ao abrir modal: define mês atual (se não tiver) e cria UMA linha virgem
   useEffect(() => {
     if (!open) return;
     const hoje = new Date();
-    const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    if (!mesAno) setMesAno(`${meses[hoje.getMonth()]}/${hoje.getFullYear()}`);
-    if (linhas.length === 0) {
-      setLinhas([
-        { id: crypto.randomUUID(), nome: "", valor: "" },
-        { id: crypto.randomUUID(), nome: "", valor: "" },
-      ]);
-    }
+    if (!mesAno) setMesAno(`${mesesAbrev[hoje.getMonth()]}/${hoje.getFullYear()}`);
+    setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
     setErro("");
   }, [open]);
 
+  // Ao trocar o mês manualmente: sempre reseta para UMA linha virgem
   useEffect(() => {
     if (!open || !mesAno) return;
-    const carregar = async () => {
+    setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
+    setErro("");
+  }, [mesAno, open]);
+
+  const adicionarLinha = () =>
+    setLinhas((prev) => [...prev, { id: crypto.randomUUID(), nome: "", valor: "" }]);
+
+  const atualizarLinha = (id, campo, valor) =>
+    setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)));
+
+  const removerLinha = (id) =>
+    setLinhas((prev) => prev.filter((l) => l.id !== id));
+
+  // Copiar mês anterior para o mês atual
+  const copiarMesAnterior = async () => {
+    if (!mesAno) {
+      setErro("Selecione um mês para copiar.");
+      return;
+    }
+
+    try {
       setIsLoading(true);
+      setErro("");
+
+      const [mesStr, anoStr] = mesAno.split("/");
+      const idx = mesesAbrev.indexOf(mesStr);
+      if (idx === -1) {
+        setErro("Mês inválido.");
+        setIsLoading(false);
+        return;
+      }
+
+      let prevIdx = idx - 1;
+      let prevAno = Number(anoStr);
+      if (prevIdx < 0) {
+        prevIdx = 11;
+        prevAno -= 1;
+      }
+      const mesAnoAnterior = `${mesesAbrev[prevIdx]}/${prevAno}`;
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
         setIsLoading(false);
+        setErro("Usuário não autenticado.");
         return;
       }
 
-      const { data: reg } = await supabase
+      const { data: regAnterior } = await supabase
         .from("registros_ativos")
         .select("id")
         .eq("user_id", user.id)
-        .eq("mes_ano", mesAno)
+        .eq("mes_ano", mesAnoAnterior)
         .maybeSingle();
 
-      if (reg) {
-        const { data: itens } = await supabase
-          .from("registros_ativos_itens")
-          .select("nome_ativo, valor")
-          .eq("registro_id", reg.id);
-
-        setLinhas(
-          itens?.length > 0
-            ? itens.map((i) => ({
-                id: crypto.randomUUID(),
-                nome: i.nome_ativo,
-                valor: Number(i.valor).toLocaleString("pt-BR", {
-                  minimumFractionDigits: 2,
-                }),
-              }))
-            : [{ id: crypto.randomUUID(), nome: "", valor: "" }]
-        );
-      } else {
-        setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
+      if (!regAnterior) {
+        setIsLoading(false);
+        setErro(`Nenhum registro encontrado em ${mesAnoAnterior} para copiar.`);
+        return;
       }
-      setIsLoading(false);
-    };
-    carregar();
-  }, [open, mesAno]);
 
-  const adicionarLinha = () =>
-    setLinhas((prev) => [...prev, { id: crypto.randomUUID(), nome: "", valor: "" }]);
-  const atualizarLinha = (id, campo, valor) =>
-    setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, [campo]: valor } : l)));
-  const removerLinha = (id) => setLinhas((prev) => prev.filter((l) => l.id !== id));
+      const { data: itens } = await supabase
+        .from("registros_ativos_itens")
+        .select("nome_ativo, valor")
+        .eq("registro_id", regAnterior.id);
+
+      if (!itens || itens.length === 0) {
+        setIsLoading(false);
+        setErro(`Nenhum item encontrado em ${mesAnoAnterior} para copiar.`);
+        return;
+      }
+
+      setLinhas(
+        itens.map((i) => ({
+          id: crypto.randomUUID(),
+          nome: i.nome_ativo,
+          valor: Number(i.valor).toLocaleString("pt-BR", {
+            minimumFractionDigits: 2,
+          }),
+        }))
+      );
+
+      setIsLoading(false);
+    } catch (err) {
+      setIsLoading(false);
+      setErro("Erro ao copiar mês anterior: " + err.message);
+    }
+  };
 
   const salvar = async () => {
     if (!mesAno) return setErro("Selecione um mês.");
     setErro("");
 
-    // 1) linhas parcialmente preenchidas (nome sem valor ou valor sem nome)
     const linhasParciais = linhas.filter((l) => {
       const nomeOk = l.nome.trim() !== "";
       const valorOk = l.valor.trim() !== "";
@@ -296,7 +335,7 @@ export default function EditAtivosModal({
             <h2 className="text-lg font-bold text-gray-800 text-center">Editar Ativos</h2>
           </div>
 
-          {/* Linha 2 - Mês/Ano + Adicionar (super compacta) */}
+          {/* Linha 2 - Mês/Ano + Copiar + Adicionar */}
           <div className="px-8 py-1 bg-white border-b border-gray-300">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2 flex-wrap">
@@ -305,12 +344,21 @@ export default function EditAtivosModal({
                 </span>
                 <MesAnoPickerTopo value={mesAno} onChange={setMesAno} />
               </div>
-              <button
-                onClick={adicionarLinha}
-                className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-lg shadow transition"
-              >
-                <Plus size={16} /> Adicionar ativo
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={copiarMesAnterior}
+                  className="px-4 py-2 border border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-semibold text-xs rounded-lg transition"
+                >
+                  Copiar mês anterior
+                </button>
+                <button
+                  onClick={adicionarLinha}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-lg shadow transition"
+                >
+                  <Plus size={16} /> Adicionar ativo
+                </button>
+              </div>
             </div>
           </div>
 
@@ -360,7 +408,7 @@ export default function EditAtivosModal({
             </div>
           </div>
 
-          {/* Linha 4 - Zerar + Total (super compacta) */}
+          {/* Linha 4 - Zerar + Total */}
           <div className="px-8 py-1 bg-white border-t border-gray-300 flex items-center justify-between flex-wrap gap-2">
             <button
               onClick={zerarMes}
@@ -378,7 +426,7 @@ export default function EditAtivosModal({
             </div>
           </div>
 
-          {/* Linha 5 - Salvar Alterações (mesmas medidas do Adicionar) */}
+          {/* Linha 5 - Salvar Alterações */}
           <div className="px-8 pb-3 pt-1 bg-white border-t border-gray-300">
             <button
               onClick={salvar}
@@ -405,20 +453,15 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
   const [query, setQuery] = useState(linha.nome || "");
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // mantém query sincronizado com o valor da linha (útil ao editar)
   useEffect(() => {
     setQuery(linha.nome || "");
   }, [linha.nome]);
 
   const sugestoes = useMemo(() => {
     if (!ativosExistentes || ativosExistentes.length === 0) return [];
-
-    // se o usuário ainda não digitou nada, mostra uma pré-lista
     if (!query.trim()) {
       return ativosExistentes.slice(0, 8);
     }
-
-    // se já digitou, filtra pela digitação
     return ativosExistentes
       .filter((a) => a.toLowerCase().includes(query.toLowerCase()))
       .slice(0, 8);
@@ -437,7 +480,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
               setQuery(e.target.value);
               setShowDropdown(true);
             }}
-            onFocus={() => setShowDropdown(true)} // sempre abre a lista ao focar
+            onFocus={() => setShowDropdown(true)}
             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
             placeholder="Ex: Petrobras, Tesouro Selic..."
             className="w-full px-3 py-1.5 text-xs font-medium text-gray-800 bg-white border border-gray-300 rounded-md focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
