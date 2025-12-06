@@ -118,6 +118,7 @@ export default function EditAtivosModal({
         { id: crypto.randomUUID(), nome: "", valor: "" },
       ]);
     }
+    setErro("");
   }, [open]);
 
   useEffect(() => {
@@ -156,6 +157,8 @@ export default function EditAtivosModal({
               }))
             : [{ id: crypto.randomUUID(), nome: "", valor: "" }]
         );
+      } else {
+        setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
       }
       setIsLoading(false);
     };
@@ -169,8 +172,27 @@ export default function EditAtivosModal({
   const removerLinha = (id) => setLinhas((prev) => prev.filter((l) => l.id !== id));
 
   const salvar = async () => {
-    if (!mesAno) return setErro("Selecione um mês");
+    if (!mesAno) return setErro("Selecione um mês.");
+    setErro("");
+
+    // 1) linhas parcialmente preenchidas (nome sem valor ou valor sem nome)
+    const linhasParciais = linhas.filter((l) => {
+      const nomeOk = l.nome.trim() !== "";
+      const valorOk = l.valor.trim() !== "";
+      return (nomeOk && !valorOk) || (!nomeOk && valorOk);
+    });
+
+    if (linhasParciais.length > 0) {
+      setErro("Preencha NOME DO ATIVO e VALOR em todas as linhas usadas ou apague as linhas incompletas.");
+      return;
+    }
+
     const itensValidos = linhas.filter((l) => l.nome.trim() && l.valor.trim());
+
+    if (itensValidos.length === 0) {
+      setErro("Adicione pelo menos um ativo com nome e valor para salvar o registro.");
+      return;
+    }
 
     try {
       const {
@@ -190,17 +212,6 @@ export default function EditAtivosModal({
         .eq("mes_ano", mesAno)
         .maybeSingle();
 
-      if (itensValidos.length === 0 && regExistente) {
-        await supabase
-          .from("registros_ativos_itens")
-          .delete()
-          .eq("registro_id", regExistente.id);
-        await supabase.from("registros_ativos").delete().eq("id", regExistente.id);
-        onSave?.({ mesAno, total: 0, deleted: true });
-        onClose();
-        return;
-      }
-
       let registroId = regExistente?.id;
       if (!registroId) {
         const { data } = await supabase
@@ -217,21 +228,38 @@ export default function EditAtivosModal({
       }
 
       await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
-      if (itensValidos.length > 0) {
-        await supabase.from("registros_ativos_itens").insert(
-          itensValidos.map((l) => ({
-            registro_id: registroId,
-            user_id: user.id,
-            nome_ativo: l.nome.trim(),
-            valor: Number(l.valor.replace(/\./g, "").replace(",", ".")),
-          }))
-        );
-      }
+      await supabase.from("registros_ativos_itens").insert(
+        itensValidos.map((l) => ({
+          registro_id: registroId,
+          user_id: user.id,
+          nome_ativo: l.nome.trim(),
+          valor: Number(l.valor.replace(/\./g, "").replace(",", ".")),
+        }))
+      );
 
       onSave?.({ mesAno, total: totalCalc, deleted: false });
       onClose();
     } catch (err) {
       setErro("Erro ao salvar: " + err.message);
+    }
+  };
+
+  const zerarMes = async () => {
+    if (!mesAno) {
+      setErro("Selecione um mês para zerar.");
+      return;
+    }
+    const confirmar = window.confirm("Zerar todos os ativos deste mês?");
+    if (!confirmar) return;
+
+    try {
+      setErro("");
+      await deleteRegistroAtivosPorMesAno(mesAno);
+      setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
+      onSave?.({ mesAno, total: 0, deleted: true });
+      onClose();
+    } catch (err) {
+      setErro("Erro ao zerar mês: " + err.message);
     }
   };
 
@@ -327,12 +355,7 @@ export default function EditAtivosModal({
           {/* Linha 4 - Zerar + Total (super compacta) */}
           <div className="px-8 py-1 bg-white border-t border-gray-300 flex items-center justify-between flex-wrap gap-2">
             <button
-              onClick={() => {
-                if (confirm("Zerar todos os ativos deste mês?")) {
-                  setLinhas([]);
-                  salvar();
-                }
-              }}
+              onClick={zerarMes}
               className="text-red-600 hover:text-red-700 font-semibold text-xs flex items-center gap-1.5"
             >
               <Trash2 size={14} /> Zerar este mês
