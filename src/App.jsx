@@ -1,4 +1,4 @@
-// src/App.jsx — VERSÃO FINAL, 100% FUNCIONANDO
+// src/App.jsx — VERSÃO ATUALIZADA COM RESET DE SENHA
 import { useEffect, useMemo, useState, useCallback } from "react";
 import AppLayout from "./layouts/AppLayout";
 
@@ -20,15 +20,31 @@ import Cursos from "./pages/Cursos";
 import Noticias from "./pages/Noticias";
 import CashControlHome from "./pages/CashControlHome";
 import Login from "./pages/Login.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx"; // 👈 NOVO
 
 import { supabase } from "./lib/supabaseClient";
 import { deleteRegistroAtivosPorMesAno } from "./components/modals/EditAtivosModal";
 
-const MES_IDX = { Jan:0,Fev:1,Mar:2,Abr:3,Mai:4,Jun:5,Jul:6,Ago:7,Set:8,Out:9,Nov:10,Dez:11 };
+const MES_IDX = {
+  Jan: 0,
+  Fev: 1,
+  Mar: 2,
+  Abr: 3,
+  Mai: 4,
+  Jun: 5,
+  Jul: 6,
+  Ago: 7,
+  Set: 8,
+  Out: 9,
+  Nov: 10,
+  Dez: 11,
+};
 
 // CARREGA TODOS OS REGISTROS DO SUPABASE
 async function carregarRegistrosAtivos() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return {};
 
   const { data: registros } = await supabase
@@ -44,10 +60,12 @@ async function carregarRegistrosAtivos() {
     .select("registro_id, nome_ativo, valor");
 
   const porMes = {};
-  registros.forEach(reg => { porMes[reg.mes_ano] = []; });
+  registros.forEach((reg) => {
+    porMes[reg.mes_ano] = [];
+  });
 
-  itens?.forEach(i => {
-    const reg = registros.find(r => r.id === i.registro_id);
+  itens?.forEach((i) => {
+    const reg = registros.find((r) => r.id === i.registro_id);
     if (reg) {
       porMes[reg.mes_ano].push({
         nome: i.nome_ativo,
@@ -61,33 +79,55 @@ async function carregarRegistrosAtivos() {
 
 // DASHBOARD PRINCIPAL
 function DashboardMain({ registrosPorMes, onDeleteMonth }) {
-  const columns = useMemo(() => Object.keys(registrosPorMes).sort((a, b) => {
-    const [ma, aa] = a.split("/"); const [mb, ab] = b.split("/");
-    const ya = parseInt(aa, 10); const yb = parseInt(ab, 10);
-    const ia = MES_IDX[ma] ?? 0; const ib = MES_IDX[mb] ?? 0;
-    return ya !== yb ? ya - yb : ia - ib;
-  }), [registrosPorMes]);
+  const columns = useMemo(
+    () =>
+      Object.keys(registrosPorMes).sort((a, b) => {
+        const [ma, aa] = a.split("/");
+        const [mb, ab] = b.split("/");
+        const ya = parseInt(aa, 10);
+        const yb = parseInt(ab, 10);
+        const ia = MES_IDX[ma] ?? 0;
+        const ib = MES_IDX[mb] ?? 0;
+        return ya !== yb ? ya - yb : ia - ib;
+      }),
+    [registrosPorMes]
+  );
 
   const rows = useMemo(() => {
     const ativos = new Set();
-    columns.forEach(mes => (registrosPorMes[mes] || []).forEach(i => ativos.add(i.nome)));
-    return Array.from(ativos).sort().map(nome => ({
-      ativo: nome,
-      valores: columns.map(mes => {
-        const item = (registrosPorMes[mes] || []).find(i => i.nome === nome);
-        return item ? Number(item.valor) : 0;
-      })
-    }));
+    columns.forEach((mes) =>
+      (registrosPorMes[mes] || []).forEach((i) => ativos.add(i.nome))
+    );
+    return Array.from(ativos)
+      .sort()
+      .map((nome) => ({
+        ativo: nome,
+        valores: columns.map((mes) => {
+          const item = (registrosPorMes[mes] || []).find(
+            (i) => i.nome === nome
+          );
+          return item ? Number(item.valor) : 0;
+        }),
+      }));
   }, [columns, registrosPorMes]);
 
   const dadosResumo = useMemo(() => {
-    const totais = columns.map(m => (registrosPorMes[m] || []).reduce((a, i) => a + Number(i.valor), 0));
+    const totais = columns.map((m) =>
+      (registrosPorMes[m] || []).reduce(
+        (a, i) => a + Number(i.valor),
+        0
+      )
+    );
     const ultimo = columns.length > 0 ? columns[columns.length - 1] : null;
     return {
       mesAtual: ultimo || "-",
       patrimonioAtual: ultimo ? totais[totais.length - 1] : 0,
       comparativos: { mesAnterior: totais[totais.length - 2] || 0 },
-      distribuicao: ultimo ? [...(registrosPorMes[ultimo] || [])].sort((a,b) => b.valor - a.valor) : [],
+      distribuicao: ultimo
+        ? [...(registrosPorMes[ultimo] || [])].sort(
+            (a, b) => b.valor - a.valor
+          )
+        : [],
     };
   }, [columns, registrosPorMes]);
 
@@ -98,25 +138,46 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
         <CardEvolucao columns={columns} rows={rows} />
       </div>
       <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
-        <CardRegistro columns={columns} rows={rows} onDeleteMonth={onDeleteMonth} />
+        <CardRegistro
+          columns={columns}
+          rows={rows}
+          onDeleteMonth={onDeleteMonth}
+        />
         <CardDividendosCash columns={columns} />
       </div>
       <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
         <CardEvolucaoPct columns={columns} rows={rows} />
-        <CardParticipacao itens={dadosResumo.distribuicao} mesAtual={dadosResumo.mesAtual} />
+        <CardParticipacao
+          itens={dadosResumo.distribuicao}
+          mesAtual={dadosResumo.mesAtual}
+        />
       </div>
     </div>
   );
 }
 
 export default function App() {
-  const [view, setView] = useState("landing");
+  // 👇 já inicializa a view certa se a URL for /reset-password
+  const [view, setView] = useState(() => {
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname;
+      const hash = window.location.hash;
+      if (path === "/reset-password" || hash.includes("reset-password")) {
+        return "reset-password";
+      }
+    }
+    return "landing";
+  });
+
   const [user, setUser] = useState(null);
   const [authLoaded, setAuthLoaded] = useState(false);
   const [registrosPorMes, setRegistrosPorMes] = useState({});
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const refreshData = useCallback(() => setRefreshTrigger(t => t + 1), []);
+  const refreshData = useCallback(
+    () => setRefreshTrigger((t) => t + 1),
+    []
+  );
 
   // CARREGA DADOS DO SUPABASE
   useEffect(() => {
@@ -130,8 +191,21 @@ export default function App() {
   // AUTENTICAÇÃO
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
-    supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user ?? null));
+    supabase.auth.onAuthStateChange((_event, session) =>
+      setUser(session?.user ?? null)
+    );
     setAuthLoaded(true);
+  }, []);
+
+  // Se o Supabase voltar com um hash tipo "#access_token=...&type=recovery"
+  // garantimos que a tela de reset será exibida mesmo se a view inicial fosse outra.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash || "";
+    const path = window.location.pathname;
+    if (path === "/reset-password" || hash.includes("type=recovery")) {
+      setView("reset-password");
+    }
   }, []);
 
   const handleDeleteMonth = async (mesAno) => {
@@ -140,21 +214,39 @@ export default function App() {
     refreshData();
   };
 
-  if (!authLoaded) return <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-300">Carregando...</div>;
+  if (!authLoaded)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-300">
+        Carregando...
+      </div>
+    );
 
-  // CORRIGIDO: agora inclui "cursos-dashboard"
-  const protectedViews = ["dashboard", "cursos-dashboard", "carteira", "despesas", "relatorios", "mercado"];
+  // views que exigem usuário logado
+  const protectedViews = [
+    "dashboard",
+    "cursos-dashboard",
+    "carteira",
+    "despesas",
+    "relatorios",
+    "mercado",
+  ];
   if (!user && protectedViews.includes(view)) setView("login");
 
   const screens = {
     landing: <Landing onNavigate={setView} />,
     login: <Login onNavigate={setView} />,
+    "reset-password": <ResetPassword onNavigate={setView} />, // 👈 NOVO
     "saida-fiscal": <SaidaFiscal onNavigate={setView} />,
     "invista-exterior": <InvistaExterior onNavigate={setView} />,
     cursos: <Cursos onNavigate={setView} />,
     noticias: <Noticias onNavigate={setView} />,
     "cashcontrol-home": <CashControlHome onNavigate={setView} />,
-    dashboard: <DashboardMain registrosPorMes={registrosPorMes} onDeleteMonth={handleDeleteMonth} />,
+    dashboard: (
+      <DashboardMain
+        registrosPorMes={registrosPorMes}
+        onDeleteMonth={handleDeleteMonth}
+      />
+    ),
     "cursos-dashboard": <CursosPage />,
     carteira: <CarteiraCash />,
     despesas: <Despesas />,
@@ -163,14 +255,34 @@ export default function App() {
   };
 
   // Telas full-screen (sem sidebar)
-  if (["landing","login","saida-fiscal","invista-exterior","cursos","noticias","cashcontrol-home"].includes(view)) {
+  if (
+    [
+      "landing",
+      "login",
+      "reset-password", // 👈 também full-screen
+      "saida-fiscal",
+      "invista-exterior",
+      "cursos",
+      "noticias",
+      "cashcontrol-home",
+    ].includes(view)
+  ) {
     return screens[view];
   }
 
   // Todas as outras telas com sidebar
   return (
-    <AppLayout onNavigate={setView} currentView={view} refreshData={refreshData}>
-      {screens[view] || <DashboardMain registrosPorMes={registrosPorMes} onDeleteMonth={handleDeleteMonth} />}
+    <AppLayout
+      onNavigate={setView}
+      currentView={view}
+      refreshData={refreshData}
+    >
+      {screens[view] || (
+        <DashboardMain
+          registrosPorMes={registrosPorMes}
+          onDeleteMonth={handleDeleteMonth}
+        />
+      )}
     </AppLayout>
   );
 }
