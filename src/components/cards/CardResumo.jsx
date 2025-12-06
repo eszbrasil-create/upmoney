@@ -1,28 +1,34 @@
 // src/components/cards/CardResumo.jsx
 import React from "react";
 
-export default function CardResumo({ data }) {
+export default function CardResumo({ data = {} }) {
   const fmt = new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
     maximumFractionDigits: 2,
   });
 
-  const { mesAtual, patrimonioAtual, comparativos, distribuicao } = data || {};
+  const {
+    mesAtual,
+    patrimonioAtual = 0,
+    comparativos = {},
+    distribuicao = [],
+  } = data;
 
+  // calcula variação percentual em relação a um valor base
   const variacao = (base) => {
-    if (base == null || base <= 0) return null;
+    if (base == null || Number.isNaN(base) || base <= 0) return null;
     return (patrimonioAtual - base) / base;
   };
 
   const totalDist =
-    distribuicao?.reduce((acc, it) => acc + (it.valor || 0), 0) || 0;
+    distribuicao.reduce((acc, it) => acc + (Number(it.valor) || 0), 0) || 0;
 
   const linhasComparativo = [
-    { label: "vs mês anterior", valor: comparativos?.mesAnterior },
-    { label: "vs 3 meses", valor: comparativos?.m3 },
-    { label: "vs 6 meses", valor: comparativos?.m6 },
-    { label: "vs 12 meses", valor: comparativos?.m12 },
+    { label: "vs mês anterior", valor: comparativos.mesAnterior },
+    { label: "vs 3 meses", valor: comparativos.m3 },
+    { label: "vs 6 meses", valor: comparativos.m6 },
+    { label: "vs 12 meses", valor: comparativos.m12 },
   ];
 
   return (
@@ -46,9 +52,10 @@ export default function CardResumo({ data }) {
       {/* Comparativos (fixo) */}
       <div className="shrink-0 space-y-2 mb-2">
         {linhasComparativo.map(({ label, valor }, index) => {
-          const hasValor =
-            typeof valor === "number" && !Number.isNaN(valor) && valor > 0;
-          const v = hasValor ? variacao(valor) : null;
+          const valorNum =
+            typeof valor === "number" && !Number.isNaN(valor) ? valor : null;
+          const hasValor = valorNum !== null && valorNum > 0;
+          const v = hasValor ? variacao(valorNum) : null;
 
           return (
             <div
@@ -58,7 +65,7 @@ export default function CardResumo({ data }) {
               <span className="text-slate-300 text-sm">{label}</span>
               <div className="flex items-center gap-2">
                 <span className="text-slate-200 text-sm">
-                  {hasValor ? fmt.format(valor) : "—"}
+                  {hasValor ? fmt.format(valorNum) : "—"}
                 </span>
                 {v !== null && (
                   <span
@@ -75,15 +82,16 @@ export default function CardResumo({ data }) {
         })}
       </div>
 
-      {/* Distribuição (ROLA dentro do card) */}
+      {/* Distribuição (rolagem interna) */}
       <div className="flex-1 min-h-0 overflow-y-auto pr-1 scrollbar">
         <span className="text-slate-100 font-semibold text-sm block mb-2 sticky top-0 bg-slate-800/70 py-1">
           Distribuição da carteira
         </span>
 
         <div className="space-y-3">
-          {distribuicao?.map((item) => {
-            const pct = totalDist > 0 ? (item.valor / totalDist) * 100 : 0;
+          {distribuicao.map((item) => {
+            const valorNum = Number(item.valor) || 0;
+            const pct = totalDist > 0 ? (valorNum / totalDist) * 100 : 0;
 
             return (
               <div key={item.nome}>
@@ -91,7 +99,7 @@ export default function CardResumo({ data }) {
                   <span className="text-slate-300">{item.nome}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-slate-200">
-                      {fmt.format(item.valor)}
+                      {fmt.format(valorNum)}
                     </span>
                     <span className="text-slate-400 text-xs">
                       {pct.toFixed(1)}%
@@ -108,6 +116,12 @@ export default function CardResumo({ data }) {
               </div>
             );
           })}
+
+          {distribuicao.length === 0 && (
+            <p className="text-xs text-slate-400">
+              Nenhum ativo cadastrado para este mês.
+            </p>
+          )}
         </div>
       </div>
     </div>
