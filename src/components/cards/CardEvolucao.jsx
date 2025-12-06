@@ -86,7 +86,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
       </div>
 
       {/* GRÁFICO — padding reduzido para colar as barras na borda */}
-      <div className="flex-1 min-h-[310px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-0 overflow-x-auto overflow-y-hidden">
+      <div className="flex-1 min-h-[340px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-0 overflow-x-auto overflow-y-hidden">
         
         <div className="flex items-end gap-1 min-w-max h-full">
           {totals.map((valor, i) => {
