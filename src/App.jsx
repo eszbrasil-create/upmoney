@@ -155,7 +155,7 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
   }, [columns, registrosPorMes]);
 
   return (
-    <div className="pt-3 pr-6 pl-0">
+    <div className="pt-1 pr-6 pl-0">
       <div className="flex items-start gap-3 flex-wrap md:flex-nowrap">
         <CardResumo data={dadosResumo} />
         <CardEvolucao columns={columns} rows={rows} />
