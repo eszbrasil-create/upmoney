@@ -345,7 +345,7 @@ export default function EditAtivosModal({
       onClick={onClose}
     >
       <div
-        className="bg-transparent w-full max-w-5xl max-h-[90vh] flex flex-col"
+        className="bg-transparent w-full max-w-5xl max-h-[90vh] flex flex-col mx-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-white rounded-3xl shadow-3xl border border-gray-300 overflow-hidden flex flex-col relative">
