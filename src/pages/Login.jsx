@@ -8,10 +8,12 @@ export default function Login({ onNavigate }) {
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
+  const [mensagem, setMensagem] = useState(""); // ✅ mensagens de info/sucesso
 
   async function handleSubmit(e) {
     e.preventDefault();
     setErro("");
+    setMensagem("");
     setLoading(true);
 
     try {
@@ -51,6 +53,44 @@ export default function Login({ onNavigate }) {
     }
   }
 
+  // ✅ Recuperar senha via e-mail
+  async function handleResetPassword() {
+    setErro("");
+    setMensagem("");
+
+    if (!email) {
+      setErro("Informe seu e-mail para recuperar a senha.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      setLoading(false);
+
+      if (error) {
+        console.error(error);
+        setErro(
+          error.message ||
+            "Não foi possível enviar o e-mail de recuperação. Tente novamente."
+        );
+        return;
+      }
+
+      setMensagem(
+        "Enviamos um e-mail com o link para redefinir sua senha. Verifique sua caixa de entrada (e também o spam)."
+      );
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+      setErro("Erro inesperado ao solicitar recuperação de senha.");
+    }
+  }
+
   const titulo =
     mode === "login" ? "Entrar no upControl" : "Criar minha conta no upControl";
   const subTitulo =
@@ -80,7 +120,11 @@ export default function Login({ onNavigate }) {
           <div className="flex items-center mb-4 text-xs bg-slate-800/80 rounded-full p-1">
             <button
               type="button"
-              onClick={() => setMode("login")}
+              onClick={() => {
+                setMode("login");
+                setErro("");
+                setMensagem("");
+              }}
               className={`flex-1 py-1.5 rounded-full transition text-center ${
                 mode === "login"
                   ? "bg-emerald-500 text-slate-950 font-semibold"
@@ -91,7 +135,11 @@ export default function Login({ onNavigate }) {
             </button>
             <button
               type="button"
-              onClick={() => setMode("signup")}
+              onClick={() => {
+                setMode("signup");
+                setErro("");
+                setMensagem("");
+              }}
               className={`flex-1 py-1.5 rounded-full transition text-center ${
                 mode === "signup"
                   ? "bg-emerald-500 text-slate-950 font-semibold"
@@ -106,6 +154,13 @@ export default function Login({ onNavigate }) {
           {erro && (
             <div className="mb-3 rounded-lg border border-rose-500/60 bg-rose-500/10 px-3 py-2 text-xs text-rose-100">
               {erro}
+            </div>
+          )}
+
+          {/* Mensagem de info/sucesso */}
+          {mensagem && (
+            <div className="mb-3 rounded-lg border border-emerald-500/60 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">
+              {mensagem}
             </div>
           )}
 
@@ -141,6 +196,17 @@ export default function Login({ onNavigate }) {
                 className="w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                 placeholder="Mínimo 6 caracteres"
               />
+
+              {/* 🔑 Esqueci minha senha (só no modo login) */}
+              {mode === "login" && (
+                <button
+                  type="button"
+                  onClick={handleResetPassword}
+                  className="mt-1 text-[11px] text-emerald-300 hover:text-emerald-200 underline underline-offset-2"
+                >
+                  Esqueci minha senha
+                </button>
+              )}
             </div>
 
             <button
