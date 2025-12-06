@@ -1,4 +1,4 @@
-// src/App.jsx — VERSÃO ATUALIZADA COM RESET DE SENHA
+// src/App.jsx — VERSÃO ATUALIZADA COM RESET DE SENHA E RESUMO CORRIGIDO
 import { useEffect, useMemo, useState, useCallback } from "react";
 import AppLayout from "./layouts/AppLayout";
 
@@ -20,7 +20,7 @@ import Cursos from "./pages/Cursos";
 import Noticias from "./pages/Noticias";
 import CashControlHome from "./pages/CashControlHome";
 import Login from "./pages/Login.jsx";
-import ResetPassword from "./pages/ResetPassword.jsx"; // 👈 NOVO
+import ResetPassword from "./pages/ResetPassword.jsx";
 
 import { supabase } from "./lib/supabaseClient";
 import { deleteRegistroAtivosPorMesAno } from "./components/modals/EditAtivosModal";
@@ -79,6 +79,7 @@ async function carregarRegistrosAtivos() {
 
 // DASHBOARD PRINCIPAL
 function DashboardMain({ registrosPorMes, onDeleteMonth }) {
+  // Meses ordenados cronologicamente
   const columns = useMemo(
     () =>
       Object.keys(registrosPorMes).sort((a, b) => {
@@ -93,6 +94,7 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
     [registrosPorMes]
   );
 
+  // Linhas: cada ativo, com seus valores por mês
   const rows = useMemo(() => {
     const ativos = new Set();
     columns.forEach((mes) =>
@@ -111,23 +113,44 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
       }));
   }, [columns, registrosPorMes]);
 
+  // 🔥 RESUMO: patrimônio atual, comparativos e distribuição
   const dadosResumo = useMemo(() => {
-    const totais = columns.map((m) =>
-      (registrosPorMes[m] || []).reduce(
-        (a, i) => a + Number(i.valor),
+    if (columns.length === 0) {
+      return {
+        mesAtual: "-",
+        patrimonioAtual: 0,
+        comparativos: {},
+        distribuicao: [],
+      };
+    }
+
+    const totais = columns.map((mes) =>
+      (registrosPorMes[mes] || []).reduce(
+        (acc, item) => acc + (Number(item.valor) || 0),
         0
       )
     );
-    const ultimo = columns.length > 0 ? columns[columns.length - 1] : null;
+
+    const idxLast = columns.length - 1;
+    const mesAtualKey = columns[idxLast];
+
+    function pegarMesesAtras(qtd) {
+      const pos = idxLast - qtd;
+      return pos >= 0 ? totais[pos] : null;
+    }
+
     return {
-      mesAtual: ultimo || "-",
-      patrimonioAtual: ultimo ? totais[totais.length - 1] : 0,
-      comparativos: { mesAnterior: totais[totais.length - 2] || 0 },
-      distribuicao: ultimo
-        ? [...(registrosPorMes[ultimo] || [])].sort(
-            (a, b) => b.valor - a.valor
-          )
-        : [],
+      mesAtual: mesAtualKey,
+      patrimonioAtual: totais[idxLast],
+      comparativos: {
+        mesAnterior: pegarMesesAtras(1),
+        m3: pegarMesesAtras(3),
+        m6: pegarMesesAtras(6),
+        m12: pegarMesesAtras(12),
+      },
+      distribuicao: [...(registrosPorMes[mesAtualKey] || [])].sort(
+        (a, b) => b.valor - a.valor
+      ),
     };
   }, [columns, registrosPorMes]);
 
@@ -197,8 +220,7 @@ export default function App() {
     setAuthLoaded(true);
   }, []);
 
-  // Se o Supabase voltar com um hash tipo "#access_token=...&type=recovery"
-  // garantimos que a tela de reset será exibida mesmo se a view inicial fosse outra.
+  // Garante que se vier um link de recuperação do Supabase, cai na tela de reset
   useEffect(() => {
     if (typeof window === "undefined") return;
     const hash = window.location.hash || "";
@@ -221,7 +243,7 @@ export default function App() {
       </div>
     );
 
-  // views que exigem usuário logado
+  // Views que exigem usuário logado
   const protectedViews = [
     "dashboard",
     "cursos-dashboard",
@@ -235,7 +257,7 @@ export default function App() {
   const screens = {
     landing: <Landing onNavigate={setView} />,
     login: <Login onNavigate={setView} />,
-    "reset-password": <ResetPassword onNavigate={setView} />, // 👈 NOVO
+    "reset-password": <ResetPassword onNavigate={setView} />,
     "saida-fiscal": <SaidaFiscal onNavigate={setView} />,
     "invista-exterior": <InvistaExterior onNavigate={setView} />,
     cursos: <Cursos onNavigate={setView} />,
@@ -259,7 +281,7 @@ export default function App() {
     [
       "landing",
       "login",
-      "reset-password", // 👈 também full-screen
+      "reset-password",
       "saida-fiscal",
       "invista-exterior",
       "cursos",
