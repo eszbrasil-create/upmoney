@@ -184,12 +184,14 @@ export default function EditAtivosModal({
     // 1) linhas parcialmente preenchidas (nome sem valor ou valor sem nome)
     const linhasParciais = linhas.filter((l) => {
       const nomeOk = l.nome.trim() !== "";
-      the valorOk = l.valor.trim() !== "";
+      const valorOk = l.valor.trim() !== "";
       return (nomeOk && !valorOk) || (!nomeOk && valorOk);
     });
 
     if (linhasParciais.length > 0) {
-      setErro("Preencha NOME DO ATIVO e VALOR em todas as linhas usadas ou apague as linhas incompletas.");
+      setErro(
+        "Preencha NOME DO ATIVO e VALOR em todas as linhas usadas ou apague as linhas incompletas."
+      );
       return;
     }
 
@@ -222,7 +224,7 @@ export default function EditAtivosModal({
       if (!registroId) {
         const { data } = await supabase
           .from("registros_ativos")
-          .insert({ user_id: user.id, mes_ano: mesAno, total: totalCalc })
+          .insert({ user_id: user.id, mes_ao: mesAno, total: totalCalc }) // <- cuidado se sua coluna é mes_ano
           .select("id")
           .single();
         registroId = data.id;
