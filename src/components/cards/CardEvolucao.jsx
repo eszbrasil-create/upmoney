@@ -87,7 +87,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
       </div>
 
       {/* ÁREA DO GRÁFICO (se adapta ao card, com altura mínima) */}
-      <div className="flex-1 min-h-[370px] rounded-2xl border border-white/10 bg-slate-900/80 p-3 overflow-x-auto overflow-y-hidden">
+      <div className="flex-1 min-h-[360px] rounded-2xl border border-white/10 bg-slate-900/80 p-3 overflow-x-auto overflow-y-hidden">
         <div className="flex items-end gap-1 min-w-max h-full">
           {totals.map((valor, i) => {
             const alturaReal = Math.max(
