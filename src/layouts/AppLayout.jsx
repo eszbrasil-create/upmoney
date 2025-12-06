@@ -61,7 +61,7 @@ export default function AppLayout({ children, onNavigate, currentView, refreshDa
         currentView={currentView}
       />
 
-      <main className="ml-48 pr-0 pt-0 min-h-screen overflow-x-hidden">
+      <main className="ml-50 pr-0 pt-0 min-h-screen overflow-x-hidden">
         {children}
       </main>
 
