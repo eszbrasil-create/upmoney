@@ -8,24 +8,30 @@ export default function CardResumo({ data }) {
     maximumFractionDigits: 2,
   });
 
-  const { mesAtual, patrimonioAtual, comparativos, distribuicao } = data;
+  const { mesAtual, patrimonioAtual, comparativos, distribuicao } = data || {};
 
   const variacao = (base) => {
-    if (!base || base <= 0) return null;
+    if (base == null || base <= 0) return null;
     return (patrimonioAtual - base) / base;
   };
 
   const totalDist =
     distribuicao?.reduce((acc, it) => acc + (it.valor || 0), 0) || 0;
 
+  const linhasComparativo = [
+    { label: "vs mês anterior", valor: comparativos?.mesAnterior },
+    { label: "vs 3 meses", valor: comparativos?.m3 },
+    { label: "vs 6 meses", valor: comparativos?.m6 },
+    { label: "vs 12 meses", valor: comparativos?.m12 },
+  ];
+
   return (
-    <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[640px] h-[460px] overflow-hidden shrink-0
-                    flex flex-col">
+    <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[640px] h-[460px] overflow-hidden shrink-0 flex flex-col">
       {/* Cabeçalho (fixo) */}
       <div className="shrink-0 mb-3 flex items-center justify-between">
         <span className="text-slate-100 font-semibold text-lg">Resumo</span>
         <span className="text-xs px-2 py-1 rounded bg-slate-700/60 text-slate-200">
-          {mesAtual}
+          {mesAtual || "-"}
         </span>
       </div>
 
@@ -33,19 +39,17 @@ export default function CardResumo({ data }) {
       <div className="shrink-0 flex items-center justify-between bg-slate-900/40 border border-white/5 rounded-xl px-3 py-2 mb-3">
         <span className="text-slate-300 text-sm">Patrimônio atual</span>
         <span className="text-slate-100 text-xl font-semibold">
-          {fmt.format(patrimonioAtual)}
+          {fmt.format(patrimonioAtual || 0)}
         </span>
       </div>
 
       {/* Comparativos (fixo) */}
       <div className="shrink-0 space-y-2 mb-2">
-        {[
-          { label: "vs mês anterior", valor: comparativos?.mesAnterior },
-          { label: "vs 3 meses", valor: comparativos?.m3 },
-          { label: "vs 6 meses", valor: comparativos?.m6 },
-          { label: "vs 12 meses", valor: comparativos?.m12 },
-        ].map(({ label, valor }, index) => {
-          const v = variacao(valor);
+        {linhasComparativo.map(({ label, valor }, index) => {
+          const hasValor =
+            typeof valor === "number" && !Number.isNaN(valor) && valor > 0;
+          const v = hasValor ? variacao(valor) : null;
+
           return (
             <div
               key={index}
@@ -53,7 +57,9 @@ export default function CardResumo({ data }) {
             >
               <span className="text-slate-300 text-sm">{label}</span>
               <div className="flex items-center gap-2">
-                <span className="text-slate-200 text-sm">{fmt.format(valor)}</span>
+                <span className="text-slate-200 text-sm">
+                  {hasValor ? fmt.format(valor) : "—"}
+                </span>
                 {v !== null && (
                   <span
                     className={`text-xs font-medium ${
