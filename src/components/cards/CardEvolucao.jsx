@@ -6,7 +6,7 @@ const MESES = [
   "Jul","Ago","Set","Out","Nov","Dez"
 ];
 
-// Normaliza "11/26", "nov/26", "Nov-2026" etc para "Nov/2026"
+// Normaliza "11/26", "nov/26", etc. → "Nov/2026"
 function normalizeMesAno(str) {
   if (!str || !str.includes("/")) return str;
 
@@ -61,7 +61,8 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
     );
   }, [normalizedColumns, rows]);
 
-  const max = Math.max(1, ...totals);
+  const maxBruto = Math.max(1, ...totals);
+  const max = Number.isFinite(maxBruto) && maxBruto > 0 ? maxBruto : 1;
 
   // Animação
   const [animate, setAnimate] = useState(false);
@@ -73,8 +74,12 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
   // Tooltip
   const [tip, setTip] = useState(null);
 
+  // 🔹 Altura máxima da barra em pixels (dentro do gráfico)
+  const MAX_BAR_HEIGHT = 260; // aumentei para ocupar mais o card
+
   return (
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] flex flex-col">
+      
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <span className="text-slate-100 font-semibold text-lg">Evolução</span>
@@ -83,51 +88,47 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
         </span>
       </div>
 
-      {/*
-        Área do gráfico:
-        - mantém a mesma altura do card que você já tinha (min-h)
-        - flex + items-end para colar as barras na parte de baixo
-      */}
+      {/* Área do gráfico (mesma altura de antes) */}
       <div className="flex-1 min-h-[345px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-2 overflow-x-auto overflow-y-hidden flex items-end">
-        <div className="flex items-end gap-1 min-w-max h-full w-full">
+        <div className="flex items-end gap-1 min-w-max h-full">
           {totals.map((valor, i) => {
             const proporcao = max > 0 ? valor / max : 0;
-            // altura em % da área disponível (a maior barra chega perto de 100%)
-            const alturaPct = animate ? Math.max(proporcao * 100, 3) : 2;
+            const alturaReal = Math.max(
+              6,
+              Math.round(proporcao * MAX_BAR_HEIGHT)
+            );
+            const altura = animate ? alturaReal : 4;
 
             const [mes, ano] = normalizedColumns[i].split("/");
 
             return (
-              <div
-                key={i}
-                className="flex flex-col items-center w-10 h-full"
-              >
-                {/* Zona da barra ocupa todo o espaço acima do texto */}
-                <div className="w-full flex-1 flex items-end">
-                  <div
-                    className="w-full rounded-xl bg-sky-400/80 hover:bg-sky-300 transition-all duration-700 ease-out cursor-pointer"
-                    style={{ height: `${alturaPct}%` }}
-                    onMouseEnter={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      setTip({
-                        x: rect.left + rect.width / 2,
-                        y: rect.top - 10,
-                        mes,
-                        ano,
-                        valor,
-                      });
-                    }}
-                    onMouseMove={(e) => {
-                      setTip((prev) =>
-                        prev ? { ...prev, x: e.clientX, y: e.clientY - 12 } : prev
-                      );
-                    }}
-                    onMouseLeave={() => setTip(null)}
-                  />
-                </div>
+              <div key={i} className="flex flex-col items-center gap-0.5 w-10">
+                {/* Barra */}
+                <div
+                  className="w-full rounded-xl bg-sky-400/80 hover:bg-sky-300 transition-all duration-700 ease-out cursor-pointer"
+                  style={{ height: `${altura}px` }}
+                  onMouseEnter={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setTip({
+                      x: rect.left + rect.width / 2,
+                      y: rect.top - 10,
+                      mes,
+                      ano,
+                      valor,
+                    });
+                  }}
+                  onMouseMove={(e) => {
+                    setTip((prev) =>
+                      prev
+                        ? { ...prev, x: e.clientX, y: e.clientY - 12 }
+                        : prev
+                    );
+                  }}
+                  onMouseLeave={() => setTip(null)}
+                />
 
-                {/* Labels embaixo, fora da área da barra */}
-                <div className="mt-1 text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap">
+                {/* Labels */}
+                <div className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap mt-1">
                   {mes}
                   <br />
                   <span className="text-[11px] opacity-70">{ano}</span>
