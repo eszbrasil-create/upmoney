@@ -1,26 +1,30 @@
 // src/components/cards/CardEvolucao.jsx
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
+// Normaliza formatos
 function normalizeMesAno(str) {
   if (!str || !str.includes("/")) return str;
 
   let [mes, ano] = str.split("/").map((s) => s.trim());
-  
+
+  // Mês numérico → abreviação
   if (/^\d+$/.test(mes)) {
     const idx = Number(mes) - 1;
     if (idx >= 0 && idx < 12) mes = MESES[idx];
   } else {
     mes = mes.charAt(0).toUpperCase() + mes.slice(1, 3).toLowerCase();
-    const found = MESES.find(m => m.toLowerCase() === mes.toLowerCase());
+    const found = MESES.find((m) => m.toLowerCase() === mes.toLowerCase());
     if (found) mes = found;
   }
 
+  // Ano 2 dígitos → 4 dígitos
   if (/^\d{2}$/.test(ano)) ano = `20${ano}`;
   return `${mes}/${ano}`;
 }
 
+// Tooltip visual
 function Tooltip({ x, y, mes, ano, valor }) {
   return (
     <div className="fixed z-50 pointer-events-none" style={{ left: x, top: y }}>
@@ -41,6 +45,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
     [columns]
   );
 
+  // Soma por mês
   const totals = useMemo(() => {
     return normalizedColumns.map((_, colIdx) =>
       rows.reduce((acc, r) => acc + (r.valores?.[colIdx] || 0), 0)
@@ -49,20 +54,21 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
 
   const max = Math.max(1, ...totals);
 
+  const chartRef = useRef(null);
+
+  // Animação inicial
   const [animate, setAnimate] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setAnimate(true), 80);
+    const t = setTimeout(() => setAnimate(true), 100);
     return () => clearTimeout(t);
   }, []);
 
   const [tip, setTip] = useState(null);
 
-  // 🔥️ Novo: ref para medir altura dinâmica
-  const chartRef = useRef(null);
-
   return (
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] flex flex-col">
-      
+
+      {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <span className="text-slate-100 font-semibold text-lg">Evolução</span>
         <span className="text-xs px-2 py-1 rounded-lg bg-slate-700/60 text-slate-300">
@@ -70,28 +76,30 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
         </span>
       </div>
 
-      {/* 🔧 Agora o gráfico usa toda a altura disponível */}
+      {/* Área do gráfico (apenas ajuste aqui, mais nada no layout externo) */}
       <div
         ref={chartRef}
-        className="flex-1 min-h-[345px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-2 overflow-x-auto overflow-y-hidden flex items-end"
+        className="flex-1 min-h-[345px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-4 pb-2 overflow-x-auto overflow-y-hidden flex items-end"
       >
         <div className="flex items-end gap-1 min-w-max h-full">
 
           {totals.map((valor, i) => {
-            const containerHeight = chartRef.current?.offsetHeight || 200;
+            const containerHeight = chartRef.current?.offsetHeight || 300;
 
-            // 🧠 Altura proporcional ao container (sem limite fixo)
+            // 🧠 Ajuste correto: ocupa área útil sem alterar o card
             const alturaReal = Math.max(
-              6,
-              Math.round((valor / max) * (containerHeight - 50))
+              8,
+              Math.round((valor / max) * (containerHeight - 110))
             );
 
             const altura = animate ? alturaReal : 4;
+
             const [mes, ano] = normalizedColumns[i].split("/");
 
             return (
-              <div key={i} className="flex flex-col items-center gap-0.5 w-10">
+              <div key={i} className="flex flex-col items-center gap-1 w-10">
 
+                {/* Barra */}
                 <div
                   className="w-full rounded-xl bg-sky-400/80 hover:bg-sky-300 transition-all duration-700 ease-out cursor-pointer"
                   style={{ height: `${altura}px` }}
@@ -109,7 +117,8 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
                   onMouseLeave={() => setTip(null)}
                 />
 
-                <div className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap mt-1">
+                {/* Label */}
+                <div className="text-[12px] text-slate-300 text-center whitespace-nowrap leading-tight">
                   {mes}
                   <br />
                   <span className="text-[11px] opacity-70">{ano}</span>
@@ -117,6 +126,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
               </div>
             );
           })}
+
         </div>
       </div>
 
