@@ -1,5 +1,5 @@
 // src/components/cards/CardEvolucao.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
@@ -57,7 +57,8 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
 
   const [tip, setTip] = useState(null);
 
-  const MAX_BAR_HEIGHT = 230;
+  // 🔥️ Novo: ref para medir altura dinâmica
+  const chartRef = useRef(null);
 
   return (
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] flex flex-col">
@@ -69,15 +70,22 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
         </span>
       </div>
 
-      {/* 🎯 AQUI ESTÁ O AJUSTE: pb-2 para levantar as barras */}
-      <div className="flex-1 min-h-[345px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-2 overflow-x-auto overflow-y-hidden flex items-end">
-        
+      {/* 🔧 Agora o gráfico usa toda a altura disponível */}
+      <div
+        ref={chartRef}
+        className="flex-1 min-h-[345px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-2 overflow-x-auto overflow-y-hidden flex items-end"
+      >
         <div className="flex items-end gap-1 min-w-max h-full">
 
           {totals.map((valor, i) => {
+            const containerHeight = chartRef.current?.offsetHeight || 200;
+
+            // 🧠 Altura proporcional ao container (sem limite fixo)
             const alturaReal = Math.max(
-              6, Math.round((valor / max) * MAX_BAR_HEIGHT)
+              6,
+              Math.round((valor / max) * (containerHeight - 50))
             );
+
             const altura = animate ? alturaReal : 4;
             const [mes, ano] = normalizedColumns[i].split("/");
 
@@ -101,7 +109,6 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
                   onMouseLeave={() => setTip(null)}
                 />
 
-                {/* 🔥 Labels levemente elevados */}
                 <div className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap mt-1">
                   {mes}
                   <br />
