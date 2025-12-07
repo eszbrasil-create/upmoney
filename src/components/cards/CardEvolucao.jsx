@@ -98,7 +98,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
       </div>
 
       {/* GRÁFICO — agora o conteúdo todo fica encostado na borda inferior */}
-      <div className="flex-1 min-h-[345px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-0.5 overflow-x-auto overflow-y-hidden flex items-end">
+      <div className="flex-1 min-h-[345px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-0.7 overflow-x-auto overflow-y-hidden flex items-end">
         {/* linha de colunas/barras */}
         <div className="flex items-end gap-1 min-w-max w-full">
           {totals.map((valor, i) => {
