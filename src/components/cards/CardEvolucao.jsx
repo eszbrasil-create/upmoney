@@ -1,18 +1,13 @@
 // src/components/cards/CardEvolucao.jsx
 import React, { useEffect, useMemo, useState } from "react";
 
-const MESES = [
-  "Jan","Fev","Mar","Abr","Mai","Jun",
-  "Jul","Ago","Set","Out","Nov","Dez"
-];
+const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
-// Normaliza "11/26", "nov/26", etc. → "Nov/2026"
 function normalizeMesAno(str) {
   if (!str || !str.includes("/")) return str;
 
   let [mes, ano] = str.split("/").map((s) => s.trim());
 
-  // mês numérico → abreviação
   if (/^\d+$/.test(mes)) {
     const idx = Number(mes) - 1;
     if (idx >= 0 && idx < 12) mes = MESES[idx];
@@ -22,13 +17,11 @@ function normalizeMesAno(str) {
     if (found) mes = found;
   }
 
-  // ano 2 dígitos → 4 dígitos
   if (/^\d{2}$/.test(ano)) ano = `20${ano}`;
 
   return `${mes}/${ano}`;
 }
 
-// Tooltip
 function Tooltip({ x, y, mes, ano, valor }) {
   return (
     <div className="fixed z-50 pointer-events-none" style={{ left: x, top: y }}>
@@ -37,10 +30,7 @@ function Tooltip({ x, y, mes, ano, valor }) {
           {mes}/{ano}
         </div>
         <div className="text-sm text-slate-100 font-semibold">
-          {valor.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          })}
+          {valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
         </div>
       </div>
     </div>
@@ -48,38 +38,28 @@ function Tooltip({ x, y, mes, ano, valor }) {
 }
 
 export default function CardEvolucao({ columns = [], rows = [] }) {
-  // Meses normalizados
-  const normalizedColumns = useMemo(
-    () => columns.map(normalizeMesAno),
-    [columns]
-  );
+  const normalizedColumns = useMemo(() => columns.map(normalizeMesAno), [columns]);
 
-  // Total por mês
   const totals = useMemo(() => {
     return normalizedColumns.map((_, colIdx) =>
       rows.reduce((acc, r) => acc + (r.valores?.[colIdx] || 0), 0)
     );
   }, [normalizedColumns, rows]);
 
-  const maxBruto = Math.max(1, ...totals);
-  const max = Number.isFinite(maxBruto) && maxBruto > 0 ? maxBruto : 1;
+  const max = Math.max(1, ...totals);
 
-  // Animação
   const [animate, setAnimate] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setAnimate(true), 80);
     return () => clearTimeout(t);
   }, []);
 
-  // Tooltip
   const [tip, setTip] = useState(null);
 
-  // 🔹 Altura máxima da barra em pixels (dentro do gráfico)
-  const MAX_BAR_HEIGHT = 260; // aumentei para ocupar mais o card
+  const MAX_BAR_HEIGHT = 260;
 
   return (
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] flex flex-col">
-      
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <span className="text-slate-100 font-semibold text-lg">Evolução</span>
@@ -88,27 +68,37 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
         </span>
       </div>
 
-      {/* Área do gráfico (mesma altura de antes) */}
-      <div className="flex-1 min-h-[345px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-2 overflow-x-auto overflow-y-hidden flex items-end">
-        <div className="flex items-end gap-1 min-w-max h-full">
-          {totals.map((valor, i) => {
-            const proporcao = max > 0 ? valor / max : 0;
-            const alturaReal = Math.max(
-              6,
-              Math.round(proporcao * MAX_BAR_HEIGHT)
-            );
-            const altura = animate ? alturaReal : 4;
+      {/* Gráfico */}
+      <div className="flex-1 min-h-[345px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-6 pb-14 relative overflow-hidden">
+        {/* Container absoluto para barras + labels */}
+        <div className="absolute inset-x-3 bottom-0 h-full flex flex-col justify-end">
+          
+          {/* Labels (mês + ano) na base */}
+          <div className="flex justify-between gap-1 mb-3">
+            {normalizedColumns.map((col, i) => {
+              const [mes, ano] = col.split("/");
+              return (
+                <div key={i} className="flex-1 text-center">
+                  <div className="text-[12px] text-slate-300 font-medium">{mes}</div>
+                  <div className="text-[10px] text-slate-400 opacity-80 mt-0.5">{ano}</div>
+                </div>
+              );
+            })}
+          </div>
 
-            const [mes, ano] = normalizedColumns[i].split("/");
+          {/* Barras (agora aparecem!) */}
+          <div className="flex items-end gap-1 pb-2">
+            {totals.map((valor, i) => {
+              const alturaReal = Math.max(6, Math.round((valor / max) * MAX_BAR_HEIGHT));
+              const altura = animate ? alturaReal : 4;
 
-            return (
-              <div key={i} className="flex flex-col items-center gap-0.5 w-10">
-                {/* Barra */}
+              return (
                 <div
-                  className="w-full rounded-xl bg-sky-400/80 hover:bg-sky-300 transition-all duration-700 ease-out cursor-pointer"
-                  style={{ height: `${altura}px` }}
+                  key={i}
+                  className="flex-1 flex justify-center"
                   onMouseEnter={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
+                    const [mes, ano] = normalizedColumns[i].split("/");
                     setTip({
                       x: rect.left + rect.width / 2,
                       y: rect.top - 10,
@@ -118,24 +108,18 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
                     });
                   }}
                   onMouseMove={(e) => {
-                    setTip((prev) =>
-                      prev
-                        ? { ...prev, x: e.clientX, y: e.clientY - 12 }
-                        : prev
-                    );
+                    setTip(prev => prev ? { ...prev, x: e.clientX, y: e.clientY - 12 } : prev);
                   }}
                   onMouseLeave={() => setTip(null)}
-                />
-
-                {/* Labels */}
-                <div className="text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap mt-1">
-                  {mes}
-                  <br />
-                  <span className="text-[11px] opacity-70">{ano}</span>
+                >
+                  <div
+                    className="w-10 rounded-xl bg-sky-400/80 hover:bg-sky-300 transition-all duration-700 ease-out cursor-pointer"
+                    style={{ height: `${altura}px` }}
+                  />
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
