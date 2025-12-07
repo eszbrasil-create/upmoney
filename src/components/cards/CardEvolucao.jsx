@@ -140,7 +140,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
                 />
 
                 {/* Label – grudadinha embaixo */}
-                <div className="mt-1 -mb-1 text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap">
+                <div className="mt-2 -mb-1 text-[12px] text-slate-300 text-center leading-tight whitespace-nowrap">
                   {mes}
                   <br />
                   <span className="text-[11px] opacity-70">{ano}</span>
