@@ -52,22 +52,21 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
 
   const [tip, setTip] = useState(null);
 
-  const MAX_BAR_HEIGHT = 270; // aumentei um pouco pra compensar o espaço dos labels
+  const MAX_BAR_HEIGHT = 280;
 
   return (
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] flex flex-col">
-      {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <span className="text-slate-100 font-semibold text-lg">Evolução</span>
         <span className="text-xs px-2 py-1 rounded-lg bg-slate-700/60 text-slate-300">Mensal</span>
       </div>
 
-      {/* Gráfico — REMOVI TODO O PADDING INFERIOR */}
+      {/* Gráfico — sem padding inferior */}
       <div className="flex-1 rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-6 pb-0 overflow-hidden relative">
-        {/* Container absoluto: barras + labels na base, sem espaço */}
+        {/* Container absoluto: barras + labels na base */}
         <div className="absolute inset-x-3 bottom-0 h-full flex flex-col justify-end">
           
-          {/* BARRAS (tocando a base) */}
+          {/* BARRAS (em cima) */}
           <div className="flex items-end gap-1 h-full">
             {totals.map((valor, i) => {
               const altura = animate
@@ -95,8 +94,8 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
             })}
           </div>
 
-          {/* LABELS — colados na base, sem margem */}
-          <div className="flex justify-between gap-1 -mt-1">
+          {/* LABELS — colados na base */}
+          <div className="flex justify-between gap-1 mt-1">
             {normalizedColumns.map((col, i) => {
               const [mes, ano] = col.split("/");
               return (
