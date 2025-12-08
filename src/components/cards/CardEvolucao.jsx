@@ -87,7 +87,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
   const MAX_BAR_HEIGHT = 260;
 
   return (
-    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] flex flex-col">
+    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[620px] flex flex-col">
       {/* Cabeçalho */}
       <div className="flex justify-between items-center mb-2">
         <span className="text-slate-100 font-semibold text-lg">Evolução</span>
