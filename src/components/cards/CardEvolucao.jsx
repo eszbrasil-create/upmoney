@@ -17,7 +17,6 @@ function normalizeMesAno(str) {
   }
 
   if (/^\d{2}$/.test(ano)) ano = `20${ano}`;
-
   return `${mes}/${ano}`;
 }
 
@@ -53,7 +52,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
 
   const [tip, setTip] = useState(null);
 
-  const MAX_BAR_HEIGHT = 260;
+  const MAX_BAR_HEIGHT = 270; // aumentei um pouco pra compensar o espaço dos labels
 
   return (
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] flex flex-col">
@@ -63,13 +62,13 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
         <span className="text-xs px-2 py-1 rounded-lg bg-slate-700/60 text-slate-300">Mensal</span>
       </div>
 
-      {/* Gráfico */}
-      <div className="flex-1 min-h-[345px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-6 pb-14 relative overflow-hidden">
-        {/* Container absoluto: barras + labels na base */}
+      {/* Gráfico — REMOVI TODO O PADDING INFERIOR */}
+      <div className="flex-1 rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-6 pb-0 overflow-hidden relative">
+        {/* Container absoluto: barras + labels na base, sem espaço */}
         <div className="absolute inset-x-3 bottom-0 h-full flex flex-col justify-end">
           
-          {/* BARRAS (em cima) */}
-          <div className="flex items-end gap-1 h-full pb-10">
+          {/* BARRAS (tocando a base) */}
+          <div className="flex items-end gap-1 h-full">
             {totals.map((valor, i) => {
               const altura = animate
                 ? Math.max(6, Math.round((valor / max) * MAX_BAR_HEIGHT))
@@ -78,9 +77,9 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
               return (
                 <div
                   key={i}
-                  className="flex-1 flex justify-center"
+                  className="flex-1 flex justify-center relative"
                   onMouseEnter={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRects()[0];
+                    const rect = e.currentTarget.getBoundingClientRect();
                     const [mes, ano] = normalizedColumns[i].split("/");
                     setTip({ x: rect.left + rect.width / 2, y: rect.top - 10, mes, ano, valor });
                   }}
@@ -88,7 +87,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
                   onMouseLeave={() => setTip(null)}
                 >
                   <div
-                    className="w-10 rounded-xl bg-sky-400/80 hover:bg-sky-300 transition-all duration-700 ease-out cursor-pointer"
+                    className="w-10 rounded-t-xl bg-sky-400/80 hover:bg-sky-300 transition-all duration-700 ease-out cursor-pointer"
                     style={{ height: `${altura}px` }}
                   />
                 </div>
@@ -96,14 +95,14 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
             })}
           </div>
 
-          {/* LABELS (embaixo das barras) */}
-          <div className="flex justify-between gap-1">
+          {/* LABELS — colados na base, sem margem */}
+          <div className="flex justify-between gap-1 -mt-1">
             {normalizedColumns.map((col, i) => {
               const [mes, ano] = col.split("/");
               return (
-                <div key={i} className="flex-1 text-center">
+                <div key={i} className="flex-1 text-center leading-none">
                   <div className="text-[12px] text-slate-300 font-medium">{mes}</div>
-                  <div className="text-[10px] text-slate-400 opacity-80 mt-0.5">{ano}</div>
+                  <div className="text-[10px] text-slate-400 opacity-80">{ano}</div>
                 </div>
               );
             })}
