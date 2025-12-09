@@ -115,7 +115,7 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
   }, [idxShown, parts, total]);
 
   return (
-    <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[605px] min-w-[590px] max-w-[605px] h-[360px] p-4 overflow-hidden">
+    <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[600px] min-w-[590px] max-w-[605px] h-[360px] p-4 overflow-hidden">
       <div className="flex items-center justify-between mb-3">
         <span className="text-slate-100 font-semibold text-lg">
           Participação
