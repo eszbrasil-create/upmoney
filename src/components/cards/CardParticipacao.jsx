@@ -36,20 +36,21 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
 }
 
 export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
-  // prepara dados
+  // prepara dados — usa 100% dos itens recebidos, sem filtro e sem mudar a ordem
   const { total, parts } = useMemo(() => {
-    const t = itens.reduce((a, i) => a + (Number(i.valor) || 0), 0);
-    const p = itens
-      .map((i, idx) => ({
-        nome: i.nome,
-        valor: Number(i.valor) || 0,
-        color: PALETTE[idx % PALETTE.length],
-      }))
-      .sort((a, b) => b.valor - a.valor)
-      .map((i) => ({
-        ...i,
-        pct: t > 0 ? (i.valor / t) * 100 : 0,
-      }));
+    const baseParts = itens.map((i, idx) => ({
+      nome: i.nome,
+      valor: Number(i.valor) || 0,
+      color: PALETTE[idx % PALETTE.length],
+    }));
+
+    const t = baseParts.reduce((a, i) => a + i.valor, 0);
+
+    const p = baseParts.map((i) => ({
+      ...i,
+      pct: t > 0 ? (i.valor / t) * 100 : 0,
+    }));
+
     return { total: t, parts: p };
   }, [itens]);
 
@@ -78,12 +79,15 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
 
   // conteúdo central (total ou detalhe do ativo)
   const center = useMemo(() => {
-    if (
-      idxShown == null ||
-      idxShown < 0 ||
-      idxShown >= parts.length ||
-      total <= 0
-    ) {
+    if (!parts.length || total <= 0) {
+      return {
+        title: "Sem dados",
+        line1: "—",
+        line2: "",
+      };
+    }
+
+    if (idxShown == null || idxShown < 0 || idxShown >= parts.length) {
       return {
         title: "Total",
         line1: total.toLocaleString("pt-BR", {
@@ -126,15 +130,17 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
               const isActive = i === idxShown;
               return (
                 <li
-                  key={it.nome}
+                  key={`${it.nome}-${i}`}
                   onMouseEnter={() => setHoverIdx(i)}
                   onMouseLeave={() => setHoverIdx(null)}
-                  onClick={() => setActiveIdx((prev) => (prev === i ? null : i))}
+                  onClick={() =>
+                    setActiveIdx((prev) => (prev === i ? null : i))
+                  }
                   className={`rounded-xl border border-white/10 bg-slate-900/40 px-3 py-2 w-[220px] cursor-pointer transition
                     ${isActive ? "ring-1 ring-sky-400/50 bg-slate-900/60" : ""}`}
                   title={`${it.nome} • ${it.pct.toFixed(1)}%`}
                 >
-                  {/* ✅ AJUSTE: nome à esquerda, % à direita */}
+                  {/* nome à esquerda, % à direita */}
                   <div className="flex items-center w-full">
                     <span
                       className="inline-block h-3 w-3 rounded-full mr-2"
@@ -174,33 +180,34 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
               />
 
               {/* fatias */}
-              {parts.map((p, i) => {
-                const { start, end } = angles[i];
-                const d = arcPath(cx, cy, rOuter, rInner, start, end);
-                const selected = i === idxShown;
+              {total > 0 &&
+                parts.map((p, i) => {
+                  const { start, end } = angles[i];
+                  const d = arcPath(cx, cy, rOuter, rInner, start, end);
+                  const selected = i === idxShown;
 
-                return (
-                  <path
-                    key={p.nome}
-                    d={d}
-                    fill={p.color}
-                    fillOpacity={selected ? 1 : 0.85}
-                    className={`transition-all duration-150 cursor-pointer ${
-                      selected
-                        ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]"
-                        : ""
-                    }`}
-                    onMouseEnter={() => setHoverIdx(i)}
-                    onMouseLeave={() => setHoverIdx(null)}
-                    onClick={() =>
-                      setActiveIdx((prev) => (prev === i ? null : i))
-                    }
-                  />
-                );
-              })}
+                  return (
+                    <path
+                      key={`${p.nome}-${i}`}
+                      d={d}
+                      fill={p.color}
+                      fillOpacity={selected ? 1 : 0.85}
+                      className={`transition-all duration-150 cursor-pointer ${
+                        selected
+                          ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]"
+                          : ""
+                      }`}
+                      onMouseEnter={() => setHoverIdx(i)}
+                      onMouseLeave={() => setHoverIdx(null)}
+                      onClick={() =>
+                        setActiveIdx((prev) => (prev === i ? null : i))
+                      }
+                    />
+                  );
+                })}
 
               {/* “anel” interno extra para contraste quando há seleção */}
-              {idxShown != null && (
+              {idxShown != null && total > 0 && (
                 <circle
                   cx={cx}
                   cy={cy}
