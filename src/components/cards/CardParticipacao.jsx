@@ -3,14 +3,41 @@ import React, { useMemo, useState } from "react";
 
 const PALETTE = [
   "#8538f8ff", // sky
-  "#22d3ee", // cyan
+  "#22d3ee",   // cyan
   "#f5bb0bff", // amber
   "#e80707ff", // violet
-  "#34d399", // emerald
+  "#34d399",   // emerald
   "#71fb78ff", // rose
   "#9d72f4ff", // pink
-  "#60a5fa", // blue
+  "#60a5fa",   // blue
 ];
+
+const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+
+// mesma lógica do CardRegistro
+function normalizeMesAno(str) {
+  if (!str || typeof str !== "string" || !str.includes("/")) return str;
+
+  let [mes, ano] = str.split("/").map((s) => s.trim());
+
+  // mês numérico -> MMM
+  if (/^\d+$/.test(mes)) {
+    const idx = Number(mes) - 1;
+    if (idx >= 0 && idx < 12) mes = MESES[idx];
+  } else {
+    // mês texto -> MMM
+    mes = mes.charAt(0).toUpperCase() + mes.slice(1, 3).toLowerCase();
+    if (!MESES.includes(mes)) {
+      const found = MESES.find((m) => m.toLowerCase() === mes.toLowerCase());
+      if (found) mes = found;
+    }
+  }
+
+  // ano 2 dígitos -> 4 dígitos
+  if (/^\d{2}$/.test(ano)) ano = `20${ano}`;
+
+  return `${mes}/${ano}`;
+}
 
 // helpers para desenhar arcos em SVG
 function polarToCartesian(cx, cy, r, angleDeg) {
@@ -35,16 +62,50 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
   ].join(" ");
 }
 
-export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
-  // prepara dados
-  const { total, parts } = useMemo(() => {
-    const baseParts = itens.map((i, idx) => ({
-      nome: i.nome,
-      valor: Number(i.valor) || 0,
-      color: PALETTE[idx % PALETTE.length],
-    }));
+export default function CardParticipacao({
+  rows = [],          // mesmas rows do CardRegistro
+  columns = [],       // mesmas columns do CardRegistro
+  mesAtual = "-",     // ex: "Ago/2026"
+}) {
+  // normaliza colunas e mês atual pro mesmo formato do CardRegistro
+  const normalizedColumns = useMemo(
+    () => columns.map(normalizeMesAno),
+    [columns]
+  );
 
-    const t = baseParts.reduce((a, i) => a + i.valor, 0);
+  const normalizedMesAtual = useMemo(
+    () => normalizeMesAno(mesAtual),
+    [mesAtual]
+  );
+
+  // encontra o índice do mês atual
+  const idxMesAtual = useMemo(() => {
+    const idx = normalizedColumns.findIndex((c) => c === normalizedMesAtual);
+    // fallback: se não achar, usa última coluna disponível
+    if (idx === -1 && normalizedColumns.length > 0) {
+      return normalizedColumns.length - 1;
+    }
+    return idx;
+  }, [normalizedColumns, normalizedMesAtual]);
+
+  // prepara dados (itens) A PARTIR de rows + idxMesAtual
+  const { total, parts } = useMemo(() => {
+    if (idxMesAtual < 0) {
+      return { total: 0, parts: [] };
+    }
+
+    const baseParts = rows
+      .filter((r) => r && r.ativo && r.ativo !== "Total") // usa todas as linhas, menos "Total"
+      .map((row, idx) => {
+        const bruto = row.valores?.[idxMesAtual] ?? 0;
+        return {
+          nome: row.ativo,
+          valor: Number(bruto) || 0,
+          color: PALETTE[idx % PALETTE.length],
+        };
+      });
+
+    const t = baseParts.reduce((acc, i) => acc + i.valor, 0);
 
     const p = baseParts.map((i) => ({
       ...i,
@@ -52,12 +113,12 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
     }));
 
     return { total: t, parts: p };
-  }, [itens]);
+  }, [rows, idxMesAtual]);
 
   // interação
   const [activeIdx, setActiveIdx] = useState(null); // último clique
-  const [hoverIdx, setHoverIdx] = useState(null); // hover atual
-  const idxShown = hoverIdx ?? activeIdx; // prioridade p/ hover
+  const [hoverIdx, setHoverIdx] = useState(null);   // hover atual
+  const idxShown = hoverIdx ?? activeIdx;           // prioridade p/ hover
 
   // geometria do donut
   const size = 280; // tamanho do lado do SVG
@@ -114,6 +175,9 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
     };
   }, [idxShown, parts, total]);
 
+  // label que aparece no badge (garante que fica no mesmo formato da tabela)
+  const badgeMes = normalizedMesAtual || mesAtual || "-";
+
   return (
     <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[605px] min-w-[590px] max-w-[605px] h-[360px] p-4 overflow-hidden">
       <div className="flex items-center justify-between mb-3">
@@ -121,7 +185,7 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
           Participação
         </span>
         <span className="text-xs px-2 py-1 rounded bg-slate-700/60 text-slate-200">
-          {mesAtual}
+          {badgeMes}
         </span>
       </div>
 
