@@ -173,13 +173,13 @@ export default function DespesasPage() {
   const tableMinW = "min-w-[1400px]";
 
   const cellBase =
-    "px-3 py-1.5 border-t border-slate-700 text-right text-sm whitespace-nowrap";
+    "px-3 py-1.0 border-t border-slate-700 text-right text-sm whitespace-nowrap";
   const headBase =
-    "px-3 py-1.5 border-t border-slate-700 text-slate-300 text-sm font-medium text-right";
+    "px-3 py-1.0 border-t border-slate-700 text-slate-300 text-sm font-medium text-right";
   const firstColHead =
-    "px-3 py-1.5 border-t border-slate-700 text-slate-300 text-sm font-semibold text-left";
+    "px-3 py-1.0 border-t border-slate-700 text-slate-300 text-sm font-semibold text-left";
   const firstColCell =
-    "px-3 py-1.5 border-t border-slate-700 text-sm text-left";
+    "px-3 py-1.0 border-t border-slate-700 text-sm text-left";
 
   const SectionDivider = ({ label, variant }) => (
     <tr>
