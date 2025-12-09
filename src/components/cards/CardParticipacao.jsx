@@ -36,7 +36,7 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
 }
 
 export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
-  // prepara dados — usa 100% dos itens recebidos, sem filtro e sem mudar a ordem
+  // prepara dados
   const { total, parts } = useMemo(() => {
     const baseParts = itens.map((i, idx) => ({
       nome: i.nome,
@@ -87,7 +87,11 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
       };
     }
 
-    if (idxShown == null || idxShown < 0 || idxShown >= parts.length) {
+    if (
+      idxShown == null ||
+      idxShown < 0 ||
+      idxShown >= parts.length
+    ) {
       return {
         title: "Total",
         line1: total.toLocaleString("pt-BR", {
