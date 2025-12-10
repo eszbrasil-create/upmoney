@@ -2,10 +2,22 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Trash2, Download, Eraser } from "lucide-react";
 
-const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const MESES = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+];
 const ANOS = [2025, 2026];
 
-// Categorias básicas (pode ajustar depois)
 const CATEGORIAS = {
   RECEITA: [
     "Salário",
@@ -44,7 +56,6 @@ const initialAno = (() => {
   return ANOS.includes(atual) ? atual : ANOS[0];
 })();
 
-// Normaliza qualquer dado que venha do localStorage (para suportar mudanças de estrutura)
 function normalizarLinhas(raw) {
   try {
     const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
@@ -97,21 +108,29 @@ export default function DespesasPage() {
 
   // Helpers de edição
   const setDescricao = (id, texto) =>
-    setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, descricao: texto } : l)));
+    setLinhas((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, descricao: texto } : l))
+    );
 
   const setCategoria = (id, categoria) =>
-    setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, categoria } : l)));
+    setLinhas((prev) =>
+      prev.map((l) => (l.id === id ? { ...l, categoria } : l))
+    );
 
   const setValor = (id, mesIdx, texto) =>
     setLinhas((prev) =>
       prev.map((l) =>
         l.id === id
-          ? { ...l, valores: l.valores.map((v, i) => (i === mesIdx ? texto : v)) }
+          ? {
+              ...l,
+              valores: l.valores.map((v, i) => (i === mesIdx ? texto : v)),
+            }
           : l
       )
     );
 
-  const delLinha = (id) => setLinhas((prev) => prev.filter((l) => l.id !== id));
+  const delLinha = (id) =>
+    setLinhas((prev) => prev.filter((l) => l.id !== id));
 
   const fillAteFim = (id, mesIdx) =>
     setLinhas((prev) =>
@@ -131,8 +150,14 @@ export default function DespesasPage() {
     return Math.round(n);
   };
 
-  const receitas = useMemo(() => linhas.filter((l) => l.tipo === "RECEITA"), [linhas]);
-  const despesas = useMemo(() => linhas.filter((l) => l.tipo === "DESPESA"), [linhas]);
+  const receitas = useMemo(
+    () => linhas.filter((l) => l.tipo === "RECEITA"),
+    [linhas]
+  );
+  const despesas = useMemo(
+    () => linhas.filter((l) => l.tipo === "DESPESA"),
+    [linhas]
+  );
 
   const addReceita = () => setLinhas((prev) => [...prev, novaLinha("RECEITA")]);
   const addDespesa = () => setLinhas((prev) => [...prev, novaLinha("DESPESA")]);
@@ -145,21 +170,22 @@ export default function DespesasPage() {
     try {
       const raw = localStorage.getItem(lsKeyForAno(anoAnterior));
       const linhasAntigas = raw ? normalizarLinhas(raw) : [];
-      // Gera novos IDs para não conflitar
       const copiadas = linhasAntigas.map((l) => ({
         ...l,
         id: crypto.randomUUID(),
       }));
       setLinhas(copiadas);
-    } catch {
-      // Se der erro, não faz nada
-    }
+    } catch {}
   };
 
   // Totais
   const {
-    totReceitas, totDespesas, saldo,
-    totalReceitasAno, totalDespesasAno, saldoAno,
+    totReceitas,
+    totDespesas,
+    saldo,
+    totalReceitasAno,
+    totalDespesasAno,
+    saldoAno,
   } = useMemo(() => {
     const r = Array(12).fill(0);
     const d = Array(12).fill(0);
@@ -191,13 +217,12 @@ export default function DespesasPage() {
     });
 
   const exportCSV = () => {
-    // Agora exporta também a categoria
-    const header = ["Tipo","Categoria","Descrição",...MESES,"Total"];
+    const header = ["Tipo", "Categoria", "Descrição", ...MESES, "Total"];
     const rows = [
-      ["— RECEITAS —","","",...Array(12).fill(""),""],
+      ["— RECEITAS —", "", "", ...Array(12).fill(""), ""],
       ...receitas.map((l) => {
         const valoresNum = l.valores.map(toNum);
-        const total = valoresNum.reduce((a,b)=>a+b,0);
+        const total = valoresNum.reduce((a, b) => a + b, 0);
         return [
           l.tipo,
           l.categoria ?? "",
@@ -206,11 +231,17 @@ export default function DespesasPage() {
           Math.round(total),
         ];
       }),
-      ["TOTAL RECEITAS","", "",...totReceitas.map(Math.round), Math.round(totalReceitasAno)],
-      ["— DESPESAS —","","",...Array(12).fill(""),""],
+      [
+        "TOTAL RECEITAS",
+        "",
+        "",
+        ...totReceitas.map(Math.round),
+        Math.round(totalReceitasAno),
+      ],
+      ["— DESPESAS —", "", "", ...Array(12).fill(""), ""],
       ...despesas.map((l) => {
         const valoresNum = l.valores.map(toNum);
-        const total = valoresNum.reduce((a,b)=>a+b,0);
+        const total = valoresNum.reduce((a, b) => a + b, 0);
         return [
           l.tipo,
           l.categoria ?? "",
@@ -219,15 +250,27 @@ export default function DespesasPage() {
           Math.round(total),
         ];
       }),
-      ["TOTAL DESPESAS","", "",...totDespesas.map(Math.round), Math.round(totalDespesasAno)],
-      ["SALDO (R-D)","", "",...saldo.map(Math.round), Math.round(saldoAno)],
+      [
+        "TOTAL DESPESAS",
+        "",
+        "",
+        ...totDespesas.map(Math.round),
+        Math.round(totalDespesasAno),
+      ],
+      [
+        "SALDO (R-D)",
+        "",
+        "",
+        ...saldo.map(Math.round),
+        Math.round(saldoAno),
+      ],
     ];
 
     const csv = [header, ...rows]
       .map((r) =>
         r
           .map((v) =>
-            typeof v === "string" ? `"${v.replace(/"/g,'""')}"` : v
+            typeof v === "string" ? `"${v.replace(/"/g, '""')}"` : v
           )
           .join(";")
       )
@@ -245,7 +288,9 @@ export default function DespesasPage() {
   const clearAll = () => {
     if (confirm(`Apagar todas as linhas de ${anoSelecionado}?`)) {
       setLinhas([]);
-      try { localStorage.removeItem(lsKeyForAno(anoSelecionado)); } catch {}
+      try {
+        localStorage.removeItem(lsKeyForAno(anoSelecionado));
+      } catch {}
     }
   };
 
@@ -265,7 +310,7 @@ export default function DespesasPage() {
   const firstColCell =
     "px-2 py-0.5 border-t border-slate-700 text-sm text-left";
 
-  // versões SEM cor de texto (para a linha do saldo)
+  // versões sem cor para o saldo
   const headBaseNoColor =
     "px-2 py-0.5 border-t border-slate-700 text-xs font-medium text-right";
   const firstColHeadNoColor =
@@ -281,7 +326,9 @@ export default function DespesasPage() {
               "text-xs uppercase tracking-wider",
               variant === "green" ? "text-emerald-300 font-semibold" : "",
               variant === "red" ? "text-rose-300 font-semibold" : "",
-            ].join(" ").trim()}
+            ]
+              .join(" ")
+              .trim()}
           >
             {label}
           </span>
@@ -306,7 +353,6 @@ export default function DespesasPage() {
     if (el) el.focus();
   };
 
-  // Células de valor: Enter + setas
   const handleKeyVal = (sec, rowIdx, colIdx) => (e) => {
     const key = e.key;
 
@@ -324,7 +370,6 @@ export default function DespesasPage() {
       if (colIdx > 0) {
         focusCell(sec, rowIdx, colIdx - 1);
       } else {
-        // volta para descrição da mesma linha
         focusDesc(sec, rowIdx);
       }
       return;
@@ -332,7 +377,7 @@ export default function DespesasPage() {
 
     if (key === "ArrowDown") {
       e.preventDefault();
-      focusCell(sec, rowIdx + 1, colIdx); // se não existir linha, não faz nada
+      focusCell(sec, rowIdx + 1, colIdx);
       return;
     }
 
@@ -345,7 +390,6 @@ export default function DespesasPage() {
     }
   };
 
-  // Descrição: Enter + setas
   const handleKeyDesc = (sec, rowIdx) => (e) => {
     const key = e.key;
 
@@ -363,22 +407,19 @@ export default function DespesasPage() {
 
     if (key === "ArrowRight") {
       e.preventDefault();
-      // vai para a primeira célula de mês (coluna 0)
       focusCell(sec, rowIdx, 0);
       return;
     }
   };
 
-  // Classe ÚNICA para a linha de saldo, baseada no saldo do ano
+  // Classe para a linha do saldo (ano inteiro)
   const saldoRowClass =
     saldoAno >= 0 ? "text-emerald-300 font-bold" : "text-rose-300 font-bold";
 
-  // Resumo compacto (texto abaixo do título)
   const percGasto =
     totalReceitasAno > 0 ? (totalDespesasAno / totalReceitasAno) * 100 : 0;
   const saldoMedioMensal = saldoAno / 12;
 
-  // Ano anterior existe?
   const idxAno = ANOS.indexOf(anoSelecionado);
   const temAnoAnterior = idxAno > 0;
 
@@ -387,7 +428,6 @@ export default function DespesasPage() {
       {/* Cabeçalho + ações */}
       <div className="mb-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          {/* Título + seleção de ano */}
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-slate-100 text-3xl font-semibold">
               Despesas
@@ -410,7 +450,6 @@ export default function DespesasPage() {
             </div>
           </div>
 
-          {/* Botões */}
           <div className="flex flex-wrap items-center gap-2">
             {temAnoAnterior && (
               <button
@@ -453,12 +492,14 @@ export default function DespesasPage() {
           </div>
         </div>
 
-        {/* Resumo compacto textual */}
         <div className="mt-2 text-[11px] sm:text-xs text-slate-400">
           {totalReceitasAno > 0 ? (
             <>
-              Em <span className="font-semibold text-slate-200">{anoSelecionado}</span> você está
-              gastando{" "}
+              Em{" "}
+              <span className="font-semibold text-slate-200">
+                {anoSelecionado}
+              </span>{" "}
+              você está gastando{" "}
               <span className="font-semibold text-rose-300">
                 {percGasto.toFixed(0)}%
               </span>{" "}
@@ -495,9 +536,7 @@ export default function DespesasPage() {
 
             <thead className="sticky top-0 z-30 bg-slate-900">
               <tr>
-                <th
-                  className="px-2 py-1 border-t border-slate-700 text-slate-300 text-xs font-medium text-center sticky left-0 bg-slate-900 z-30"
-                />
+                <th className="px-2 py-1 border-t border-slate-700 text-slate-300 text-xs font-medium text-center sticky left-0 bg-slate-900 z-30" />
                 <th
                   className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 z-30 text-xs`}
                 >
@@ -509,7 +548,9 @@ export default function DespesasPage() {
                   Descrição
                 </th>
                 {MESES.map((m) => (
-                  <th key={m} className={headBase}>{m}</th>
+                  <th key={m} className={headBase}>
+                    {m}
+                  </th>
                 ))}
                 <th className={headBase}>Total</th>
               </tr>
@@ -535,8 +576,9 @@ export default function DespesasPage() {
                       </button>
                     </td>
 
-                    {/* Categoria */}
-                    <td className={`${firstColCell} sticky left-[3.5rem] bg-slate-900`}>
+                    <td
+                      className={`${firstColCell} sticky left-[3.5rem] bg-slate-900`}
+                    >
                       <select
                         className="w-full bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-500"
                         value={l.categoria}
@@ -551,13 +593,16 @@ export default function DespesasPage() {
                       </select>
                     </td>
 
-                    {/* Descrição */}
-                    <td className={`${firstColCell} sticky left-[11.5rem] bg-slate-900`}>
+                    <td
+                      className={`${firstColCell} sticky left-[11.5rem] bg-slate-900`}
+                    >
                       <input
                         className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500 text-sm"
                         placeholder="Nova receita"
                         value={l.descricao}
-                        onChange={(e) => setDescricao(l.id, e.target.value)}
+                        onChange={(e) =>
+                          setDescricao(l.id, e.target.value)
+                        }
                         onKeyDown={handleKeyDesc("rec", rIdx)}
                         data-dsec="rec"
                         data-drow={rIdx}
@@ -586,18 +631,18 @@ export default function DespesasPage() {
                       </td>
                     ))}
 
-                    <td className={`${cellBase} font-semibold text-slate-200`}>
+                    <td
+                      className={`${cellBase} font-semibold text-slate-200`}
+                    >
                       {fmtBR(somaLinha)}
                     </td>
                   </tr>
                 );
               })}
 
-              {/* TOTAL RECEITAS (não-sticky, linha padrão) */}
-              <tr className="bg-slate-900">
-                <td
-                  className="sticky left-0 bg-slate-900 border-t border-slate-700"
-                />
+              {/* TOTAL RECEITAS – mesma altura da linha de Total Despesas */}
+              <tr className="bg-slate-900 h-8">
+                <td className="sticky left-0 bg-slate-900 border-t border-slate-700" />
                 <td
                   className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 text-emerald-300 text-xs`}
                 />
@@ -640,8 +685,9 @@ export default function DespesasPage() {
                       </button>
                     </td>
 
-                    {/* Categoria */}
-                    <td className={`${firstColCell} sticky left-[3.5rem] bg-slate-900`}>
+                    <td
+                      className={`${firstColCell} sticky left-[3.5rem] bg-slate-900`}
+                    >
                       <select
                         className="w-full bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-500"
                         value={l.categoria}
@@ -656,13 +702,16 @@ export default function DespesasPage() {
                       </select>
                     </td>
 
-                    {/* Descrição */}
-                    <td className={`${firstColCell} sticky left-[11.5rem] bg-slate-900`}>
+                    <td
+                      className={`${firstColCell} sticky left-[11.5rem] bg-slate-900`}
+                    >
                       <input
                         className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500 text-sm"
                         placeholder="Nova despesa"
                         value={l.descricao}
-                        onChange={(e) => setDescricao(l.id, e.target.value)}
+                        onChange={(e) =>
+                          setDescricao(l.id, e.target.value)
+                        }
                         onKeyDown={handleKeyDesc("des", dIdx)}
                         data-dsec="des"
                         data-drow={dIdx}
@@ -691,18 +740,18 @@ export default function DespesasPage() {
                       </td>
                     ))}
 
-                    <td className={`${cellBase} font-semibold text-slate-200`}>
+                    <td
+                      className={`${cellBase} font-semibold text-slate-200`}
+                    >
                       {fmtBR(somaLinha)}
                     </td>
                   </tr>
                 );
               })}
 
-              {/* TOTAL DESPESAS – agora igual à linha de Total Receitas */}
-              <tr className="bg-slate-900">
-                <td
-                  className="sticky left-0 bg-slate-900 border-t border-slate-700"
-                />
+              {/* TOTAL DESPESAS – mesma estrutura e altura da Total Receitas */}
+              <tr className="bg-slate-900 h-8">
+                <td className="sticky left-0 bg-slate-900 border-t border-slate-700" />
                 <td
                   className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 text-rose-300 text-xs`}
                 />
@@ -726,7 +775,7 @@ export default function DespesasPage() {
                 </td>
               </tr>
 
-              {/* SALDO – linha inteira vermelha ou verde conforme saldoAno (continua sticky) */}
+              {/* SALDO – fixo e colorido por saldoAno */}
               <tr>
                 <td
                   className="sticky bottom-0 left-0 z-30 bg-slate-900 border-t border-slate-700"
