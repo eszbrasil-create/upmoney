@@ -566,7 +566,7 @@ export default function DespesasPage() {
                 const categoriasRec = CATEGORIAS.RECEITA || [];
                 return (
                   <tr key={l.id} className="hover:bg-slate-800/30">
-                    <td className="px-2 py-0.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900">
+                    <td className="px-0 py-0 border-t border-slate-700 text-center sticky left-0 bg-slate-900">
                       <button
                         onClick={() => delLinha(l.id)}
                         className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-rose-400"
