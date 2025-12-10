@@ -21,7 +21,7 @@ const IconInstagram = (props) => (
   </svg>
 );
 
-// Divider ajustado
+// Divider reduzido
 const SectionDivider = () => (
   <div className="w-full">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -72,75 +72,65 @@ export default function Landing({ onNavigate }) {
   return (
     <div className="min-h-screen flex flex-col bg-white text-[#1f3548]">
 
-      {/* Header */}
+      {/* HEADER */}
       <header className="sticky top-0 z-40 bg-[#1f3548] text-white/95">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="mx-auto max-w-7xl h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
 
           <button
             type="button"
             onClick={() => onNavigate?.("landing")}
-            className="font-semibold tracking-tight text-xl hover:opacity-90 transition-opacity"
+            className="font-semibold tracking-tight text-xl hover:opacity-90"
           >
             UpMoney
           </button>
 
           <nav className="hidden md:flex items-center gap-8 text-[15px] font-semibold">
-            <a onClick={(e) => {e.preventDefault(); onNavigate?.("cursos");}} className="hover:text-white">
-              Cursos
-            </a>
-            <a onClick={(e) => {e.preventDefault(); onNavigate?.("cashcontrol-home");}} className="hover:text-white">
-              UpControl
-            </a>
-            <a onClick={(e) => {e.preventDefault(); onNavigate?.("saida-fiscal");}} className="hover:text-white">
-              Saída Fiscal
-            </a>
-            <a onClick={(e) => {e.preventDefault(); onNavigate?.("invista-exterior");}} className="hover:text-white">
-              Invista no Exterior
-            </a>
+            <a onClick={(e) => { e.preventDefault(); onNavigate?.("cursos"); }} className="hover:text-white">Cursos</a>
+            <a onClick={(e) => { e.preventDefault(); onNavigate?.("cashcontrol-home"); }} className="hover:text-white">UpControl</a>
+            <a onClick={(e) => { e.preventDefault(); onNavigate?.("saida-fiscal"); }} className="hover:text-white">Saída Fiscal</a>
+            <a onClick={(e) => { e.preventDefault(); onNavigate?.("invista-exterior"); }} className="hover:text-white">Invista no Exterior</a>
           </nav>
 
           <div className="flex items-center gap-3">
-
             <button
               type="button"
               onClick={() => onNavigate?.("login")}
-              className="hidden sm:inline-flex items-center rounded-xl bg-[#F5B60A] px-4 py-2 text-sm font-bold text-[#1f3548] hover:brightness-105 transition"
+              className="hidden sm:inline-flex items-center rounded-xl bg-[#F5B60A] px-4 py-2 text-sm font-bold text-[#1f3548] hover:brightness-105"
             >
               Meu Plano
             </button>
 
-            <a href="https://youtube.com" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20">
+            <a href="https://youtube.com" className="h-9 w-9 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20">
               <IconYouTube className="h-4 w-4" />
             </a>
 
-            <a href="https://instagram.com" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20">
+            <a href="https://instagram.com" className="h-9 w-9 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20">
               <IconInstagram className="h-4 w-4" />
             </a>
-
           </div>
+
         </div>
       </header>
 
-      {/* HERO PRINCIPAL */}
+      {/* HERO */}
       <main className="flex-1">
 
         <section className="bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-12 items-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-12 items-center">
 
             <div className="order-2 md:order-1">
-              <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden bg-[#cfd6dc]/30 flex items-center justify-center">
-                <img src="/hero-hand-tree.png" className="h-full w-full object-cover" />
+              <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden bg-[#cfd6dc]/30">
+                <img src="/hero-hand-tree.png" className="w-full h-full object-cover" />
               </div>
             </div>
 
             <div className="order-1 md:order-2">
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-[#1f3548] leading-tight">
+              <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight text-[#1f3548]">
                 Conquiste seu Primeiro Dividendo em 30 dias
               </h1>
 
               <p className="mt-5 text-base sm:text-lg text-[#1f3548]/80">
-                Nada de complicação ou termos difíceis — aqui você aprende fazendo, com orientação real
-                no seu ritmo, para finalmente entrar no mundo dos investimentos com segurança.
+                Nada de complicação ou termos difíceis — aqui você aprende fazendo, com orientação real no seu ritmo, para finalmente entrar no mundo dos investimentos com segurança.
               </p>
 
               <div className="mt-7 flex flex-wrap gap-3">
@@ -171,41 +161,34 @@ export default function Landing({ onNavigate }) {
           </div>
         </section>
 
-        {/* ESPAÇAMENTO REDUZIDO */}
         <div className="h-2 md:h-4"></div>
-
         <SectionDivider />
 
         {/* SEÇÃO DO PROGRAMA */}
         <section className="bg-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
 
             <div>
-
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1f3548]">
                 O Programa Completo para Viver seu Primeiro Dividendo
               </h2>
 
               <p className="mt-4 text-base sm:text-lg text-[#1f3548]/80">
-                O método que guia você, passo a passo, até seus primeiros dividendos — 
-                e abre o caminho para a sua liberdade financeira.
+                O método que guia você, passo a passo, até seus primeiros dividendos — e abre o caminho para a sua liberdade financeira.
               </p>
 
               <ul className="mt-6 space-y-4 text-[#1f3548]/90 text-sm sm:text-base">
 
                 <li>
-                  📘 <strong>Material exclusivo completo</strong> — curso de Renda Fixa, Ações e Fundos Imobiliários,
-                  com conteúdo prático e direto ao ponto para transformar você em um investidor de verdade.
+                  📘 <strong>Material exclusivo completo</strong> — curso de Renda Fixa, Ações e Fundos Imobiliários, conteúdo prático e direto ao ponto para transformar você em um investidor de verdade.
                 </li>
 
                 <li>
-                  📊 <strong>Acesso à ferramenta de Controle de Patrimônio</strong> — organize suas despesas,
-                  receitas e investimentos com dashboards intuitivos e profissionais.
+                  📊 <strong>Acesso à ferramenta de Controle de Patrimônio</strong> — organize despesas, receitas e investimentos com dashboards intuitivos e profissionais.
                 </li>
 
                 <li>
-                  🤝 <strong><u>Acompanhamento presencial até você receber seu primeiro dividendo</u></strong> —
-                  o grande diferencial do programa: você não caminha sozinho.
+                  🤝 <strong><u>Acompanhamento presencial até você receber seu primeiro dividendo</u></strong> — o maior diferencial do programa: você não caminha sozinho.
                 </li>
 
                 <li>
@@ -214,19 +197,31 @@ export default function Landing({ onNavigate }) {
 
               </ul>
 
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#F5B60A] px-6 py-3 text-sm font-semibold text-[#1f3548] hover:brightness-105 transition"
-              >
-                <IconWhatsApp className="h-4 w-4" />
-                Agende sua avaliação gratuita
-              </button>
+              {/* 🔥 BOTÕES COPIADOS DO TOPO */}
+              <div className="mt-7 flex flex-wrap gap-3">
 
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#F5B60A] px-6 py-3 text-base font-bold text-[#1f3548] hover:brightness-105 transition"
+                >
+                  <IconWhatsApp className="h-5 w-5" />
+                  Agende sua avaliação gratuita
+                </button>
+
+                <button
+                  onClick={openWhatsAppDirect}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-6 py-3 text-base font-bold text-white hover:brightness-105 transition"
+                >
+                  <IconWhatsApp className="h-5 w-5" />
+                  Falar no WhatsApp
+                </button>
+
+              </div>
             </div>
 
             <div>
-              <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden bg-[#cfd6dc]/30 flex items-center justify-center">
-                <img src="/hero-dividendo.png" className="h-full w-full object-cover" />
+              <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden bg-[#cfd6dc]/30">
+                <img src="/hero-dividendo.png" className="w-full h-full object-cover" />
               </div>
             </div>
 
@@ -237,7 +232,7 @@ export default function Landing({ onNavigate }) {
 
       {/* MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-white rounded-2xl p-6 shadow-xl">
 
             <div className="flex items-start justify-between">
