@@ -295,10 +295,10 @@ export default function DespesasPage() {
   };
 
   // Layout – linhas mais compactas
-  const colW = "w-10";
+  const colW = "w-20";
   const categoriaColWidth = "w-32";
   const descColWidth = "w-[220px]";
-  const actionsColWidth = "w-1";
+  const actionsColWidth = "w-14";
   const tableMinW = "min-w-[1480px]";
 
   const cellBase =
@@ -542,8 +542,9 @@ export default function DespesasPage() {
                 >
                   Categoria
                 </th>
+                {/* AQUI FOI A MUDANÇA: sem sticky/left pra não cortar o texto */}
                 <th
-                  className={`${firstColHead} sticky left-[11.5rem] bg-slate-900 z-20`}
+                  className={`${firstColHead} bg-slate-900 z-20`}
                 >
                   Descrição
                 </th>
@@ -566,7 +567,7 @@ export default function DespesasPage() {
                 const categoriasRec = CATEGORIAS.RECEITA || [];
                 return (
                   <tr key={l.id} className="hover:bg-slate-800/30">
-                    <td className="px-0 py-0 border-t border-slate-700 text-center sticky left-0 bg-slate-900">
+                    <td className="px-2 py-0.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900">
                       <button
                         onClick={() => delLinha(l.id)}
                         className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-rose-400"
@@ -594,7 +595,7 @@ export default function DespesasPage() {
                     </td>
 
                     <td
-                      className={`${firstColCell} sticky left-[11.5rem] bg-slate-900`}
+                      className={`${firstColCell} bg-slate-900`}
                     >
                       <input
                         className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500 text-sm"
@@ -647,14 +648,14 @@ export default function DespesasPage() {
                   className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 text-emerald-300 text-xs`}
                 />
                 <td
-                  className={`${firstColHead} text-emerald-300 sticky left-[11.5rem] bg-slate-900`}
+                  className={`${firstColHead} text-emerald-300 bg-slate-900`}
                 >
                   Total Receitas
                 </td>
                 {totReceitas.map((v, i) => (
                   <td
                     key={`tr${i}`}
-                    className={`${headBase} text-emerald-300 bg-slate-900 py-1`}
+                    className={`${headBase} text-emerald-300 bg-slate-900`}
                   >
                     {fmtBR(v)}
                   </td>
@@ -703,7 +704,7 @@ export default function DespesasPage() {
                     </td>
 
                     <td
-                      className={`${firstColCell} sticky left-[11.5rem] bg-slate-900`}
+                      className={`${firstColCell} bg-slate-900`}
                     >
                       <input
                         className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500 text-sm"
@@ -756,7 +757,7 @@ export default function DespesasPage() {
                   className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 text-rose-300 text-xs`}
                 />
                 <td
-                  className={`${firstColHead} text-rose-300 sticky left-[11.5rem] bg-slate-900`}
+                  className={`${firstColHead} text-rose-300 bg-slate-900`}
                 >
                   Total Despesas
                 </td>
