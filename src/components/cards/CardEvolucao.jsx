@@ -77,8 +77,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
   const [tip, setTip] = useState(null);
 
   return (
-    // 👇 MANTÉM largura/altura originais, apenas removendo overflow-hidden
-    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[600px] h-[415px] shrink-0">
+    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[600px] h-[415px] shrink-0 flex flex-col">
       {/* HEADER */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-slate-100 font-semibold text-lg">Evolução</span>
@@ -87,8 +86,8 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
         </span>
       </div>
 
-      {/* ÁREA DO GRÁFICO  - só ajustei altura e padding-bottom */}
-      <div className="h-[340px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-6 overflow-x-auto overflow-y-hidden">
+      {/* ÁREA DO GRÁFICO */}
+      <div className="flex-1 rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-6 overflow-x-auto overflow-y-hidden">
         <div className="flex items-end gap-1 min-w-max">
           {totals.map((valor, i) => {
             const alturaReal = Math.max(
