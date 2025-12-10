@@ -21,7 +21,7 @@ const IconInstagram = (props) => (
   </svg>
 );
 
-// Divider reduzido
+// Divider
 const SectionDivider = () => (
   <div className="w-full">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -74,28 +74,26 @@ export default function Landing({ onNavigate }) {
 
       {/* HEADER */}
       <header className="sticky top-0 z-40 bg-[#1f3548] text-white/95">
-        <div className="mx-auto max-w-7xl h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
 
           <button
-            type="button"
             onClick={() => onNavigate?.("landing")}
-            className="font-semibold tracking-tight text-xl hover:opacity-90"
+            className="font-semibold text-xl tracking-tight hover:opacity-90"
           >
             UpMoney
           </button>
 
           <nav className="hidden md:flex items-center gap-8 text-[15px] font-semibold">
-            <a onClick={(e) => { e.preventDefault(); onNavigate?.("cursos"); }} className="hover:text-white">Cursos</a>
-            <a onClick={(e) => { e.preventDefault(); onNavigate?.("cashcontrol-home"); }} className="hover:text-white">UpControl</a>
-            <a onClick={(e) => { e.preventDefault(); onNavigate?.("saida-fiscal"); }} className="hover:text-white">Saída Fiscal</a>
-            <a onClick={(e) => { e.preventDefault(); onNavigate?.("invista-exterior"); }} className="hover:text-white">Invista no Exterior</a>
+            <a onClick={(e)=>{e.preventDefault(); onNavigate?.("cursos")}} className="hover:text-white">Cursos</a>
+            <a onClick={(e)=>{e.preventDefault(); onNavigate?.("cashcontrol-home")}} className="hover:text-white">UpControl</a>
+            <a onClick={(e)=>{e.preventDefault(); onNavigate?.("saida-fiscal")}} className="hover:text-white">Saída Fiscal</a>
+            <a onClick={(e)=>{e.preventDefault(); onNavigate?.("invista-exterior")}} className="hover:text-white">Invista no Exterior</a>
           </nav>
 
           <div className="flex items-center gap-3">
             <button
-              type="button"
               onClick={() => onNavigate?.("login")}
-              className="hidden sm:inline-flex items-center rounded-xl bg-[#F5B60A] px-4 py-2 text-sm font-bold text-[#1f3548] hover:brightness-105"
+              className="hidden sm:inline-flex items-center bg-[#F5B60A] text-[#1f3548] px-4 py-2 rounded-xl text-sm font-bold hover:brightness-105"
             >
               Meu Plano
             </button>
@@ -125,6 +123,7 @@ export default function Landing({ onNavigate }) {
             </div>
 
             <div className="order-1 md:order-2">
+              {/* TITULO AJUSTADO */}
               <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight text-[#1f3548]">
                 Conquiste seu Primeiro Dividendo em 30 dias
               </h1>
@@ -136,7 +135,7 @@ export default function Landing({ onNavigate }) {
               <div className="mt-7 flex flex-wrap gap-3">
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#F5B60A] px-6 py-3 text-base font-bold text-[#1f3548] hover:brightness-105 transition"
+                  className="inline-flex items-center gap-2 bg-[#F5B60A] px-6 py-3 rounded-2xl text-base font-bold text-[#1f3548] hover:brightness-105"
                 >
                   <IconWhatsApp className="h-5 w-5" />
                   Agende sua avaliação gratuita
@@ -144,7 +143,7 @@ export default function Landing({ onNavigate }) {
 
                 <button
                   onClick={openWhatsAppDirect}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-6 py-3 text-base font-bold text-white hover:brightness-105 transition"
+                  className="inline-flex items-center gap-2 bg-[#25D366] px-6 py-3 rounded-2xl text-base font-bold text-white hover:brightness-105"
                 >
                   <IconWhatsApp className="h-5 w-5" />
                   Falar no WhatsApp
@@ -169,7 +168,8 @@ export default function Landing({ onNavigate }) {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid md:grid-cols-2 gap-10 items-center">
 
             <div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1f3548]">
+              {/* TITULO AJUSTADO AQUI TAMBÉM */}
+              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#1f3548]">
                 O Programa Completo para Viver seu Primeiro Dividendo
               </h2>
 
@@ -197,12 +197,12 @@ export default function Landing({ onNavigate }) {
 
               </ul>
 
-              {/* 🔥 BOTÕES COPIADOS DO TOPO */}
+              {/* BOTÕES COPIADOS DO TOPO */}
               <div className="mt-7 flex flex-wrap gap-3">
 
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#F5B60A] px-6 py-3 text-base font-bold text-[#1f3548] hover:brightness-105 transition"
+                  className="inline-flex items-center gap-2 bg-[#F5B60A] px-6 py-3 rounded-2xl text-base font-bold text-[#1f3548] hover:brightness-105"
                 >
                   <IconWhatsApp className="h-5 w-5" />
                   Agende sua avaliação gratuita
@@ -210,7 +210,7 @@ export default function Landing({ onNavigate }) {
 
                 <button
                   onClick={openWhatsAppDirect}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#25D366] px-6 py-3 text-base font-bold text-white hover:brightness-105 transition"
+                  className="inline-flex items-center gap-2 bg-[#25D366] px-6 py-3 rounded-2xl text-base font-bold text-white hover:brightness-105"
                 >
                   <IconWhatsApp className="h-5 w-5" />
                   Falar no WhatsApp
@@ -220,7 +220,7 @@ export default function Landing({ onNavigate }) {
             </div>
 
             <div>
-              <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden bg-[#cfd6dc]/30">
+              <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-[#cfd6dc]/30">
                 <img src="/hero-dividendo.png" className="w-full h-full object-cover" />
               </div>
             </div>
@@ -241,33 +241,27 @@ export default function Landing({ onNavigate }) {
             </div>
 
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+              <input className="w-full border rounded-xl px-3 py-2 text-sm" name="nome" value={form.nome} onChange={onChange} placeholder="Seu nome" required />
+              <input className="w-full border rounded-xl px-3 py-2 text-sm" name="email" value={form.email} onChange={onChange} placeholder="seu@email.com" required />
+              <input className="w-full border rounded-xl px-3 py-2 text-sm" name="telefone" value={form.telefone} onChange={onChange} placeholder="(DDD) 90000-0000" required />
 
-              <input name="nome" value={form.nome} onChange={onChange} placeholder="Seu nome"
-                className="w-full border rounded-xl px-3 py-2 text-sm" required />
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 border rounded-xl text-sm">
+                  Cancelar
+                </button>
 
-              <input name="email" value={form.email} onChange={onChange} placeholder="seu@email.com"
-                className="w-full border rounded-xl px-3 py-2 text-sm" required />
-
-              <input name="telefone" value={form.telefone} onChange={onChange} placeholder="(DDD) 90000-0000"
-                className="w-full border rounded-xl px-3 py-2 text-sm" required />
-
-              <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border rounded-xl text-sm">Cancelar</button>
-
-                <button type="submit"
-                  className="px-5 py-2 bg-[#1f3548] text-white rounded-xl text-sm font-semibold hover:brightness-110">
+                <button type="submit" className="px-5 py-2 bg-[#1f3548] text-white rounded-xl font-semibold text-sm hover:brightness-110">
                   Enviar pelo WhatsApp
                 </button>
               </div>
-
             </form>
+
           </div>
         </div>
       )}
 
       {/* FOOTER */}
-      <footer className="mt-10 bg-[#1f3548] text-white/95">
+      <footer className="bg-[#1f3548] text-white/95 mt-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
           <nav className="flex gap-6 text-sm">
