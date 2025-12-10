@@ -5,11 +5,34 @@ import { Trash2, Download, Eraser } from "lucide-react";
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const ANOS = [2025, 2026];
 
+// Categorias básicas (pode ajustar depois)
+const CATEGORIAS = {
+  RECEITA: [
+    "Salário",
+    "Pró-labore",
+    "Renda extra",
+    "Dividendos",
+    "Outras receitas",
+  ],
+  DESPESA: [
+    "Moradia",
+    "Alimentação",
+    "Transporte",
+    "Saúde",
+    "Educação",
+    "Lazer",
+    "Impostos/Taxas",
+    "Investimentos",
+    "Outras despesas",
+  ],
+};
+
 function novaLinha(tipo = "DESPESA") {
   return {
     id: crypto.randomUUID(),
     tipo, // "RECEITA" | "DESPESA"
     descricao: "",
+    categoria: "",
     valores: Array(12).fill(""),
   };
 }
@@ -21,6 +44,25 @@ const initialAno = (() => {
   return ANOS.includes(atual) ? atual : ANOS[0];
 })();
 
+// Normaliza qualquer dado que venha do localStorage (para suportar mudanças de estrutura)
+function normalizarLinhas(raw) {
+  try {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((l) => ({
+      id: l.id ?? crypto.randomUUID(),
+      tipo: l.tipo === "RECEITA" ? "RECEITA" : "DESPESA",
+      descricao: l.descricao ?? "",
+      categoria: l.categoria ?? "",
+      valores: Array(12)
+        .fill("")
+        .map((_, i) => (l.valores?.[i] ?? "")),
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export default function DespesasPage() {
   // ===== Ano selecionado =====
   const [anoSelecionado, setAnoSelecionado] = useState(initialAno);
@@ -29,7 +71,7 @@ export default function DespesasPage() {
   const [linhas, setLinhas] = useState(() => {
     try {
       const raw = localStorage.getItem(lsKeyForAno(initialAno));
-      return raw ? JSON.parse(raw) : [];
+      return raw ? normalizarLinhas(raw) : [];
     } catch {
       return [];
     }
@@ -40,7 +82,7 @@ export default function DespesasPage() {
     setAnoSelecionado(ano);
     try {
       const raw = localStorage.getItem(lsKeyForAno(ano));
-      setLinhas(raw ? JSON.parse(raw) : []);
+      setLinhas(raw ? normalizarLinhas(raw) : []);
     } catch {
       setLinhas([]);
     }
@@ -56,6 +98,9 @@ export default function DespesasPage() {
   // Helpers de edição
   const setDescricao = (id, texto) =>
     setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, descricao: texto } : l)));
+
+  const setCategoria = (id, categoria) =>
+    setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, categoria } : l)));
 
   const setValor = (id, mesIdx, texto) =>
     setLinhas((prev) =>
@@ -92,6 +137,25 @@ export default function DespesasPage() {
   const addReceita = () => setLinhas((prev) => [...prev, novaLinha("RECEITA")]);
   const addDespesa = () => setLinhas((prev) => [...prev, novaLinha("DESPESA")]);
 
+  // Duplicar ano anterior
+  const duplicarAnoAnterior = () => {
+    const idx = ANOS.indexOf(anoSelecionado);
+    if (idx <= 0) return;
+    const anoAnterior = ANOS[idx - 1];
+    try {
+      const raw = localStorage.getItem(lsKeyForAno(anoAnterior));
+      const linhasAntigas = raw ? normalizarLinhas(raw) : [];
+      // Gera novos IDs para não conflitar
+      const copiadas = linhasAntigas.map((l) => ({
+        ...l,
+        id: crypto.randomUUID(),
+      }));
+      setLinhas(copiadas);
+    } catch {
+      // Se der erro, não faz nada
+    }
+  };
+
   // Totais
   const {
     totReceitas, totDespesas, saldo,
@@ -127,27 +191,46 @@ export default function DespesasPage() {
     });
 
   const exportCSV = () => {
-    const header = ["Tipo","Descrição",...MESES,"Total"];
+    // Agora exporta também a categoria
+    const header = ["Tipo","Categoria","Descrição",...MESES,"Total"];
     const rows = [
-      ["— RECEITAS —","",...Array(12).fill(""),""],
+      ["— RECEITAS —","","",...Array(12).fill(""),""],
       ...receitas.map((l) => {
         const valoresNum = l.valores.map(toNum);
         const total = valoresNum.reduce((a,b)=>a+b,0);
-        return [l.tipo, l.descricao, ...valoresNum.map(Math.round), Math.round(total)];
+        return [
+          l.tipo,
+          l.categoria ?? "",
+          l.descricao,
+          ...valoresNum.map(Math.round),
+          Math.round(total),
+        ];
       }),
-      ["TOTAL RECEITAS","",...totReceitas.map(Math.round), Math.round(totalReceitasAno)],
-      ["— DESPESAS —","",...Array(12).fill(""),""],
+      ["TOTAL RECEITAS","", "",...totReceitas.map(Math.round), Math.round(totalReceitasAno)],
+      ["— DESPESAS —","","",...Array(12).fill(""),""],
       ...despesas.map((l) => {
         const valoresNum = l.valores.map(toNum);
         const total = valoresNum.reduce((a,b)=>a+b,0);
-        return [l.tipo, l.descricao, ...valoresNum.map(Math.round), Math.round(total)];
+        return [
+          l.tipo,
+          l.categoria ?? "",
+          l.descricao,
+          ...valoresNum.map(Math.round),
+          Math.round(total),
+        ];
       }),
-      ["TOTAL DESPESAS","",...totDespesas.map(Math.round), Math.round(totalDespesasAno)],
-      ["SALDO (R-D)","",...saldo.map(Math.round), Math.round(saldoAno)],
+      ["TOTAL DESPESAS","", "",...totDespesas.map(Math.round), Math.round(totalDespesasAno)],
+      ["SALDO (R-D)","", "",...saldo.map(Math.round), Math.round(saldoAno)],
     ];
 
     const csv = [header, ...rows]
-      .map((r) => r.map((v) => (typeof v === "string" ? `"${v.replace(/"/g,'""')}"` : v)).join(";"))
+      .map((r) =>
+        r
+          .map((v) =>
+            typeof v === "string" ? `"${v.replace(/"/g,'""')}"` : v
+          )
+          .join(";")
+      )
       .join("\n");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -166,24 +249,25 @@ export default function DespesasPage() {
     }
   };
 
-  // Layout
+  // Layout – linhas mais compactas
   const colW = "w-20";
-  const firstColWidth = "w-[240px]";
+  const categoriaColWidth = "w-32";
+  const descColWidth = "w-[220px]";
   const actionsColWidth = "w-14";
-  const tableMinW = "min-w-[1400px]";
+  const tableMinW = "min-w-[1480px]";
 
   const cellBase =
-    "px-3 py-1.0 border-t border-slate-700 text-right text-sm whitespace-nowrap";
+    "px-2 py-0.5 border-t border-slate-700 text-right text-xs whitespace-nowrap";
   const headBase =
-    "px-3 py-1.0 border-t border-slate-700 text-slate-300 text-sm font-medium text-right";
+    "px-2 py-0.5 border-t border-slate-700 text-slate-300 text-xs font-medium text-right";
   const firstColHead =
-    "px-3 py-1.0 border-t border-slate-700 text-slate-300 text-sm font-semibold text-left";
+    "px-2 py-0.5 border-t border-slate-700 text-slate-300 text-sm font-semibold text-left";
   const firstColCell =
-    "px-3 py-1.0 border-t border-slate-700 text-sm text-left";
+    "px-2 py-0.5 border-t border-slate-700 text-sm text-left";
 
   const SectionDivider = ({ label, variant }) => (
     <tr>
-      <td colSpan={MESES.length + 3} className="py-2">
+      <td colSpan={MESES.length + 4} className="py-2">
         <div className="flex items-center gap-3">
           <div className="h-0.5 w-full bg-slate-700" />
           <span
@@ -279,13 +363,18 @@ export default function DespesasPage() {
     }
   };
 
-  const saldoRowClass =
-    (saldoAno >= 0 ? "text-emerald-300" : "text-rose-300") + " font-bold";
+  const saldoRowClassBase = "font-bold";
+  const saldoAnoClass =
+    saldoAno >= 0 ? "text-emerald-300" : "text-rose-300";
 
   // Resumo compacto (texto abaixo do título)
   const percGasto =
     totalReceitasAno > 0 ? (totalDespesasAno / totalReceitasAno) * 100 : 0;
   const saldoMedioMensal = saldoAno / 12;
+
+  // Ano anterior existe?
+  const idxAno = ANOS.indexOf(anoSelecionado);
+  const temAnoAnterior = idxAno > 0;
 
   return (
     <div className="h-screen flex flex-col pr-0 pl-0">
@@ -317,6 +406,16 @@ export default function DespesasPage() {
 
           {/* Botões */}
           <div className="flex flex-wrap items-center gap-2">
+            {temAnoAnterior && (
+              <button
+                onClick={duplicarAnoAnterior}
+                className="px-3 py-2 rounded-md bg-slate-700 text-white text-sm hover:bg-slate-600"
+                title="Copiar receitas e despesas do ano anterior"
+              >
+                Duplicar ano anterior
+              </button>
+            )}
+
             <button
               onClick={addReceita}
               className="px-3 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-500"
@@ -380,7 +479,8 @@ export default function DespesasPage() {
           <table className={`table-fixed ${tableMinW} w-full`}>
             <colgroup>
               <col className={actionsColWidth} />
-              <col className={firstColWidth} />
+              <col className={categoriaColWidth} />
+              <col className={descColWidth} />
               {MESES.map((_, i) => (
                 <col key={`c${i}`} className={colW} />
               ))}
@@ -390,10 +490,15 @@ export default function DespesasPage() {
             <thead className="sticky top-0 z-30 bg-slate-900">
               <tr>
                 <th
-                  className="px-2 py-1.5 border-t border-slate-700 text-slate-300 text-sm font-medium text-center sticky left-0 bg-slate-900 z-30"
+                  className="px-2 py-1 border-t border-slate-700 text-slate-300 text-xs font-medium text-center sticky left-0 bg-slate-900 z-30"
                 />
                 <th
-                  className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 z-20`}
+                  className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 z-30 text-xs`}
+                >
+                  Categoria
+                </th>
+                <th
+                  className={`${firstColHead} sticky left-[10.5rem] bg-slate-900 z-20`}
                 >
                   Descrição
                 </th>
@@ -411,21 +516,39 @@ export default function DespesasPage() {
               {receitas.map((l, rIdx) => {
                 const valoresNum = l.valores.map(toNum);
                 const somaLinha = valoresNum.reduce((a, b) => a + b, 0);
+                const categoriasRec = CATEGORIAS.RECEITA || [];
                 return (
                   <tr key={l.id} className="hover:bg-slate-800/30">
-                    <td className="px-2 py-1.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900">
+                    <td className="px-2 py-0.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900">
                       <button
                         onClick={() => delLinha(l.id)}
-                        className="p-1.5 rounded hover:bg-white/10 text-slate-400 hover:text-rose-400"
+                        className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-rose-400"
                         title="Excluir linha"
                       >
-                        <Trash2 size={18} />
+                        <Trash2 size={16} />
                       </button>
                     </td>
 
+                    {/* Categoria */}
                     <td className={`${firstColCell} sticky left-[3.5rem] bg-slate-900`}>
+                      <select
+                        className="w-full bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                        value={l.categoria}
+                        onChange={(e) => setCategoria(l.id, e.target.value)}
+                      >
+                        <option value="">Sem categoria</option>
+                        {categoriasRec.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+
+                    {/* Descrição */}
+                    <td className={`${firstColCell} sticky left-[10.5rem] bg-slate-900`}>
                       <input
-                        className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500"
+                        className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500 text-sm"
                         placeholder="Nova receita"
                         value={l.descricao}
                         onChange={(e) => setDescricao(l.id, e.target.value)}
@@ -438,7 +561,7 @@ export default function DespesasPage() {
                     {MESES.map((_, i) => (
                       <td key={i} className={cellBase}>
                         <input
-                          className="w-full bg-transparent outline-none text-slate-100 text-right placeholder:text-slate-600"
+                          className="w-full bg-transparent outline-none text-slate-100 text-right placeholder:text-slate-600 text-xs"
                           inputMode="numeric"
                           placeholder="0"
                           value={String(l.valores[i] ?? "")}
@@ -471,7 +594,11 @@ export default function DespesasPage() {
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
-                  className={`${firstColHead} text-emerald-300 sticky left-[3.5rem] bg-slate-900`}
+                  className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 text-emerald-300 text-xs`}
+                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                />
+                <td
+                  className={`${firstColHead} text-emerald-300 sticky left-[10.5rem] bg-slate-900`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   Total Receitas
@@ -497,21 +624,39 @@ export default function DespesasPage() {
               {despesas.map((l, dIdx) => {
                 const valoresNum = l.valores.map(toNum);
                 const somaLinha = valoresNum.reduce((a, b) => a + b, 0);
+                const categoriasDes = CATEGORIAS.DESPESA || [];
                 return (
                   <tr key={l.id} className="hover:bg-slate-800/30">
-                    <td className="px-2 py-1.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900">
+                    <td className="px-2 py-0.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900">
                       <button
                         onClick={() => delLinha(l.id)}
-                        className="p-1.5 rounded hover:bg-white/10 text-slate-400 hover:text-rose-400"
+                        className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-rose-400"
                         title="Excluir linha"
                       >
-                        <Trash2 size={18} />
+                        <Trash2 size={16} />
                       </button>
                     </td>
 
+                    {/* Categoria */}
                     <td className={`${firstColCell} sticky left-[3.5rem] bg-slate-900`}>
+                      <select
+                        className="w-full bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                        value={l.categoria}
+                        onChange={(e) => setCategoria(l.id, e.target.value)}
+                      >
+                        <option value="">Sem categoria</option>
+                        {categoriasDes.map((cat) => (
+                          <option key={cat} value={cat}>
+                            {cat}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+
+                    {/* Descrição */}
+                    <td className={`${firstColCell} sticky left-[10.5rem] bg-slate-900`}>
                       <input
-                        className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500"
+                        className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500 text-sm"
                         placeholder="Nova despesa"
                         value={l.descricao}
                         onChange={(e) => setDescricao(l.id, e.target.value)}
@@ -524,7 +669,7 @@ export default function DespesasPage() {
                     {MESES.map((_, i) => (
                       <td key={i} className={cellBase}>
                         <input
-                          className="w-full bg-transparent outline-none text-slate-100 text-right placeholder:text-slate-600"
+                          className="w-full bg-transparent outline-none text-slate-100 text-right placeholder:text-slate-600 text-xs"
                           inputMode="numeric"
                           placeholder="0"
                           value={String(l.valores[i] ?? "")}
@@ -557,7 +702,11 @@ export default function DespesasPage() {
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
-                  className={`${firstColHead} text-rose-300 sticky bottom-[40px] left-[3.5rem] z-20 bg-slate-900`}
+                  className={`${firstColHead} sticky bottom-[40px] left-[3.5rem] z-20 bg-slate-900 text-rose-300 text-xs`}
+                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                />
+                <td
+                  className={`${firstColHead} text-rose-300 sticky bottom-[40px] left-[10.5rem] z-20 bg-slate-900`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   Total Despesas
@@ -579,29 +728,37 @@ export default function DespesasPage() {
                 </td>
               </tr>
 
-              {/* SALDO – fixo */}
+              {/* SALDO – fixo, com meses negativos em vermelho */}
               <tr>
                 <td
                   className="sticky bottom-0 left-0 z-30 bg-slate-900 border-t border-slate-700"
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
-                  className={`${firstColHead} sticky bottom-0 left-[3.5rem] z-30 bg-slate-900 ${saldoRowClass}`}
+                  className={`${firstColHead} sticky bottom-0 left-[3.5rem] z-30 bg-slate-900 ${saldoAnoClass} ${saldoRowClassBase} text-xs`}
+                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                />
+                <td
+                  className={`${firstColHead} sticky bottom-0 left-[10.5rem] z-30 bg-slate-900 ${saldoAnoClass} ${saldoRowClassBase}`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   Saldo (R − D)
                 </td>
-                {saldo.map((v, i) => (
-                  <td
-                    key={`sl${i}`}
-                    className={`${headBase} sticky bottom-0 z-30 bg-slate-900 ${saldoRowClass}`}
-                    style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
-                  >
-                    {fmtBR(v)}
-                  </td>
-                ))}
+                {saldo.map((v, i) => {
+                  const classeMes =
+                    v >= 0 ? "text-emerald-300" : "text-rose-300";
+                  return (
+                    <td
+                      key={`sl${i}`}
+                      className={`${headBase} sticky bottom-0 z-30 bg-slate-900 ${classeMes} ${saldoRowClassBase}`}
+                      style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                    >
+                      {fmtBR(v)}
+                    </td>
+                  );
+                })}
                 <td
-                  className={`${headBase} sticky bottom-0 z-30 bg-slate-900 ${saldoRowClass}`}
+                  className={`${headBase} sticky bottom-0 z-30 bg-slate-900 ${saldoAnoClass} ${saldoRowClassBase}`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   {fmtBR(saldoAno)}
