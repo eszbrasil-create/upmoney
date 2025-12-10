@@ -21,73 +21,63 @@ const IconInstagram = (props) => (
   </svg>
 );
 
-// 🐷 Porquinho SVG (48px, usa currentColor)
+// 🐷 Porquinho sólido, estilizado para parecer correndo
 const PiggyIcon = (props) => (
   <svg
     viewBox="0 0 48 48"
-    fill="none"
     xmlns="http://www.w3.org/2000/svg"
     aria-hidden="true"
     {...props}
   >
+    {/* Corpo principal */}
     <path
-      d="M10 22c0-6.5 4.5-12 12-12h6c7.5 0 12 5.5 12 12v6c0 4.5-3.5 8-8 8H18c-4.5 0-8-3.5-8-8v-6Z"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      d="M10 22c0-6.5 4.8-12 12.5-12h6c7.5 0 12.5 5.3 12.5 12v4.5c0 5-4 9-9 9H19c-5 0-9-4-9-9V22Z"
+      fill="currentColor"
+    />
+    {/* Focinho */}
+    <circle cx="33" cy="24" r="4" fill="currentColor" />
+    <circle cx="31.8" cy="24" r="0.9" fill="#fff" />
+    <circle cx="34.2" cy="24" r="0.9" fill="#fff" />
+    {/* Olho */}
+    <circle cx="22" cy="21" r="1.4" fill="#fff" />
+    <circle cx="22" cy="21" r="0.7" fill="#1f3548" />
+    {/* Orelhas */}
+    <path
+      d="M20 13.5 17 9c-.5-.8.3-1.7 1.3-1.4L22 9.2c.5.2.9.6 1.1 1.1L24 13"
+      fill="currentColor"
     />
     <path
-      d="M16 12 14 8"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      d="M30 13.5 33 9c.5-.8-.3-1.7-1.3-1.4L28 9.2c-.5.2-.9.6-1.1 1.1L26 13"
+      fill="currentColor"
+    />
+    {/* Pernas */}
+    <path
+      d="M17 33c-.4 1.8-1.4 3-2.8 3-1.1 0-2-.8-2.2-1.9L11.5 31 14 30l3 3Z"
+      fill="currentColor"
     />
     <path
-      d="M34 12 36 8"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      d="M29 33c.4 1.8 1.4 3 2.8 3 1.1 0 2-.8 2.2-1.9L34.5 31 32 30l-3 3Z"
+      fill="currentColor"
     />
-    <circle cx="21" cy="23" r="1.6" fill="currentColor" />
-    <circle cx="29" cy="23" r="1.6" fill="currentColor" />
+    {/* Rabinho */}
     <path
-      d="M23 28c0 1.4 1.3 2.5 3 2.5s3-1.1 3-2.5"
+      d="M41 23c1.3.3 2.2 1.3 2.2 2.5S42.3 28 41 28.3"
+      fill="none"
       stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M12 30 10 34"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M36 30 38 34"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M40.5 24c2 0 3.5 1.6 3.5 3.5S42.5 31 40.5 31"
-      stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.8"
       strokeLinecap="round"
     />
   </svg>
 );
 
-// Divider com linha + porquinho animado passando em cima
+// Divider com linha + porquinho correndo ACIMA da linha
 const SectionDivider = () => (
   <div className="w-full">
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative flex items-center">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
       {/* linha */}
       <div className="h-px w-full bg-gradient-to-r from-transparent via-[#1f3548]/30 to-transparent" />
-      {/* porquinho sobre a linha */}
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none">
+      {/* porquinho acima da linha */}
+      <div className="absolute left-0 bottom-full mb-2 pointer-events-none">
         <div className="piggy-run">
           <PiggyIcon className="h-12 w-12 text-[#F5B60A]" />
         </div>
@@ -137,7 +127,7 @@ export default function Landing({ onNavigate }) {
 
   return (
     <>
-      {/* Animação do porquinho — Modelo A (linear, esquerda -> direita, loop infinito) */}
+      {/* Animação do porquinho — modelo A, 12s, linear, loop infinito */}
       <style>{`
         @keyframes piggy-walk {
           0% {
@@ -148,7 +138,7 @@ export default function Landing({ onNavigate }) {
           }
         }
         .piggy-run {
-          animation: piggy-walk 8s linear infinite;
+          animation: piggy-walk 12s linear infinite;
           will-change: transform;
         }
       `}</style>
