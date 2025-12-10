@@ -160,7 +160,7 @@ export default function Landing({ onNavigate }) {
           </div>
         </section>
 
-        <div className="h-2 md:h-4"></div>
+        <div className="h-1 md:h-2"></div>
         <SectionDivider />
 
         {/* SEÇÃO DO PROGRAMA */}
