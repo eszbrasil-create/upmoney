@@ -21,12 +21,13 @@ const IconInstagram = (props) => (
   </svg>
 );
 
+// Section Divider ajustado (OPÇÃO B)
 const SectionDivider = () => (
   <div className="w-full">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="h-px w-full bg-gradient-to-r from-transparent via-[#1f3548]/30 to-transparent" />
     </div>
-    <div className="h-10" />
+    <div className="h-4" />
   </div>
 );
 
@@ -81,7 +82,6 @@ export default function Landing({ onNavigate }) {
             UpMoney
           </button>
 
-          {/* Botões do menu */}
           <nav className="hidden md:flex items-center gap-8 text-[15px] font-semibold">
             <a
               href="#cursos"
@@ -128,9 +128,7 @@ export default function Landing({ onNavigate }) {
             </a>
           </nav>
 
-          {/* Área da direita */}
           <div className="flex items-center gap-3">
-            {/* 🔐 Botão Meu Plano -> leva para a página de Login */}
             <button
               type="button"
               onClick={() => onNavigate?.("login")}
@@ -144,7 +142,6 @@ export default function Landing({ onNavigate }) {
               target="_blank"
               rel="noreferrer"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
-              aria-label="YouTube"
             >
               <IconYouTube className="h-4 w-4" />
             </a>
@@ -154,7 +151,6 @@ export default function Landing({ onNavigate }) {
               target="_blank"
               rel="noreferrer"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg:white/10 hover:bg-white/20"
-              aria-label="Instagram"
             >
               <IconInstagram className="h-4 w-4" />
             </a>
@@ -217,7 +213,8 @@ export default function Landing({ onNavigate }) {
           </div>
         </section>
 
-        <div className="h-16 md:h-24"></div>
+        {/* Espaço reduzido (OPÇÃO B) */}
+        <div className="h-6 md:h-10"></div>
 
         <SectionDivider />
 
