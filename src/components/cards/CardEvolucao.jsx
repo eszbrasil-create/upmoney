@@ -77,7 +77,8 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
   const [tip, setTip] = useState(null);
 
   return (
-    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[600px] h-[430px] overflow-hidden shrink-0">
+    <div className="<div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[600px] h-[390px] overflow-hidden shrink-0">
+">
       {/* HEADER */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-slate-100 font-semibold text-lg">Evolução</span>
@@ -87,7 +88,8 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
       </div>
 
       {/* ÁREA DO GRÁFICO */}
-      <div className="h-[380px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-3 overflow-x-auto overflow-y-hidden">
+      <div className="<div className="h-[350px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-6 overflow-x-auto overflow-y-hidden">
+">
         <div className="flex items-end gap-1 min-w-max">
           {totals.map((valor, i) => {
             const alturaReal = Math.max(
