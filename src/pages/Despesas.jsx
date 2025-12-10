@@ -363,9 +363,9 @@ export default function DespesasPage() {
     }
   };
 
-  const saldoRowClassBase = "font-bold";
-  const saldoAnoClass =
-    saldoAno >= 0 ? "text-emerald-300" : "text-rose-300";
+  // Classe ÚNICA para a linha de saldo, baseada no saldo do ano
+  const saldoRowClass =
+    saldoAno >= 0 ? "text-emerald-300 font-bold" : "text-rose-300 font-bold";
 
   // Resumo compacto (texto abaixo do título)
   const percGasto =
@@ -728,37 +728,33 @@ export default function DespesasPage() {
                 </td>
               </tr>
 
-              {/* SALDO – fixo, com linha inteira vermelha ou verde */}
+              {/* SALDO – linha inteira vermelha ou verde conforme saldoAno */}
               <tr>
                 <td
                   className="sticky bottom-0 left-0 z-30 bg-slate-900 border-t border-slate-700"
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
-                  className={`${firstColHead} sticky bottom-0 left-[3.5rem] z-30 bg-slate-900 ${saldoAnoClass} ${saldoRowClassBase} text-xs`}
+                  className={`${firstColHead} sticky bottom-0 left-[3.5rem] z-30 bg-slate-900 ${saldoRowClass} text-xs`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
-                  className={`${firstColHead} sticky bottom-0 left-[11.5rem] z-30 bg-slate-900 ${saldoAnoClass} ${saldoRowClassBase}`}
+                  className={`${firstColHead} sticky bottom-0 left-[11.5rem] z-30 bg-slate-900 ${saldoRowClass}`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   Saldo (R − D)
                 </td>
-                {saldo.map((v, i) => {
-                  const classeMes =
-                    v >= 0 ? "text-emerald-300" : "text-rose-300";
-                  return (
-                    <td
-                      key={`sl${i}`}
-                      className={`${headBase} sticky bottom-0 z-30 bg-slate-900 ${classeMes} ${saldoRowClassBase}`}
-                      style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
-                    >
-                      {fmtBR(v)}
-                    </td>
-                  );
-                })}
+                {saldo.map((v, i) => (
+                  <td
+                    key={`sl${i}`}
+                    className={`${headBase} sticky bottom-0 z-30 bg-slate-900 ${saldoRowClass}`}
+                    style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                  >
+                    {fmtBR(v)}
+                  </td>
+                ))}
                 <td
-                  className={`${headBase} sticky bottom-0 z-30 bg-slate-900 ${saldoAnoClass} ${saldoRowClassBase}`}
+                  className={`${headBase} sticky bottom-0 z-30 bg-slate-900 ${saldoRowClass}`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   {fmtBR(saldoAno)}
