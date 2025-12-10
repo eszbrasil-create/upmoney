@@ -298,7 +298,7 @@ export default function DespesasPage() {
   const colW = "w-20";
   const categoriaColWidth = "w-32";
   const descColWidth = "w-[220px]";
-  const actionsColWidth = "w-4";
+  const actionsColWidth = "w-1";
   const tableMinW = "min-w-[1480px]";
 
   const cellBase =
