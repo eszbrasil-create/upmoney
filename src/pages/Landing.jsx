@@ -27,7 +27,7 @@ const SectionDivider = () => (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="h-px w-full bg-gradient-to-r from-transparent via-[#1f3548]/30 to-transparent" />
     </div>
-    <div className="h-2" />
+    <div className="h-1" />
   </div>
 );
 
