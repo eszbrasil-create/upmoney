@@ -144,11 +144,19 @@ export default function DespesasPage() {
 
   // Conversão para número inteiro (arredondado)
   const toNum = (x) => {
-    if (x === "" || x === null || x === undefined) return 0;
+    if (x === "" || x == null) return 0;
     const n = Number(String(x).replace(",", "."));
     if (!Number.isFinite(n)) return 0;
     return Math.round(n);
   };
+
+  const fmtBR = (v) =>
+    Math.round(v).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
 
   const receitas = useMemo(
     () => linhas.filter((l) => l.tipo === "RECEITA"),
@@ -207,136 +215,6 @@ export default function DespesasPage() {
       saldoAno: sum(r) - sum(d),
     };
   }, [linhas]);
-
-  const fmtBR = (v) =>
-    Math.round(v).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-
-  const exportCSV = () => {
-    const header = ["Tipo", "Categoria", "Descrição", ...MESES, "Total"];
-    const rows = [
-      ["— RECEITAS —", "", "", ...Array(12).fill(""), ""],
-      ...receitas.map((l) => {
-        const valoresNum = l.valores.map(toNum);
-        const total = valoresNum.reduce((a, b) => a + b, 0);
-        return [
-          l.tipo,
-          l.categoria ?? "",
-          l.descricao,
-          ...valoresNum.map(Math.round),
-          Math.round(total),
-        ];
-      }),
-      [
-        "TOTAL RECEITAS",
-        "",
-        "",
-        ...totReceitas.map(Math.round),
-        Math.round(totalReceitasAno),
-      ],
-      ["— DESPESAS —", "", "", ...Array(12).fill(""), ""],
-      ...despesas.map((l) => {
-        const valoresNum = l.valores.map(toNum);
-        const total = valoresNum.reduce((a, b) => a + b, 0);
-        return [
-          l.tipo,
-          l.categoria ?? "",
-          l.descricao,
-          ...valoresNum.map(Math.round),
-          Math.round(total),
-        ];
-      }),
-      [
-        "TOTAL DESPESAS",
-        "",
-        "",
-        ...totDespesas.map(Math.round),
-        Math.round(totalDespesasAno),
-      ],
-      [
-        "SALDO (R-D)",
-        "",
-        "",
-        ...saldo.map(Math.round),
-        Math.round(saldoAno),
-      ],
-    ];
-
-    const csv = [header, ...rows]
-      .map((r) =>
-        r
-          .map((v) =>
-            typeof v === "string" ? `"${v.replace(/"/g, '""')}"` : v
-          )
-          .join(";")
-      )
-      .join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `despesas_${anoSelecionado}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const clearAll = () => {
-    if (confirm(`Apagar todas as linhas de ${anoSelecionado}?`)) {
-      setLinhas([]);
-      try {
-        localStorage.removeItem(lsKeyForAno(anoSelecionado));
-      } catch {}
-    }
-  };
-
-  // Layout – linhas mais compactas
-  const colW = "w-20";
-  const categoriaColWidth = "w-32";
-  const descColWidth = "w-[220px]";
-  const actionsColWidth = "w-14";
-  const tableMinW = "min-w-[1480px]";
-
-  const cellBase =
-    "px-2 py-0.5 border-t border-slate-700 text-right text-xs whitespace-nowrap";
-  const headBase =
-    "px-2 py-0.5 border-t border-slate-700 text-slate-300 text-xs font-medium text-right";
-  const firstColHead =
-    "px-2 py-0.5 border-t border-slate-700 text-slate-300 text-sm font-semibold text-left";
-  const firstColCell =
-    "px-2 py-0.5 border-t border-slate-700 text-sm text-left";
-
-  // versões sem cor para o saldo
-  const headBaseNoColor =
-    "px-2 py-0.5 border-t border-slate-700 text-xs font-medium text-right";
-  const firstColHeadNoColor =
-    "px-2 py-0.5 border-t border-slate-700 text-sm font-semibold text-left";
-
-  const SectionDivider = ({ label, variant }) => (
-    <tr>
-      <td colSpan={MESES.length + 4} className="py-2">
-        <div className="flex items-center gap-3">
-          <div className="h-0.5 w-full bg-slate-700" />
-          <span
-            className={[
-              "text-xs uppercase tracking-wider",
-              variant === "green" ? "text-emerald-300 font-semibold" : "",
-              variant === "red" ? "text-rose-300 font-semibold" : "",
-            ]
-              .join(" ")
-              .trim()}
-          >
-            {label}
-          </span>
-          <div className="h-0.5 w-full bg-slate-700" />
-        </div>
-      </td>
-    </tr>
-  );
 
   // ===== Navegação por teclado =====
   const focusCell = (sec, row, col) => {
@@ -640,28 +518,19 @@ export default function DespesasPage() {
                 );
               })}
 
-              {/* TOTAL RECEITAS – mesma altura da linha de Total Despesas */}
-              <tr className="bg-slate-900 h-8">
-                <td className="sticky left-0 bg-slate-900 border-t border-slate-700" />
-                <td
-                  className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 text-emerald-300 text-xs`}
-                />
-                <td
-                  className={`${firstColHead} text-emerald-300 sticky left-[11.5rem] bg-slate-900`}
-                >
+              {/* TOTAL RECEITAS – agora com a mesma altura do Total Despesas */}
+              <tr className="bg-slate-900 border-t-2 border-emerald-500">
+                <td className="sticky left-0 bg-slate-900 border-t-2 border-emerald-500" />
+                <td className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 border-t-2 border-emerald-500 text-xs`} />
+                <td className={`${firstColHead} sticky left-[11.5rem] bg-slate-900 border-t-2 border-emerald-500 text-emerald-300 font-bold`}>
                   Total Receitas
                 </td>
                 {totReceitas.map((v, i) => (
-                  <td
-                    key={`tr${i}`}
-                    className={`${headBase} text-emerald-300 bg-slate-900`}
-                  >
+                  <td key={`tr${i}`} className="px-2 py-3 text-right font-semibold text-emerald-300 bg-slate-900 border-t-2 border-emerald-500">
                     {fmtBR(v)}
                   </td>
                 ))}
-                <td
-                  className={`${headBase} font-semibold text-emerald-300 bg-slate-900`}
-                >
+                <td className="px-2 py-3 text-right font-bold text-emerald-300 bg-slate-900 border-t-2 border-emerald-500">
                   {fmtBR(totalReceitasAno)}
                 </td>
               </tr>
@@ -749,28 +618,19 @@ export default function DespesasPage() {
                 );
               })}
 
-              {/* TOTAL DESPESAS – mesma estrutura e altura da Total Receitas */}
-              <tr className="bg-slate-900 h-8">
-                <td className="sticky left-0 bg-slate-900 border-t border-slate-700" />
-                <td
-                  className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 text-rose-300 text-xs`}
-                />
-                <td
-                  className={`${firstColHead} text-rose-300 sticky left-[11.5rem] bg-slate-900`}
-                >
+              {/* TOTAL DESPESAS – mesma altura do Total Receitas */}
+              <tr className="bg-slate-900 border-t-2 border-rose-500">
+                <td className="sticky left-0 bg-slate-900 border-t-2 border-rose-500" />
+                <td className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 border-t-2 border-rose-500 text-xs`} />
+                <td className={`${firstColHead} sticky left-[11.5rem] bg-slate-900 border-t-2 border-rose-500 text-rose-300 font-bold`}>
                   Total Despesas
                 </td>
                 {totDespesas.map((v, i) => (
-                  <td
-                    key={`td${i}`}
-                    className={`${headBase} text-rose-300 bg-slate-900`}
-                  >
+                  <td key={`td${i}`} className="px-2 py-3 text-right font-semibold text-rose-300 bg-slate-900 border-t-2 border-rose-500">
                     {fmtBR(v)}
                   </td>
                 ))}
-                <td
-                  className={`${headBase} font-semibold text-rose-300 bg-slate-900`}
-                >
+                <td className="px-2 py-3 text-right font-bold text-rose-300 bg-slate-900 border-t-2 border-rose-500">
                   {fmtBR(totalDespesasAno)}
                 </td>
               </tr>
