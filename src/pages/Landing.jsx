@@ -214,7 +214,7 @@ export default function Landing({ onNavigate }) {
         </section>
 
         {/* Espaço reduzido (OPÇÃO B) */}
-        <div className="h-4 md:h-6"></div>
+        <div className="h-2 md:h-3"></div>
 
         <SectionDivider />
 
