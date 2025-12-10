@@ -593,19 +593,16 @@ export default function DespesasPage() {
                 );
               })}
 
-              {/* TOTAL RECEITAS */}
+              {/* TOTAL RECEITAS (não-sticky, linha padrão) */}
               <tr className="bg-slate-900">
                 <td
                   className="sticky left-0 bg-slate-900 border-t border-slate-700"
-                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
                   className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 text-emerald-300 text-xs`}
-                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
                   className={`${firstColHead} text-emerald-300 sticky left-[11.5rem] bg-slate-900`}
-                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   Total Receitas
                 </td>
@@ -701,40 +698,35 @@ export default function DespesasPage() {
                 );
               })}
 
-              {/* TOTAL DESPESAS – fixo */}
-              <tr>
+              {/* TOTAL DESPESAS – agora igual à linha de Total Receitas */}
+              <tr className="bg-slate-900">
                 <td
-                  className="sticky bottom-[40px] left-0 z-20 bg-slate-900 border-t border-slate-700"
-                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                  className="sticky left-0 bg-slate-900 border-t border-slate-700"
                 />
                 <td
-                  className={`${firstColHead} sticky bottom-[40px] left-[3.5rem] z-20 bg-slate-900 text-rose-300 text-xs`}
-                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                  className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 text-rose-300 text-xs`}
                 />
                 <td
-                  className={`${firstColHead} text-rose-300 sticky bottom-[40px] left-[11.5rem] z-20 bg-slate-900`}
-                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                  className={`${firstColHead} text-rose-300 sticky left-[11.5rem] bg-slate-900`}
                 >
                   Total Despesas
                 </td>
                 {totDespesas.map((v, i) => (
                   <td
                     key={`td${i}`}
-                    className={`${headBase} text-rose-300 sticky bottom-[40px] z-20 bg-slate-900`}
-                    style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                    className={`${headBase} text-rose-300 bg-slate-900`}
                   >
                     {fmtBR(v)}
                   </td>
                 ))}
                 <td
-                  className={`${headBase} font-semibold text-rose-300 sticky bottom-[40px] z-20 bg-slate-900`}
-                  style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
+                  className={`${headBase} font-semibold text-rose-300 bg-slate-900`}
                 >
                   {fmtBR(totalDespesasAno)}
                 </td>
               </tr>
 
-              {/* SALDO – linha inteira vermelha ou verde conforme saldoAno */}
+              {/* SALDO – linha inteira vermelha ou verde conforme saldoAno (continua sticky) */}
               <tr>
                 <td
                   className="sticky bottom-0 left-0 z-30 bg-slate-900 border-t border-slate-700"
