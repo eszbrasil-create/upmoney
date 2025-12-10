@@ -65,7 +65,7 @@ export default function CardEvolucao({ columns = [], rows = [] }) {
         <span className="text-xs px-2 py-1 rounded-lg bg-slate-700/60 text-slate-200">Mensal</span>
       </div>
 
-      <div className="h-[320px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-10 overflow-x-auto">
+      <div className="h-[350px] rounded-2xl border border-white/10 bg-slate-900/80 px-3 pt-3 pb-10 overflow-x-auto">
         
         <div className="flex items-end gap-1 min-w-max">
           
