@@ -295,7 +295,7 @@ export default function DespesasPage() {
   };
 
   // Layout – linhas mais compactas
-  const colW = "w-20";
+  const colW = "w-10";
   const categoriaColWidth = "w-32";
   const descColWidth = "w-[200px]";
   const actionsColWidth = "w-1";
