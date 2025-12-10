@@ -265,6 +265,12 @@ export default function DespesasPage() {
   const firstColCell =
     "px-2 py-0.5 border-t border-slate-700 text-sm text-left";
 
+  // versões SEM cor de texto (para a linha do saldo)
+  const headBaseNoColor =
+    "px-2 py-0.5 border-t border-slate-700 text-xs font-medium text-right";
+  const firstColHeadNoColor =
+    "px-2 py-0.5 border-t border-slate-700 text-sm font-semibold text-left";
+
   const SectionDivider = ({ label, variant }) => (
     <tr>
       <td colSpan={MESES.length + 4} className="py-2">
@@ -735,11 +741,11 @@ export default function DespesasPage() {
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
-                  className={`${firstColHead} sticky bottom-0 left-[3.5rem] z-30 bg-slate-900 ${saldoRowClass} text-xs`}
+                  className={`${firstColHeadNoColor} sticky bottom-0 left-[3.5rem] z-30 bg-slate-900 ${saldoRowClass} text-xs`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
-                  className={`${firstColHead} sticky bottom-0 left-[11.5rem] z-30 bg-slate-900 ${saldoRowClass}`}
+                  className={`${firstColHeadNoColor} sticky bottom-0 left-[11.5rem] z-30 bg-slate-900 ${saldoRowClass}`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   Saldo (R − D)
@@ -747,14 +753,14 @@ export default function DespesasPage() {
                 {saldo.map((v, i) => (
                   <td
                     key={`sl${i}`}
-                    className={`${headBase} sticky bottom-0 z-30 bg-slate-900 ${saldoRowClass}`}
+                    className={`${headBaseNoColor} sticky bottom-0 z-30 bg-slate-900 ${saldoRowClass}`}
                     style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                   >
                     {fmtBR(v)}
                   </td>
                 ))}
                 <td
-                  className={`${headBase} sticky bottom-0 z-30 bg-slate-900 ${saldoRowClass}`}
+                  className={`${headBaseNoColor} sticky bottom-0 z-30 bg-slate-900 ${saldoRowClass}`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   {fmtBR(saldoAno)}
