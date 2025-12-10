@@ -498,7 +498,7 @@ export default function DespesasPage() {
                   Categoria
                 </th>
                 <th
-                  className={`${firstColHead} sticky left-[10.5rem] bg-slate-900 z-20`}
+                  className={`${firstColHead} sticky left-[11.5rem] bg-slate-900 z-20`}
                 >
                   Descrição
                 </th>
@@ -546,7 +546,7 @@ export default function DespesasPage() {
                     </td>
 
                     {/* Descrição */}
-                    <td className={`${firstColCell} sticky left-[10.5rem] bg-slate-900`}>
+                    <td className={`${firstColCell} sticky left-[11.5rem] bg-slate-900`}>
                       <input
                         className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500 text-sm"
                         placeholder="Nova receita"
@@ -598,7 +598,7 @@ export default function DespesasPage() {
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
-                  className={`${firstColHead} text-emerald-300 sticky left-[10.5rem] bg-slate-900`}
+                  className={`${firstColHead} text-emerald-300 sticky left-[11.5rem] bg-slate-900`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   Total Receitas
@@ -654,7 +654,7 @@ export default function DespesasPage() {
                     </td>
 
                     {/* Descrição */}
-                    <td className={`${firstColCell} sticky left-[10.5rem] bg-slate-900`}>
+                    <td className={`${firstColCell} sticky left-[11.5rem] bg-slate-900`}>
                       <input
                         className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500 text-sm"
                         placeholder="Nova despesa"
@@ -706,7 +706,7 @@ export default function DespesasPage() {
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
-                  className={`${firstColHead} text-rose-300 sticky bottom-[40px] left-[10.5rem] z-20 bg-slate-900`}
+                  className={`${firstColHead} text-rose-300 sticky bottom-[40px] left-[11.5rem] z-20 bg-slate-900`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   Total Despesas
@@ -728,7 +728,7 @@ export default function DespesasPage() {
                 </td>
               </tr>
 
-              {/* SALDO – fixo, com meses negativos em vermelho */}
+              {/* SALDO – fixo, com linha inteira vermelha ou verde */}
               <tr>
                 <td
                   className="sticky bottom-0 left-0 z-30 bg-slate-900 border-t border-slate-700"
@@ -739,7 +739,7 @@ export default function DespesasPage() {
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
-                  className={`${firstColHead} sticky bottom-0 left-[10.5rem] z-30 bg-slate-900 ${saldoAnoClass} ${saldoRowClassBase}`}
+                  className={`${firstColHead} sticky bottom-0 left-[11.5rem] z-30 bg-slate-900 ${saldoAnoClass} ${saldoRowClassBase}`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   Saldo (R − D)
