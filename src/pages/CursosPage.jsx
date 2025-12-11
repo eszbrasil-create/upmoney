@@ -36,7 +36,7 @@ export default function CursosPage() {
       {
         id: 7,
         titulo: "Estratégia de Renda Passiva",
-        pdf: "/pdfs/Apostila Curso_6_Estratégia de Renda Passiva.pdf",
+        pdf: "/pdfs/Apostila_Curso_6_Estratégia_de_Renda_Passiva.pdf",
       },
       { id: 8, titulo: "Impostos", pdf: "/pdfs/modulo6.pdf" },
       {
