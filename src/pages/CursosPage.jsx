@@ -23,7 +23,7 @@ export default function CursosPage() {
         pdf: "/pdfs/MEU-PRIMEIRO-DIVIDENDO.pdf",
       },
       { id: 2, titulo: "Abrir Conta na Corretora", pdf: "/pdfs/modulo2.pdf" },
-      { id: 3, titulo: "Renda Fixa", pdf: "/pdfs/modulo3.pdf" },
+      { id: 3, titulo: "Renda Fixa", pdf: "/pdfs/Apostila Curso_2_Renda Fixa.pdf" },
       { id: 4, titulo: "Renda Variável", pdf: "/pdfs/modulo4.pdf" },
       {
         id: 5,
