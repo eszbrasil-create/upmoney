@@ -35,8 +35,8 @@ export default function CursosPage() {
       },
       {
         id: 7,
-        titulo: "Cash Control (1:1)",
-        pdf: "/pdfs/modulo6.pdf",
+        titulo: "Estratégia de Renda Passiva",
+        pdf: "/pdfs/Apostila Curso_6_Estratégia de Renda Passiva.pdf",
       },
       { id: 8, titulo: "Impostos", pdf: "/pdfs/modulo6.pdf" },
       {
