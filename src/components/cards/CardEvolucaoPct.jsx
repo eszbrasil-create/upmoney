@@ -52,25 +52,22 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
     });
   }, [normalizedColumns, rows]);
 
-  // ✅ sem casas decimais
   const fmtPct = (x) => `${x >= 0 ? "+" : ""}${Math.round(x)}%`;
 
   return (
-    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[640px] h-[360px] overflow-hidden">
+    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[640px] h-[360px] overflow-hidden shrink-0">
       
       <div className="flex items-center justify-between mb-3">
         <div className="text-slate-100 font-semibold text-lg">Evolução %</div>
         <div className="text-[11px] text-slate-400">% vs mês anterior</div>
       </div>
 
-      <div className="relative h-[300px] overflow-auto rounded-2xl border border-white/10 bg-slate-900/40">
-        <table className="min-w-full border-separate border-spacing-0">
-
+      <div className="relative h-[300px] overflow-x-auto overflow-y-auto rounded-2xl border border-white/10 bg-slate-900/40">
+        <table className="border-separate border-spacing-0 w-max">
           {/* Header */}
           <thead className="sticky top-0 z-40 bg-slate-800/90 backdrop-blur">
             <tr className="text-left text-slate-300 text-sm">
-
-              {/* ✅ Coluna fixa (Ativos) igual ao CardRegistro */}
+              {/* Coluna fixa (Ativos) */}
               <th
                 className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-1 font-medium border-b border-white/10"
                 style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
@@ -105,7 +102,6 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
                   key={row.ativo}
                   className={`${zebra ? "bg-white/[0.02]" : "bg-transparent"} hover:bg-white/[0.05] transition text-sm`}
                 >
-                  {/* ✅ sticky com z menor que header para não sobrepor */}
                   <td
                     className="sticky left-0 z-10 bg-slate-950/60 px-3 py-2 border-b border-white/10 text-slate-100 font-medium"
                     style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
@@ -150,8 +146,6 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
           {/* Footer */}
           <tfoot className="sticky bottom-0 z-40 bg-slate-800/90 backdrop-blur">
             <tr className="text-sm font-semibold">
-
-              {/* ✅ Total com mesma largura e z alto */}
               <td
                 className="sticky left-0 z-50 bg-slate-800/90 backdrop-blur px-3 py-2 border-t border-white/10 text-slate-100"
                 style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
@@ -191,7 +185,6 @@ export default function CardEvolucaoPct({ columns = [], rows = [] }) {
               })}
             </tr>
           </tfoot>
-
         </table>
       </div>
     </div>
