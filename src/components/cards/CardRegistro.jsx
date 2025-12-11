@@ -139,9 +139,9 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
             })}
           </tbody>
 
-          {/* Rodapé - Totais */}
-          <tfoot className="sticky bottom-0 z-30 bg-slate-800/90 backdrop-blur">
-            <tr className="text-sm">
+          {/* Rodapé - Totais (travado no fundo) */}
+          <tfoot>
+            <tr className="sticky bottom-0 z-30 bg-slate-800/90 backdrop-blur text-sm">
               <td
                 className="sticky left-0 z-50 bg-slate-800/90 backdrop-blur px-3 py-2 border-t border-white/10 text-slate-100 font-semibold"
                 style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
