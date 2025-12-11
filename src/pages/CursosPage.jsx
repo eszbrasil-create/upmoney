@@ -3,31 +3,46 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import { PiggyBank, FileDown, CheckCircle2 } from "lucide-react";
 import confetti from "canvas-confetti";
 import party from "party-js";
-import { supabase } from "../lib/supabaseClient"; // client do Supabase
+import { supabase } from "../lib/supabaseClient";
 
-const ORANGE = "#f97316"; // Carteira Cash (laranja)
-const GREEN = "#10e597ff"; // Concluído (verde)
+const ORANGE = "#f97316";
+const GREEN = "#10e597ff";
 const LS_KEY_CURSOS = "cc_cursos_concluidos_v1";
-// id fixo deste curso na tabela user_course_progress
 const COURSE_ID = "do_zero_ao_meu_primeiro_dividendo";
 
 export default function CursosPage() {
-  // usuário logado no Supabase
   const [user, setUser] = useState(null);
 
+  // ================================
+  // MÓDULOS — AJUSTADOS
+  // ================================
   const MODULOS = useMemo(
     () => [
       {
         id: 1,
-        titulo: "Apresentação do Curso(1 to 1)",
+        titulo: "Apresentação do Curso (1 to 1)",
         pdf: "/pdfs/MEU-PRIMEIRO-DIVIDENDO.pdf",
       },
-      { id: 2, titulo: "Abrir Conta na Corretora", pdf: "/pdfs/modulo2.pdf" },
-      { id: 3, titulo: "Renda Fixa", pdf: "/pdfs/Apostila Curso_2_Renda Fixa.pdf" },
-      { id: 4, titulo: "Renda Variável", pdf: "/pdfs/Apostila Curso_3_Renda Variavel.pdf" },
+      {
+        id: 2,
+        titulo: "Abrir Conta na Corretora",
+        pdf: "/pdfs/modulo2.pdf",
+      },
+      {
+        id: 3,
+        titulo: "Renda Fixa",
+        pdf: "/pdfs/Apostila Curso_2_Renda Fixa.pdf",
+      },
+      {
+        id: 4,
+        titulo: "Renda Variável",
+        pdf: "/pdfs/Apostila Curso_3_Renda Variavel.pdf",
+      },
       {
         id: 5,
-        titulo: "FIIs – Fundos Imobiliários", pdf: "/pdfs/Apostila Curso_4_Fundos Imobiliários.pdf"},
+        titulo: "FIIs – Fundos Imobiliários",
+        pdf: "/pdfs/Apostila Curso_4_Fundos Imobiliários.pdf",
+      },
       {
         id: 6,
         titulo: "Dividendos",
@@ -35,10 +50,14 @@ export default function CursosPage() {
       },
       {
         id: 7,
-        titulo: "Estratégia de Renda Passiva",
+        titulo: "Estratégia de Renda Passiva",
         pdf: "/pdfs/Apostila_Curso_6_Estratégia_de_Renda_Passiva.pdf",
       },
-      { id: 8, titulo: "UpControl (1 to 1)", pdf: "/pdfs/modulo6.pdf" },
+      {
+        id: 8,
+        titulo: "UpControl (1 to 1)",
+        pdf: "/pdfs/modulo6.pdf",
+      },
       {
         id: 9,
         titulo: "Meu Primeiro Dividendo (1 to 1)",
@@ -48,9 +67,9 @@ export default function CursosPage() {
     []
   );
 
-  // ============================================
-  // 🎆 FUNÇÃO DE FOGOS DE ARTIFÍCIO
-  // ============================================
+  // ================================
+  // FOGOS DE ARTIFÍCIO
+  // ================================
   function launchFireworks() {
     const duration = 2000;
     const animationEnd = Date.now() + duration;
@@ -88,9 +107,9 @@ export default function CursosPage() {
     }, 250);
   }
 
-  // ============================================
-  // 💸 CHUVA DE MOEDAS (party-js)
-  // ============================================
+  // ================================
+  // CHUVA DE MOEDAS
+  // ================================
   function launchCoinRain(target) {
     if (!target) return;
     party.confetti(target, {
@@ -99,12 +118,11 @@ export default function CursosPage() {
     });
   }
 
-  // ref para o container da página (onde a chuva de moedas vai acontecer)
   const containerRef = useRef(null);
 
-  // =================================================
-  // Estado dos módulos concluídos (com proteção SSR)
-  // =================================================
+  // ================================
+  // LOCAL STORAGE
+  // ================================
   const [concluidos, setConcluidos] = useState(() => {
     if (typeof window === "undefined") return new Set();
     try {
@@ -118,9 +136,6 @@ export default function CursosPage() {
     }
   });
 
-  // =================================================
-  // Salva no localStorage (também protegido)
-  // =================================================
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -128,18 +143,13 @@ export default function CursosPage() {
         LS_KEY_CURSOS,
         JSON.stringify(Array.from(concluidos))
       );
-    } catch {
-      // se der erro no localStorage, só ignora
-    }
+    } catch {}
   }, [concluidos]);
 
   const total = MODULOS.length;
   const done = concluidos.size;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
-  // =================================================
-  // 🎉 DISPARA FOGOS + CHUVA DE MOEDAS QUANDO 100%
-  // =================================================
   useEffect(() => {
     if (done === total && total > 0) {
       launchFireworks();
@@ -149,41 +159,29 @@ export default function CursosPage() {
     }
   }, [done, total]);
 
-  // =================================================
-  // 🔐 BUSCAR O USUÁRIO LOGADO NO SUPABASE
-  // =================================================
+  // ================================
+  // SUPABASE — LOGIN
+  // ================================
   useEffect(() => {
     async function loadUser() {
       const { data, error } = await supabase.auth.getUser();
-
-      if (error) {
-        console.error("Erro ao buscar usuário:", error);
-        return;
-      }
-
-      setUser(data.user);
+      if (!error) setUser(data.user);
     }
-
     loadUser();
   }, []);
 
-  // =================================================
-  // 📥 CARREGAR PROGRESSO DO SUPABASE (SE HOUVER)
-  // =================================================
+  // ================================
+  // SUPABASE — PROGRESSO
+  // ================================
   useEffect(() => {
     if (!user) return;
 
     async function loadProgressFromSupabase() {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("user_course_progress")
         .select("completed_lessons")
         .eq("user_id", user.id)
         .eq("course_id", COURSE_ID);
-
-      if (error) {
-        console.error("Erro ao carregar progresso do curso:", error);
-        return;
-      }
 
       if (data && data.length > 0) {
         const lessons = data[0].completed_lessons || [];
@@ -196,90 +194,61 @@ export default function CursosPage() {
     loadProgressFromSupabase();
   }, [user]);
 
-  // =================================================
-  // 💾 SALVAR PROGRESSO NO SUPABASE
-  // =================================================
+  // ================================
+  // SALVAR PROGRESSO NO SUPABASE
+  // ================================
   async function saveProgressToSupabase(nextSet, progressPercent) {
-    if (!user) return; // se não tiver usuário logado, não salva
+    if (!user) return;
 
     const completedLessons = Array.from(nextSet);
 
-    // Verifica se já existe registro para esse user + curso
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("user_course_progress")
       .select("id")
       .eq("user_id", user.id)
       .eq("course_id", COURSE_ID);
 
-    if (error) {
-      console.error("Erro ao buscar progresso para salvar:", error);
-      return;
-    }
+    if (data && data.length > 0) {
+      const rowId = data[0].id;
 
-    try {
-      if (data && data.length > 0) {
-        // UPDATE
-        const rowId = data[0].id;
-
-        const { error: updateError } = await supabase
-          .from("user_course_progress")
-          .update({
-            completed_lessons: completedLessons,
-            progress_percent: progressPercent,
-          })
-          .eq("id", rowId);
-
-        if (updateError) {
-          console.error("Erro ao atualizar progresso:", updateError);
-        }
-      } else {
-        // INSERT
-        const { error: insertError } = await supabase
-          .from("user_course_progress")
-          .insert({
-            user_id: user.id,
-            course_id: COURSE_ID,
-            completed_lessons: completedLessons,
-            progress_percent: progressPercent,
-          });
-
-        if (insertError) {
-          console.error("Erro ao inserir progresso:", insertError);
-        }
-      }
-    } catch (err) {
-      console.error("Erro inesperado ao salvar progresso:", err);
+      await supabase
+        .from("user_course_progress")
+        .update({
+          completed_lessons: completedLessons,
+          progress_percent: progressPercent,
+        })
+        .eq("id", rowId);
+    } else {
+      await supabase.from("user_course_progress").insert({
+        user_id: user.id,
+        course_id: COURSE_ID,
+        completed_lessons: completedLessons,
+        progress_percent: progressPercent,
+      });
     }
   }
 
-  // =================================================
-  // ✅ MARCAR / DESMARCAR MÓDULO CONCLUÍDO
-  // =================================================
   const toggleConcluido = async (id) => {
     setConcluidos((prev) => {
       const next = new Set(prev);
 
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
 
-      const totalModulos = MODULOS.length;
-      const doneCount = next.size;
-      const progressPercent =
-        totalModulos > 0 ? Math.round((doneCount / totalModulos) * 100) : 0;
+      const progressPercent = Math.round((next.size / MODULOS.length) * 100);
 
-      // salva no Supabase em background
       saveProgressToSupabase(next, progressPercent);
 
       return next;
     });
   };
 
+  // ================================
+  // JSX
+  // ================================
   return (
     <div ref={containerRef} className="pt-3 pr-6 pl-0">
-      {/* keyframes locais para animações do porquinho */}
+      {/* animação do porquinho */}
       <style>{`
         @keyframes pig-pulse {
           0% { transform: scale(1); }
@@ -288,7 +257,7 @@ export default function CursosPage() {
         }
       `}</style>
 
-      {/* BLOCO 1 – Cabeçalho + Progresso */}
+      {/* Cabeçalho */}
       <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[1200px] max-w-full p-5 mb-4">
         <div className="text-center mb-4">
           <h1 className="text-2xl md:text-3xl font-bold text-slate-150">
@@ -317,7 +286,7 @@ export default function CursosPage() {
         </div>
       </div>
 
-      {/* BLOCO 2 – Cards */}
+      {/* Cards */}
       <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[1200px] max-w-full p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {MODULOS.map((m) => {
@@ -332,7 +301,7 @@ export default function CursosPage() {
                     : "border-white/10 bg-slate-900/40"
                 }`}
               >
-                {/* Porquinho */}
+                {/* ícone */}
                 <div
                   className="shrink-0 transition-transform duration-300 group-hover:scale-105"
                   style={{
@@ -345,8 +314,8 @@ export default function CursosPage() {
                   <PiggyBank size={100} color={isDone ? GREEN : ORANGE} />
                 </div>
 
+                {/* Conteúdo */}
                 <div className="flex-1">
-                  {/* Título + Badge ABSOLUTO */}
                   <div className="relative pb-1">
                     <h3 className="text-slate-200 font-semibold pr-20">
                       {m.id}. {m.titulo}
@@ -360,6 +329,7 @@ export default function CursosPage() {
                     )}
                   </div>
 
+                  {/* Botões */}
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     {/* Ver PDF */}
                     <a
