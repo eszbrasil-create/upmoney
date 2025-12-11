@@ -37,7 +37,7 @@ function MesAnoPickerTopo({ value, onChange }) {
               className="bg-white rounded-3xl shadow-3xl p-8 max-w-md w-full border-8 border-gray-100"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Ano */}
+              {/* Ano + setas */}
               <div className="flex items-center justify-between mb-8">
                 <button
                   onClick={() => setAno((a) => a - 1)}
@@ -45,9 +45,7 @@ function MesAnoPickerTopo({ value, onChange }) {
                 >
                   ←
                 </button>
-
                 <span className="text-2xl font-black text-emerald-600">{ano}</span>
-
                 <button
                   onClick={() => setAno((a) => a + 1)}
                   className="w-10 h-10 hover:bg-gray-100 rounded-full text-2xl font-bold text-emerald-700"
@@ -117,77 +115,21 @@ export default function EditAtivosModal({
     0
   );
 
-  // Quando abrir modal → define mês e limpa erros
+  // Ao abrir modal: define mês atual (se não tiver) e cria UMA linha virgem
   useEffect(() => {
     if (!open) return;
-
     const hoje = new Date();
-    if (!mesAno) {
-      setMesAno(`${mesesAbrev[hoje.getMonth()]}/${hoje.getFullYear()}`);
-    }
-
+    if (!mesAno) setMesAno(`${mesesAbrev[hoje.getMonth()]}/${hoje.getFullYear()}`);
+    setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
     setErro("");
   }, [open]);
 
-  /* 
-  ============================================================
-  🔥 CORREÇÃO DO BUG:
-  Carregar os itens existentes do mês ao abrir / trocar o mês
-  ============================================================
-  */
+  // Ao trocar o mês manualmente: sempre reseta para UMA linha virgem
   useEffect(() => {
     if (!open || !mesAno) return;
-
-    async function carregarDadosDoMes() {
-      setErro("");
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-
-      // Busca registro do mês
-      const { data: regExistente } = await supabase
-        .from("registros_ativos")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("mes_ano", mesAno)
-        .maybeSingle();
-
-      // Se não existe → começa com linha vazia
-      if (!regExistente) {
-        setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
-        return;
-      }
-
-      // Busca itens existentes do mês
-      const { data: itens } = await supabase
-        .from("registros_ativos_itens")
-        .select("nome_ativo, valor")
-        .eq("registro_id", regExistente.id);
-
-      if (!itens || itens.length === 0) {
-        setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
-        return;
-      }
-
-      // Preenche tabela com os itens já existentes
-      setLinhas(
-        itens.map((i) => ({
-          id: crypto.randomUUID(),
-          nome: i.nome_ativo,
-          valor: Number(i.valor).toLocaleString("pt-BR", {
-            minimumFractionDigits: 2,
-          }),
-        }))
-      );
-    }
-
-    carregarDadosDoMes();
+    setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
+    setErro("");
   }, [mesAno, open]);
-
-  /* ======================================================= */
 
   const adicionarLinha = () =>
     setLinhas((prev) => [...prev, { id: crypto.randomUUID(), nome: "", valor: "" }]);
@@ -198,7 +140,7 @@ export default function EditAtivosModal({
   const removerLinha = (id) =>
     setLinhas((prev) => prev.filter((l) => l.id !== id));
 
-  // helper para Mes/Ano → chave numérica
+  // helper para converter "Jan/2025" -> chave numérica
   const parseMesAnoKey = (mesAnoStr) => {
     if (!mesAnoStr) return null;
     const [mStr, anoStr] = mesAnoStr.split("/");
@@ -206,9 +148,10 @@ export default function EditAtivosModal({
     if (idx === -1) return null;
     const anoNum = Number(anoStr);
     if (Number.isNaN(anoNum)) return null;
-    return anoNum * 12 + idx;
+    return anoNum * 12 + idx; // ano * 12 + indiceMes
   };
 
+  // Copiar "mês anterior"
   const copiarMesAnterior = async () => {
     if (!mesAno) {
       setErro("Selecione um mês para copiar.");
@@ -222,12 +165,18 @@ export default function EditAtivosModal({
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
+      if (!user) {
+        setIsLoading(false);
+        setErro("Usuário não autenticado.");
+        return;
+      }
 
-      const { data: regs } = await supabase
+      const { data: regs, error } = await supabase
         .from("registros_ativos")
         .select("id, mes_ano")
         .eq("user_id", user.id);
+
+      if (error) throw error;
 
       if (!regs || regs.length === 0) {
         setIsLoading(false);
@@ -238,25 +187,38 @@ export default function EditAtivosModal({
       const keyAtual = parseMesAnoKey(mesAno);
 
       let candidatos = regs
-        .map((r) => ({ ...r, key: parseMesAnoKey(r.mes_ano) }))
+        .map((r) => ({
+          ...r,
+          key: parseMesAnoKey(r.mes_ano),
+        }))
         .filter((r) => r.key !== null);
 
+      if (candidatos.length === 0) {
+        setIsLoading(false);
+        setErro("Não foi possível interpretar as datas salvas para copiar.");
+        return;
+      }
+
       if (keyAtual !== null) {
-        const anteriores = candidatos.filter((c) => c.key < keyAtual);
-        if (anteriores.length) candidatos = anteriores;
+        const anteriores = candidatos.filter((r) => r.key < keyAtual);
+        if (anteriores.length > 0) {
+          candidatos = anteriores;
+        }
       }
 
       candidatos.sort((a, b) => b.key - a.key);
-      const escolhido = candidatos[0];
+      const regEscolhido = candidatos[0];
 
-      const { data: itens } = await supabase
+      const { data: itens, error: itensError } = await supabase
         .from("registros_ativos_itens")
         .select("nome_ativo, valor")
-        .eq("registro_id", escolhido.id);
+        .eq("registro_id", regEscolhido.id);
+
+      if (itensError) throw itensError;
 
       if (!itens || itens.length === 0) {
         setIsLoading(false);
-        setErro(`Nenhum item encontrado em ${escolhido.mes_ano}.`);
+        setErro(`Nenhum item encontrado em ${regEscolhido.mes_ano} para copiar.`);
         return;
       }
 
@@ -272,14 +234,14 @@ export default function EditAtivosModal({
 
       setIsLoading(false);
     } catch (err) {
-      setErro("Erro ao copiar: " + err.message);
       setIsLoading(false);
+      setErro("Erro ao copiar mês anterior: " + err.message);
     }
   };
 
+  // 🔧 AQUI É ONDE ESTAVA O PROBLEMA: SALVAR SOBRESCREVIA TUDO
   const salvar = async () => {
     if (!mesAno) return setErro("Selecione um mês.");
-
     setErro("");
 
     const linhasParciais = linhas.filter((l) => {
@@ -289,13 +251,16 @@ export default function EditAtivosModal({
     });
 
     if (linhasParciais.length > 0) {
-      setErro("Preencha corretamente todas as linhas ou apague as incompletas.");
+      setErro(
+        "Preencha NOME DO ATIVO e VALOR em todas as linhas usadas ou apague as linhas incompletas."
+      );
       return;
     }
 
     const itensValidos = linhas.filter((l) => l.nome.trim() && l.valor.trim());
+
     if (itensValidos.length === 0) {
-      setErro("Adicione pelo menos um ativo para salvar.");
+      setErro("Adicione pelo menos um ativo com nome e valor para salvar o registro.");
       return;
     }
 
@@ -305,11 +270,7 @@ export default function EditAtivosModal({
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      const totalCalc = itensValidos.reduce(
-        (acc, l) => acc + (Number(l.valor.replace(/\./g, "").replace(",", ".")) || 0),
-        0
-      );
-
+      // 1) Busca (ou cria) o registro do mês
       const { data: regExistente } = await supabase
         .from("registros_ativos")
         .select("id")
@@ -319,29 +280,66 @@ export default function EditAtivosModal({
 
       let registroId = regExistente?.id;
       if (!registroId) {
+        // cria registro "casca" com total 0 por enquanto
         const { data } = await supabase
           .from("registros_ativos")
-          .insert({ user_id: user.id, mes_ano: mesAno, total: totalCalc })
+          .insert({ user_id: user.id, mes_ano: mesAno, total: 0 })
           .select("id")
           .single();
         registroId = data.id;
-      } else {
-        await supabase
-          .from("registros_ativos")
-          .update({ total: totalCalc })
-          .eq("id", registroId);
       }
 
-      // Sobrescreve itens do mês (correto!)
-      await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
-      await supabase.from("registros_ativos_itens").insert(
-        itensValidos.map((l) => ({
-          registro_id: registroId,
-          user_id: user.id,
-          nome_ativo: l.nome.trim(),
-          valor: Number(l.valor.replace(/\./g, "").replace(",", ".")),
-        }))
-      );
+      // 2) Carrega itens antigos do mês (se houver)
+      const { data: itensAntigos } = await supabase
+        .from("registros_ativos_itens")
+        .select("nome_ativo, valor")
+        .eq("registro_id", registroId);
+
+      // 3) Monta um mapa nome_ativo -> valor a partir do que já existia
+      const mapa = new Map();
+
+      if (Array.isArray(itensAntigos)) {
+        for (const it of itensAntigos) {
+          const nome = String(it.nome_ativo || "").trim();
+          if (!nome) continue;
+          const valNum = Number(it.valor) || 0;
+          mapa.set(nome, valNum);
+        }
+      }
+
+      // 4) Aplica os itens novos/atuais: substitui se já existe, adiciona se for novo
+      for (const l of itensValidos) {
+        const nome = l.nome.trim();
+        const valNum =
+          Number(l.valor.replace(/\./g, "").replace(",", ".")) || 0;
+        if (!nome) continue;
+        mapa.set(nome, valNum); // sobrescreve o valor anterior deste ativo
+      }
+
+      // 5) Constrói lista final de itens a salvar
+      const itensFinais = Array.from(mapa.entries()).map(([nome_ativo, valor]) => ({
+        registro_id: registroId,
+        user_id: user.id,
+        nome_ativo,
+        valor,
+      }));
+
+      // 6) Recalcula o total com base em TODOS os ativos (antigos + novos mesclados)
+      const totalCalc = itensFinais.reduce((acc, it) => acc + (Number(it.valor) || 0), 0);
+
+      // 7) Atualiza total no registro principal
+      await supabase
+        .from("registros_ativos")
+        .update({ total: totalCalc })
+        .eq("id", registroId);
+
+      // 8) Sobrescreve itens do mês com a lista mesclada
+      await supabase
+        .from("registros_ativos_itens")
+        .delete()
+        .eq("registro_id", registroId);
+
+      await supabase.from("registros_ativos_itens").insert(itensFinais);
 
       onSave?.({ mesAno, total: totalCalc, deleted: false });
       onClose();
@@ -355,16 +353,17 @@ export default function EditAtivosModal({
       setErro("Selecione um mês para zerar.");
       return;
     }
-
-    if (!window.confirm("Deseja realmente zerar este mês?")) return;
+    const confirmar = window.confirm("Zerar todos os ativos deste mês?");
+    if (!confirmar) return;
 
     try {
+      setErro("");
       await deleteRegistroAtivosPorMesAno(mesAno);
       setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
       onSave?.({ mesAno, total: 0, deleted: true });
       onClose();
     } catch (err) {
-      setErro("Erro ao zerar: " + err.message);
+      setErro("Erro ao zerar mês: " + err.message);
     }
   };
 
@@ -380,7 +379,7 @@ export default function EditAtivosModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-white rounded-3xl shadow-3xl border border-gray-300 overflow-hidden flex flex-col relative">
-          {/* Fechar */}
+          {/* Botão fechar */}
           <button
             onClick={onClose}
             className="absolute top-3 right-3 p-1.5 rounded-full hover:bg-gray-100 text-gray-500"
@@ -388,14 +387,12 @@ export default function EditAtivosModal({
             <X size={20} />
           </button>
 
-          {/* Título */}
+          {/* Linha 1 - Título */}
           <div className="bg-gray-200 px-8 py-2 border-b border-gray-300">
-            <h2 className="text-lg font-bold text-gray-800 text-center">
-              Editar Ativos
-            </h2>
+            <h2 className="text-lg font-bold text-gray-800 text-center">Editar Ativos</h2>
           </div>
 
-          {/* Mês-Ano + Copiar + Adicionar */}
+          {/* Linha 2 - Mês/Ano + Copiar + Adicionar */}
           <div className="px-8 py-1 bg-white border-b border-gray-300">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-2 flex-wrap">
@@ -412,7 +409,6 @@ export default function EditAtivosModal({
                 >
                   Copiar mês anterior
                 </button>
-
                 <button
                   onClick={adicionarLinha}
                   className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-lg shadow transition"
@@ -423,7 +419,7 @@ export default function EditAtivosModal({
             </div>
           </div>
 
-          {/* Tabela */}
+          {/* Linha 3 - Tabela */}
           <div className="px-8 py-2 bg-white flex-1 max-h-[50vh] overflow-y-auto">
             <div className="border border-gray-300 rounded-2xl overflow-hidden">
               <table className="w-full border-collapse">
@@ -434,17 +430,22 @@ export default function EditAtivosModal({
                     <th className="px-3 py-2 w-12 text-center">Lixeira</th>
                   </tr>
                 </thead>
-
                 <tbody className="divide-y divide-gray-200">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={3} className="text-center py-8 text-gray-500 text-xs">
+                      <td
+                        colSpan={3}
+                        className="text-center py-8 text-gray-500 text-xs font-medium"
+                      >
                         Carregando dados...
                       </td>
                     </tr>
                   ) : linhas.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="text-center py-8 text-gray-400 text-xs">
+                      <td
+                        colSpan={3}
+                        className="text-center py-8 text-gray-400 text-xs font-medium"
+                      >
                         Nenhum ativo adicionado
                       </td>
                     </tr>
@@ -464,7 +465,7 @@ export default function EditAtivosModal({
             </div>
           </div>
 
-          {/* Rodapé */}
+          {/* Linha 4 - Zerar + Total */}
           <div className="px-8 py-1 bg-white border-t border-gray-300 flex items-center justify-between flex-wrap gap-2">
             <button
               onClick={zerarMes}
@@ -472,15 +473,17 @@ export default function EditAtivosModal({
             >
               <Trash2 size={14} /> Zerar este mês
             </button>
-
             <div className="text-right">
-              <div className="text-[10px] text-gray-600 uppercase tracking-wide">Total do mês</div>
+              <div className="text-[10px] text-gray-600 uppercase tracking-wide">
+                Total do mês
+              </div>
               <div className="text-xl font-bold text-emerald-700">
                 R$ {total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
               </div>
             </div>
           </div>
 
+          {/* Linha 5 - Salvar Alterações */}
           <div className="px-8 pb-3 pt-1 bg-white border-t border-gray-300">
             <button
               onClick={salvar}
@@ -512,7 +515,10 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
   }, [linha.nome]);
 
   const sugestoes = useMemo(() => {
-    if (!query.trim()) return ativosExistentes.slice(0, 8);
+    if (!ativosExistentes || ativosExistentes.length === 0) return [];
+    if (!query.trim()) {
+      return ativosExistentes.slice(0, 8);
+    }
     return ativosExistentes
       .filter((a) => a.toLowerCase().includes(query.toLowerCase()))
       .slice(0, 8);
@@ -536,12 +542,11 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
             placeholder="Ex: Petrobras, Tesouro Selic..."
             className="w-full px-3 py-1.5 text-xs font-medium text-gray-800 bg-white border border-gray-300 rounded-md focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
           />
-
           {showDropdown &&
             sugestoes.length > 0 &&
             createPortal(
               <div
-                className="fixed bg-white border-2 border-gray-300 rounded-xl shadow-2xl overflow-hidden z-[9999]"
+                className="fixed bg-white border-2 border-gray-300 rounded-xl shadow-2xl overflow-hidden z-[9999] text-emerald-700"
                 style={{
                   top: inputRef.current?.getBoundingClientRect().bottom + window.scrollY + 8,
                   left: inputRef.current?.getBoundingClientRect().left + window.scrollX,
@@ -567,7 +572,6 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
             )}
         </div>
       </td>
-
       <td className="px-3 py-2">
         <input
           type="text"
@@ -586,7 +590,6 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
           className="w-full px-3 py-1.5 text-xs font-bold text-right text-emerald-700 bg-white border border-gray-300 rounded-md focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
         />
       </td>
-
       <td className="px-3 py-2 text-center">
         <button
           onClick={onRemove}
@@ -599,7 +602,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
   );
 }
 
-/* ============== DELETE POR MÊS ============== */
+/* ============== HELPER PARA DELETAR MÊS ============== */
 export async function deleteRegistroAtivosPorMesAno(mesAno) {
   const {
     data: { user },
@@ -615,13 +618,6 @@ export async function deleteRegistroAtivosPorMesAno(mesAno) {
 
   if (!regExistente) return;
 
-  await supabase
-    .from("registros_ativos_itens")
-    .delete()
-    .eq("registro_id", regExistente.id);
-
-  await supabase
-    .from("registros_ativos")
-    .delete()
-    .eq("id", regExistente.id);
+  await supabase.from("registros_ativos_itens").delete().eq("registro_id", regExistente.id);
+  await supabase.from("registros_ativos").delete().eq("id", regExistente.id);
 }
