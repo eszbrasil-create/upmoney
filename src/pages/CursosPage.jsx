@@ -28,7 +28,7 @@ export default function CursosPage() {
       {
         id: 5,
         titulo: "FIIs – Fundos Imobiliários",
-        pdf: "/pdfs/Apostila Curso_4_Fundos Imobiliarios",
+        pdf: "/pdfs/Apostila Curso_4_Fundos Imobiliarios.pdf",
       },
       {
         id: 6,
