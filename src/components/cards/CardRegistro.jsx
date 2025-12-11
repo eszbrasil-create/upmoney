@@ -29,6 +29,7 @@ function normalizeMesAno(str) {
 }
 
 export default function CardRegistro({ columns = [], rows = [], onDeleteMonth }) {
+  // formato numérico sem moeda e sem casas decimais (arredondado)
   const fmt = useMemo(
     () =>
       new Intl.NumberFormat("pt-BR", {
@@ -38,11 +39,13 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     []
   );
 
+  // Normaliza colunas para padrão MMM/AAAA
   const normalizedColumns = useMemo(
     () => columns.map(normalizeMesAno),
     [columns]
   );
 
+  // Totais por mês (cada coluna)
   const totaisColuna = useMemo(() => {
     return normalizedColumns.map((_, colIdx) =>
       rows.reduce((acc, r) => acc + (r.valores?.[colIdx] || 0), 0)
@@ -52,7 +55,8 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
   const LEFT_COL_WIDTH = 130;
 
   return (
-    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[640px] h-[360px] p-4 overflow-hidden shrink-0">
+    <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[640px] h-[360px] p-4 overflow-hidden">
+      
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
         <div className="text-slate-100 font-semibold text-lg">
@@ -65,10 +69,12 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
 
       {/* Área da tabela com scroll interno */}
       <div className="relative h-[310px] overflow-x-auto overflow-y-auto pb-0 rounded-2xl border border-white/10 bg-slate-900/40">
-        <table className="border-separate border-spacing-0 w-max">
+        <table className="min-w-full border-separate border-spacing-0">
+          
           {/* Cabeçalho fixo */}
           <thead className="sticky top-0 z-30 bg-slate-800/90 backdrop-blur">
             <tr className="text-left text-slate-300 text-sm">
+              
               {/* Coluna fixa (Ativos) */}
               <th
                 className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-1 font-medium border-b border-white/10"
