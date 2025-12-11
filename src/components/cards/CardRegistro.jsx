@@ -4,38 +4,74 @@ import { Trash2 } from "lucide-react";
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
+/**
+ * Aceita formatos:
+ * - "Fev/2025"
+ * - "Fev 2025"
+ * - "Fev2025"
+ * - "2/25", "02/2025", "2 2025", "2-2025"
+ */
 function normalizeMesAno(str) {
-  if (!str || !str.includes("/")) return str;
-  let [mes, ano] = str.split("/").map(s => s.trim());
+  if (!str) return str;
+  let s = String(str).trim();
 
-  // mês numérico -> MMM
+  let mes;
+  let ano;
+
+  // 1) Formatos numéricos: "2/25", "02/2025", "2 2025", "2-2025"
+  let mNum = s.match(/^(\d{1,2})\s*[\/\-\s]?\s*(\d{2,4})$/);
+  if (mNum) {
+    mes = mNum[1];
+    ano = mNum[2];
+  } else {
+    // 2) Formatos com texto: "Fev/2025", "Fev 2025", "Fev2025"
+    let mTxt = s.match(/^([A-Za-zÀ-ÿ]{3})\s*[\/\-\s]?\s*(\d{2,4})$/);
+    if (mTxt) {
+      mes = mTxt[1];
+      ano = mTxt[2];
+    } else if (s.includes("/")) {
+      // 3) fallback "qualquer coisa/ano"
+      [mes, ano] = s.split("/").map((p) => p.trim());
+    } else {
+      // não consegui interpretar → devolve como veio
+      return s;
+    }
+  }
+
+  // trata mês
   if (/^\d+$/.test(mes)) {
     const idx = Number(mes) - 1;
-    if (idx >= 0 && idx < 12) mes = MESES[idx];
+    if (idx >= 0 && idx < 12) {
+      mes = MESES[idx];
+    }
   } else {
-    // texto -> MMM
-    mes = mes.charAt(0).toUpperCase() + mes.slice(1,3).toLowerCase();
-    const found = MESES.find(m => m.toLowerCase() === mes.toLowerCase());
+    mes = mes.charAt(0).toUpperCase() + mes.slice(1, 3).toLowerCase();
+    const found = MESES.find((m) => m.toLowerCase() === mes.toLowerCase());
     if (found) mes = found;
   }
 
-  // ano 2 dígitos -> 4 dígitos
-  if (/^\d{2}$/.test(ano)) ano = `20${ano}`;
+  // trata ano
+  if (/^\d{2}$/.test(ano)) {
+    ano = `20${ano}`;
+  }
+
   return `${mes}/${ano}`;
 }
 
 export default function CardRegistro({ columns = [], rows = [], onDeleteMonth }) {
   const fmt = useMemo(
-    () => new Intl.NumberFormat("pt-BR", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }),
+    () =>
+      new Intl.NumberFormat("pt-BR", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }),
     []
   );
 
-  /** =========================================================
-   *  Meses em ordem Jan → Dez, **guardando índice original**
-   * ==========================================================*/
+  /** ============================
+   * Meses em ordem Jan → Dez,
+   * guardando índice original
+   * ============================ */
   const monthMeta = useMemo(() => {
     const norm = columns.map(normalizeMesAno);
 
@@ -44,7 +80,16 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
       .sort((a, b) => {
         const ma = a.label.split("/")[0];
         const mb = b.label.split("/")[0];
-        return MESES.indexOf(ma) - MESES.indexOf(mb);
+        const ia = MESES.indexOf(ma);
+        const ib = MESES.indexOf(mb);
+
+        // se algum mês não for reconhecido, mantém ordem de entrada
+        if (ia < 0 && ib < 0) return a.originalIndex - b.originalIndex;
+        if (ia < 0) return 1;
+        if (ib < 0) return -1;
+
+        const diff = ia - ib;
+        return diff !== 0 ? diff : a.originalIndex - b.originalIndex;
       });
   }, [columns]);
 
@@ -53,9 +98,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     [monthMeta]
   );
 
-  /** =========================================================
-   *  Totais por coluna respeitando a nova ordem
-   * ==========================================================*/
+  /** Totais por coluna de acordo com o índice ORIGINAL */
   const totaisColuna = useMemo(
     () =>
       monthMeta.map(({ originalIndex }) =>
@@ -73,11 +116,13 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[640px] h-[360px] p-4 overflow-hidden shrink-0">
       <div className="flex items-center justify-between mb-1">
         <div className="text-slate-100 font-semibold text-lg">Registros</div>
-        <div className="text-[11px] text-slate-400">Registros salvos por mês</div>
+        <div className="text-[11px] text-slate-400">
+          Registros salvos por mês
+        </div>
       </div>
 
       <div className="relative h-[310px] overflow-auto rounded-2xl border border-white/10 bg-slate-900/40">
-        {/* TABELA PRINCIPAL */}
+        {/* tabela principal (corpo + header) */}
         <div className="min-w-max pb-12">
           {/* espaço para o TOTAL não ser sobreposto */}
           <table className="w-full border-separate border-spacing-0">
@@ -99,8 +144,12 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
                     >
                       <div className="flex items-center gap-2 justify-center">
                         <div className="text-center leading-tight">
-                          <span className="text-[13px] text-slate-200">{mes}</span>
-                          <span className="text-[12px] text-slate-400">{ano}</span>
+                          <span className="text-[13px] text-slate-200">
+                            {mes}
+                          </span>
+                          <span className="text-[12px] text-slate-400">
+                            {ano}
+                          </span>
                         </div>
                         <button
                           onClick={() => onDeleteMonth?.(m)}
@@ -115,7 +164,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
               </tr>
             </thead>
 
-            {/* CORPO - rola normalmente */}
+            {/* CORPO */}
             <tbody>
               {rows.map((row, i) => (
                 <tr
