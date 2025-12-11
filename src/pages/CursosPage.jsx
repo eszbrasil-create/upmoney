@@ -30,8 +30,8 @@ export default function CursosPage() {
         titulo: "FIIs – Fundos Imobiliários", pdf: "/pdfs/Apostila Curso_4_Fundos Imobiliários.pdf"},
       {
         id: 6,
-        titulo: "Montando sua Carteira (1 to 1)",
-        pdf: "/pdfs/modulo6.pdf",
+        titulo: "Estratégia de Dividendos",
+        pdf: "/pdfs/Apostila Curso_5_Dividendos.pdf",
       },
       {
         id: 7,
