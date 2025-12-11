@@ -17,7 +17,6 @@ function normalizeMesAno(str) {
     const idx = Number(mes) - 1;
     if (idx >= 0 && idx < 12) mes = MESES[idx];
   } else {
-    // Padroniza texto do mês (ex: "agosto" → "Ago")
     mes = mes.charAt(0).toUpperCase() + mes.slice(1, 3).toLowerCase();
     const found = MESES.find((m) => m.toLowerCase() === mes.toLowerCase());
     if (found) mes = found;
@@ -39,7 +38,6 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     []
   );
 
-  // Ordena os meses de Janeiro a Dezembro
   const normalizedColumns = useMemo(() => {
     const norm = columns.map(normalizeMesAno);
 
@@ -51,7 +49,6 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     return norm.sort((a, b) => getMonthIndex(a) - getMonthIndex(b));
   }, [columns]);
 
-  // Totais por coluna
   const totaisColuna = useMemo(() => {
     return normalizedColumns.map((_, colIdx) =>
       rows.reduce((acc, r) => acc + (r.valores?.[colIdx] || 0), 0)
@@ -70,14 +67,14 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
 
       {/* Área da tabela com scroll */}
       <div className="relative h-[310px] overflow-auto rounded-2xl border border-white/10 bg-slate-900/40">
-        {/* Container que garante alinhamento perfeito no scroll horizontal */}
-        <div className="min-w-max">
+        {/* Conteúdo rolável */}
+        <div className="min-w-max h-full">
           <table className="border-separate border-spacing-0 w-full">
             {/* Cabeçalho fixo verticalmente */}
-            <thead className="sticky top-0 z-30 bg-slate-800/95 backdrop-blur">
+            <thead className="sticky top-0 z-30 bg-slate-800/90 backdrop-blur">
               <tr className="text-left text-slate-300 text-sm">
                 <th
-                  className="sticky left-0 z-40 bg-slate-800/95 backdrop-blur px-3 py-2 font-medium border-b border-white/10"
+                  className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-2 font-medium border-b border-white/10"
                   style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
                 >
                   Ativos
@@ -110,19 +107,19 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
               </tr>
             </thead>
 
-            {/* Corpo da tabela */}
-            <tbody>
+            {/* Corpo da tabela (rolável) */}
+            <tbody className="h-[calc(100%-4rem)] overflow-auto">
               {rows.map((row, rowIdx) => {
                 const zebra = rowIdx % 2 === 0;
                 return (
                   <tr
                     key={row.ativo}
                     className={`text-sm transition ${
-                      zebra ? "bg-white/[0.03]" : "bg-transparent"
-                    } hover:bg-white/[0.06]`}
+                      zebra ? "bg-white/[0.02]" : "bg-transparent"
+                    } hover:bg-white/[0.04]`}
                   >
                     <td
-                      className="sticky left-0 z-20 bg-slate-900/80 backdrop-blur px-3 py-2 border-b border-white/05 text-slate-100 font-medium"
+                      className="sticky left-0 z-20 bg-slate-950/60 px-3 py-2 border-b border-white/10 text-slate-100 font-medium"
                       style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
                     >
                       {row.ativo}
@@ -131,7 +128,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
                     {normalizedColumns.map((_, idx) => (
                       <td
                         key={idx}
-                        className="px-3 py-2 border-b border-white/05 text-slate-200 whitespace-nowrap tabular-nums text-right"
+                        className="px-3 py-2 border-b border-white/10 text-slate-200 whitespace-nowrap tabular-nums text-right"
                       >
                         {fmt.format(row.valores?.[idx] ?? 0)}
                       </td>
@@ -143,34 +140,30 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
           </table>
         </div>
 
-        {/* RODAPÉ TOTAL FIXO NO FUNDO – AGORA PERFEITO */}
+        {/* Rodapé TOTAL fixo na parte de baixo do card */}
         {normalizedColumns.length > 0 && (
-          <div className="absolute inset-x-0 bottom-0 h-12 pointer-events-none">
-            <div className="relative h-full overflow-hidden">
-              <div className="absolute inset-0 flex items-center">
-                <div className="min-w-max w-full">
-                  <table className="border-separate border-spacing-0 w-full">
-                    <tfoot>
-                      <tr className="bg-gradient-to-t from-slate-900 via-slate-800/95 to-slate-800/90 text-sm font-bold shadow-2xl">
-                        <td
-                          className="sticky left-0 z-50 bg-slate-900/95 backdrop-blur px-3 py-2 border-t-2 border-emerald-500/50 text-emerald-400 shadow-lg"
-                          style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
-                        >
-                          TOTAL
-                        </td>
-                        {totaisColuna.map((total, i) => (
-                          <td
-                            key={i}
-                            className="px-3 py-2 border-t-2 border-emerald-500/30 text-emerald-300 whitespace-nowrap tabular-nums text-right"
-                          >
-                            {fmt.format(total)}
-                          </td>
-                        ))}
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              </div>
+          <div className="absolute bottom-0 left-0 w-full bg-slate-800/90 backdrop-blur border-t border-white/10">
+            <div className="min-w-max">
+              <table className="border-separate border-spacing-0 w-full">
+                <tfoot>
+                  <tr className="text-sm font-semibold">
+                    <td
+                      className="sticky left-0 bg-slate-800/90 backdrop-blur px-3 py-2 border-t border-white/10 text-slate-100"
+                      style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
+                    >
+                      TOTAL
+                    </td>
+                    {totaisColuna.map((total, i) => (
+                      <td
+                        key={i}
+                        className="px-3 py-2 border-t border-white/10 text-slate-100 whitespace-nowrap tabular-nums text-right"
+                      >
+                        {fmt.format(total)}
+                      </td>
+                    ))}
+                  </tr>
+                </tfoot>
+              </table>
             </div>
           </div>
         )}
