@@ -27,7 +27,6 @@ function normalizeMesAno(str) {
     const idx = Number(mes) - 1;
     if (idx >= 0 && idx < 12) mes = MESES[idx];
   } else {
-    // texto -> MMM
     mes = mes.charAt(0).toUpperCase() + mes.slice(1, 3).toLowerCase();
     const found = MESES.find((m) => m.toLowerCase() === mes.toLowerCase());
     if (found) mes = found;
@@ -49,11 +48,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     []
   );
 
-  /** metas das colunas:
-   *  - label normalizada (ex: "Fev/2025")
-   *  - índice original (para buscar em rows.valores[...])
-   *  - índice do mês (0..11) para ordenar Jan→Dez
-   */
+  // meta das colunas: label normalizada + índice original + índice do mês
   const columnMeta = useMemo(() => {
     const norm = columns.map((c) => normalizeMesAno(c));
 
@@ -79,7 +74,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     return meta;
   }, [columns]);
 
-  // totais por coluna, usando o índice ORIGINAL em cada linha
+  // totais por coluna (usando índice original)
   const totaisColuna = useMemo(
     () =>
       columnMeta.map((col) =>
@@ -103,16 +98,15 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
         </div>
       </div>
 
-      {/* Área principal: tabela rolável + total fixo no rodapé */}
+      {/* Área principal: tabela rolável + TOTAL fixo */}
       <div className="relative h-[310px] rounded-2xl border border-white/10 bg-slate-900/40">
-        {/* SCROLL VERTICAL: só o corpo da tabela rola */}
-        <div className="absolute inset-0 overflow-auto pb-10">
-          {/* pb-10 = espaço para não esconder a última linha atrás do TOTAL fixo */}
+        {/* Miolo rolável (fica ATRÁS da barra de TOTAL) */}
+        <div className="absolute inset-0 overflow-auto z-10">
           <table className="min-w-max w-full border-separate border-spacing-0">
-            {/* CABEÇALHO */}
+            {/* Cabeçalho */}
             <thead className="sticky top-0 z-20 bg-slate-800/90 backdrop-blur">
               <tr className="text-left text-slate-300 text-sm">
-                {/* coluna fixa Ativos */}
+                {/* Coluna fixa Ativos */}
                 <th
                   className="sticky left-0 z-30 bg-slate-800/90 backdrop-blur px-3 py-1 font-medium border-b border-white/10"
                   style={{
@@ -123,14 +117,14 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
                   Ativos
                 </th>
 
-                {/* meses em ordem Jan→Dez */}
+                {/* Meses em ordem Jan → Dez, mês em cima / ano embaixo */}
                 {columnMeta.map((col) => (
                   <th
                     key={col.label}
                     className="px-3 py-1 font-medium border-b border-white/10 text-slate-300 whitespace-nowrap"
                   >
                     <div className="flex items-center gap-2 justify-center">
-                      <div className="text-center leading-tight">
+                      <div className="flex flex-col leading-tight text-center">
                         <span className="text-[13px] text-slate-200">
                           {col.mes}
                         </span>
@@ -153,7 +147,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
               </tr>
             </thead>
 
-            {/* CORPO: rola junto com o cabeçalho, TOTAL fica fora */}
+            {/* Corpo */}
             <tbody>
               {rows.map((row, rowIdx) => {
                 const zebra = rowIdx % 2 === 0;
@@ -164,7 +158,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
                       zebra ? "bg-white/[0.02]" : "bg-transparent"
                     } hover:bg-white/[0.04] transition`}
                   >
-                    {/* primeira coluna fixa */}
+                    {/* Ativo fixo na esquerda */}
                     <td
                       className="sticky left-0 z-10 bg-slate-950/60 px-3 py-2 border-b border-white/10 text-slate-100 font-medium"
                       style={{
@@ -175,7 +169,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
                       {row.ativo}
                     </td>
 
-                    {/* valores, usando índice ORIGINAL da coluna */}
+                    {/* Valores alinhados pela posição ORIGINAL de cada coluna */}
                     {columnMeta.map((col) => {
                       const v = Number(row.valores?.[col.originalIndex]) || 0;
                       return (
@@ -194,9 +188,9 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
           </table>
         </div>
 
-        {/* TOTAL FIXO: NÃO ROLA NUNCA */}
+        {/* Barra TOTAL fixa por cima do miolo (miolo corre por trás) */}
         {columnMeta.length > 0 && (
-          <div className="absolute inset-x-0 bottom-0 bg-slate-800/95 border-t border-white/10">
+          <div className="absolute inset-x-0 bottom-0 z-20 bg-slate-800/95 border-t border-white/10">
             <table className="min-w-max w-full border-separate border-spacing-0">
               <tbody>
                 <tr className="text-sm font-semibold text-slate-100">
