@@ -2,12 +2,25 @@
 import React, { useMemo } from "react";
 import { Trash2 } from "lucide-react";
 
-const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const MESES = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+];
 
 function normalizeMesAno(str) {
   if (!str || !str.includes("/")) return str;
 
-  let [mes, ano] = str.split("/").map(s => s.trim());
+  let [mes, ano] = str.split("/").map((s) => s.trim());
 
   // mês numérico -> MMM
   if (/^\d+$/.test(mes)) {
@@ -15,9 +28,9 @@ function normalizeMesAno(str) {
     if (idx >= 0 && idx < 12) mes = MESES[idx];
   } else {
     // mês texto -> MMM
-    mes = mes.charAt(0).toUpperCase() + mes.slice(1,3).toLowerCase();
+    mes = mes.charAt(0).toUpperCase() + mes.slice(1, 3).toLowerCase();
     if (!MESES.includes(mes)) {
-      const found = MESES.find(m => m.toLowerCase() === mes.toLowerCase());
+      const found = MESES.find((m) => m.toLowerCase() === mes.toLowerCase());
       if (found) mes = found;
     }
   }
@@ -55,17 +68,13 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[640px] h-[360px] p-4 overflow-hidden shrink-0">
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
-        <div className="text-slate-100 font-semibold text-lg">
-          Registros
-        </div>
-        <div className="text-[11px] text-slate-400">
-          Registros salvos por mês
-        </div>
+        <div className="text-slate-100 font-semibold text-lg">Registros</div>
+        <div className="text-[11px] text-slate-400">Registros salvos por mês</div>
       </div>
 
       {/* Área da tabela com scroll interno */}
       <div className="relative h-[310px] overflow-x-auto overflow-y-auto pb-0 rounded-2xl border border-white/10 bg-slate-900/40">
-        <table className="border-separate border-spacing-0 w-max">
+        <table className="border-separate border-spacing-0 w-full">
           {/* Cabeçalho fixo */}
           <thead className="sticky top-0 z-30 bg-slate-800/90 backdrop-blur">
             <tr className="text-left text-slate-300 text-sm">
@@ -115,7 +124,9 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
               return (
                 <tr
                   key={row.ativo}
-                  className={`text-sm ${zebra ? "bg-white/[0.02]" : "bg-transparent"} hover:bg-white/[0.04] transition`}
+                  className={`text-sm ${
+                    zebra ? "bg-white/[0.02]" : "bg-transparent"
+                  } hover:bg-white/[0.04] transition`}
                 >
                   {/* Primeira coluna fixa — Ativo */}
                   <td
@@ -140,8 +151,8 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
           </tbody>
 
           {/* Rodapé - Totais (travado no fundo) */}
-          <tfoot>
-            <tr className="sticky bottom-0 z-30 bg-slate-800/90 backdrop-blur text-sm">
+          <tfoot className="sticky bottom-0 z-30 bg-slate-800/90 backdrop-blur">
+            <tr className="text-sm">
               <td
                 className="sticky left-0 z-50 bg-slate-800/90 backdrop-blur px-3 py-2 border-t border-white/10 text-slate-100 font-semibold"
                 style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
