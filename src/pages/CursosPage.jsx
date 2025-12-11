@@ -27,8 +27,7 @@ export default function CursosPage() {
       { id: 4, titulo: "Renda Variável", pdf: "/pdfs/Apostila Curso_3_Renda Variavel.pdf" },
       {
         id: 5,
-        titulo: "FIIs – Fundos Imobiliários",
-        pdf: "/pdfs/Apostila Curso_4_Fundos Imobiliários.pdf"},
+        titulo: "FIIs – Fundos Imobiliários", pdf: "/pdfs/Apostila Curso_4_Fundos Imobiliários.pdf"},
       {
         id: 6,
         titulo: "Montando sua Carteira (1 to 1)",
