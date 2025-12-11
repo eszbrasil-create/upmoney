@@ -2,12 +2,25 @@
 import React, { useMemo } from "react";
 import { Trash2 } from "lucide-react";
 
-const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const MESES = [
+  "Jan",
+  "Fev",
+  "Mar",
+  "Abr",
+  "Mai",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Set",
+  "Out",
+  "Nov",
+  "Dez",
+];
 
 function normalizeMesAno(str) {
   if (!str || !str.includes("/")) return str;
 
-  let [mes, ano] = str.split("/").map(s => s.trim());
+  let [mes, ano] = str.split("/").map((s) => s.trim());
 
   // mês numérico -> MMM
   if (/^\d+$/.test(mes)) {
@@ -15,9 +28,9 @@ function normalizeMesAno(str) {
     if (idx >= 0 && idx < 12) mes = MESES[idx];
   } else {
     // mês texto -> MMM
-    mes = mes.charAt(0).toUpperCase() + mes.slice(1,3).toLowerCase();
+    mes = mes.charAt(0).toUpperCase() + mes.slice(1, 3).toLowerCase();
     if (!MESES.includes(mes)) {
-      const found = MESES.find(m => m.toLowerCase() === mes.toLowerCase());
+      const found = MESES.find((m) => m.toLowerCase() === mes.toLowerCase());
       if (found) mes = found;
     }
   }
@@ -29,6 +42,7 @@ function normalizeMesAno(str) {
 }
 
 export default function CardRegistro({ columns = [], rows = [], onDeleteMonth }) {
+  // formato numérico sem casas decimais
   const fmt = useMemo(
     () =>
       new Intl.NumberFormat("pt-BR", {
@@ -38,11 +52,19 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     []
   );
 
-  const normalizedColumns = useMemo(
-    () => columns.map(normalizeMesAno),
-    [columns]
-  );
+  // meses sempre em ordem Jan → Dez, independentemente da ordem de input
+  const normalizedColumns = useMemo(() => {
+    const norm = columns.map(normalizeMesAno);
 
+    const getMonthIndex = (m) => {
+      const [mes] = m.split("/");
+      return MESES.indexOf(mes);
+    };
+
+    return norm.sort((a, b) => getMonthIndex(a) - getMonthIndex(b));
+  }, [columns]);
+
+  // totais por coluna
   const totaisColuna = useMemo(() => {
     return normalizedColumns.map((_, colIdx) =>
       rows.reduce((acc, r) => acc + (r.valores?.[colIdx] || 0), 0)
@@ -55,17 +77,13 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg w-[640px] h-[360px] p-4 overflow-hidden shrink-0">
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
-        <div className="text-slate-100 font-semibold text-lg">
-          Registros
-        </div>
-        <div className="text-[11px] text-slate-400">
-          Registros salvos por mês
-        </div>
+        <div className="text-slate-100 font-semibold text-lg">Registros</div>
+        <div className="text-[11px] text-slate-400">Registros salvos por mês</div>
       </div>
 
       {/* Área da tabela com scroll interno */}
       <div className="relative h-[310px] overflow-x-auto overflow-y-auto pb-0 rounded-2xl border border-white/10 bg-slate-900/40">
-        {/* conteúdo rolável (header + linhas) */}
+        {/* conteúdo rolável (cabeçalho + linhas) */}
         <div className="min-w-max pb-10">
           <table className="border-separate border-spacing-0 w-full">
             {/* Cabeçalho fixo */}
@@ -117,7 +135,9 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
                 return (
                   <tr
                     key={row.ativo}
-                    className={`text-sm ${zebra ? "bg-white/[0.02]" : "bg-transparent"} hover:bg-white/[0.04] transition`}
+                    className={`text-sm ${
+                      zebra ? "bg-white/[0.02]" : "bg-transparent"
+                    } hover:bg-white/[0.04] transition`}
                   >
                     {/* Primeira coluna fixa — Ativo */}
                     <td
