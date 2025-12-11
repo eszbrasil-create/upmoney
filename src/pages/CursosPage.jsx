@@ -38,7 +38,7 @@ export default function CursosPage() {
         titulo: "Estratégia de Renda Passiva",
         pdf: "/pdfs/Apostila_Curso_6_Estratégia_de_Renda_Passiva.pdf",
       },
-      { id: 8, titulo: "Impostos", pdf: "/pdfs/modulo6.pdf" },
+      { id: 8, titulo: "UpControl", pdf: "/pdfs/modulo6.pdf" },
       {
         id: 9,
         titulo: "Recebendo o Primeiro Dividendo (1 to 1)",
