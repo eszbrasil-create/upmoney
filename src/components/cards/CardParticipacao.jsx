@@ -3,13 +3,13 @@ import React, { useMemo, useState } from "react";
 
 const PALETTE = [
   "#8538f8ff", // sky
-  "#22d3ee", // cyan
+  "#22d3ee",   // cyan
   "#f5bb0bff", // amber
-  "#e80707ff", // violet
-  "#34d399", // emerald
-  "#71fb78ff", // rose
-  "#9d72f4ff", // pink
-  "#60a5fa", // blue
+  "#e80707ff", // red
+  "#34d399",   // emerald
+  "#71fb78ff", // lime
+  "#9d72f4ff", // purple
+  "#60a5fa",   // blue
 ];
 
 // helpers para desenhar arcos em SVG
@@ -17,6 +17,7 @@ function polarToCartesian(cx, cy, r, angleDeg) {
   const a = ((angleDeg - 90) * Math.PI) / 180;
   return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
 }
+
 function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
   // “donut slice”: arco externo + arco interno (reverso)
   const largeArc = endAngle - startAngle > 180 ? 1 : 0;
@@ -56,8 +57,8 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
 
   // interação
   const [activeIdx, setActiveIdx] = useState(null); // último clique
-  const [hoverIdx, setHoverIdx] = useState(null); // hover atual
-  const idxShown = hoverIdx ?? activeIdx; // prioridade p/ hover
+  const [hoverIdx, setHoverIdx] = useState(null);   // hover atual
+  const idxShown = hoverIdx ?? activeIdx;           // prioridade p/ hover
 
   // geometria do donut
   const size = 280; // tamanho do lado do SVG
@@ -102,6 +103,7 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
         line2: "",
       };
     }
+
     const it = parts[idxShown];
     return {
       title: it.nome,
@@ -115,7 +117,7 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
   }, [idxShown, parts, total]);
 
   return (
-    <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[600px] min-w-[590px] max-w-[605px] h-[360px] p-4 overflow-hidden">
+    <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[590px] h-[360px] p-4 overflow-hidden shrink-0">
       <div className="flex items-center justify-between mb-3">
         <span className="text-slate-100 font-semibold text-lg">
           Participação
