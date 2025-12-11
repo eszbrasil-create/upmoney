@@ -82,113 +82,104 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
       </div>
 
       {/* Área da tabela com scroll interno */}
-      <div className="relative h-[310px] overflow-x-auto overflow-y-auto pb-0 rounded-2xl border border-white/10 bg-slate-900/40">
-        {/* conteúdo rolável (cabeçalho + linhas) */}
-        <div className="min-w-max pb-10">
-          <table className="border-separate border-spacing-0 w-full">
-            {/* Cabeçalho fixo */}
-            <thead className="sticky top-0 z-30 bg-slate-800/90 backdrop-blur">
-              <tr className="text-left text-slate-300 text-sm">
-                {/* Coluna fixa (Ativos) */}
-                <th
-                  className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-1 font-medium border-b border-white/10"
-                  style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
-                >
-                  Ativos
-                </th>
+      <div className="relative h-[310px] overflow-x-auto overflow-y-auto rounded-2xl border border-white/10 bg-slate-900/40">
+        <table className="border-separate border-spacing-0 min-w-max">
+          {/* Cabeçalho fixo */}
+          <thead className="sticky top-0 z-30 bg-slate-800/90 backdrop-blur">
+            <tr className="text-left text-slate-300 text-sm">
+              {/* Coluna fixa (Ativos) */}
+              <th
+                className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-1 font-medium border-b border-white/10"
+                style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
+              >
+                Ativos
+              </th>
 
-                {/* Meses + lixeira */}
-                {normalizedColumns.map((m) => {
-                  const [mes, ano] = m.split("/");
+              {/* Meses + lixeira */}
+              {normalizedColumns.map((m) => {
+                const [mes, ano] = m.split("/");
 
-                  return (
-                    <th
-                      key={m}
-                      className="px-3 py-1 font-medium border-b border-white/10 text-slate-300 whitespace-nowrap"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex flex-col leading-tight text-center">
-                          <span className="text-[13px] text-slate-200">{mes}</span>
-                          <span className="text-[12px] text-slate-400">{ano}</span>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => onDeleteMonth?.(m)}
-                          className="p-1 rounded-md hover:bg-white/10 text-slate-400 hover:text-rose-400 transition"
-                          aria-label={`Excluir mês ${m}`}
-                          title={`Excluir mês ${m}`}
-                        >
-                          <Trash2 size={14} strokeWidth={2} />
-                        </button>
-                      </div>
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-
-            {/* Corpo */}
-            <tbody>
-              {rows.map((row, rowIdx) => {
-                const zebra = rowIdx % 2 === 0;
                 return (
-                  <tr
-                    key={row.ativo}
-                    className={`text-sm ${
-                      zebra ? "bg-white/[0.02]" : "bg-transparent"
-                    } hover:bg-white/[0.04] transition`}
+                  <th
+                    key={m}
+                    className="px-3 py-1 font-medium border-b border-white/10 text-slate-300 whitespace-nowrap"
                   >
-                    {/* Primeira coluna fixa — Ativo */}
-                    <td
-                      className="sticky left-0 z-10 bg-slate-950/60 px-3 py-2 border-b border-white/10 text-slate-100 font-medium"
-                      style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
-                    >
-                      {row.ativo}
-                    </td>
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-col leading-tight text-center">
+                        <span className="text-[13px] text-slate-200">{mes}</span>
+                        <span className="text-[12px] text-slate-400">{ano}</span>
+                      </div>
 
-                    {/* Valores por mês */}
-                    {normalizedColumns.map((_, idx) => (
-                      <td
-                        key={idx}
-                        className="px-3 py-2 border-b border-white/10 text-slate-200 whitespace-nowrap text-left tabular-nums"
+                      <button
+                        type="button"
+                        onClick={() => onDeleteMonth?.(m)}
+                        className="p-1 rounded-md hover:bg-white/10 text-slate-400 hover:text-rose-400 transition"
+                        aria-label={`Excluir mês ${m}`}
+                        title={`Excluir mês ${m}`}
                       >
-                        {fmt.format(row.valores?.[idx] ?? 0)}
-                      </td>
-                    ))}
-                  </tr>
+                        <Trash2 size={14} strokeWidth={2} />
+                      </button>
+                    </div>
+                  </th>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </tr>
+          </thead>
 
-        {/* Rodapé TOTAL fixo no fundo do card */}
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0">
-          <div className="min-w-max">
-            <table className="border-separate border-spacing-0 w-full">
-              <tfoot>
-                <tr className="bg-slate-800/90 backdrop-blur text-sm">
+          {/* Corpo */}
+          <tbody>
+            {rows.map((row, rowIdx) => {
+              const zebra = rowIdx % 2 === 0;
+              return (
+                <tr
+                  key={row.ativo}
+                  className={`text-sm ${
+                    zebra ? "bg-white/[0.02]" : "bg-transparent"
+                  } hover:bg-white/[0.04] transition`}
+                >
+                  {/* Primeira coluna fixa — Ativo */}
                   <td
-                    className="sticky left-0 z-50 bg-slate-800/90 backdrop-blur px-3 py-2 border-t border-white/10 text-slate-100 font-semibold"
+                    className="sticky left-0 z-10 bg-slate-950/60 px-3 py-2 border-b border-white/10 text-slate-100 font-medium"
                     style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
                   >
-                    Total
+                    {row.ativo}
                   </td>
 
-                  {totaisColuna.map((v, i) => (
+                  {/* Valores por mês */}
+                  {normalizedColumns.map((_, idx) => (
                     <td
-                      key={i}
-                      className="px-3 py-2 border-t border-white/10 text-slate-100 font-semibold whitespace-nowrap text-left tabular-nums"
+                      key={idx}
+                      className="px-3 py-2 border-b border-white/10 text-slate-200 whitespace-nowrap text-left tabular-nums"
                     >
-                      {fmt.format(v)}
+                      {fmt.format(row.valores?.[idx] ?? 0)}
                     </td>
                   ))}
                 </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
+              );
+            })}
+          </tbody>
+
+          {/* Rodapé - Totais, sticky no fundo da área visível */}
+          <tfoot className="sticky bottom-0 z-30 bg-slate-800/90 backdrop-blur">
+            <tr className="text-sm">
+              <td
+                className="sticky left-0 z-40 bg-slate-800/90 backdrop-blur px-3 py-2 border-t border-white/10 text-slate-100 font-semibold"
+                style={{ minWidth: LEFT_COL_WIDTH, width: LEFT_COL_WIDTH }}
+              >
+                Total
+              </td>
+
+              {totaisColuna.map((v, i) => (
+                <td
+                  key={i}
+                  className="px-3 py-2 border-t border-white/10 text-slate-100 font-semibold whitespace-nowrap text-left tabular-nums"
+                >
+                  {fmt.format(v)}
+                </td>
+              ))}
+            </tr>
+          </tfoot>
+        </table>
       </div>
     </div>
   );
