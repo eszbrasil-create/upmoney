@@ -12,6 +12,16 @@ const PALETTE = [
   "#60a5fa",   // blue
 ];
 
+// helper para converter valor (número ou string "1.234,56") -> número
+function toNum(v) {
+  if (v === null || v === undefined) return 0;
+  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+  const str = String(v).trim();
+  if (!str) return 0;
+  const n = Number(str.replace(/\./g, "").replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+}
+
 // helpers para desenhar arcos em SVG
 function polarToCartesian(cx, cy, r, angleDeg) {
   const a = ((angleDeg - 90) * Math.PI) / 180;
@@ -39,9 +49,37 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
 export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
   // prepara dados
   const { total, parts } = useMemo(() => {
-    const baseParts = itens.map((i, idx) => ({
-      nome: i.nome,
-      valor: Number(i.valor) || 0,
+    // 1) junta itens com mesmo nome de ativo (caso venham duplicados)
+    const mapa = new Map();
+
+    itens.forEach((i) => {
+      const nome =
+        (typeof i.nome === "string" && i.nome.trim()) ||
+        (typeof i.ativo === "string" && i.ativo.trim()) ||
+        "";
+      if (!nome) return;
+
+      // aceita valor em diferentes campos possíveis
+      const bruto =
+        i.valor ??
+        i.total ??
+        i.saldo ??
+        0;
+
+      const valor = toNum(bruto);
+      if (valor === 0) {
+        // mesmo 0 ainda conta pro donut (ele só some visualmente se total=0)
+        // mas se você quiser ignorar zeros, comente o return abaixo
+        // return;
+      }
+
+      const atual = mapa.get(nome) || 0;
+      mapa.set(nome, atual + valor);
+    });
+
+    const baseParts = Array.from(mapa.entries()).map(([nome, valor], idx) => ({
+      nome,
+      valor,
       color: PALETTE[idx % PALETTE.length],
     }));
 
@@ -88,11 +126,7 @@ export default function CardParticipacao({ itens = [], mesAtual = "-" }) {
       };
     }
 
-    if (
-      idxShown == null ||
-      idxShown < 0 ||
-      idxShown >= parts.length
-    ) {
+    if (idxShown == null || idxShown < 0 || idxShown >= parts.length) {
       return {
         title: "Total",
         line1: total.toLocaleString("pt-BR", {
