@@ -1,4 +1,4 @@
-// src/pages/Landing.jsx → VERSÃO FINAL PERFEITA COM BADGE VERMELHO CONSERTADO
+// src/pages/Landing.jsx → VERSÃO FINAL DEFINITIVA (12/12/2025 – NUNCA MAIS MEXE)
 import React, { useState } from "react";
 
 const IconWhatsApp = (props) => (
@@ -61,60 +61,49 @@ export default function Landing({ onNavigate }) {
         </div>
       </header>
 
-      {/* HERO FINAL COM BADGE VERMELHO CONSERTADO */}
+      {/* HERO FINAL – BADGE NO CANTO SUPERIOR DIREITO */}
       <section className="relative bg-gradient-to-b from-white to-amber-50/30 pt-20 pb-16">
-        {/* BADGE VERMELHO PEQUENO E ELEGANT */}
-        <div className="absolute top-20 left-4 lg:left-1/2 lg:-translate-x-1/2 z-40">
-          <div className="bg-red-600 text-white px-5 py-2.5 rounded-full text-sm font-black uppercase tracking-wider shadow-2xl shadow-red-600/60 animate-pulse flex items-center gap-2">
+        {/* BADGE VERMELHO NO CANTO DIREITO – PERFEITO */}
+        <div className="absolute top-20 right-4 z-40">
+          <div className="bg-red-600 text-white px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider shadow-2xl shadow-red-600/60 animate-pulse flex items-center gap-2">
             <span className="relative flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
             </span>
-            Vagas limitadas para 1 turma. Depois só em 2026. Aproveite agora!
+            Vagas limitadas para 1 turma · Depois só em 2026
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
-            {/* BLOCO ESQUERDO SUBIDO */}
-            <div className="text-center lg:text-left lg:-mt-12">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            <div className="text-center lg:text-left">
               <h1 className="text-5xl lg:text-6xl font-black tracking-tight text-slate-900 leading-tight">
                 Receba seu <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">primeiro dividendo</span>
                 <br className="hidden lg:block" />
                 em até <span className="text-amber-600">30 dias</span>
               </h1>
 
-              <p className="mt-5 text-xl lg:text-2xl text-slate-700 font-medium">
+              <p className="mt-6 text-xl lg:text-2xl text-slate-700 font-medium">
                 Programa completo com acompanhamento individual até o dinheiro pingar na sua conta.
               </p>
 
-              <p className="mt-3 text-2xl font-bold text-amber-600">
+              <p className="mt-4 text-2xl font-bold text-amber-600">
                 Resultado garantido ou devolvo cada centavo.
               </p>
 
-              <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 px-10 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-amber-500/50 hover:scale-105 transition-all duration-300"
-                >
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <button onClick={() => setIsModalOpen(true)} className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 px-10 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-amber-500/50 hover:scale-105 transition-all duration-300">
                   <span className="absolute inset-0 bg-white/25 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                   Quero meu primeiro dividendo em 30 dias
                 </button>
-
-                <button
-                  onClick={falarAgora}
-                  className="flex items-center justify-center gap-3 bg-[#25D366] px-10 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition"
-                >
+                <button onClick={falarAgora} className="flex items-center justify-center gap-3 bg-[#25D366] px-10 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition">
                   <IconWhatsApp className="w-8 h-8" />
                   Falar agora no WhatsApp
                 </button>
               </div>
 
               <div className="mt-6">
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-300"
-                >
+                <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-300">
                   <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
@@ -124,8 +113,7 @@ export default function Landing({ onNavigate }) {
               </div>
             </div>
 
-            {/* IMAGEM */}
-            <div className="relative lg:mt-8">
+            <div className="relative">
               <div className="absolute -inset-6 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-3xl blur-3xl -z-10" />
               <div className="bg-white rounded-3xl shadow-2xl p-6 border border-slate-200">
                 <div className="flex items-center gap-4 mb-6">
@@ -148,7 +136,7 @@ export default function Landing({ onNavigate }) {
         </div>
       </section>
 
-      {/* MODAL */}
+      {/* MODAL E FOOTER (mantidos) */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
@@ -158,7 +146,7 @@ export default function Landing({ onNavigate }) {
             </div>
             <form onSubmit={enviarWhats} className="space-y-5">
               <input type="text" name="nome" value={form.nome} onChange={handleChange} placeholder="Seu nome completo" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300" />
-              <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="seu@email.com" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300" />
+              <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="seu@email.com" required className="email" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300" />
               <input type="tel" name="telefone" value={form.telefone} onChange={handleChange} placeholder="(11) 98765-4321" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300" />
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 border border-slate-300 rounded-xl font-medium hover:bg-slate-50">Cancelar</button>
@@ -169,7 +157,6 @@ export default function Landing({ onNavigate }) {
         </div>
       )}
 
-      {/* FOOTER */}
       <footer className="bg-slate-900 text-white/60 py-12 mt-20">
         <div className="max-w-7xl mx-auto px-6 text-center text-sm">
           UpMoney © 2025 — O seu primeiro dividendo começa aqui.
