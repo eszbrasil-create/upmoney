@@ -67,6 +67,11 @@ const initialAno = (() => {
   return ANOS.includes(atual) ? atual : ANOS[0];
 })();
 
+const initialMes = (() => {
+  const m = new Date().getMonth(); // 0..11
+  return Math.min(11, Math.max(0, m));
+})();
+
 function normalizarLinhas(raw) {
   try {
     const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
@@ -133,6 +138,9 @@ const toInt = (x) => Math.round(parseBRNumber(x));
 export default function DespesasPage() {
   // ===== Ano selecionado =====
   const [anoSelecionado, setAnoSelecionado] = useState(initialAno);
+
+  // ===== Mês selecionado (NOVO) =====
+  const [mesSelecionado, setMesSelecionado] = useState(initialMes);
 
   // ===== Linhas =====
   const [linhas, setLinhas] = useState(() => {
@@ -217,49 +225,102 @@ export default function DespesasPage() {
     } catch {}
   };
 
-  // ===== Totais + categorias =====
-  const { totReceitas, totDespesas, saldo, totalReceitasAno, totalDespesasAno, saldoAno, topCategoriasAno } =
-    useMemo(() => {
-      const r = Array(12).fill(0);
-      const d = Array(12).fill(0);
-      const catAno = {};
+  // ===== Totais + categorias (ANUAL) =====
+  const {
+    totReceitas,
+    totDespesas,
+    saldo,
+    totalReceitasAno,
+    totalDespesasAno,
+    saldoAno,
+    topCategoriasAno,
+  } = useMemo(() => {
+    const r = Array(12).fill(0);
+    const d = Array(12).fill(0);
+    const catAno = {};
 
-      for (const l of linhas) {
-        for (let i = 0; i < 12; i++) {
-          const n = toInt(l.valores[i]);
-          if (l.tipo === "RECEITA") {
-            r[i] += n;
-          } else {
-            d[i] += n;
-            const cat = (l.categoria || "Sem categoria").trim() || "Sem categoria";
-            catAno[cat] = (catAno[cat] || 0) + n;
-          }
+    for (const l of linhas) {
+      for (let i = 0; i < 12; i++) {
+        const n = toInt(l.valores[i]);
+        if (l.tipo === "RECEITA") {
+          r[i] += n;
+        } else {
+          d[i] += n;
+          const cat = (l.categoria || "Sem categoria").trim() || "Sem categoria";
+          catAno[cat] = (catAno[cat] || 0) + n;
         }
       }
+    }
 
-      const s = r.map((v, i) => v - d[i]);
-      const sum = (arr) => arr.reduce((a, b) => a + b, 0);
+    const s = r.map((v, i) => v - d[i]);
+    const sum = (arr) => arr.reduce((a, b) => a + b, 0);
 
-      const totalD = sum(d);
-      const top = Object.entries(catAno)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([cat, valor]) => ({
-          cat,
-          valor,
-          perc: totalD > 0 ? (valor / totalD) * 100 : 0,
-        }));
+    const totalD = sum(d);
+    const top = Object.entries(catAno)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([cat, valor]) => ({
+        cat,
+        valor,
+        perc: totalD > 0 ? (valor / totalD) * 100 : 0,
+      }));
 
-      return {
-        totReceitas: r,
-        totDespesas: d,
-        saldo: s,
-        totalReceitasAno: sum(r),
-        totalDespesasAno: totalD,
-        saldoAno: sum(r) - totalD,
-        topCategoriasAno: top,
-      };
-    }, [linhas]);
+    return {
+      totReceitas: r,
+      totDespesas: d,
+      saldo: s,
+      totalReceitasAno: sum(r),
+      totalDespesasAno: totalD,
+      saldoAno: sum(r) - totalD,
+      topCategoriasAno: top,
+    };
+  }, [linhas]);
+
+  // ===== Totais (MENSAL) + categorias do mês (NOVO) =====
+  const {
+    totalReceitasMes,
+    totalDespesasMes,
+    saldoMes,
+    percGastoMes,
+    topCategoriasMes,
+  } = useMemo(() => {
+    const mes = mesSelecionado;
+
+    let rMes = 0;
+    let dMes = 0;
+    const catMes = {};
+
+    for (const l of linhas) {
+      const n = toInt(l.valores[mes]);
+      if (l.tipo === "RECEITA") {
+        rMes += n;
+      } else {
+        dMes += n;
+        const cat = (l.categoria || "Sem categoria").trim() || "Sem categoria";
+        catMes[cat] = (catMes[cat] || 0) + n;
+      }
+    }
+
+    const sMes = rMes - dMes;
+    const p = rMes > 0 ? (dMes / rMes) * 100 : 0;
+
+    const top = Object.entries(catMes)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)
+      .map(([cat, valor]) => ({
+        cat,
+        valor,
+        perc: dMes > 0 ? (valor / dMes) * 100 : 0,
+      }));
+
+    return {
+      totalReceitasMes: rMes,
+      totalDespesasMes: dMes,
+      saldoMes: sMes,
+      percGastoMes: p,
+      topCategoriasMes: top,
+    };
+  }, [linhas, mesSelecionado]);
 
   const fmtBR = (v) =>
     Math.round(v).toLocaleString("pt-BR", {
@@ -306,23 +367,25 @@ export default function DespesasPage() {
     URL.revokeObjectURL(url);
   };
 
-  // ✅ Export PDF com try/catch (evita silêncio total se der erro)
+  // ===== Export PDF (MENSAL) =====
   const exportPDF = async () => {
     try {
       await exportRelatorioPDF({
         anoSelecionado,
         meses: MESES,
+        mesIdx: mesSelecionado,
         totReceitas,
         totDespesas,
         saldo,
-        totalReceitasAno,
-        totalDespesasAno,
-        saldoAno,
-        topCategoriasAno,
+        totalReceitasMes,
+        totalDespesasMes,
+        saldoMes,
+        percGastoMes,
+        topCategoriasMes,
       });
-    } catch (err) {
-      console.error("Erro ao exportar PDF:", err);
-      alert("Erro ao gerar PDF. Veja o console (F12).");
+    } catch (e) {
+      console.error(e);
+      alert("Não foi possível gerar o PDF. Veja o console (F12) para detalhes.");
     }
   };
 
@@ -343,12 +406,15 @@ export default function DespesasPage() {
   const tableMinW = "min-w-[1480px]";
 
   const cellBase = "px-2 py-0.5 border-t border-slate-700 text-right text-xs whitespace-nowrap";
-  const headBase = "px-2 py-0.5 border-t border-slate-700 text-slate-300 text-xs font-medium text-right";
-  const firstColHead = "px-2 py-0.5 border-t border-slate-700 text-slate-300 text-sm font-semibold text-left";
+  const headBase =
+    "px-2 py-0.5 border-t border-slate-700 text-slate-300 text-xs font-medium text-right";
+  const firstColHead =
+    "px-2 py-0.5 border-t border-slate-700 text-slate-300 text-sm font-semibold text-left";
   const firstColCell = "px-2 py-0.5 border-t border-slate-700 text-sm text-left";
 
   const headBaseNoColor = "px-2 py-0.5 border-t border-slate-700 text-xs font-medium text-right";
-  const firstColHeadNoColor = "px-2 py-0.5 border-t border-slate-700 text-sm font-semibold text-left";
+  const firstColHeadNoColor =
+    "px-2 py-0.5 border-t border-slate-700 text-sm font-semibold text-left";
 
   const SectionDivider = ({ label, variant }) => (
     <tr>
@@ -457,6 +523,8 @@ export default function DespesasPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-slate-100 text-3xl font-semibold">Despesas</h1>
+
+            {/* ANOS */}
             <div className="inline-flex rounded-full bg-slate-800 p-1 text-xs">
               {ANOS.map((ano) => (
                 <button
@@ -464,10 +532,31 @@ export default function DespesasPage() {
                   onClick={() => trocarAno(ano)}
                   className={[
                     "px-3 py-1 rounded-full transition-colors",
-                    anoSelecionado === ano ? "bg-slate-100 text-slate-900 font-semibold" : "text-slate-300 hover:bg-slate-700",
+                    anoSelecionado === ano
+                      ? "bg-slate-100 text-slate-900 font-semibold"
+                      : "text-slate-300 hover:bg-slate-700",
                   ].join(" ")}
                 >
                   {ano}
+                </button>
+              ))}
+            </div>
+
+            {/* MÊS (NOVO) */}
+            <div className="inline-flex rounded-full bg-slate-800 p-1 text-xs">
+              {MESES.map((m, idx) => (
+                <button
+                  key={m}
+                  onClick={() => setMesSelecionado(idx)}
+                  className={[
+                    "px-3 py-1 rounded-full transition-colors",
+                    mesSelecionado === idx
+                      ? "bg-slate-100 text-slate-900 font-semibold"
+                      : "text-slate-300 hover:bg-slate-700",
+                  ].join(" ")}
+                  title={`Relatório mensal: ${m}`}
+                >
+                  {m}
                 </button>
               ))}
             </div>
@@ -484,16 +573,22 @@ export default function DespesasPage() {
               </button>
             )}
 
-            <button onClick={addReceita} className="px-3 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-500">
+            <button
+              onClick={addReceita}
+              className="px-3 py-2 rounded-md bg-emerald-600 text-white text-sm hover:bg-emerald-500"
+            >
               + Receita
             </button>
-            <button onClick={addDespesa} className="px-3 py-2 rounded-md bg-rose-600 text-white text-sm hover:bg-rose-500">
+            <button
+              onClick={addDespesa}
+              className="px-3 py-2 rounded-md bg-rose-600 text-white text-sm hover:bg-rose-500"
+            >
               + Despesa
             </button>
 
             <button
               onClick={exportPDF}
-              title="Exportar Relatório PDF"
+              title="Exportar Relatório PDF (mensal)"
               className="flex items-center gap-1 px-3 py-2 rounded-md bg-slate-700 text-white text-sm hover:bg-slate-600"
             >
               <Download size={16} /> Exportar PDF
@@ -507,7 +602,11 @@ export default function DespesasPage() {
               <Download size={16} /> CSV
             </button>
 
-            <button onClick={clearAll} title="Limpar tudo" className="flex items-center gap-1 px-3 py-2 rounded-md bg-slate-800 text-white text-sm hover:bg-slate-700">
+            <button
+              onClick={clearAll}
+              title="Limpar tudo"
+              className="flex items-center gap-1 px-3 py-2 rounded-md bg-slate-800 text-white text-sm hover:bg-slate-700"
+            >
               <Eraser size={16} /> Limpar
             </button>
           </div>
@@ -518,7 +617,12 @@ export default function DespesasPage() {
             <>
               Em <span className="font-semibold text-slate-200">{anoSelecionado}</span> você está gastando{" "}
               <span className="font-semibold text-rose-300">{percGasto.toFixed(0)}%</span> do que ganha. Saldo médio mensal:{" "}
-              <span className={["font-semibold", saldoMedioMensal >= 0 ? "text-emerald-300" : "text-rose-300"].join(" ")}>
+              <span
+                className={[
+                  "font-semibold",
+                  saldoMedioMensal >= 0 ? "text-emerald-300" : "text-rose-300",
+                ].join(" ")}
+              >
                 {fmtBR(saldoMedioMensal)}
               </span>
               .
@@ -575,20 +679,24 @@ export default function DespesasPage() {
         <div className="relative h-full overflow-y-auto">
           <table className={`table-fixed ${tableMinW} w-full`}>
             <colgroup>
-              <col className={actionsColWidth} />
-              <col className={categoriaColWidth} />
-              <col className={descColWidth} />
+              <col className={"w-14"} />
+              <col className={"w-32"} />
+              <col className={`w-[${DESC_PX}px]`} />
               {MESES.map((_, i) => (
-                <col key={`c${i}`} className={colW} />
+                <col key={`c${i}`} className={"w-20"} />
               ))}
-              <col className={colW} />
+              <col className={"w-20"} />
             </colgroup>
 
             <thead className="sticky top-0 z-40 bg-slate-900">
               <tr>
                 <th className="px-2 py-1 border-t border-slate-700 text-slate-300 text-xs font-medium text-center sticky left-0 bg-slate-900 z-50" />
-                <th className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 z-50 text-xs`}>Categoria</th>
-                <th className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 z-50`}>Descrição</th>
+                <th className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 z-50 text-xs`}>
+                  Categoria
+                </th>
+                <th className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 z-50`}>
+                  Descrição
+                </th>
                 {MESES.map((m) => (
                   <th key={m} className={headBase}>
                     {m}
@@ -678,13 +786,17 @@ export default function DespesasPage() {
               <tr className="bg-slate-900 h-8">
                 <td className="sticky left-0 bg-slate-900 border-t border-slate-700 z-30" />
                 <td className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 text-emerald-300 text-xs z-30`} />
-                <td className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 text-emerald-300 z-30`}>Total Receitas</td>
+                <td className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 text-emerald-300 z-30`}>
+                  Total Receitas
+                </td>
                 {totReceitas.map((v, i) => (
                   <td key={`tr${i}`} className={`${headBase} text-emerald-300 bg-slate-900`}>
                     {fmtBR(v)}
                   </td>
                 ))}
-                <td className={`${headBase} font-semibold text-emerald-300 bg-slate-900`}>{fmtBR(totalReceitasAno)}</td>
+                <td className={`${headBase} font-semibold text-emerald-300 bg-slate-900`}>
+                  {fmtBR(totalReceitasAno)}
+                </td>
               </tr>
 
               {/* DESPESAS */}
@@ -766,13 +878,17 @@ export default function DespesasPage() {
               <tr className="bg-slate-900 h-8">
                 <td className="sticky left-0 bg-slate-900 border-t border-slate-700 z-30" />
                 <td className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 text-rose-300 text-xs z-30`} />
-                <td className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 text-rose-300 z-30`}>Total Despesas</td>
+                <td className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 text-rose-300 z-30`}>
+                  Total Despesas
+                </td>
                 {totDespesas.map((v, i) => (
                   <td key={`td${i}`} className={`${headBase} text-rose-300 bg-slate-900`}>
                     {fmtBR(v)}
                   </td>
                 ))}
-                <td className={`${headBase} font-semibold text-rose-300 bg-slate-900`}>{fmtBR(totalDespesasAno)}</td>
+                <td className={`${headBase} font-semibold text-rose-300 bg-slate-900`}>
+                  {fmtBR(totalDespesasAno)}
+                </td>
               </tr>
 
               {/* SALDO – sticky bottom */}
