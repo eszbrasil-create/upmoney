@@ -1,5 +1,5 @@
 // src/pages/Despesas.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Trash2, Download, Eraser } from "lucide-react";
 
 const MESES = [
@@ -19,13 +19,7 @@ const MESES = [
 const ANOS = [2025, 2026];
 
 const CATEGORIAS = {
-  RECEITA: [
-    "Salário",
-    "Pró-labore",
-    "Renda extra",
-    "Dividendos",
-    "Outras receitas",
-  ],
+  RECEITA: ["Salário", "Pró-labore", "Renda extra", "Dividendos", "Outras receitas"],
   DESPESA: [
     "Moradia",
     "Alimentação",
@@ -39,9 +33,25 @@ const CATEGORIAS = {
   ],
 };
 
+// ===== Layout / Sticky (px coerentes) =====
+// w-14 = 56px, w-32 = 128px
+const ACTIONS_PX = 56;
+const CATEG_PX = 128;
+const DESC_PX = 220;
+const LEFT_CATEG = ACTIONS_PX; // 56
+const LEFT_DESC = ACTIONS_PX + CATEG_PX; // 184
+
+const uid = () => {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  }
+};
+
 function novaLinha(tipo = "DESPESA") {
   return {
-    id: crypto.randomUUID(),
+    id: uid(),
     tipo, // "RECEITA" | "DESPESA"
     descricao: "",
     categoria: "",
@@ -61,7 +71,7 @@ function normalizarLinhas(raw) {
     const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
     if (!Array.isArray(parsed)) return [];
     return parsed.map((l) => ({
-      id: l.id ?? crypto.randomUUID(),
+      id: l.id ?? uid(),
       tipo: l.tipo === "RECEITA" ? "RECEITA" : "DESPESA",
       descricao: l.descricao ?? "",
       categoria: l.categoria ?? "",
@@ -74,11 +84,57 @@ function normalizarLinhas(raw) {
   }
 }
 
+// ===== Parser BR =====
+function parseBRNumber(input) {
+  if (input === "" || input === null || input === undefined) return 0;
+
+  let s = String(input).trim();
+  if (!s) return 0;
+
+  // remove espaços e símbolos básicos
+  s = s.replace(/\s+/g, "").replace(/[R$\u00A0]/g, "");
+
+  // se tiver vírgula, assume decimal BR
+  if (s.includes(",")) {
+    // remove separadores de milhar "."
+    s = s.replace(/\./g, "");
+    // troca vírgula por ponto decimal
+    s = s.replace(/,/g, ".");
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  // sem vírgula: pode ser "1200", "1200.50" ou "1.200"
+  // se tiver mais de um ".", é milhar => remove todos
+  const dots = (s.match(/\./g) || []).length;
+  if (dots >= 2) {
+    const n = Number(s.replace(/\./g, ""));
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  if (dots === 1) {
+    const [a, b] = s.split(".");
+    // se b tem exatamente 3 dígitos e a não é vazio => provável milhar: "1.200"
+    if (/^\d{3}$/.test(b) && a && /^\d+$/.test(a)) {
+      const n = Number(a + b);
+      return Number.isFinite(n) ? n : 0;
+    }
+    // caso contrário trata como decimal: "1200.50"
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+const toInt = (x) => Math.round(parseBRNumber(x));
+
 export default function DespesasPage() {
   // ===== Ano selecionado =====
   const [anoSelecionado, setAnoSelecionado] = useState(initialAno);
 
-  // ===== Linhas: carrega do localStorage na criação =====
+  // ===== Linhas =====
   const [linhas, setLinhas] = useState(() => {
     try {
       const raw = localStorage.getItem(lsKeyForAno(initialAno));
@@ -87,6 +143,10 @@ export default function DespesasPage() {
       return [];
     }
   });
+
+  // Hint de replicar (duplo clique) — aparece quando foca em célula mensal
+  const [showReplicarHint, setShowReplicarHint] = useState(false);
+  const hintTimerRef = useRef(null);
 
   // Trocar ano
   const trocarAno = (ano) => {
@@ -99,38 +159,34 @@ export default function DespesasPage() {
     }
   };
 
-  // Salvar sempre que ano ou linhas mudarem
+  // ===== Salvar com debounce =====
   useEffect(() => {
-    try {
-      localStorage.setItem(lsKeyForAno(anoSelecionado), JSON.stringify(linhas));
-    } catch {}
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(lsKeyForAno(anoSelecionado), JSON.stringify(linhas));
+      } catch {}
+    }, 420);
+
+    return () => clearTimeout(t);
   }, [linhas, anoSelecionado]);
 
   // Helpers de edição
   const setDescricao = (id, texto) =>
-    setLinhas((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, descricao: texto } : l))
-    );
+    setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, descricao: texto } : l)));
 
   const setCategoria = (id, categoria) =>
-    setLinhas((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, categoria } : l))
-    );
+    setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, categoria } : l)));
 
   const setValor = (id, mesIdx, texto) =>
     setLinhas((prev) =>
       prev.map((l) =>
         l.id === id
-          ? {
-              ...l,
-              valores: l.valores.map((v, i) => (i === mesIdx ? texto : v)),
-            }
+          ? { ...l, valores: l.valores.map((v, i) => (i === mesIdx ? texto : v)) }
           : l
       )
     );
 
-  const delLinha = (id) =>
-    setLinhas((prev) => prev.filter((l) => l.id !== id));
+  const delLinha = (id) => setLinhas((prev) => prev.filter((l) => l.id !== id));
 
   const fillAteFim = (id, mesIdx) =>
     setLinhas((prev) =>
@@ -142,22 +198,8 @@ export default function DespesasPage() {
       })
     );
 
-  // Conversão para número inteiro (arredondado)
-  const toNum = (x) => {
-    if (x === "" || x === null || x === undefined) return 0;
-    const n = Number(String(x).replace(",", "."));
-    if (!Number.isFinite(n)) return 0;
-    return Math.round(n);
-  };
-
-  const receitas = useMemo(
-    () => linhas.filter((l) => l.tipo === "RECEITA"),
-    [linhas]
-  );
-  const despesas = useMemo(
-    () => linhas.filter((l) => l.tipo === "DESPESA"),
-    [linhas]
-  );
+  const receitas = useMemo(() => linhas.filter((l) => l.tipo === "RECEITA"), [linhas]);
+  const despesas = useMemo(() => linhas.filter((l) => l.tipo === "DESPESA"), [linhas]);
 
   const addReceita = () => setLinhas((prev) => [...prev, novaLinha("RECEITA")]);
   const addDespesa = () => setLinhas((prev) => [...prev, novaLinha("DESPESA")]);
@@ -170,15 +212,12 @@ export default function DespesasPage() {
     try {
       const raw = localStorage.getItem(lsKeyForAno(anoAnterior));
       const linhasAntigas = raw ? normalizarLinhas(raw) : [];
-      const copiadas = linhasAntigas.map((l) => ({
-        ...l,
-        id: crypto.randomUUID(),
-      }));
+      const copiadas = linhasAntigas.map((l) => ({ ...l, id: uid() }));
       setLinhas(copiadas);
     } catch {}
   };
 
-  // Totais
+  // ===== Totais + categorias =====
   const {
     totReceitas,
     totDespesas,
@@ -186,25 +225,48 @@ export default function DespesasPage() {
     totalReceitasAno,
     totalDespesasAno,
     saldoAno,
+    despesasPorCategoriaAno,
+    topCategoriasAno,
   } = useMemo(() => {
     const r = Array(12).fill(0);
     const d = Array(12).fill(0);
+    const catAno = {};
+
     for (const l of linhas) {
       for (let i = 0; i < 12; i++) {
-        const n = toNum(l.valores[i]);
-        if (l.tipo === "RECEITA") r[i] += n;
-        else d[i] += n;
+        const n = toInt(l.valores[i]);
+        if (l.tipo === "RECEITA") {
+          r[i] += n;
+        } else {
+          d[i] += n;
+          const cat = (l.categoria || "Sem categoria").trim() || "Sem categoria";
+          catAno[cat] = (catAno[cat] || 0) + n;
+        }
       }
     }
+
     const s = r.map((v, i) => v - d[i]);
     const sum = (arr) => arr.reduce((a, b) => a + b, 0);
+
+    const totalD = sum(d);
+    const top = Object.entries(catAno)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([cat, valor]) => ({
+        cat,
+        valor,
+        perc: totalD > 0 ? (valor / totalD) * 100 : 0,
+      }));
+
     return {
       totReceitas: r,
       totDespesas: d,
       saldo: s,
       totalReceitasAno: sum(r),
-      totalDespesasAno: sum(d),
-      saldoAno: sum(r) - sum(d),
+      totalDespesasAno: totalD,
+      saldoAno: sum(r) - totalD,
+      despesasPorCategoriaAno: catAno,
+      topCategoriasAno: top,
     };
   }, [linhas]);
 
@@ -221,57 +283,25 @@ export default function DespesasPage() {
     const rows = [
       ["— RECEITAS —", "", "", ...Array(12).fill(""), ""],
       ...receitas.map((l) => {
-        const valoresNum = l.valores.map(toNum);
+        const valoresNum = l.valores.map(toInt);
         const total = valoresNum.reduce((a, b) => a + b, 0);
-        return [
-          l.tipo,
-          l.categoria ?? "",
-          l.descricao,
-          ...valoresNum.map(Math.round),
-          Math.round(total),
-        ];
+        return [l.tipo, l.categoria ?? "", l.descricao, ...valoresNum, total];
       }),
-      [
-        "TOTAL RECEITAS",
-        "",
-        "",
-        ...totReceitas.map(Math.round),
-        Math.round(totalReceitasAno),
-      ],
+      ["TOTAL RECEITAS", "", "", ...totReceitas.map(Math.round), Math.round(totalReceitasAno)],
       ["— DESPESAS —", "", "", ...Array(12).fill(""), ""],
       ...despesas.map((l) => {
-        const valoresNum = l.valores.map(toNum);
+        const valoresNum = l.valores.map(toInt);
         const total = valoresNum.reduce((a, b) => a + b, 0);
-        return [
-          l.tipo,
-          l.categoria ?? "",
-          l.descricao,
-          ...valoresNum.map(Math.round),
-          Math.round(total),
-        ];
+        return [l.tipo, l.categoria ?? "", l.descricao, ...valoresNum, total];
       }),
-      [
-        "TOTAL DESPESAS",
-        "",
-        "",
-        ...totDespesas.map(Math.round),
-        Math.round(totalDespesasAno),
-      ],
-      [
-        "SALDO (R-D)",
-        "",
-        "",
-        ...saldo.map(Math.round),
-        Math.round(saldoAno),
-      ],
+      ["TOTAL DESPESAS", "", "", ...totDespesas.map(Math.round), Math.round(totalDespesasAno)],
+      ["SALDO (R-D)", "", "", ...saldo.map(Math.round), Math.round(saldoAno)],
     ];
 
     const csv = [header, ...rows]
       .map((r) =>
         r
-          .map((v) =>
-            typeof v === "string" ? `"${v.replace(/"/g, '""')}"` : v
-          )
+          .map((v) => (typeof v === "string" ? `"${v.replace(/"/g, '""')}"` : v))
           .join(";")
       )
       .join("\n");
@@ -294,27 +324,22 @@ export default function DespesasPage() {
     }
   };
 
-  // Layout – linhas mais compactas
+  // ===== Layout =====
   const colW = "w-20";
-  const categoriaColWidth = "w-32";
-  const descColWidth = "w-[220px]";
-  const actionsColWidth = "w-14";
+  const actionsColWidth = "w-14"; // 56px
+  const categoriaColWidth = "w-32"; // 128px
+  const descColWidth = `w-[${DESC_PX}px]`; // 220px
   const tableMinW = "min-w-[1480px]";
 
-  const cellBase =
-    "px-2 py-0.5 border-t border-slate-700 text-right text-xs whitespace-nowrap";
+  const cellBase = "px-2 py-0.5 border-t border-slate-700 text-right text-xs whitespace-nowrap";
   const headBase =
     "px-2 py-0.5 border-t border-slate-700 text-slate-300 text-xs font-medium text-right";
   const firstColHead =
     "px-2 py-0.5 border-t border-slate-700 text-slate-300 text-sm font-semibold text-left";
-  const firstColCell =
-    "px-2 py-0.5 border-t border-slate-700 text-sm text-left";
+  const firstColCell = "px-2 py-0.5 border-t border-slate-700 text-sm text-left";
 
-  // versões sem cor para o saldo
-  const headBaseNoColor =
-    "px-2 py-0.5 border-t border-slate-700 text-xs font-medium text-right";
-  const firstColHeadNoColor =
-    "px-2 py-0.5 border-t border-slate-700 text-sm font-semibold text-left";
+  const headBaseNoColor = "px-2 py-0.5 border-t border-slate-700 text-xs font-medium text-right";
+  const firstColHeadNoColor = "px-2 py-0.5 border-t border-slate-700 text-sm font-semibold text-left";
 
   const SectionDivider = ({ label, variant }) => (
     <tr>
@@ -347,9 +372,7 @@ export default function DespesasPage() {
   };
 
   const focusDesc = (sec, row) => {
-    const el = document.querySelector(
-      `input[data-dsec="${sec}"][data-drow="${row}"]`
-    );
+    const el = document.querySelector(`input[data-dsec="${sec}"][data-drow="${row}"]`);
     if (el) el.focus();
   };
 
@@ -359,19 +382,14 @@ export default function DespesasPage() {
     if (key === "Enter" || key === "ArrowRight") {
       e.preventDefault();
       const next = colIdx + 1;
-      if (next < 12) {
-        focusCell(sec, rowIdx, next);
-      }
+      if (next < 12) focusCell(sec, rowIdx, next);
       return;
     }
 
     if (key === "ArrowLeft") {
       e.preventDefault();
-      if (colIdx > 0) {
-        focusCell(sec, rowIdx, colIdx - 1);
-      } else {
-        focusDesc(sec, rowIdx);
-      }
+      if (colIdx > 0) focusCell(sec, rowIdx, colIdx - 1);
+      else focusDesc(sec, rowIdx);
       return;
     }
 
@@ -383,9 +401,7 @@ export default function DespesasPage() {
 
     if (key === "ArrowUp") {
       e.preventDefault();
-      if (rowIdx > 0) {
-        focusCell(sec, rowIdx - 1, colIdx);
-      }
+      if (rowIdx > 0) focusCell(sec, rowIdx - 1, colIdx);
       return;
     }
   };
@@ -412,16 +428,20 @@ export default function DespesasPage() {
     }
   };
 
-  // Classe para a linha do saldo (ano inteiro)
-  const saldoRowClass =
-    saldoAno >= 0 ? "text-emerald-300 font-bold" : "text-rose-300 font-bold";
-
-  const percGasto =
-    totalReceitasAno > 0 ? (totalDespesasAno / totalReceitasAno) * 100 : 0;
+  const saldoRowClass = saldoAno >= 0 ? "text-emerald-300 font-bold" : "text-rose-300 font-bold";
+  const percGasto = totalReceitasAno > 0 ? (totalDespesasAno / totalReceitasAno) * 100 : 0;
   const saldoMedioMensal = saldoAno / 12;
 
   const idxAno = ANOS.indexOf(anoSelecionado);
   const temAnoAnterior = idxAno > 0;
+
+  const top3 = topCategoriasAno.slice(0, 3);
+
+  const showHintNow = () => {
+    setShowReplicarHint(true);
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    hintTimerRef.current = setTimeout(() => setShowReplicarHint(false), 2800);
+  };
 
   return (
     <div className="h-screen flex flex-col pr-0 pl-0">
@@ -429,9 +449,7 @@ export default function DespesasPage() {
       <div className="mb-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-slate-100 text-3xl font-semibold">
-              Despesas
-            </h1>
+            <h1 className="text-slate-100 text-3xl font-semibold">Despesas</h1>
             <div className="inline-flex rounded-full bg-slate-800 p-1 text-xs">
               {ANOS.map((ano) => (
                 <button
@@ -495,15 +513,8 @@ export default function DespesasPage() {
         <div className="mt-2 text-[11px] sm:text-xs text-slate-400">
           {totalReceitasAno > 0 ? (
             <>
-              Em{" "}
-              <span className="font-semibold text-slate-200">
-                {anoSelecionado}
-              </span>{" "}
-              você está gastando{" "}
-              <span className="font-semibold text-rose-300">
-                {percGasto.toFixed(0)}%
-              </span>{" "}
-              do que ganha. Saldo médio mensal:{" "}
+              Em <span className="font-semibold text-slate-200">{anoSelecionado}</span> você está gastando{" "}
+              <span className="font-semibold text-rose-300">{percGasto.toFixed(0)}%</span> do que ganha. Saldo médio mensal:{" "}
               <span
                 className={[
                   "font-semibold",
@@ -513,11 +524,52 @@ export default function DespesasPage() {
                 {fmtBR(saldoMedioMensal)}
               </span>
               .
+              {top3.length > 0 && (
+                <>
+                  {" "}
+                  Top gastos:{" "}
+                  {top3.map((t, i) => (
+                    <span key={t.cat} className="text-slate-200">
+                      {i > 0 ? " • " : ""}
+                      <span className="font-semibold">{t.cat}</span>{" "}
+                      <span className="text-slate-400">
+                        ({fmtBR(t.valor)} • {t.perc.toFixed(0)}%)
+                      </span>
+                    </span>
+                  ))}
+                  .
+                </>
+              )}
             </>
           ) : (
             <>Preencha suas receitas para ver o resumo anual de {anoSelecionado}.</>
           )}
         </div>
+
+        {/* Bloco compacto: top categorias */}
+        {totalDespesasAno > 0 && topCategoriasAno.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {topCategoriasAno.slice(0, 5).map((t) => (
+              <div
+                key={t.cat}
+                className="px-2 py-1 rounded-md bg-slate-800 text-[11px] text-slate-200 border border-slate-700"
+                title={`Participação no total de despesas: ${t.perc.toFixed(1)}%`}
+              >
+                <span className="font-semibold">{t.cat}</span>{" "}
+                <span className="text-slate-400">
+                  {fmtBR(t.valor)} • {t.perc.toFixed(0)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Hint de duplo clique */}
+        {showReplicarHint && (
+          <div className="mt-2 text-[11px] text-slate-300">
+            Dica: <span className="font-semibold text-slate-100">duplo clique</span> em uma célula mensal replica o valor até Dez.
+          </div>
+        )}
       </div>
 
       {/* Tabela */}
@@ -534,17 +586,16 @@ export default function DespesasPage() {
               <col className={colW} />
             </colgroup>
 
-            <thead className="sticky top-0 z-30 bg-slate-900">
+            <thead className="sticky top-0 z-40 bg-slate-900">
               <tr>
-                <th className="px-2 py-1 border-t border-slate-700 text-slate-300 text-xs font-medium text-center sticky left-0 bg-slate-900 z-30" />
+                <th className="px-2 py-1 border-t border-slate-700 text-slate-300 text-xs font-medium text-center sticky left-0 bg-slate-900 z-50" />
                 <th
-                  className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 z-30 text-xs`}
+                  className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 z-50 text-xs`}
                 >
                   Categoria
                 </th>
-                {/* AQUI FOI A MUDANÇA: sem sticky/left pra não cortar o texto */}
                 <th
-                  className={`${firstColHead} bg-slate-900 z-20`}
+                  className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 z-50`}
                 >
                   Descrição
                 </th>
@@ -562,12 +613,13 @@ export default function DespesasPage() {
               <SectionDivider label="Receitas" variant="green" />
 
               {receitas.map((l, rIdx) => {
-                const valoresNum = l.valores.map(toNum);
+                const valoresNum = l.valores.map(toInt);
                 const somaLinha = valoresNum.reduce((a, b) => a + b, 0);
                 const categoriasRec = CATEGORIAS.RECEITA || [];
+
                 return (
                   <tr key={l.id} className="hover:bg-slate-800/30">
-                    <td className="px-2 py-0.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900">
+                    <td className="px-2 py-0.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900 z-30">
                       <button
                         onClick={() => delLinha(l.id)}
                         className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-rose-400"
@@ -577,9 +629,7 @@ export default function DespesasPage() {
                       </button>
                     </td>
 
-                    <td
-                      className={`${firstColCell} sticky left-[3.5rem] bg-slate-900`}
-                    >
+                    <td className={`${firstColCell} sticky left-[${LEFT_CATEG}px] bg-slate-900 z-30`}>
                       <select
                         className="w-full bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-500"
                         value={l.categoria}
@@ -594,16 +644,12 @@ export default function DespesasPage() {
                       </select>
                     </td>
 
-                    <td
-                      className={`${firstColCell} bg-slate-900`}
-                    >
+                    <td className={`${firstColCell} sticky left-[${LEFT_DESC}px] bg-slate-900 z-30`}>
                       <input
                         className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500 text-sm"
                         placeholder="Nova receita"
                         value={l.descricao}
-                        onChange={(e) =>
-                          setDescricao(l.id, e.target.value)
-                        }
+                        onChange={(e) => setDescricao(l.id, e.target.value)}
                         onKeyDown={handleKeyDesc("rec", rIdx)}
                         data-dsec="rec"
                         data-drow={rIdx}
@@ -618,8 +664,9 @@ export default function DespesasPage() {
                           placeholder="0"
                           value={String(l.valores[i] ?? "")}
                           onChange={(e) => setValor(l.id, i, e.target.value)}
+                          onFocus={showHintNow}
                           onBlur={(e) => {
-                            const n = toNum(e.target.value);
+                            const n = toInt(e.target.value);
                             setValor(l.id, i, n === 0 ? "" : String(n));
                           }}
                           onDoubleClick={() => fillAteFim(l.id, i)}
@@ -632,37 +679,28 @@ export default function DespesasPage() {
                       </td>
                     ))}
 
-                    <td
-                      className={`${cellBase} font-semibold text-slate-200`}
-                    >
-                      {fmtBR(somaLinha)}
-                    </td>
+                    <td className={`${cellBase} font-semibold text-slate-200`}>{fmtBR(somaLinha)}</td>
                   </tr>
                 );
               })}
 
-              {/* TOTAL RECEITAS – mesma altura da linha de Total Despesas */}
+              {/* TOTAL RECEITAS */}
               <tr className="bg-slate-900 h-8">
-                <td className="sticky left-0 bg-slate-900 border-t border-slate-700" />
+                <td className="sticky left-0 bg-slate-900 border-t border-slate-700 z-30" />
                 <td
-                  className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 text-emerald-300 text-xs`}
+                  className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 text-emerald-300 text-xs z-30`}
                 />
                 <td
-                  className={`${firstColHead} text-emerald-300 bg-slate-900`}
+                  className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 text-emerald-300 z-30`}
                 >
                   Total Receitas
                 </td>
                 {totReceitas.map((v, i) => (
-                  <td
-                    key={`tr${i}`}
-                    className={`${headBase} text-emerald-300 bg-slate-900`}
-                  >
+                  <td key={`tr${i}`} className={`${headBase} text-emerald-300 bg-slate-900`}>
                     {fmtBR(v)}
                   </td>
                 ))}
-                <td
-                  className={`${headBase} font-semibold text-emerald-300 bg-slate-900`}
-                >
+                <td className={`${headBase} font-semibold text-emerald-300 bg-slate-900`}>
                   {fmtBR(totalReceitasAno)}
                 </td>
               </tr>
@@ -671,12 +709,13 @@ export default function DespesasPage() {
               <SectionDivider label="Despesas" variant="red" />
 
               {despesas.map((l, dIdx) => {
-                const valoresNum = l.valores.map(toNum);
+                const valoresNum = l.valores.map(toInt);
                 const somaLinha = valoresNum.reduce((a, b) => a + b, 0);
                 const categoriasDes = CATEGORIAS.DESPESA || [];
+
                 return (
                   <tr key={l.id} className="hover:bg-slate-800/30">
-                    <td className="px-2 py-0.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900">
+                    <td className="px-2 py-0.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900 z-30">
                       <button
                         onClick={() => delLinha(l.id)}
                         className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-rose-400"
@@ -686,9 +725,7 @@ export default function DespesasPage() {
                       </button>
                     </td>
 
-                    <td
-                      className={`${firstColCell} sticky left-[3.5rem] bg-slate-900`}
-                    >
+                    <td className={`${firstColCell} sticky left-[${LEFT_CATEG}px] bg-slate-900 z-30`}>
                       <select
                         className="w-full bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-500"
                         value={l.categoria}
@@ -703,16 +740,12 @@ export default function DespesasPage() {
                       </select>
                     </td>
 
-                    <td
-                      className={`${firstColCell} bg-slate-900`}
-                    >
+                    <td className={`${firstColCell} sticky left-[${LEFT_DESC}px] bg-slate-900 z-30`}>
                       <input
                         className="w-full bg-transparent outline-none text-slate-100 placeholder:text-slate-500 text-sm"
                         placeholder="Nova despesa"
                         value={l.descricao}
-                        onChange={(e) =>
-                          setDescricao(l.id, e.target.value)
-                        }
+                        onChange={(e) => setDescricao(l.id, e.target.value)}
                         onKeyDown={handleKeyDesc("des", dIdx)}
                         data-dsec="des"
                         data-drow={dIdx}
@@ -727,8 +760,9 @@ export default function DespesasPage() {
                           placeholder="0"
                           value={String(l.valores[i] ?? "")}
                           onChange={(e) => setValor(l.id, i, e.target.value)}
+                          onFocus={showHintNow}
                           onBlur={(e) => {
-                            const n = toNum(e.target.value);
+                            const n = toInt(e.target.value);
                             setValor(l.id, i, n === 0 ? "" : String(n));
                           }}
                           onDoubleClick={() => fillAteFim(l.id, i)}
@@ -741,53 +775,44 @@ export default function DespesasPage() {
                       </td>
                     ))}
 
-                    <td
-                      className={`${cellBase} font-semibold text-slate-200`}
-                    >
-                      {fmtBR(somaLinha)}
-                    </td>
+                    <td className={`${cellBase} font-semibold text-slate-200`}>{fmtBR(somaLinha)}</td>
                   </tr>
                 );
               })}
 
-              {/* TOTAL DESPESAS – mesma estrutura e altura da Total Receitas */}
+              {/* TOTAL DESPESAS */}
               <tr className="bg-slate-900 h-8">
-                <td className="sticky left-0 bg-slate-900 border-t border-slate-700" />
+                <td className="sticky left-0 bg-slate-900 border-t border-slate-700 z-30" />
                 <td
-                  className={`${firstColHead} sticky left-[3.5rem] bg-slate-900 text-rose-300 text-xs`}
+                  className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 text-rose-300 text-xs z-30`}
                 />
                 <td
-                  className={`${firstColHead} text-rose-300 bg-slate-900`}
+                  className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 text-rose-300 z-30`}
                 >
                   Total Despesas
                 </td>
                 {totDespesas.map((v, i) => (
-                  <td
-                    key={`td${i}`}
-                    className={`${headBase} text-rose-300 bg-slate-900`}
-                  >
+                  <td key={`td${i}`} className={`${headBase} text-rose-300 bg-slate-900`}>
                     {fmtBR(v)}
                   </td>
                 ))}
-                <td
-                  className={`${headBase} font-semibold text-rose-300 bg-slate-900`}
-                >
+                <td className={`${headBase} font-semibold text-rose-300 bg-slate-900`}>
                   {fmtBR(totalDespesasAno)}
                 </td>
               </tr>
 
-              {/* SALDO – fixo e colorido por saldoAno */}
+              {/* SALDO – sticky bottom */}
               <tr>
                 <td
-                  className="sticky bottom-0 left-0 z-30 bg-slate-900 border-t border-slate-700"
+                  className="sticky bottom-0 left-0 z-40 bg-slate-900 border-t border-slate-700"
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
-                  className={`${firstColHeadNoColor} sticky bottom-0 left-[3.5rem] z-30 bg-slate-900 ${saldoRowClass} text-xs`}
+                  className={`${firstColHeadNoColor} sticky bottom-0 left-[${LEFT_CATEG}px] z-40 bg-slate-900 ${saldoRowClass} text-xs`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 />
                 <td
-                  className={`${firstColHeadNoColor} sticky bottom-0 left-[11.5rem] z-30 bg-slate-900 ${saldoRowClass}`}
+                  className={`${firstColHeadNoColor} sticky bottom-0 left-[${LEFT_DESC}px] z-40 bg-slate-900 ${saldoRowClass}`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   Saldo (R − D)
@@ -795,14 +820,14 @@ export default function DespesasPage() {
                 {saldo.map((v, i) => (
                   <td
                     key={`sl${i}`}
-                    className={`${headBaseNoColor} sticky bottom-0 z-30 bg-slate-900 ${saldoRowClass}`}
+                    className={`${headBaseNoColor} sticky bottom-0 z-40 bg-slate-900 ${saldoRowClass}`}
                     style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                   >
                     {fmtBR(v)}
                   </td>
                 ))}
                 <td
-                  className={`${headBaseNoColor} sticky bottom-0 z-30 bg-slate-900 ${saldoRowClass}`}
+                  className={`${headBaseNoColor} sticky bottom-0 z-40 bg-slate-900 ${saldoRowClass}`}
                   style={{ boxShadow: "0 -1px 0 0 rgba(30,41,59,1)" }}
                 >
                   {fmtBR(saldoAno)}
