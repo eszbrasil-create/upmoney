@@ -1,4 +1,4 @@
-// src/pages/Landing.jsx → VERSÃO FINAL AGRESSIVA E HONESTA (2025)
+// src/pages/Landing.jsx → VERSÃO AJUSTADA (bloco imagem subido + botões mais próximos + texto menor)
 import React, { useState } from "react";
 
 const IconWhatsApp = (props) => (
@@ -51,15 +51,14 @@ export default function Landing({ onNavigate }) {
         </div>
       </header>
 
-      {/* HERO AGRESSIVA E HONESTA */}
+      {/* HERO AJUSTADA */}
       <section className="relative overflow-hidden bg-gradient-to-b from-white to-amber-50/30">
         <div className="absolute inset-0 bg-grid-slate-900/[0.03] [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
             {/* TEXTO */}
             <div className="text-center lg:text-left">
-              {/* Badge de atração (sem número falso) */}
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-600 text-white px-5 py-2.5 rounded-full text-sm font-bold mb-8 shadow-lg">
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -82,8 +81,8 @@ export default function Landing({ onNavigate }) {
                 Resultado garantido ou devolvo cada centavo.
               </p>
 
-              {/* Benefícios grandes e claros */}
-              <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-8">
+              {/* Benefícios */}
+              <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-8">
                 <div className="text-center">
                   <div className="text-5xl mb-3">1 to 1</div>
                   <p className="font-bold text-lg">Acompanhamento individual</p>
@@ -98,11 +97,11 @@ export default function Landing({ onNavigate }) {
                 </div>
               </div>
 
-              {/* CTAs */}
-              <div className="mt-12 flex flex-col sm:flex-row gap-5 justify-center lg:justify-start">
+              {/* BOTÕES MAIS PRÓXIMOS DO TEXTO */}
+              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 px-10 py-6 rounded-2xl text-2xl font-black text-white shadow-2xl hover:shadow-amber-500/40 hover:scale-105 transition-all"
+                  className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 px-8 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-amber-500/40 hover:scale-105 transition-all"
                 >
                   <span className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                   Quero meu primeiro dividendo em 30 dias
@@ -110,20 +109,20 @@ export default function Landing({ onNavigate }) {
 
                 <button
                   onClick={falarAgora}
-                  className="flex items-center justify-center gap-4 bg-[#25D366] px-10 py-6 rounded-2xl text-2xl font-black text-white shadow-xl hover:shadow-green-500/50 hover:scale-105 transition"
+                  className="flex items-center justify-center gap-3 bg-[#25D366] px-8 py-5 rounded-2xl text-xl font-bold text-white shadow-xl hover:shadow-green-500/50 hover:scale-105 transition"
                 >
-                  <IconWhatsApp className="w-9 h-9" />
+                  <IconWhatsApp className="w-8 h-8" />
                   Falar agora no WhatsApp
                 </button>
               </div>
 
-              <p className="mt-8 text-lg text-slate-600 font-medium">
+              <p className="mt-6 text-lg text-slate-600 font-medium">
                 Avaliação gratuita • 15 minutos • 100% gratuita e sem compromisso
               </p>
             </div>
 
-            {/* MOCKUP */}
-            <div className="relative">
+            {/* IMAGEM SUBIDA (mais próxima do texto) */}
+            <div className="relative lg:-mt-12">
               <div className="absolute -inset-6 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-3xl blur-3xl -z-10" />
 
               <div className="bg-white rounded-3xl shadow-2xl p-6 border border-slate-200">
@@ -148,12 +147,6 @@ export default function Landing({ onNavigate }) {
                   <div className="text-lg opacity-90">Dividendos este mês</div>
                 </div>
               </div>
-
-              {/* Badges reais (quando tiver) – por enquanto escondidos */}
-              {/* <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-4">
-                <div className="bg-white px-6 py-3 rounded-full shadow-xl font-bold">+1.200 alunos</div>
-                <div className="bg-white px-6 py-3 rounded-full shadow-xl font-bold">4.9/5</div>
-              </div> */}
             </div>
           </div>
         </div>
@@ -169,9 +162,9 @@ export default function Landing({ onNavigate }) {
             </div>
 
             <form onSubmit={enviarWhats} className="space-y-5">
-              <input type="text" name="nome" value={form.nome} onChange={handle} placeholder="Seu nome completo" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 focus:outline-none" />
-              <input type="email" name="email" value={form.email} onChange={handle} placeholder="seu@email.com" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 focus:outline-none" />
-              <input type="tel" name="telefone" value={form.telefone} onChange={handle} placeholder="(11) 98765-4321" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 focus:outline-none" />
+              <input type="text" name="nome" value={form.nome} onChange={handleChange} placeholder="Seu nome completo" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 focus:outline-none" />
+              <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="seu@email.com" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 focus:outline-none" />
+              <input type="tel" name="telefone" value={form.telefone} onChange={handleChange} placeholder="(11) 98765-4321" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 focus:outline-none" />
 
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 border border-slate-300 rounded-xl font-medium hover:bg-slate-50">
