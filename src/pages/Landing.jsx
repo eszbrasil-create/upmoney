@@ -1,4 +1,4 @@
-// src/pages/Landing.jsx → VERSÃO FINAL DEFINITIVA (12/12/2025 – NUNCA MAIS MEXE)
+// src/pages/Landing.jsx → VERSÃO FINAL 100% CERTA (12/12/2025)
 import React, { useState } from "react";
 
 const IconWhatsApp = (props) => (
@@ -28,12 +28,12 @@ export default function Landing({ onNavigate }) {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* HEADER */}
-      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-white/5">
+      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-white5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <button onClick={() => onNavigate?.("landing")} className="text-2xl font-black text-white">
             UpMoney
           </button>
-          <nav className="hidden lg:flex items-center gap-10 text-white/80 font-medium">
+          <nav className="hidden lg:flex items-center gap-10 text-white80 font-medium">
             <button onClick={() => onNavigate?.("cursos")} className="hover:text-white">Cursos</button>
             <button onClick={() => onNavigate?.("cashcontrol-home")} className="hover:text-white">UpControl</button>
             <button onClick={() => onNavigate?.("saida-fiscal")} className="hover:text-white">Saída Fiscal</button>
@@ -43,40 +43,27 @@ export default function Landing({ onNavigate }) {
             <button onClick={() => onNavigate?.("login")} className="bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-900 px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition hidden sm:block">
               Meu Plano
             </button>
-            <a href="https://youtube.com/@upmoney" target="_blank" className="group">
-              <div className="w-11 h-11 bg-red-600 rounded-full flex items-center justify-center hover:scale-110 transition">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M23.5 6.19a3.03 3.03 0 0-2.13-2.13C19.6 3.5 12 3.5 12 3.5s-7.6 0-9.37.56A3.03 3.03 0 0 0 .5 6.19 31.5 31.5 0 0 0 0 12c0 1.94.18 3.87.5 5.81.28 1.01 1.11 1.8 2.13 2.08C4.4 20.5 12 20.5 12 20.5s7.6 0 9.37-.56a3.03 3.03 0 0 0 2.13-2.13c.32-1.93.5-3.86.5-5.81 0-1.94-.18-3.87-.5-5.81ZM9.75 15.5v-7l6 3.5-6 3.5Z"/>
-                </svg>
-              </div>
-            </a>
-            <a href="https://instagram.com/upmoneybr" target="_blank" className="group">
-              <div className="w-11 h-11 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center hover:scale-110 transition">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.24.42.56.22.96.49 1.38.9.41.41.67.82.9 1.38.17.43.37 1.07.42 2.24.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.42 2.24a3.6 3.6 0 0 1-.9 1.38 3.6 3.6 0 0 1-1.38.9c-.43.17-1.07.37-2.24.42-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.24-.42a3.6 3.6 0 0 1-1.38-.9 3.6 3.6 0 0 1-.9-1.38c-.17-.43-.37-1.07-.42-2.24C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.42-2.24.22-.56.49-.96.9-1.38.41-.41.82-.67 1.38-.9.43-.17 1.07-.37 2.24-.42C8.42 2.17 8.8 2.16 12 2.16Zm0 3.4c-3.16 0-3.53.01-4.77.07-.98.05-1.52.21-1.87.35-.47.18-.8.4-1.15.75-.35.35-.57.68-.75 1.15-.14.35-.3.89-.35 1.87-.06 1.24-.07 1.61-.07 4.77s.01 3.53.07 4.77c.05.98.21 1.52.35 1.87.18.47.4.8.75 1.15.35.35.68.57 1.15.75.35.14.89.3 1.87.35 1.24.06 1.61.07 4.77.07s3.53-.01 4.77-.07c.98-.05 1.52-.21 1.87-.35.47-.18.8-.4 1.15-1.15.35-.35.57-.68.75-1.15.14-.35.3-.89.35-1.87.06-1.24.07-1.61.07-4.77s-.01-3.53-.07-4.77c-.05-.98.21-1.52.35-1.87a2.62 2.62 0 0 0-.75-1.15c-.35-.35-.68-.57-1.15-.75-.35-.14-.89-.3-1.87-.35-1.24-.06-1.61-.07-4.77-.07Zm0 2.7a4.64 4.64 0 1 1 0 9.28 4.64 4.64 0 0 1 0-9.28Zm0 1.8a2.84 2.84 0 1 0 0 5.68 2.84 2.84 0 0 0 0-5.68Zm5.93-2.18a1.09 1.09 0 1 1 0 2.18 1.09 1.09 0 0 1 0-2.18Z"/>
-                </svg>
-              </div>
-            </a>
           </div>
         </div>
       </header>
 
-      {/* HERO FINAL – BADGE NO CANTO SUPERIOR DIREITO */}
-      <section className="relative bg-gradient-to-b from-white to-amber-50/30 pt-20 pb-16">
-        {/* BADGE VERMELHO NO CANTO DIREITO – PERFEITO */}
-        <div className="absolute top-20 right-4 z-40">
-          <div className="bg-red-600 text-white px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider shadow-2xl shadow-red-600/60 animate-pulse flex items-center gap-2">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-            </span>
-            Vagas limitadas para 1 turma · Depois só em 2026
+      {/* HERO FINAL – BADGE VERMELHO SOBRE O UPCONTROL + ESQUERDA SUBIDA */}
+      <section className="relative bg-gradient-to-b from-white to-amber-5030 pt-16 pb-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          {/* BADGE VERMELHO CENTRALIZADO SOBRE O UPCONTROL */}
+          <div className="absolute top-16 lg:top-20 right-4 lg:right-32 z-50">
+            <div className="bg-red-600 text-white px-6 py-3 rounded-full text-sm font-black uppercase tracking-wider shadow-2xl shadow-red-60060 flex items-center gap-2 animate-pulse">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+              </span>
+              Vagas limitadas para 1 turma · Depois só em 2026
+            </div>
           </div>
-        </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            <div className="text-center lg:text-left">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* BLOCO ESQUERDO SUBIDO ATÉ QUASE O HEADER */}
+            <div className="text-center lg:text-left lg:-mt-24">
               <h1 className="text-5xl lg:text-6xl font-black tracking-tight text-slate-900 leading-tight">
                 Receba seu <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">primeiro dividendo</span>
                 <br className="hidden lg:block" />
@@ -92,18 +79,18 @@ export default function Landing({ onNavigate }) {
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <button onClick={() => setIsModalOpen(true)} className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 px-10 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-amber-500/50 hover:scale-105 transition-all duration-300">
-                  <span className="absolute inset-0 bg-white/25 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                <button onClick={() => setIsModalOpen(true)} className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 px-10 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-amber-50050 hover:scale-105 transition-all duration-300">
+                  <span className="absolute inset-0 bg-white25 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                   Quero meu primeiro dividendo em 30 dias
                 </button>
-                <button onClick={falarAgora} className="flex items-center justify-center gap-3 bg-[#25D366] px-10 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition">
+                <button onClick={falarAgora} className="flex items-center justify-center gap-3 bg-[#25D366] px-10 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-green-50050 hover:scale-105 transition">
                   <IconWhatsApp className="w-8 h-8" />
                   Falar agora no WhatsApp
                 </button>
               </div>
 
               <div className="mt-6">
-                <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-300">
+                <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-emerald-50050 hover:scale-105 transition-all duration-300">
                   <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
@@ -113,9 +100,9 @@ export default function Landing({ onNavigate }) {
               </div>
             </div>
 
+            {/* UPCONTROL COM BADGE EM CIMA */}
             <div className="relative">
-              <div className="absolute -inset-6 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-3xl blur-3xl -z-10" />
-              <div className="bg-white rounded-3xl shadow-2xl p-6 border border-slate-200">
+              <div className="bg-white rounded-3xl shadow-2xl p-8 border border-slate-200">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center text-white text-5xl font-black shadow-2xl">
                     U
@@ -138,7 +125,7 @@ export default function Landing({ onNavigate }) {
 
       {/* MODAL E FOOTER (mantidos) */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-slate-900">Avaliação Gratuita (15 min)</h2>
@@ -146,7 +133,7 @@ export default function Landing({ onNavigate }) {
             </div>
             <form onSubmit={enviarWhats} className="space-y-5">
               <input type="text" name="nome" value={form.nome} onChange={handleChange} placeholder="Seu nome completo" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300" />
-              <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="seu@email.com" required className="email" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300" />
+              <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="seu@email.com" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300" />
               <input type="tel" name="telefone" value={form.telefone} onChange={handleChange} placeholder="(11) 98765-4321" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300" />
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 border border-slate-300 rounded-xl font-medium hover:bg-slate-50">Cancelar</button>
@@ -157,7 +144,7 @@ export default function Landing({ onNavigate }) {
         </div>
       )}
 
-      <footer className="bg-slate-900 text-white/60 py-12 mt-20">
+      <footer className="bg-slate-900 text-white60 py-12 mt-20">
         <div className="max-w-7xl mx-auto px-6 text-center text-sm">
           UpMoney © 2025 — O seu primeiro dividendo começa aqui.
         </div>
