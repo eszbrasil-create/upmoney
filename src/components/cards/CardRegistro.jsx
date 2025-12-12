@@ -55,20 +55,24 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
     const meta = norm.map((label, originalIndex) => {
       const [mes = "", ano = ""] = (label || "").split("/");
       const monthIndex = MESES.indexOf(mes);
+      const yearNumber = Number(ano) || 0;
+
       return {
         label,
         mes,
         ano,
         originalIndex,
         monthIndex: monthIndex === -1 ? 99 : monthIndex,
+        yearNumber,
       };
     });
 
+    // 🔧 ordena sempre Jan..Dez; dentro do mesmo mês, ano crescente
     meta.sort((a, b) => {
       if (a.monthIndex !== b.monthIndex) {
         return a.monthIndex - b.monthIndex;
       }
-      return String(a.ano).localeCompare(String(b.ano));
+      return a.yearNumber - b.yearNumber;
     });
 
     return meta;
