@@ -1,4 +1,4 @@
-// src/pages/Landing.jsx → VERSÃO FINAL BRABA E PRONTA PRA SUBIR
+// src/pages/Landing.jsx → VERSÃO FINAL + BOTÃO EXTRA BRABO
 import React, { useState } from "react";
 
 const IconWhatsApp = (props) => (
@@ -29,7 +29,7 @@ export default function Landing({ onNavigate }) {
     <div className="min-h-screen flex flex-col bg-white">
       {/* HEADER */}
       <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between flex">
           <button onClick={() => onNavigate?.("landing")} className="text-2xl font-black text-white">
             UpMoney
           </button>
@@ -48,11 +48,11 @@ export default function Landing({ onNavigate }) {
         </div>
       </header>
 
-      {/* HERO BRABA */}
+      {/* HERO FINAL */}
       <section className="relative overflow-hidden bg-gradient-to-b from-white to-amber-50/30 py-12 lg:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-            {/* TEXTO + BOTÕES COLADOS */}
+            {/* TEXTO */}
             <div className="text-center lg:text-left">
               {/* BADGE BRABO */}
               <div className="inline-flex items-center gap-3 bg-red-600 text-white px-6 py-3 rounded-full text-base font-black uppercase tracking-wider mb-6 shadow-2xl shadow-red-600/50 animate-pulse">
@@ -77,7 +77,7 @@ export default function Landing({ onNavigate }) {
                 Resultado garantido ou devolvo cada centavo.
               </p>
 
-              {/* BOTÕES COLADÍSSIMOS */}
+              {/* BOTÕES PRINCIPAIS COLADOS */}
               <div className="mt-5 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <button
                   onClick={() => setIsModalOpen(true)}
@@ -96,9 +96,19 @@ export default function Landing({ onNavigate }) {
                 </button>
               </div>
 
-              <p className="mt-4 text-lg text-slate-600 font-medium">
-                Avaliação gratuita • 15 minutos • 100% gratuita e sem compromisso
-              </p>
+              {/* BOTÃO EXTRA QUE VOCÊ PEDIU – FICA LINDO! */}
+              <div className="mt-5">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-300"
+                >
+                  <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                  </svg>
+                  Avaliação gratuita • 15 minutos • 100% gratuita e sem compromisso
+                </button>
+              </div>
             </div>
 
             {/* IMAGEM */}
@@ -106,7 +116,7 @@ export default function Landing({ onNavigate }) {
               <div className="absolute -inset-6 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-3xl blur-3xl -z-10" />
               <div className="bg-white rounded-3xl shadow-2xl p-6 border border-slate-200">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center text-white text-4xl font-black shadow-xl">
+                  <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center text-white text-4xl font-black shadow-xl">
                     U
                   </div>
                   <div>
@@ -125,7 +135,7 @@ export default function Landing({ onNavigate }) {
         </div>
       </section>
 
-      {/* MODAL */}
+      {/* MODAL (igual antes) */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
