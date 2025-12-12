@@ -1,106 +1,89 @@
 // src/pages/Relatorios.jsx
 // Relatórios 2.0 — Protótipo inicial lúdico, visual e moderno
+// Tela BLOQUEADA (em construção)
 
-import React, { useState } from "react";
-import { TrendingUp, BookOpen, Coins, PieChart, Layers, Construction, X } from "lucide-react";
+import React from "react";
+import {
+  TrendingUp,
+  BookOpen,
+  Coins,
+  PieChart,
+  Layers,
+  Construction,
+} from "lucide-react";
 
 export default function Relatorios() {
-  const [showBanner, setShowBanner] = useState(true);
-
   return (
-    <div className="pt-4 pr-6 pl-0 text-slate-100">
+    <div className="relative min-h-screen text-slate-100 overflow-hidden">
 
-      {/* ================= BALÃO "EM CONSTRUÇÃO" ================= */}
-      {showBanner && (
-        <div className="mb-4 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 shadow-lg">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 rounded-xl bg-amber-400/15 p-2 border border-amber-400/20">
-                <Construction className="text-amber-300" size={20} />
-              </div>
-
-              <div className="flex flex-col">
-                <div className="text-sm font-semibold text-amber-200">
-                  Relatórios em construção
-                </div>
-                <div className="text-[12px] text-amber-100/80 mt-0.5">
-                  Estamos preparando gráficos e análises reais para esta área. Por enquanto, você verá apenas o protótipo visual.
-                </div>
-              </div>
+      {/* ================= OVERLAY BLOQUEADOR ================= */}
+      <div className="fixed inset-0 z-[9999] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center">
+        <div className="max-w-md mx-4 rounded-2xl border border-amber-400/30 bg-slate-900/90 p-6 shadow-2xl text-center">
+          <div className="flex justify-center mb-4">
+            <div className="rounded-full bg-amber-400/15 p-4 border border-amber-400/30">
+              <Construction className="text-amber-300" size={32} />
             </div>
-
-            <button
-              type="button"
-              onClick={() => setShowBanner(false)}
-              className="rounded-lg p-2 hover:bg-white/5 transition"
-              aria-label="Fechar aviso"
-              title="Fechar"
-            >
-              <X size={18} className="text-amber-200/80" />
-            </button>
           </div>
+
+          <h2 className="text-lg font-semibold text-amber-200">
+            Relatórios em construção
+          </h2>
+
+          <p className="mt-2 text-sm text-slate-300 leading-relaxed">
+            Estamos trabalhando para transformar esta área em um painel completo
+            de análises financeiras, com gráficos claros e insights úteis.
+          </p>
+
+          <p className="mt-3 text-xs text-slate-400">
+            Por enquanto, esta seção está disponível apenas para visualização.
+          </p>
         </div>
-      )}
+      </div>
 
-      {/* ================= HERO PRINCIPAL ================= */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 shadow-lg">
-        <div className="absolute inset-0 opacity-20 bg-[url('/hero-pattern.png')] bg-cover" />
-        <h1 className="relative text-2xl font-bold tracking-tight">
-          Sua Jornada Financeira
-        </h1>
-        <p className="relative mt-1 text-sm text-white/90">
-          Um resumo claro, bonito e motivador da sua evolução.
-        </p>
+      {/* ================= CONTEÚDO NORMAL (VISÍVEL, MAS BLOQUEADO) ================= */}
+      <div className="pt-4 pr-6 pl-0">
 
-        <div className="relative mt-5 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <HeroCard label="Patrimônio Atual" value="R$ 0,00" icon={TrendingUp} />
-          <HeroCard label="Evolução Total" value="+0%" icon={PieChart} />
-          <HeroCard label="Nível da Jornada" value="Iniciante" icon={Layers} />
-          <HeroCard label="Meses Consistentes" value="0" icon={BookOpen} />
+        {/* HERO */}
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 shadow-lg">
+          <div className="absolute inset-0 opacity-20 bg-[url('/hero-pattern.png')] bg-cover" />
+          <h1 className="relative text-2xl font-bold tracking-tight">
+            Sua Jornada Financeira
+          </h1>
+          <p className="relative mt-1 text-sm text-white/90">
+            Um resumo claro, bonito e motivador da sua evolução.
+          </p>
+
+          <div className="relative mt-5 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <HeroCard label="Patrimônio Atual" value="R$ 0,00" icon={TrendingUp} />
+            <HeroCard label="Evolução Total" value="+0%" icon={PieChart} />
+            <HeroCard label="Nível da Jornada" value="Iniciante" icon={Layers} />
+            <HeroCard label="Meses Consistentes" value="0" icon={BookOpen} />
+          </div>
+        </section>
+
+        <div className="mt-6 space-y-6">
+          <SectionCard title="Despesas & Receitas do Mês" icon={Coins}>
+            <PlaceholderGraph />
+          </SectionCard>
+
+          <SectionCard title="Seu progresso nos Cursos" icon={BookOpen}>
+            <PlaceholderBar />
+          </SectionCard>
+
+          <SectionCard title="Dividendos Recebidos" icon={Coins}>
+            <PlaceholderGraph />
+          </SectionCard>
+
+          <SectionCard title="Distribuição da Carteira" icon={PieChart}>
+            <PlaceholderPie />
+          </SectionCard>
         </div>
-      </section>
-
-      {/* ================= BLOCO: 5 SEÇÕES ================= */}
-      <div className="mt-6 space-y-6">
-
-        {/* DESPESAS & RECEITAS */}
-        <SectionCard title="Despesas & Receitas do Mês" icon={Coins}>
-          <p className="text-slate-400 text-sm">
-            Em breve, gráficos e análises reais baseados nos seus registros.
-          </p>
-          <PlaceholderGraph />
-        </SectionCard>
-
-        {/* CURSOS & APRENDIZADO */}
-        <SectionCard title="Seu progresso nos Cursos" icon={BookOpen}>
-          <p className="text-slate-400 text-sm">
-            Acompanhe seu avanço no aprendizado e veja o impacto no seu patrimônio.
-          </p>
-          <PlaceholderBar />
-        </SectionCard>
-
-        {/* DIVIDENDOS */}
-        <SectionCard title="Dividendos Recebidos" icon={Coins}>
-          <p className="text-slate-400 text-sm">
-            Aqui você vai ver seus dividendos mensais e totais do ano.
-          </p>
-          <PlaceholderGraph />
-        </SectionCard>
-
-        {/* CARTEIRA CASH */}
-        <SectionCard title="Distribuição da Carteira" icon={PieChart}>
-          <p className="text-slate-400 text-sm">
-            Visual moderno da sua carteira — Ações, FIIs, Cripto, Caixa e mais.
-          </p>
-          <PlaceholderPie />
-        </SectionCard>
-
       </div>
     </div>
   );
 }
 
-/* ------------------------- COMPONENTES BASE ------------------------- */
+/* ---------------- COMPONENTES BASE ---------------- */
 
 function HeroCard({ label, value, icon: Icon }) {
   return (
@@ -128,7 +111,7 @@ function SectionCard({ title, icon: Icon, children }) {
   );
 }
 
-/* ----------- PLACEHOLDERS LÚDICOS (trocamos depois) ----------- */
+/* -------- PLACEHOLDERS -------- */
 
 function PlaceholderGraph() {
   return (
