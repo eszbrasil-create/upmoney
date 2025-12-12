@@ -1,8 +1,9 @@
 // src/pages/Relatorios.jsx
 // Relatórios 2.0 — Protótipo inicial lúdico, visual e moderno
-// Tela BLOQUEADA (em construção)
+// Tela BLOQUEADA (em construção) + botão "Voltar para o Dashboard"
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   TrendingUp,
   BookOpen,
@@ -13,6 +14,8 @@ import {
 } from "lucide-react";
 
 export default function Relatorios() {
+  const navigate = useNavigate();
+
   return (
     <div className="relative min-h-screen text-slate-100 overflow-hidden">
 
@@ -37,13 +40,27 @@ export default function Relatorios() {
           <p className="mt-3 text-xs text-slate-400">
             Por enquanto, esta seção está disponível apenas para visualização.
           </p>
+
+          <button
+            type="button"
+            onClick={() => navigate("/dash")}
+            className="
+              mt-5 inline-flex items-center justify-center
+              rounded-xl px-4 py-2
+              bg-emerald-500 hover:bg-emerald-400
+              text-slate-950 font-semibold text-sm
+              transition shadow
+            "
+          >
+            Voltar para o Dashboard
+          </button>
         </div>
       </div>
 
       {/* ================= CONTEÚDO NORMAL (VISÍVEL, MAS BLOQUEADO) ================= */}
       <div className="pt-4 pr-6 pl-0">
 
-        {/* HERO */}
+        {/* ================= HERO PRINCIPAL ================= */}
         <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 shadow-lg">
           <div className="absolute inset-0 opacity-20 bg-[url('/hero-pattern.png')] bg-cover" />
           <h1 className="relative text-2xl font-bold tracking-tight">
@@ -61,29 +78,48 @@ export default function Relatorios() {
           </div>
         </section>
 
+        {/* ================= BLOCO: SEÇÕES ================= */}
         <div className="mt-6 space-y-6">
+
+          {/* DESPESAS & RECEITAS */}
           <SectionCard title="Despesas & Receitas do Mês" icon={Coins}>
+            <p className="text-slate-400 text-sm">
+              Em breve, gráficos e análises reais baseados nos seus registros.
+            </p>
             <PlaceholderGraph />
           </SectionCard>
 
+          {/* CURSOS & APRENDIZADO */}
           <SectionCard title="Seu progresso nos Cursos" icon={BookOpen}>
+            <p className="text-slate-400 text-sm">
+              Acompanhe seu avanço no aprendizado e veja o impacto no seu patrimônio.
+            </p>
             <PlaceholderBar />
           </SectionCard>
 
+          {/* DIVIDENDOS */}
           <SectionCard title="Dividendos Recebidos" icon={Coins}>
+            <p className="text-slate-400 text-sm">
+              Aqui você vai ver seus dividendos mensais e totais do ano.
+            </p>
             <PlaceholderGraph />
           </SectionCard>
 
+          {/* CARTEIRA CASH */}
           <SectionCard title="Distribuição da Carteira" icon={PieChart}>
+            <p className="text-slate-400 text-sm">
+              Visual moderno da sua carteira — Ações, FIIs, Cripto, Caixa e mais.
+            </p>
             <PlaceholderPie />
           </SectionCard>
+
         </div>
       </div>
     </div>
   );
 }
 
-/* ---------------- COMPONENTES BASE ---------------- */
+/* ------------------------- COMPONENTES BASE ------------------------- */
 
 function HeroCard({ label, value, icon: Icon }) {
   return (
@@ -111,7 +147,7 @@ function SectionCard({ title, icon: Icon, children }) {
   );
 }
 
-/* -------- PLACEHOLDERS -------- */
+/* ----------- PLACEHOLDERS LÚDICOS (trocamos depois) ----------- */
 
 function PlaceholderGraph() {
   return (
