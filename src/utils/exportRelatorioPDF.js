@@ -1,10 +1,9 @@
 // src/utils/exportRelatorioPDF.js
 import jsPDF from "jspdf";
-import "jspdf-autotable";
-import Chart from "chart.js/auto";
+import autoTable from "jspdf-autotable";
 
 function fmtBR(v) {
-  return Math.round(v || 0).toLocaleString("pt-BR", {
+  return Math.round(v).toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
     minimumFractionDigits: 0,
@@ -13,382 +12,331 @@ function fmtBR(v) {
 }
 
 function pct(x) {
-  const n = Number.isFinite(x) ? x : 0;
-  return `${Math.round(n)}%`;
+  if (!Number.isFinite(x)) return "0%";
+  return `${Math.round(x)}%`;
 }
 
-function mesLabel(meses, mesIdx) {
-  const m = meses?.[mesIdx] ?? "";
-  return m ? `${m}` : `Mês ${mesIdx + 1}`;
-}
-
-function makeCanvas(w = 900, h = 450) {
+function makeCanvas(w = 900, h = 500) {
   const c = document.createElement("canvas");
   c.width = w;
   c.height = h;
   return c;
 }
 
-async function chartToDataURL(config, w = 900, h = 450) {
+async function chartToDataURL(Chart, config, w = 900, h = 520, bg = "#ffffff") {
   const canvas = makeCanvas(w, h);
   const ctx = canvas.getContext("2d");
 
-  // fundo branco (pra ficar estilo “relatório”)
-  ctx.fillStyle = "#ffffff";
+  // Fundo sólido (evita PNG transparente no PDF)
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, w, h);
 
   const chart = new Chart(ctx, config);
 
   // aguarda render
   await new Promise((r) => setTimeout(r, 120));
-  const url = canvas.toDataURL("image/png", 1.0);
 
+  const url = canvas.toDataURL("image/png", 1.0);
   chart.destroy();
   return url;
 }
 
-function gerarComentariosMensal({
-  totalReceitasMes,
-  totalDespesasMes,
-  saldoMes,
-  percGastoMes,
-  top3Mes,
-}) {
+function gerarComentarios({ totalReceitasAno, totalDespesasAno, saldoAno, percGasto, top3 }) {
   const msgs = [];
 
-  if (totalReceitasMes <= 0 && totalDespesasMes <= 0) {
+  if (totalReceitasAno <= 0) {
     return [
-      "Sem lançamentos neste mês.",
-      "Dica: registre suas receitas e despesas para gerar insights automáticos.",
+      "Você ainda não registrou receitas suficientes para uma análise completa.",
+      "Comece adicionando salário e outras entradas recorrentes.",
+      "Depois disso, registre as despesas principais para enxergar padrões.",
     ];
   }
 
-  if (totalReceitasMes <= 0 && totalDespesasMes > 0) {
-    msgs.push("Você registrou despesas, mas não registrou receitas neste mês.");
-    msgs.push("Dica: adicione salário e outras entradas recorrentes para o saldo fazer sentido.");
-    return msgs.slice(0, 4);
+  if (percGasto <= 60) msgs.push("Gastos bem controlados. Você está com boa margem para investir e acelerar objetivos.");
+  else if (percGasto <= 80) msgs.push("Gastos moderados. Um pequeno ajuste pode aumentar bastante o seu saldo anual.");
+  else if (percGasto <= 95) msgs.push("Atenção: seus gastos estão altos em relação à receita. Vale revisar as maiores categorias.");
+  else msgs.push("Alerta: você está gastando quase tudo (ou mais) do que ganha. Hora de um plano prático de ajuste.");
+
+  if (saldoAno >= 0) msgs.push(`Saldo anual positivo: ${fmtBR(saldoAno)}. Direcione parte disso para metas (reserva/ativos).`);
+  else msgs.push(`Saldo anual negativo: ${fmtBR(saldoAno)}. Meta #1: zerar o déficit e estabilizar antes de crescer.`);
+
+  if (top3?.length) {
+    const t = top3[0];
+    msgs.push(`Maior centro de gasto: ${t.cat} (${fmtBR(t.valor)} • ${pct(t.perc)} das despesas).`);
   }
 
-  if (percGastoMes <= 60) msgs.push("Gastos bem controlados neste mês. Ótimo sinal.");
-  else if (percGastoMes <= 80) msgs.push("Gastos moderados. Dá para otimizar e acelerar seus objetivos.");
-  else if (percGastoMes <= 95) msgs.push("Atenção: gastos altos em relação à receita. Vale revisar prioridades.");
-  else msgs.push("Alerta: você está gastando quase tudo (ou mais) do que ganha neste mês.");
-
-  if (saldoMes >= 0) msgs.push(`Saldo positivo no mês (${fmtBR(saldoMes)}). Excelente para construir patrimônio.`);
-  else msgs.push(`Saldo negativo no mês (${fmtBR(saldoMes)}). Primeiro objetivo: ajustar para voltar ao positivo.`);
-
-  if (top3Mes?.length) {
-    const t = top3Mes[0];
-    msgs.push(`Maior gasto do mês: "${t.cat}" (${fmtBR(t.valor)} • ${pct(t.perc)} das despesas).`);
-  }
-
-  if (percGastoMes > 80) msgs.push("Sugestão prática: defina um teto por categoria e revise os 2 maiores gastos primeiro.");
-  else msgs.push("Sugestão prática: transforme parte do saldo em aporte automático (consistência > intensidade).");
+  if (percGasto > 80) msgs.push("Sugestão: reduza primeiro os 2 maiores gastos e defina teto mensal por categoria.");
+  else msgs.push("Sugestão: crie um aporte automático mensal para transformar saldo em patrimônio.");
 
   return msgs.slice(0, 4);
 }
 
-const PALETA = [
-  "#3B82F6", // azul
-  "#22C55E", // verde
-  "#F59E0B", // amarelo
-  "#EF4444", // vermelho
-  "#A855F7", // roxo
-  "#06B6D4", // ciano
-  "#F97316", // laranja
-  "#64748B", // slate
-  "#10B981", // emerald
-  "#E11D48", // rose
-];
+function buildCategorias(tops = []) {
+  const top = (tops || []).slice(0, 7);
+  const labels = top.map((t) => t.cat);
+  const values = top.map((t) => t.valor);
+
+  const colors = ["#2E86DE", "#20BF6B", "#F7B731", "#EB3B5A", "#A55EEA", "#45AAF2", "#26DE81"].slice(
+    0,
+    labels.length
+  );
+
+  return { labels, values, colors };
+}
 
 export async function exportRelatorioPDF({
   anoSelecionado,
   meses,
-  mesIdx, // 0..11
-
-  // arrays 12 meses:
   totReceitas,
   totDespesas,
   saldo,
-
-  // do mês selecionado:
-  totalReceitasMes,
-  totalDespesasMes,
-  saldoMes,
-  percGastoMes,
-  topCategoriasMes, // [{cat, valor, perc}] (do mês)
+  totalReceitasAno,
+  totalDespesasAno,
+  saldoAno,
+  topCategoriasAno,
 }) {
+  // garante rodar no browser
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    throw new Error("exportRelatorioPDF deve rodar no browser (window/document indisponível).");
+  }
+
+  // Chart.js via dynamic import (evita dor no build/SSR)
+  const mod = await import("chart.js/auto");
+  const Chart = mod?.default || mod;
+
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
 
-  // ====== Tema “relatório claro” ======
+  // ===== Tema claro =====
   const W = 210;
   const H = 297;
   const M = 14;
 
-  const TXT = "#0f172a";      // slate-900
-  const MUTED = "#475569";    // slate-600
-  const LIGHT = "#e2e8f0";    // slate-200
-  const CARD = "#f8fafc";     // slate-50
-  const BLUE = "#2563eb";     // blue-600
-  const GREEN = "#16a34a";    // green-600
-  const RED = "#dc2626";      // red-600
+  const WHITE = "#ffffff";
+  const INK = "#0f172a";
+  const MUTED = "#475569";
+  const LIGHT = "#e2e8f0";
+  const CARD = "#f8fafc";
+  const BLUE = "#2563eb";
+  const GREEN = "#16a34a";
+  const RED = "#ef4444";
 
-  // Fundo branco
-  doc.setFillColor("#ffffff");
+  // Fundo
+  doc.setFillColor(WHITE);
   doc.rect(0, 0, W, H, "F");
 
-  // ===== Header =====
+  // Header
+  doc.setFillColor(CARD);
+  doc.roundedRect(M, 14, W - M * 2, 26, 4, 4, "F");
+
+  doc.setTextColor(INK);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(TXT);
   doc.setFontSize(18);
-  doc.text("Orçamento Mensal", M, 22);
+  doc.text("Orçamento Mensal", M + 8, 28);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(MUTED);
-  doc.text(
-    `${mesLabel(meses, mesIdx)} • ${anoSelecionado}  —  Relatório de Receitas e Despesas`,
-    M,
-    28
-  );
+  doc.text(`Relatório analítico • ${anoSelecionado}`, M + 8, 35);
 
-  // linha fina
-  doc.setDrawColor(LIGHT);
-  doc.setLineWidth(0.5);
-  doc.line(M, 32, W - M, 32);
-
-  // ===== KPIs =====
-  const kY = 38;
-  const kH = 20;
+  // KPIs
+  const kpiY = 46;
+  const kpiH = 18;
   const gap = 6;
-  const kW = (W - M * 2 - gap * 2) / 3;
+  const kpiW = (W - M * 2 - gap * 2) / 3;
+
+  const percGasto = totalReceitasAno > 0 ? (totalDespesasAno / totalReceitasAno) * 100 : 0;
 
   function kpiCard(x, title, value, color) {
-    doc.setFillColor(CARD);
+    doc.setFillColor("#ffffff");
     doc.setDrawColor(LIGHT);
-    doc.roundedRect(x, kY, kW, kH, 3, 3, "FD");
+    doc.roundedRect(x, kpiY, kpiW, kpiH, 3, 3, "FD");
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
     doc.setTextColor(MUTED);
-    doc.text(title, x + 6, kY + 7);
+    doc.setFontSize(9);
+    doc.text(title, x + 5, kpiY + 6);
 
+    doc.setTextColor(color);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
-    doc.setTextColor(color);
-    doc.text(value, x + 6, kY + 15);
+    doc.text(value, x + 5, kpiY + 14);
+
+    doc.setFont("helvetica", "normal");
   }
 
-  kpiCard(M, "Receitas (mês)", fmtBR(totalReceitasMes), BLUE);
-  kpiCard(M + kW + gap, "Despesas (mês)", fmtBR(totalDespesasMes), RED);
+  kpiCard(M, "Receitas (ano)", fmtBR(totalReceitasAno), GREEN);
+  kpiCard(M + kpiW + gap, "Despesas (ano)", fmtBR(totalDespesasAno), RED);
   kpiCard(
-    M + (kW + gap) * 2,
+    M + (kpiW + gap) * 2,
     "Saldo + % gasto",
-    `${fmtBR(saldoMes)} • ${pct(percGastoMes)}`,
-    saldoMes >= 0 ? GREEN : RED
+    `${fmtBR(saldoAno)} • ${pct(percGasto)}`,
+    saldoAno >= 0 ? GREEN : RED
   );
 
-  // ===== Bloco 1: Donut + Comentários =====
-  const b1Y = 64;
-  const b1H = 70;
-  const leftW = 86;
-  const rightW = (W - M * 2) - leftW - 6;
+  // ===== Charts =====
+  const chartsY = 70;
+  const chartsH = 72;
+  const half = (W - M * 2 - 6) / 2;
 
-  // caixa donut
-  doc.setFillColor(CARD);
+  doc.setFillColor("#ffffff");
   doc.setDrawColor(LIGHT);
-  doc.roundedRect(M, b1Y, leftW, b1H, 3, 3, "FD");
+  doc.roundedRect(M, chartsY, half, chartsH, 4, 4, "FD");
 
+  doc.setFillColor("#ffffff");
+  doc.setDrawColor(LIGHT);
+  doc.roundedRect(M + half + 6, chartsY, half, chartsH, 4, 4, "FD");
+
+  doc.setTextColor(INK);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.setTextColor(TXT);
-  doc.text("Resumo Atual", M + 6, b1Y + 10);
+  doc.text("Resumo Atual (Despesas)", M + 6, chartsY + 10);
+  doc.text("Despesas por Categoria (Top)", M + half + 12, chartsY + 10);
 
-  // prepara donut
-  const top8 = (topCategoriasMes || []).slice(0, 8);
-  const donutLabels = top8.map((t) => t.cat);
-  const donutValues = top8.map((t) => Math.max(0, t.valor || 0));
-  const donutColors = donutLabels.map((_, i) => PALETA[i % PALETA.length]);
+  const top = (topCategoriasAno || []).slice(0, 7);
+  const top3 = (topCategoriasAno || []).slice(0, 3);
+  const { labels, values, colors } = buildCategorias(top);
 
-  const donut = await chartToDataURL(
+  const donutImg = await chartToDataURL(
+    Chart,
     {
       type: "doughnut",
       data: {
-        labels: donutLabels.length ? donutLabels : ["Sem dados"],
+        labels: labels.length ? labels : ["Sem categorias"],
         datasets: [
           {
-            data: donutLabels.length ? donutValues : [1],
-            backgroundColor: donutLabels.length ? donutColors : ["#cbd5e1"],
+            data: labels.length ? values : [1],
+            backgroundColor: labels.length ? colors : ["#cbd5e1"],
             borderWidth: 0,
           },
         ],
       },
       options: {
         responsive: false,
-        cutout: "68%",
         plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (ctx) => {
-                const v = ctx.raw || 0;
-                return `${ctx.label}: ${fmtBR(v)}`;
-              },
-            },
-          },
+          legend: { position: "bottom", labels: { color: INK, boxWidth: 10, font: { size: 9 } } },
+          tooltip: { enabled: false },
         },
+        cutout: "62%",
       },
     },
-    520,
-    360
+    640,
+    420,
+    WHITE
   );
 
-  // coloca donut
-  doc.addImage(donut, "PNG", M + 8, b1Y + 16, leftW - 16, 46);
+  doc.addImage(donutImg, "PNG", M + 6, chartsY + 12, half - 12, chartsH - 18);
 
-  // legenda simples
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(MUTED);
-
-  let ly = b1Y + 66;
-  if (!top8.length) {
-    doc.text("Cadastre categorias para ver o resumo.", M + 6, ly);
-  } else {
-    const first = top8[0];
-    doc.text(`Top: ${first.cat} (${pct(first.perc)})`, M + 6, ly);
-  }
-
-  // caixa comentários
-  doc.setFillColor(CARD);
-  doc.setDrawColor(LIGHT);
-  doc.roundedRect(M + leftW + 6, b1Y, rightW, b1H, 3, 3, "FD");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(TXT);
-  doc.text("Leitura do mês", M + leftW + 12, b1Y + 10);
-
-  const comentarios = gerarComentariosMensal({
-    totalReceitasMes,
-    totalDespesasMes,
-    saldoMes,
-    percGastoMes,
-    top3Mes: (topCategoriasMes || []).slice(0, 3),
-  });
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(TXT);
-
-  let cy = b1Y + 18;
-  comentarios.forEach((c) => {
-    const lines = doc.splitTextToSize(`• ${c}`, rightW - 18);
-    doc.text(lines, M + leftW + 12, cy);
-    cy += lines.length * 5 + 2;
-  });
-
-  // ===== Bloco 2: Barras (12 meses: Receitas x Despesas) =====
-  const b2Y = 142;
-  const b2H = 76;
-
-  doc.setFillColor(CARD);
-  doc.setDrawColor(LIGHT);
-  doc.roundedRect(M, b2Y, W - M * 2, b2H, 3, 3, "FD");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(TXT);
-  doc.text("Receitas vs. Despesas (ano)", M + 6, b2Y + 10);
-
-  const bars = await chartToDataURL(
+  const barImg = await chartToDataURL(
+    Chart,
     {
       type: "bar",
       data: {
-        labels: meses,
+        labels: labels.length ? labels : ["Sem categorias"],
         datasets: [
-          { label: "Receitas", data: totReceitas, backgroundColor: "#3b82f6" },
-          { label: "Despesas", data: totDespesas, backgroundColor: "#22c55e" },
+          {
+            label: "Despesas",
+            data: labels.length ? values : [0],
+            backgroundColor: labels.length ? colors : ["#94a3b8"],
+            borderWidth: 0,
+          },
         ],
       },
       options: {
         responsive: false,
-        plugins: {
-          legend: { labels: { color: "#0f172a" } },
-        },
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
         scales: {
-          x: {
-            ticks: { color: "#475569" },
-            grid: { display: false },
-          },
-          y: {
-            ticks: { color: "#475569" },
-            grid: { color: "rgba(15,23,42,0.08)" },
-          },
+          x: { ticks: { color: INK, font: { size: 9 } }, grid: { display: false } },
+          y: { ticks: { color: MUTED, font: { size: 9 } }, grid: { color: "#eef2ff" } },
         },
       },
     },
-    980,
-    420
+    780,
+    420,
+    WHITE
   );
 
-  doc.addImage(bars, "PNG", M + 6, b2Y + 14, W - M * 2 - 12, b2H - 20);
+  doc.addImage(barImg, "PNG", M + half + 12, chartsY + 14, half - 18, chartsH - 20);
 
-  // ===== Tabela: Resumo por categoria (mês) =====
-  const tYTitle = 228;
+  // ===== Comentários =====
+  const boxY = 148;
+
+  doc.setFillColor("#ffffff");
+  doc.setDrawColor(LIGHT);
+  doc.roundedRect(M, boxY, W - M * 2, 34, 4, 4, "FD");
+
+  doc.setTextColor(INK);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.setTextColor(TXT);
-  doc.text("Resumo por Categoria (mês)", M, tYTitle);
+  doc.text("Comentários", M + 6, boxY + 10);
 
-  const body = (topCategoriasMes || []).length
-    ? topCategoriasMes
-        .slice(0, 12)
-        .map((t) => [t.cat, fmtBR(t.valor), pct(t.perc)])
-    : [["—", "—", "—"]];
+  const comentarios = gerarComentarios({
+    totalReceitasAno,
+    totalDespesasAno,
+    saldoAno,
+    percGasto,
+    top3,
+  });
 
-  doc.autoTable({
-    startY: tYTitle + 4,
-    head: [["Categoria", "Atual", "%"]],
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(MUTED);
+
+  let cy = boxY + 16;
+  comentarios.forEach((c) => {
+    const lines = doc.splitTextToSize(`• ${c}`, W - M * 2 - 14);
+    doc.text(lines, M + 6, cy);
+    cy += lines.length * 4.6;
+  });
+
+  // ===== Tabela por categoria (AQUI era o erro: agora é autoTable(doc, ...)) =====
+  doc.setTextColor(INK);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.text("Resumo por Categoria", M, 194);
+
+  const top10 = (topCategoriasAno || []).slice(0, 10);
+
+  const body = top10.length
+    ? top10.map((t) => [
+        t.cat,
+        fmtBR(t.valor),
+        pct(t.perc),
+        t.perc >= 35 ? "⚠️ Alto" : t.perc >= 20 ? "Atenção" : "Ok",
+      ])
+    : [["Sem categorias", "—", "—", "—"]];
+
+  autoTable(doc, {
+    startY: 198,
+    head: [["Categoria", "Atual", "%", "Sinal"]],
     body,
     styles: {
       font: "helvetica",
       fontSize: 9,
-      textColor: [15, 23, 42],
+      textColor: INK,
       fillColor: [248, 250, 252],
       lineColor: [226, 232, 240],
       lineWidth: 0.2,
-      cellPadding: 2.5,
+      cellPadding: 2.2,
     },
     headStyles: {
-      fillColor: [37, 99, 235], // azul
+      fillColor: [37, 99, 235],
       textColor: [255, 255, 255],
       fontStyle: "bold",
     },
     alternateRowStyles: { fillColor: [255, 255, 255] },
     columnStyles: {
-      0: { cellWidth: 100 },
-      1: { cellWidth: 50, halign: "right" },
-      2: { cellWidth: 20, halign: "right" },
+      0: { cellWidth: 78 },
+      1: { cellWidth: 36, halign: "right" },
+      2: { cellWidth: 18, halign: "right" },
+      3: { cellWidth: 18, halign: "center" },
     },
     margin: { left: M, right: M },
   });
 
-  // ===== Rodapé =====
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  // Rodapé
   doc.setTextColor(MUTED);
-  doc.text(
-    "Relatório educacional • Use para organizar e tomar decisões com clareza.",
-    M,
-    292
-  );
-  doc.text(
-    "CashControl",
-    W - M,
-    292,
-    { align: "right" }
-  );
+  doc.setFontSize(8);
+  doc.text("Relatório educacional — use para organizar hábitos e tomar decisões melhores.", M, 290);
+  doc.text("CashControl", W - M, 290, { align: "right" });
 
-  doc.save(`orcamento_mensal_${anoSelecionado}_${mesLabel(meses, mesIdx)}.pdf`);
+  doc.save(`relatorio_${anoSelecionado}.pdf`);
 }
