@@ -1,12 +1,46 @@
 // src/pages/Relatorios.jsx
 // Relatórios 2.0 — Protótipo inicial lúdico, visual e moderno
 
-import React from "react";
-import { TrendingUp, BookOpen, Coins, PieChart, Layers } from "lucide-react";
+import React, { useState } from "react";
+import { TrendingUp, BookOpen, Coins, PieChart, Layers, Construction, X } from "lucide-react";
 
 export default function Relatorios() {
+  const [showBanner, setShowBanner] = useState(true);
+
   return (
     <div className="pt-4 pr-6 pl-0 text-slate-100">
+
+      {/* ================= BALÃO "EM CONSTRUÇÃO" ================= */}
+      {showBanner && (
+        <div className="mb-4 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 shadow-lg">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-xl bg-amber-400/15 p-2 border border-amber-400/20">
+                <Construction className="text-amber-300" size={20} />
+              </div>
+
+              <div className="flex flex-col">
+                <div className="text-sm font-semibold text-amber-200">
+                  Relatórios em construção
+                </div>
+                <div className="text-[12px] text-amber-100/80 mt-0.5">
+                  Estamos preparando gráficos e análises reais para esta área. Por enquanto, você verá apenas o protótipo visual.
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowBanner(false)}
+              className="rounded-lg p-2 hover:bg-white/5 transition"
+              aria-label="Fechar aviso"
+              title="Fechar"
+            >
+              <X size={18} className="text-amber-200/80" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ================= HERO PRINCIPAL ================= */}
       <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 shadow-lg">
