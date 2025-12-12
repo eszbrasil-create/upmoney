@@ -1,4 +1,4 @@
-// src/pages/Landing.jsx → VERSÃO AJUSTADA (bloco imagem subido + botões mais próximos + texto menor)
+// src/pages/Landing.jsx → VERSÃO FINAL PERFEITA (2025)
 import React, { useState } from "react";
 
 const IconWhatsApp = (props) => (
@@ -51,15 +51,15 @@ export default function Landing({ onNavigate }) {
         </div>
       </header>
 
-      {/* HERO AJUSTADA */}
+      {/* HERO FINAL */}
       <section className="relative overflow-hidden bg-gradient-to-b from-white to-amber-50/30">
         <div className="absolute inset-0 bg-grid-slate-900/[0.03] [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            {/* TEXTO */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+            {/* TEXTO + BOTÕES COLADOS */}
             <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-600 text-white px-5 py-2.5 rounded-full text-sm font-bold mb-8 shadow-lg">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-600 text-white px-5 py-2.5 rounded-full text-sm font-bold mb-6 shadow-lg">
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
@@ -69,7 +69,7 @@ export default function Landing({ onNavigate }) {
 
               <h1 className="text-5xl lg:text-6xl font-black tracking-tight text-slate-900 leading-tight">
                 Receba seu <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">primeiro dividendo</span>
-                <br />
+                <br className="hidden lg:block" />
                 em até <span className="text-amber-600">30 dias</span>
               </h1>
 
@@ -82,23 +82,23 @@ export default function Landing({ onNavigate }) {
               </p>
 
               {/* Benefícios */}
-              <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-8">
+              <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div className="text-center">
-                  <div className="text-5xl mb-3">1 to 1</div>
+                  <div className="text-5xl mb-2">1 to 1</div>
                   <p className="font-bold text-lg">Acompanhamento individual</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-5xl mb-3">App</div>
+                  <div className="text-5xl mb-2">App</div>
                   <p className="font-bold text-lg">UpControl grátis para sempre</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-5xl mb-3">Shield</div>
+                  <div className="text-5xl mb-2">Shield</div>
                   <p className="font-bold text-lg">Garantia total de resultado</p>
                 </div>
               </div>
 
-              {/* BOTÕES MAIS PRÓXIMOS DO TEXTO */}
-              <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              {/* BOTÕES COLADÍSSIMOS NO TEXTO */}
+              <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <button
                   onClick={() => setIsModalOpen(true)}
                   className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 px-8 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-amber-500/40 hover:scale-105 transition-all"
@@ -116,13 +116,13 @@ export default function Landing({ onNavigate }) {
                 </button>
               </div>
 
-              <p className="mt-6 text-lg text-slate-600 font-medium">
+              <p className="mt-5 text-lg text-slate-600 font-medium">
                 Avaliação gratuita • 15 minutos • 100% gratuita e sem compromisso
               </p>
             </div>
 
-            {/* IMAGEM SUBIDA (mais próxima do texto) */}
-            <div className="relative lg:-mt-12">
+            {/* IMAGEM SUBIDA E ALINHADA */}
+            <div className="relative lg:-mt-8">
               <div className="absolute -inset-6 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-3xl blur-3xl -z-10" />
 
               <div className="bg-white rounded-3xl shadow-2xl p-6 border border-slate-200">
@@ -160,12 +160,10 @@ export default function Landing({ onNavigate }) {
               <h2 className="text-2xl font-bold text-slate-900">Avaliação Gratuita (15 min)</h2>
               <button onClick={() => setIsModalOpen(false)} className="text-3xl text-slate-400 hover:text-slate-600">&times;</button>
             </div>
-
             <form onSubmit={enviarWhats} className="space-y-5">
               <input type="text" name="nome" value={form.nome} onChange={handleChange} placeholder="Seu nome completo" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 focus:outline-none" />
               <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="seu@email.com" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 focus:outline-none" />
               <input type="tel" name="telefone" value={form.telefone} onChange={handleChange} placeholder="(11) 98765-4321" required className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 focus:outline-none" />
-
               <div className="flex gap-4 pt-4">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 border border-slate-300 rounded-xl font-medium hover:bg-slate-50">
                   Cancelar
