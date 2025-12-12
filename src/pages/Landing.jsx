@@ -1,4 +1,4 @@
-// src/pages/Landing.jsx → VERSÃO FINAL PERFEITA (12/12/2025)
+// src/pages/Landing.jsx → VERSÃO FINAL: ESQUERDA SUBIDA ATÉ O TALO
 import React, { useState } from "react";
 
 const IconWhatsApp = (props) => (
@@ -27,29 +27,22 @@ export default function Landing({ onNavigate }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* HEADER COM ÍCONES TOP */}
+      {/* HEADER */}
       <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <button onClick={() => onNavigate?.("landing")} className="text-2xl font-black text-white">
             UpMoney
           </button>
-
           <nav className="hidden lg:flex items-center gap-10 text-white/80 font-medium">
             <button onClick={() => onNavigate?.("cursos")} className="hover:text-white">Cursos</button>
             <button onClick={() => onNavigate?.("cashcontrol-home")} className="hover:text-white">UpControl</button>
             <button onClick={() => onNavigate?.("saida-fiscal")} className="hover:text-white">Saída Fiscal</button>
             <button onClick={() => onNavigate?.("invista-exterior")} className="hover:text-white">Invista no Exterior</button>
           </nav>
-
           <div className="flex items-center gap-5">
-            <button
-              onClick={() => onNavigate?.("login")}
-              className="bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-900 px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition hidden sm:block"
-            >
+            <button onClick={() => onNavigate?.("login")} className="bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-900 px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition hidden sm:block">
               Meu Plano
             </button>
-
-            {/* ÍCONES SOCIAIS GRANDES E BONITOS */}
             <a href="https://youtube.com/@upmoney" target="_blank" className="group">
               <div className="w-11 h-11 bg-red-600 rounded-full flex items-center justify-center hover:scale-110 transition">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -57,7 +50,6 @@ export default function Landing({ onNavigate }) {
                 </svg>
               </div>
             </a>
-
             <a href="https://instagram.com/upmoneybr" target="_blank" className="group">
               <div className="w-11 h-11 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center hover:scale-110 transition">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -69,13 +61,12 @@ export default function Landing({ onNavigate }) {
         </div>
       </header>
 
-      {/* HERO FINAL COM AJUSTES QUE VOCÊ PEDIU */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white to-amber-50/30 py-12 lg:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* HERO COM BLOCO ESQUERDA SUBIDO ATÉ O TALO */}
+      <section className="relative bg-gradient-to-b from-white to-amber-50/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-4 pb-16">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
-            {/* TEXTO + BOTÕES (SUBIU O BLOCO TODO) */}
-            <div className="text-center lg:text-left lg:mt-12">
-              {/* BADGE BRABO */}
+            {/* BLOCO ESQUERDO SUBIDO QUASE NO HEADER */}
+            <div className="text-center lg:text-left lg:-mt-20">
               <div className="inline-flex items-center gap-3 bg-red-600 text-white px-6 py-3 rounded-full text-base font-black uppercase tracking-wider mb-6 shadow-2xl shadow-red-600/50 animate-pulse">
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
@@ -98,7 +89,6 @@ export default function Landing({ onNavigate }) {
                 Resultado garantido ou devolvo cada centavo.
               </p>
 
-              {/* BOTÕES COLADOS */}
               <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <button
                   onClick={() => setIsModalOpen(true)}
@@ -117,7 +107,6 @@ export default function Landing({ onNavigate }) {
                 </button>
               </div>
 
-              {/* BOTÃO VERDE EXTRA */}
               <div className="mt-6">
                 <button
                   onClick={() => setIsModalOpen(true)}
@@ -132,12 +121,11 @@ export default function Landing({ onNavigate }) {
               </div>
             </div>
 
-            {/* IMAGEM DESCIDA UM POUCO */}
-            <div className="relative lg:mt-16">
+            {/* IMAGEM DESCIDA E AJUSTADA */}
+            <div className="relative lg:mt-8">
               <div className="absolute -inset-6 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-3xl blur-3xl -z-10" />
               <div className="bg-white rounded-3xl shadow-2xl p-6 border border-slate-200">
                 <div className="flex items-center gap-4 mb-6">
-                  {/* U CONSERTADO E CENTRALIZADO */}
                   <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center text-white text-5xl font-black shadow-2xl">
                     U
                   </div>
@@ -157,7 +145,7 @@ export default function Landing({ onNavigate }) {
         </div>
       </section>
 
-      {/* MODAL (igual antes) */}
+      {/* MODAL E FOOTER (mantidos) */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
@@ -178,7 +166,6 @@ export default function Landing({ onNavigate }) {
         </div>
       )}
 
-      {/* FOOTER */}
       <footer className="bg-slate-900 text-white/60 py-12 mt-20">
         <div className="max-w-7xl mx-auto px-6 text-center text-sm">
           UpMoney © 2025 — O seu primeiro dividendo começa aqui.
