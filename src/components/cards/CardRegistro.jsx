@@ -101,7 +101,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
       {/* Área principal: tabela rolável + TOTAL fixo */}
       <div className="relative h-[310px] rounded-2xl border border-white/10 bg-slate-900/40">
         {/* Miolo rolável (fica ATRÁS da barra de TOTAL) */}
-        <div className="absolute inset-0 overflow-auto z-10">
+        <div className="absolute inset-x-0 top-0 bottom-10 overflow-auto z-10">
           <table className="min-w-max w-full border-separate border-spacing-0">
             {/* Cabeçalho */}
             <thead className="sticky top-0 z-20 bg-slate-800/90 backdrop-blur">
