@@ -343,7 +343,7 @@ export default function DespesasPage() {
 
   const SectionDivider = ({ label, variant }) => (
     <tr>
-      <td colSpan={MESES.length + 4} className="py-2">
+      <td colSpan={MESES.length + 4} className="py-0">
         <div className="flex items-center gap-3">
           <div className="h-0.5 w-full bg-slate-700" />
           <span
