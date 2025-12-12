@@ -1,7 +1,6 @@
 // src/pages/Relatorios.jsx
-// Relatórios 2.0 — Protótipo inicial lúdico, visual e moderno
-// Tela BLOQUEADA (em construção) + botão "Voltar para o Dashboard"
-// ✅ Navegação robusta (HashRouter e BrowserRouter) SEM react-router-dom
+// Relatórios 2.0 — Tela BLOQUEADA (em construção)
+// ✅ Retorno ao Dashboard FUNCIONANDO via <a href>
 
 import React from "react";
 import {
@@ -14,48 +13,13 @@ import {
 } from "lucide-react";
 
 export default function Relatorios() {
-  const goToDash = () => {
-    const targetPath = "/dash";
-    const targetHash = "#/dash";
-
-    try {
-      // 1) Tenta HashRouter (não recarrega)
-      //    Se o app estiver usando hash, isso funciona direto.
-      window.location.hash = targetHash;
-      window.dispatchEvent(new HashChangeEvent("hashchange"));
-
-      // 2) Tenta History API (não recarrega)
-      //    Muitos apps escutam pushstate/locationchange além de popstate.
-      if (window.location.pathname !== targetPath) {
-        window.history.pushState({}, "", targetPath);
-      }
-
-      window.dispatchEvent(new Event("pushstate"));
-      window.dispatchEvent(new Event("locationchange"));
-      window.dispatchEvent(new PopStateEvent("popstate"));
-
-      // 3) Se nada reagir, faz fallback com reload (último recurso)
-      //    (Coloco um pequeno delay para dar tempo do SPA reagir sem reload.)
-      setTimeout(() => {
-        // Se ainda não estiver no /dash (ou hash /#/dash), força navegação
-        const inDashPath = window.location.pathname === targetPath;
-        const inDashHash = window.location.hash === targetHash;
-
-        if (!inDashPath && !inDashHash) {
-          window.location.assign(targetPath);
-        }
-      }, 80);
-    } catch {
-      // fallback final
-      window.location.assign(targetPath);
-    }
-  };
-
   return (
     <div className="relative min-h-screen text-slate-100 overflow-hidden">
+
       {/* ================= OVERLAY BLOQUEADOR ================= */}
       <div className="fixed inset-0 z-[9999] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center">
         <div className="max-w-md mx-4 rounded-2xl border border-amber-400/30 bg-slate-900/90 p-6 shadow-2xl text-center">
+
           <div className="flex justify-center mb-4">
             <div className="rounded-full bg-amber-400/15 p-4 border border-amber-400/30">
               <Construction className="text-amber-300" size={32} />
@@ -75,10 +39,9 @@ export default function Relatorios() {
             Por enquanto, esta seção está disponível apenas para visualização.
           </p>
 
-          {/* ✅ VOLTA PARA O DASH (robusto) */}
-          <button
-            type="button"
-            onClick={goToDash}
+          {/* ✅ BOTÃO REAL, IGUAL AO MENU */}
+          <a
+            href="#/dash"
             className="
               mt-5 inline-flex items-center justify-center
               rounded-xl px-4 py-2
@@ -88,60 +51,26 @@ export default function Relatorios() {
             "
           >
             Voltar para o Dashboard
-          </button>
+          </a>
+
         </div>
       </div>
 
-      {/* ================= CONTEÚDO NORMAL (VISÍVEL, MAS BLOQUEADO) ================= */}
+      {/* ================= CONTEÚDO VISUAL (BLOQUEADO) ================= */}
       <div className="pt-4 pr-6 pl-0">
-        {/* ================= HERO PRINCIPAL ================= */}
+
         <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 shadow-lg">
-          <div className="absolute inset-0 opacity-20 bg-[url('/hero-pattern.png')] bg-cover" />
-          <h1 className="relative text-2xl font-bold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight">
             Sua Jornada Financeira
           </h1>
-          <p className="relative mt-1 text-sm text-white/90">
-            Um resumo claro, bonito e motivador da sua evolução.
-          </p>
 
-          <div className="relative mt-5 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-4">
             <HeroCard label="Patrimônio Atual" value="R$ 0,00" icon={TrendingUp} />
             <HeroCard label="Evolução Total" value="+0%" icon={PieChart} />
             <HeroCard label="Nível da Jornada" value="Iniciante" icon={Layers} />
             <HeroCard label="Meses Consistentes" value="0" icon={BookOpen} />
           </div>
         </section>
-
-        {/* ================= SEÇÕES ================= */}
-        <div className="mt-6 space-y-6">
-          <SectionCard title="Despesas & Receitas do Mês" icon={Coins}>
-            <p className="text-slate-400 text-sm">
-              Em breve, gráficos e análises reais baseados nos seus registros.
-            </p>
-            <PlaceholderGraph />
-          </SectionCard>
-
-          <SectionCard title="Seu progresso nos Cursos" icon={BookOpen}>
-            <p className="text-slate-400 text-sm">
-              Acompanhe seu avanço no aprendizado e veja o impacto no seu patrimônio.
-            </p>
-            <PlaceholderBar />
-          </SectionCard>
-
-          <SectionCard title="Dividendos Recebidos" icon={Coins}>
-            <p className="text-slate-400 text-sm">
-              Aqui você vai ver seus dividendos mensais e totais do ano.
-            </p>
-            <PlaceholderGraph />
-          </SectionCard>
-
-          <SectionCard title="Distribuição da Carteira" icon={PieChart}>
-            <p className="text-slate-400 text-sm">
-              Visual moderno da sua carteira — Ações, FIIs, Cripto, Caixa e mais.
-            </p>
-            <PlaceholderPie />
-          </SectionCard>
-        </div>
       </div>
     </div>
   );
@@ -157,46 +86,6 @@ function HeroCard({ label, value, icon: Icon }) {
       </div>
       <span className="text-xs text-white/80">{label}</span>
       <span className="text-lg font-bold">{value}</span>
-    </div>
-  );
-}
-
-function SectionCard({ title, icon: Icon, children }) {
-  return (
-    <section className="rounded-xl bg-slate-900/60 border border-slate-700/50 p-5 shadow-md">
-      <div className="flex items-center gap-2 mb-3">
-        <Icon size={18} className="text-emerald-400" />
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-emerald-300">
-          {title}
-        </h2>
-      </div>
-      {children}
-    </section>
-  );
-}
-
-/* ================= PLACEHOLDERS ================= */
-
-function PlaceholderGraph() {
-  return (
-    <div className="mt-3 h-32 rounded-xl bg-slate-800/60 border border-slate-700/40 flex items-center justify-center text-xs text-slate-500">
-      Gráfico virá aqui
-    </div>
-  );
-}
-
-function PlaceholderBar() {
-  return (
-    <div className="mt-3 h-24 rounded-xl bg-slate-800/60 border border-slate-700/40 flex items-center justify-center text-xs text-slate-500">
-      Barra de progresso virá aqui
-    </div>
-  );
-}
-
-function PlaceholderPie() {
-  return (
-    <div className="mt-3 h-40 rounded-xl bg-slate-800/60 border border-slate-700/40 flex items-center justify-center text-xs text-slate-500">
-      Gráfico de pizza virá aqui
     </div>
   );
 }
