@@ -7,44 +7,33 @@ import React, {
   useLayoutEffect,
 } from "react";
 
-const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-const LS_KEY_CARTEIRA = "cc_carteira_cash_v1";
+import { supabase } from "../../lib/supabaseClient";
+import { useDyBase } from "../../utils/dyBase";
+import { mergeDyBaseIntoCarteira } from "../../utils/mergeDyBase";
 
-function normalizeMesAno(str) {
-  if (!str || !str.includes("/")) return str;
+const PT_MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
-  let [mes, ano] = str.split("/").map(s => s.trim());
+// ✅ 12 meses fixos começando em Dez/2025 (Dez/2025 → Nov/2026)
+const DY_MONTHS_12 = (() => {
+  const result = [];
+  let year = 2025;
+  let month = 11; // Dez
 
-  if (/^\d+$/.test(mes)) {
-    const idx = Number(mes) - 1;
-    if (idx >= 0 && idx < 12) mes = MESES[idx];
-  } else {
-    mes = mes.charAt(0).toUpperCase() + mes.slice(1,3).toLowerCase();
-    const found = MESES.find(m => m.toLowerCase() === mes.toLowerCase());
-    if (found) mes = found;
+  for (let i = 0; i < 12; i++) {
+    result.push({
+      label: `${PT_MESES[month]} ${year}`,
+      month,
+      year,
+    });
+
+    month++;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
   }
-
-  if (/^\d{2}$/.test(ano)) ano = `20${ano}`;
-  return `${mes}/${ano}`;
-}
-
-function Tooltip({ x, y, mes, ano, valor }) {
-  return (
-    <div className="fixed z-50 pointer-events-none" style={{ left: x, top: y }}>
-      <div className="rounded-xl bg-slate-950/95 border border-white/10 px-3 py-2 shadow-2xl">
-        <div className="text-[11px] text-slate-300 font-medium">
-          {mes}/{ano}
-        </div>
-        <div className="text-sm text-slate-100 font-semibold">
-          {valor.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
+  return result;
+})();
 
 function toNum(x) {
   if (x === "" || x === null || x === undefined) return 0;
@@ -52,46 +41,151 @@ function toNum(x) {
   return Number.isFinite(n) ? n : 0;
 }
 
-export default function CardDividendosCash({ columns = [] }) {
-  const normalizedColumns = useMemo(
-    () => columns.map(normalizeMesAno),
-    [columns]
+function Tooltip({ x, y, label, valor }) {
+  return (
+    <div className="fixed z-50 pointer-events-none" style={{ left: x, top: y }}>
+      <div className="rounded-xl bg-slate-950/95 border border-white/10 px-3 py-2 shadow-2xl">
+        <div className="text-[11px] text-slate-300 font-medium">{label}</div>
+        <div className="text-sm text-slate-100 font-semibold">
+          {valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+        </div>
+      </div>
+    </div>
   );
+}
 
-  // ✅ pega um ano "base" só pra mostrar no label (o mais recente disponível)
-  const anoMaisRecente = useMemo(() => {
-    const anos = normalizedColumns
-      .map(c => c.split("/")[1])
-      .filter(Boolean)
-      .map(a => parseInt(a, 10))
-      .filter(n => Number.isFinite(n));
-    if (!anos.length) return "";
-    return String(Math.max(...anos));
-  }, [normalizedColumns]);
+export default function CardDividendosCash() {
+  // 🔗 DY base (GitHub)
+  const { dyBase, dyBaseLoading } = useDyBase();
 
-  // ✅ força a ordem Jan → Dez SEMPRE
-  const fixedColumns = useMemo(() => {
-    return MESES.map(m => `${m}/${anoMaisRecente || ""}`.replace(/\/$/, ""));
-  }, [anoMaisRecente]);
+  // 👤 user
+  const [user, setUser] = useState(null);
 
-  const carteira = useMemo(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY_CARTEIRA);
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
+  // 📦 carteira (agregada) para o merge com DY base
+  const [carteira, setCarteira] = useState([]);
+
+  // ============================
+  // 1) Pega usuário logado
+  // ============================
+  useEffect(() => {
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      setUser(data?.user || null);
     }
+    loadUser();
   }, []);
 
-  // ✅ soma DY mensal total por mês (Jan..Dez)
+  // ============================
+  // 2) Carrega wallet_items (Supabase) e agrega por ticker+tipo
+  // ============================
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+
+    async function loadCarteiraFromSupabase() {
+      const { data, error } = await supabase
+        .from("wallet_items")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (cancelled) return;
+
+      if (error) {
+        console.error("Erro ao carregar wallet_items:", error);
+        setCarteira([]);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        setCarteira([]);
+        return;
+      }
+
+      const grupos = new Map(); // key = `${ticker}__${tipo}`
+
+      data.forEach((row) => {
+        const ticker = (row.ticker || "").toUpperCase();
+        if (!ticker) return;
+
+        const tipo = row.tipo || "ACOES";
+        const key = `${ticker}__${tipo}`;
+
+        const qtd = toNum(row.qtd);
+        const preco = toNum(row.price ?? row.preco);
+        const valor = qtd * preco;
+        const dataEntrada = row.data_entrada || "";
+
+        const atual = grupos.get(key) || {
+          ticker,
+          tipo,
+          somaQtd: 0,
+          somaValor: 0,
+          dataEntradaMaisAntiga: dataEntrada || "",
+        };
+
+        atual.somaQtd += qtd;
+        atual.somaValor += valor;
+
+        if (!atual.dataEntradaMaisAntiga) {
+          atual.dataEntradaMaisAntiga = dataEntrada;
+        } else if (dataEntrada && dataEntrada < atual.dataEntradaMaisAntiga) {
+          atual.dataEntradaMaisAntiga = dataEntrada;
+        }
+
+        grupos.set(key, atual);
+      });
+
+      const linhas = Array.from(grupos.values()).map((g, idx) => {
+        const precoMedio = g.somaQtd > 0 ? g.somaValor / g.somaQtd : 0;
+
+        return {
+          id: idx + 1,
+          ticker: g.ticker,
+          tipo: g.tipo,
+          nome: "",
+          dataEntrada: g.dataEntradaMaisAntiga || "",
+          qtd: g.somaQtd ? String(g.somaQtd) : "",
+          entrada: precoMedio ? String(precoMedio.toFixed(2)) : "",
+          valorAtual: precoMedio ? String(precoMedio.toFixed(2)) : "",
+          // ✅ dyMeses vai ser preenchido pelo merge com DY base
+          dyMeses: Array(DY_MONTHS_12.length).fill(""),
+          dy: "",
+        };
+      });
+
+      setCarteira(linhas);
+    }
+
+    loadCarteiraFromSupabase();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  // ============================
+  // 3) Merge DY base (GitHub) na carteira
+  // ============================
+  const carteiraComDy = useMemo(() => {
+    return mergeDyBaseIntoCarteira(carteira, dyBase, DY_MONTHS_12);
+  }, [carteira, dyBase]);
+
+  // ============================
+  // 4) Soma DY mensal total (12 meses fixos Dez/2025 → Nov/2026)
+  // ============================
   const totals = useMemo(() => {
-    return MESES.map((mesStr, idxMes) => {
-      return carteira.reduce((acc, r) => {
-        const arr = Array.isArray(r.dyMeses) ? r.dyMeses : [];
-        return acc + toNum(arr[idxMes]);
-      }, 0);
+    const dyMesTotal = Array(DY_MONTHS_12.length).fill(0);
+
+    carteiraComDy.forEach((r) => {
+      const arrMeses = Array.isArray(r.dyMeses) ? r.dyMeses : [];
+      for (let i = 0; i < DY_MONTHS_12.length; i++) {
+        dyMesTotal[i] += toNum(arrMeses[i]);
+      }
     });
-  }, [carteira]);
+
+    return dyMesTotal;
+  }, [carteiraComDy]);
 
   const max = Math.max(1, ...totals);
 
@@ -113,11 +207,9 @@ export default function CardDividendosCash({ columns = [] }) {
 
     const compute = () => {
       const h = el.clientHeight || 0;
-
-      const reservedForLabels = 52; // espaço dos textos embaixo
-      const topGap = 10;            // ✅ espacinho no topo pra barra não encostar
+      const reservedForLabels = 52;
+      const topGap = 10;
       const usable = Math.max(80, h - reservedForLabels - topGap);
-
       setBarMaxHeight(usable);
     };
 
@@ -128,6 +220,8 @@ export default function CardDividendosCash({ columns = [] }) {
 
     return () => ro.disconnect();
   }, []);
+
+  const isEmpty = totals.every((v) => (v || 0) === 0);
 
   return (
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] h-[360px] overflow-hidden shrink-0 flex flex-col">
@@ -140,73 +234,75 @@ export default function CardDividendosCash({ columns = [] }) {
         </span>
       </div>
 
-      {/* ✅ pt-2 cria um respiro visual extra no topo da área */}
       <div
         ref={chartRef}
-        className="flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/80 p-3 pt-2 overflow-x-auto overflow-y-hidden"
+        className="flex-1 min-h-0 rounded-2xl border border-white/10 bg-slate-900/80 p-3 pt-2 overflow-x-hidden overflow-y-hidden"
       >
-        <div className="flex items-end gap-1 min-w-max h-full">
-          {totals.map((valor, i) => {
-            const alturaReal = Math.max(
-              4,
-              Math.round((valor / max) * barMaxHeight)
-            );
-            const altura = animate ? alturaReal : 4;
+        {dyBaseLoading ? (
+          <div className="h-full flex items-center justify-center text-slate-300 text-sm">
+            Carregando base de dividendos…
+          </div>
+        ) : isEmpty ? (
+          <div className="h-full flex items-center justify-center text-slate-400 text-sm text-center px-4">
+            Sem dados de dividendos para o período (Dez/2025 → Nov/2026).
+          </div>
+        ) : (
+          <div className="flex items-end gap-1 h-full">
+            {totals.map((valor, i) => {
+              const alturaReal = Math.max(
+                4,
+                Math.round((valor / max) * barMaxHeight)
+              );
+              const altura = animate ? alturaReal : 4;
 
-            const [mes, ano] = fixedColumns[i].split("/");
+              const label = DY_MONTHS_12[i].label; // "Dez 2025"
+              const [mesTxt, anoTxt] = label.split(" ");
 
-            return (
-              <div key={i} className="flex flex-col items-center gap-2 w-10">
-                <div
-                  className="w-full rounded-xl bg-emerald-400/80 hover:bg-emerald-300 transition-all duration-700 ease-out"
-                  style={{ height: `${altura}px` }}
-                  onMouseEnter={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    setTip({
-                      x: rect.left + rect.width / 2,
-                      y: rect.top - 8,
-                      mes,
-                      ano: ano || anoMaisRecente || "",
-                      valor,
-                    });
-                  }}
-                  onMouseMove={(e) => {
-                    setTip((prev) =>
-                      prev
-                        ? { ...prev, x: e.clientX, y: e.clientY - 12 }
-                        : prev
-                    );
-                  }}
-                  onMouseLeave={() => setTip(null)}
-                />
+              return (
+                <div key={label} className="flex flex-col items-center gap-2 w-10">
+                  <div
+                    className="w-full rounded-xl bg-emerald-400/80 hover:bg-emerald-300 transition-all duration-700 ease-out"
+                    style={{ height: `${altura}px` }}
+                    onMouseEnter={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setTip({
+                        x: rect.left + rect.width / 2,
+                        y: rect.top - 8,
+                        label,
+                        valor,
+                      });
+                    }}
+                    onMouseMove={(e) => {
+                      setTip((prev) =>
+                        prev ? { ...prev, x: e.clientX, y: e.clientY - 12 } : prev
+                      );
+                    }}
+                    onMouseLeave={() => setTip(null)}
+                  />
 
-                <div
-                  className="text-[13px] text-slate-200 text-center leading-tight whitespace-nowrap font-medium"
-                  style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
-                >
-                  {mes}
-                  <br />
-                  <span
-                    className="text-[12px] opacity-70 font-normal text-slate-300"
+                  {/* ✅ Sempre mês em cima e ano embaixo (fixo do período) */}
+                  <div
+                    className="text-[13px] text-slate-200 text-center leading-tight whitespace-nowrap font-medium"
                     style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
                   >
-                    {anoMaisRecente || ""}
-                  </span>
+                    {mesTxt}
+                    <br />
+                    <span
+                      className="text-[12px] opacity-70 font-normal text-slate-300"
+                      style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
+                    >
+                      {anoTxt}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {tip && (
-        <Tooltip
-          x={tip.x}
-          y={tip.y}
-          mes={tip.mes}
-          ano={tip.ano}
-          valor={tip.valor}
-        />
+        <Tooltip x={tip.x} y={tip.y} label={tip.label} valor={tip.valor} />
       )}
     </div>
   );
