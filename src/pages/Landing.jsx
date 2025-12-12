@@ -1,4 +1,4 @@
-// src/pages/Landing.jsx → VERSÃO FINAL: ESQUERDA SUBIDA ATÉ O TALO
+// src/pages/Landing.jsx → VERSÃO FINAL PERFEITA COM BADGE VERMELHO CONSERTADO
 import React, { useState } from "react";
 
 const IconWhatsApp = (props) => (
@@ -61,20 +61,23 @@ export default function Landing({ onNavigate }) {
         </div>
       </header>
 
-      {/* HERO COM BLOCO ESQUERDA SUBIDO ATÉ O TALO */}
-      <section className="relative bg-gradient-to-b from-white to-amber-50/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-4 pb-16">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
-            {/* BLOCO ESQUERDO SUBIDO QUASE NO HEADER */}
-            <div className="text-center lg:text-left lg:-mt-20">
-              <div className="inline-flex items-center gap-3 bg-red-600 text-white px-6 py-3 rounded-full text-base font-black uppercase tracking-wider mb-6 shadow-2xl shadow-red-600/50 animate-pulse">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-                </span>
-                Vagas limitadas para 1 turma. Depois só em 2026. Aproveite agora!
-              </div>
+      {/* HERO FINAL COM BADGE VERMELHO CONSERTADO */}
+      <section className="relative bg-gradient-to-b from-white to-amber-50/30 pt-20 pb-16">
+        {/* BADGE VERMELHO PEQUENO E ELEGANT */}
+        <div className="absolute top-20 left-4 lg:left-1/2 lg:-translate-x-1/2 z-40">
+          <div className="bg-red-600 text-white px-5 py-2.5 rounded-full text-sm font-black uppercase tracking-wider shadow-2xl shadow-red-600/60 animate-pulse flex items-center gap-2">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+            </span>
+            Vagas limitadas para 1 turma. Depois só em 2026. Aproveite agora!
+          </div>
+        </div>
 
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+            {/* BLOCO ESQUERDO SUBIDO */}
+            <div className="text-center lg:text-left lg:-mt-12">
               <h1 className="text-5xl lg:text-6xl font-black tracking-tight text-slate-900 leading-tight">
                 Receba seu <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">primeiro dividendo</span>
                 <br className="hidden lg:block" />
@@ -121,7 +124,7 @@ export default function Landing({ onNavigate }) {
               </div>
             </div>
 
-            {/* IMAGEM DESCIDA E AJUSTADA */}
+            {/* IMAGEM */}
             <div className="relative lg:mt-8">
               <div className="absolute -inset-6 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-3xl blur-3xl -z-10" />
               <div className="bg-white rounded-3xl shadow-2xl p-6 border border-slate-200">
@@ -145,7 +148,7 @@ export default function Landing({ onNavigate }) {
         </div>
       </section>
 
-      {/* MODAL E FOOTER (mantidos) */}
+      {/* MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
@@ -166,6 +169,7 @@ export default function Landing({ onNavigate }) {
         </div>
       )}
 
+      {/* FOOTER */}
       <footer className="bg-slate-900 text-white/60 py-12 mt-20">
         <div className="max-w-7xl mx-auto px-6 text-center text-sm">
           UpMoney © 2025 — O seu primeiro dividendo começa aqui.
