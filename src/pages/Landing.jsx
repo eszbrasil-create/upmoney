@@ -1,4 +1,4 @@
-// src/pages/Landing.jsx → VERSÃO FINAL + BOTÃO EXTRA BRABO
+// src/pages/Landing.jsx → VERSÃO FINAL PERFEITA (12/12/2025)
 import React, { useState } from "react";
 
 const IconWhatsApp = (props) => (
@@ -27,33 +27,54 @@ export default function Landing({ onNavigate }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* HEADER */}
+      {/* HEADER COM ÍCONES TOP */}
       <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between flex">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <button onClick={() => onNavigate?.("landing")} className="text-2xl font-black text-white">
             UpMoney
           </button>
+
           <nav className="hidden lg:flex items-center gap-10 text-white/80 font-medium">
             <button onClick={() => onNavigate?.("cursos")} className="hover:text-white">Cursos</button>
             <button onClick={() => onNavigate?.("cashcontrol-home")} className="hover:text-white">UpControl</button>
             <button onClick={() => onNavigate?.("saida-fiscal")} className="hover:text-white">Saída Fiscal</button>
             <button onClick={() => onNavigate?.("invista-exterior")} className="hover:text-white">Invista no Exterior</button>
           </nav>
-          <button
-            onClick={() => onNavigate?.("login")}
-            className="bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-900 px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition"
-          >
-            Meu Plano
-          </button>
+
+          <div className="flex items-center gap-5">
+            <button
+              onClick={() => onNavigate?.("login")}
+              className="bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-900 px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition hidden sm:block"
+            >
+              Meu Plano
+            </button>
+
+            {/* ÍCONES SOCIAIS GRANDES E BONITOS */}
+            <a href="https://youtube.com/@upmoney" target="_blank" className="group">
+              <div className="w-11 h-11 bg-red-600 rounded-full flex items-center justify-center hover:scale-110 transition">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.5 6.19a3.03 3.03 0 0-2.13-2.13C19.6 3.5 12 3.5 12 3.5s-7.6 0-9.37.56A3.03 3.03 0 0 0 .5 6.19 31.5 31.5 0 0 0 0 12c0 1.94.18 3.87.5 5.81.28 1.01 1.11 1.8 2.13 2.08C4.4 20.5 12 20.5 12 20.5s7.6 0 9.37-.56a3.03 3.03 0 0 0 2.13-2.13c.32-1.93.5-3.86.5-5.81 0-1.94-.18-3.87-.5-5.81ZM9.75 15.5v-7l6 3.5-6 3.5Z"/>
+                </svg>
+              </div>
+            </a>
+
+            <a href="https://instagram.com/upmoneybr" target="_blank" className="group">
+              <div className="w-11 h-11 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center hover:scale-110 transition">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.24.42.56.22.96.49 1.38.9.41.41.67.82.9 1.38.17.43.37 1.07.42 2.24.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.42 2.24a3.6 3.6 0 0 1-.9 1.38 3.6 3.6 0 0 1-1.38.9c-.43.17-1.07.37-2.24.42-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.24-.42a3.6 3.6 0 0 1-1.38-.9 3.6 3.6 0 0 1-.9-1.38c-.17-.43-.37-1.07-.42-2.24C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.42-2.24.22-.56.49-.96.9-1.38.41-.41.82-.67 1.38-.9.43-.17 1.07-.37 2.24-.42C8.42 2.17 8.8 2.16 12 2.16Zm0 3.4c-3.16 0-3.53.01-4.77.07-.98.05-1.52.21-1.87.35-.47.18-.8.4-1.15.75-.35.35-.57.68-.75 1.15-.14.35-.3.89-.35 1.87-.06 1.24-.07 1.61-.07 4.77s.01 3.53.07 4.77c.05.98.21 1.52.35 1.87.18.47.4.8.75 1.15.35.35.68.57 1.15.75.35.14.89.3 1.87.35 1.24.06 1.61.07 4.77.07s3.53-.01 4.77-.07c.98-.05 1.52-.21 1.87-.35.47-.18.8-.4 1.15-1.15.35-.35.57-.68.75-1.15.14-.35.3-.89.35-1.87.06-1.24.07-1.61.07-4.77s-.01-3.53-.07-4.77c-.05-.98.21-1.52.35-1.87a2.62 2.62 0 0 0-.75-1.15c-.35-.35-.68-.57-1.15-.75-.35-.14-.89-.3-1.87-.35-1.24-.06-1.61-.07-4.77-.07Zm0 2.7a4.64 4.64 0 1 1 0 9.28 4.64 4.64 0 0 1 0-9.28Zm0 1.8a2.84 2.84 0 1 0 0 5.68 2.84 2.84 0 0 0 0-5.68Zm5.93-2.18a1.09 1.09 0 1 1 0 2.18 1.09 1.09 0 0 1 0-2.18Z"/>
+                </svg>
+              </div>
+            </a>
+          </div>
         </div>
       </header>
 
-      {/* HERO FINAL */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white to-amber-50/30 py-12 lg:py-16">
+      {/* HERO FINAL COM AJUSTES QUE VOCÊ PEDIU */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-white to-amber-50/30 py-12 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-            {/* TEXTO */}
-            <div className="text-center lg:text-left">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+            {/* TEXTO + BOTÕES (SUBIU O BLOCO TODO) */}
+            <div className="text-center lg:text-left lg:mt-12">
               {/* BADGE BRABO */}
               <div className="inline-flex items-center gap-3 bg-red-600 text-white px-6 py-3 rounded-full text-base font-black uppercase tracking-wider mb-6 shadow-2xl shadow-red-600/50 animate-pulse">
                 <span className="relative flex h-3 w-3">
@@ -77,8 +98,8 @@ export default function Landing({ onNavigate }) {
                 Resultado garantido ou devolvo cada centavo.
               </p>
 
-              {/* BOTÕES PRINCIPAIS COLADOS */}
-              <div className="mt-5 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              {/* BOTÕES COLADOS */}
+              <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <button
                   onClick={() => setIsModalOpen(true)}
                   className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 px-10 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-amber-500/50 hover:scale-105 transition-all duration-300"
@@ -96,8 +117,8 @@ export default function Landing({ onNavigate }) {
                 </button>
               </div>
 
-              {/* BOTÃO EXTRA QUE VOCÊ PEDIU – FICA LINDO! */}
-              <div className="mt-5">
+              {/* BOTÃO VERDE EXTRA */}
+              <div className="mt-6">
                 <button
                   onClick={() => setIsModalOpen(true)}
                   className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-300"
@@ -111,12 +132,13 @@ export default function Landing({ onNavigate }) {
               </div>
             </div>
 
-            {/* IMAGEM */}
-            <div className="relative lg:-mt-10">
+            {/* IMAGEM DESCIDA UM POUCO */}
+            <div className="relative lg:mt-16">
               <div className="absolute -inset-6 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-3xl blur-3xl -z-10" />
               <div className="bg-white rounded-3xl shadow-2xl p-6 border border-slate-200">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center text-white text-4xl font-black shadow-xl">
+                  {/* U CONSERTADO E CENTRALIZADO */}
+                  <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center text-white text-5xl font-black shadow-2xl">
                     U
                   </div>
                   <div>
