@@ -3,20 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Trash2, Download, Eraser } from "lucide-react";
 import { exportRelatorioPDF } from "../utils/exportRelatorioPDF";
 
-const MESES = [
-  "Jan",
-  "Fev",
-  "Mar",
-  "Abr",
-  "Mai",
-  "Jun",
-  "Jul",
-  "Ago",
-  "Set",
-  "Out",
-  "Nov",
-  "Dez",
-];
+const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const ANOS = [2025, 2026];
 
 const CATEGORIAS = {
@@ -53,7 +40,7 @@ const uid = () => {
 function novaLinha(tipo = "DESPESA") {
   return {
     id: uid(),
-    tipo, // "RECEITA" | "DESPESA"
+    tipo,
     descricao: "",
     categoria: "",
     valores: Array(12).fill(""),
@@ -67,11 +54,6 @@ const initialAno = (() => {
   return ANOS.includes(atual) ? atual : ANOS[0];
 })();
 
-const initialMes = (() => {
-  const m = new Date().getMonth(); // 0..11
-  return Math.min(11, Math.max(0, m));
-})();
-
 function normalizarLinhas(raw) {
   try {
     const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
@@ -81,9 +63,7 @@ function normalizarLinhas(raw) {
       tipo: l.tipo === "RECEITA" ? "RECEITA" : "DESPESA",
       descricao: l.descricao ?? "",
       categoria: l.categoria ?? "",
-      valores: Array(12)
-        .fill("")
-        .map((_, i) => (l.valores?.[i] ?? "")),
+      valores: Array(12).fill("").map((_, i) => (l.valores?.[i] ?? "")),
     }));
   } catch {
     return [];
@@ -97,20 +77,15 @@ function parseBRNumber(input) {
   let s = String(input).trim();
   if (!s) return 0;
 
-  // remove espaços e símbolos básicos
   s = s.replace(/\s+/g, "").replace(/[R$\u00A0]/g, "");
 
-  // se tiver vírgula, assume decimal BR
   if (s.includes(",")) {
-    // remove separadores de milhar "."
     s = s.replace(/\./g, "");
-    // troca vírgula por ponto decimal
     s = s.replace(/,/g, ".");
     const n = Number(s);
     return Number.isFinite(n) ? n : 0;
   }
 
-  // sem vírgula: pode ser "1200", "1200.50" ou "1.200"
   const dots = (s.match(/\./g) || []).length;
   if (dots >= 2) {
     const n = Number(s.replace(/\./g, ""));
@@ -119,12 +94,10 @@ function parseBRNumber(input) {
 
   if (dots === 1) {
     const [a, b] = s.split(".");
-    // se b tem exatamente 3 dígitos e a não é vazio => provável milhar: "1.200"
     if (/^\d{3}$/.test(b) && a && /^\d+$/.test(a)) {
       const n = Number(a + b);
       return Number.isFinite(n) ? n : 0;
     }
-    // caso contrário trata como decimal: "1200.50"
     const n = Number(s);
     return Number.isFinite(n) ? n : 0;
   }
@@ -136,13 +109,8 @@ function parseBRNumber(input) {
 const toInt = (x) => Math.round(parseBRNumber(x));
 
 export default function DespesasPage() {
-  // ===== Ano selecionado =====
   const [anoSelecionado, setAnoSelecionado] = useState(initialAno);
 
-  // ===== Mês selecionado (NOVO) =====
-  const [mesSelecionado, setMesSelecionado] = useState(initialMes);
-
-  // ===== Linhas =====
   const [linhas, setLinhas] = useState(() => {
     try {
       const raw = localStorage.getItem(lsKeyForAno(initialAno));
@@ -152,11 +120,9 @@ export default function DespesasPage() {
     }
   });
 
-  // Hint de replicar (duplo clique)
   const [showReplicarHint, setShowReplicarHint] = useState(false);
   const hintTimerRef = useRef(null);
 
-  // Trocar ano
   const trocarAno = (ano) => {
     setAnoSelecionado(ano);
     try {
@@ -167,7 +133,6 @@ export default function DespesasPage() {
     }
   };
 
-  // ===== Salvar com debounce =====
   useEffect(() => {
     const t = setTimeout(() => {
       try {
@@ -178,7 +143,6 @@ export default function DespesasPage() {
     return () => clearTimeout(t);
   }, [linhas, anoSelecionado]);
 
-  // Helpers de edição
   const setDescricao = (id, texto) =>
     setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, descricao: texto } : l)));
 
@@ -212,7 +176,6 @@ export default function DespesasPage() {
   const addReceita = () => setLinhas((prev) => [...prev, novaLinha("RECEITA")]);
   const addDespesa = () => setLinhas((prev) => [...prev, novaLinha("DESPESA")]);
 
-  // Duplicar ano anterior
   const duplicarAnoAnterior = () => {
     const idx = ANOS.indexOf(anoSelecionado);
     if (idx <= 0) return;
@@ -225,7 +188,6 @@ export default function DespesasPage() {
     } catch {}
   };
 
-  // ===== Totais + categorias (ANUAL) =====
   const {
     totReceitas,
     totDespesas,
@@ -258,7 +220,7 @@ export default function DespesasPage() {
     const totalD = sum(d);
     const top = Object.entries(catAno)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
+      .slice(0, 10)
       .map(([cat, valor]) => ({
         cat,
         valor,
@@ -276,52 +238,6 @@ export default function DespesasPage() {
     };
   }, [linhas]);
 
-  // ===== Totais (MENSAL) + categorias do mês (NOVO) =====
-  const {
-    totalReceitasMes,
-    totalDespesasMes,
-    saldoMes,
-    percGastoMes,
-    topCategoriasMes,
-  } = useMemo(() => {
-    const mes = mesSelecionado;
-
-    let rMes = 0;
-    let dMes = 0;
-    const catMes = {};
-
-    for (const l of linhas) {
-      const n = toInt(l.valores[mes]);
-      if (l.tipo === "RECEITA") {
-        rMes += n;
-      } else {
-        dMes += n;
-        const cat = (l.categoria || "Sem categoria").trim() || "Sem categoria";
-        catMes[cat] = (catMes[cat] || 0) + n;
-      }
-    }
-
-    const sMes = rMes - dMes;
-    const p = rMes > 0 ? (dMes / rMes) * 100 : 0;
-
-    const top = Object.entries(catMes)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 12)
-      .map(([cat, valor]) => ({
-        cat,
-        valor,
-        perc: dMes > 0 ? (valor / dMes) * 100 : 0,
-      }));
-
-    return {
-      totalReceitasMes: rMes,
-      totalDespesasMes: dMes,
-      saldoMes: sMes,
-      percGastoMes: p,
-      topCategoriasMes: top,
-    };
-  }, [linhas, mesSelecionado]);
-
   const fmtBR = (v) =>
     Math.round(v).toLocaleString("pt-BR", {
       style: "currency",
@@ -330,61 +246,21 @@ export default function DespesasPage() {
       maximumFractionDigits: 0,
     });
 
-  const exportCSV = () => {
-    const header = ["Tipo", "Categoria", "Descrição", ...MESES, "Total"];
-    const rows = [
-      ["— RECEITAS —", "", "", ...Array(12).fill(""), ""],
-      ...receitas.map((l) => {
-        const valoresNum = l.valores.map(toInt);
-        const total = valoresNum.reduce((a, b) => a + b, 0);
-        return [l.tipo, l.categoria ?? "", l.descricao, ...valoresNum, total];
-      }),
-      ["TOTAL RECEITAS", "", "", ...totReceitas.map(Math.round), Math.round(totalReceitasAno)],
-      ["— DESPESAS —", "", "", ...Array(12).fill(""), ""],
-      ...despesas.map((l) => {
-        const valoresNum = l.valores.map(toInt);
-        const total = valoresNum.reduce((a, b) => a + b, 0);
-        return [l.tipo, l.categoria ?? "", l.descricao, ...valoresNum, total];
-      }),
-      ["TOTAL DESPESAS", "", "", ...totDespesas.map(Math.round), Math.round(totalDespesasAno)],
-      ["SALDO (R-D)", "", "", ...saldo.map(Math.round), Math.round(saldoAno)],
-    ];
-
-    const csv = [header, ...rows]
-      .map((r) =>
-        r
-          .map((v) => (typeof v === "string" ? `"${v.replace(/"/g, '""')}"` : v))
-          .join(";")
-      )
-      .join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `despesas_${anoSelecionado}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // ===== Export PDF (MENSAL) =====
   const exportPDF = async () => {
     try {
       await exportRelatorioPDF({
         anoSelecionado,
         meses: MESES,
-        mesIdx: mesSelecionado,
         totReceitas,
         totDespesas,
         saldo,
-        totalReceitasMes,
-        totalDespesasMes,
-        saldoMes,
-        percGastoMes,
-        topCategoriasMes,
+        totalReceitasAno,
+        totalDespesasAno,
+        saldoAno,
+        topCategoriasAno,
       });
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
       alert("Não foi possível gerar o PDF. Veja o console (F12) para detalhes.");
     }
   };
@@ -398,11 +274,10 @@ export default function DespesasPage() {
     }
   };
 
-  // ===== Layout =====
   const colW = "w-20";
-  const actionsColWidth = "w-14"; // 56px
-  const categoriaColWidth = "w-32"; // 128px
-  const descColWidth = `w-[${DESC_PX}px]`; // 220px
+  const actionsColWidth = "w-14";
+  const categoriaColWidth = "w-32";
+  const descColWidth = `w-[${DESC_PX}px]`;
   const tableMinW = "min-w-[1480px]";
 
   const cellBase = "px-2 py-0.5 border-t border-slate-700 text-right text-xs whitespace-nowrap";
@@ -426,9 +301,7 @@ export default function DespesasPage() {
               "text-xs uppercase tracking-wider",
               variant === "green" ? "text-emerald-300 font-semibold" : "",
               variant === "red" ? "text-rose-300 font-semibold" : "",
-            ]
-              .join(" ")
-              .trim()}
+            ].join(" ").trim()}
           >
             {label}
           </span>
@@ -438,9 +311,10 @@ export default function DespesasPage() {
     </tr>
   );
 
-  // ===== Navegação por teclado =====
   const focusCell = (sec, row, col) => {
-    const el = document.querySelector(`input[data-sec="${sec}"][data-row="${row}"][data-col="${col}"]`);
+    const el = document.querySelector(
+      `input[data-sec="${sec}"][data-row="${row}"][data-col="${col}"]`
+    );
     if (el) el.focus();
   };
 
@@ -523,8 +397,6 @@ export default function DespesasPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-slate-100 text-3xl font-semibold">Despesas</h1>
-
-            {/* ANOS */}
             <div className="inline-flex rounded-full bg-slate-800 p-1 text-xs">
               {ANOS.map((ano) => (
                 <button
@@ -538,25 +410,6 @@ export default function DespesasPage() {
                   ].join(" ")}
                 >
                   {ano}
-                </button>
-              ))}
-            </div>
-
-            {/* MÊS (NOVO) */}
-            <div className="inline-flex rounded-full bg-slate-800 p-1 text-xs">
-              {MESES.map((m, idx) => (
-                <button
-                  key={m}
-                  onClick={() => setMesSelecionado(idx)}
-                  className={[
-                    "px-3 py-1 rounded-full transition-colors",
-                    mesSelecionado === idx
-                      ? "bg-slate-100 text-slate-900 font-semibold"
-                      : "text-slate-300 hover:bg-slate-700",
-                  ].join(" ")}
-                  title={`Relatório mensal: ${m}`}
-                >
-                  {m}
                 </button>
               ))}
             </div>
@@ -579,6 +432,7 @@ export default function DespesasPage() {
             >
               + Receita
             </button>
+
             <button
               onClick={addDespesa}
               className="px-3 py-2 rounded-md bg-rose-600 text-white text-sm hover:bg-rose-500"
@@ -588,18 +442,10 @@ export default function DespesasPage() {
 
             <button
               onClick={exportPDF}
-              title="Exportar Relatório PDF (mensal)"
+              title="Exportar Relatório PDF"
               className="flex items-center gap-1 px-3 py-2 rounded-md bg-slate-700 text-white text-sm hover:bg-slate-600"
             >
               <Download size={16} /> Exportar PDF
-            </button>
-
-            <button
-              onClick={exportCSV}
-              title="Exportar CSV"
-              className="flex items-center gap-1 px-3 py-2 rounded-md bg-slate-800 text-white text-sm hover:bg-slate-700"
-            >
-              <Download size={16} /> CSV
             </button>
 
             <button
@@ -648,7 +494,6 @@ export default function DespesasPage() {
           )}
         </div>
 
-        {/* Bloco compacto: top categorias */}
         {totalDespesasAno > 0 && topCategoriasAno.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
             {topCategoriasAno.slice(0, 5).map((t) => (
@@ -666,7 +511,6 @@ export default function DespesasPage() {
           </div>
         )}
 
-        {/* Hint de duplo clique */}
         {showReplicarHint && (
           <div className="mt-2 text-[11px] text-slate-300">
             Dica: <span className="font-semibold text-slate-100">duplo clique</span> em uma célula mensal replica o valor até Dez.
@@ -679,13 +523,13 @@ export default function DespesasPage() {
         <div className="relative h-full overflow-y-auto">
           <table className={`table-fixed ${tableMinW} w-full`}>
             <colgroup>
-              <col className={"w-14"} />
-              <col className={"w-32"} />
-              <col className={`w-[${DESC_PX}px]`} />
+              <col className={actionsColWidth} />
+              <col className={categoriaColWidth} />
+              <col className={descColWidth} />
               {MESES.map((_, i) => (
-                <col key={`c${i}`} className={"w-20"} />
+                <col key={`c${i}`} className={colW} />
               ))}
-              <col className={"w-20"} />
+              <col className={colW} />
             </colgroup>
 
             <thead className="sticky top-0 z-40 bg-slate-900">
@@ -707,7 +551,6 @@ export default function DespesasPage() {
             </thead>
 
             <tbody>
-              {/* RECEITAS */}
               <SectionDivider label="Receitas" variant="green" />
 
               {receitas.map((l, rIdx) => {
@@ -782,7 +625,6 @@ export default function DespesasPage() {
                 );
               })}
 
-              {/* TOTAL RECEITAS */}
               <tr className="bg-slate-900 h-8">
                 <td className="sticky left-0 bg-slate-900 border-t border-slate-700 z-30" />
                 <td className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 text-emerald-300 text-xs z-30`} />
@@ -799,7 +641,6 @@ export default function DespesasPage() {
                 </td>
               </tr>
 
-              {/* DESPESAS */}
               <SectionDivider label="Despesas" variant="red" />
 
               {despesas.map((l, dIdx) => {
@@ -874,7 +715,6 @@ export default function DespesasPage() {
                 );
               })}
 
-              {/* TOTAL DESPESAS */}
               <tr className="bg-slate-900 h-8">
                 <td className="sticky left-0 bg-slate-900 border-t border-slate-700 z-30" />
                 <td className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 text-rose-300 text-xs z-30`} />
@@ -891,7 +731,6 @@ export default function DespesasPage() {
                 </td>
               </tr>
 
-              {/* SALDO – sticky bottom */}
               <tr>
                 <td
                   className="sticky bottom-0 left-0 z-40 bg-slate-900 border-t border-slate-700"
