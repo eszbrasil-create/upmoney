@@ -1,156 +1,171 @@
-// src/pages/Dashboard.jsx
-import CardResumo from "../components/cards/CardResumo";
-import CardRegistro from "../components/cards/CardRegistro";
-import CardEvolucao from "../components/cards/CardEvolucao";
-import CardEvolucaoPct from "../components/cards/CardEvolucaoPct";
-import CardDividendosCash from "../components/cards/CardDividendosCash"; // ✅ card Meus Dividendos
+// src/pages/Relatorios.jsx
+// Relatórios 2.0 — Protótipo inicial lúdico, visual e moderno
+// Tela BLOQUEADA (em construção) + botão "Voltar para o Dashboard"
 
-const MESES = [
-  "Jan",
-  "Fev",
-  "Mar",
-  "Abr",
-  "Mai",
-  "Jun",
-  "Jul",
-  "Ago",
-  "Set",
-  "Out",
-  "Nov",
-  "Dez",
-];
+import React from "react";
+import {
+  TrendingUp,
+  BookOpen,
+  Coins,
+  PieChart,
+  Layers,
+  Construction,
+} from "lucide-react";
 
-const MES_IDX = {
-  Jan: 0,
-  Fev: 1,
-  Mar: 2,
-  Abr: 3,
-  Mai: 4,
-  Jun: 5,
-  Jul: 6,
-  Ago: 7,
-  Set: 8,
-  Out: 9,
-  Nov: 10,
-  Dez: 11,
-};
-
-function normalizeMesKey(key) {
-  if (!key) return key;
-  const trimmed = String(key).trim();
-
-  if (trimmed.includes("/")) {
-    let [m, a] = trimmed.split("/").map((s) => s.trim());
-
-    if (/^\d+$/.test(m)) {
-      const idx = Number(m) - 1;
-      if (idx >= 0 && idx < 12) m = MESES[idx];
-    } else {
-      m = m.charAt(0).toUpperCase() + m.slice(1, 3).toLowerCase();
-      if (!MES_IDX[m]) {
-        const found = MESES.find((x) => x.toLowerCase() === m.toLowerCase());
-        if (found) m = found;
-      }
-    }
-
-    if (/^\d{2}$/.test(a)) a = `20${a}`;
-    return `${m}/${a}`;
-  }
-
-  const parts = trimmed.split(/[-\s]+/);
-  if (parts.length === 2) return normalizeMesKey(parts.join("/"));
-
-  return trimmed;
-}
-
-export default function Dashboard({ registrosPorMes = {}, onDeleteMonth }) {
-  const normalizedRegistros = Object.fromEntries(
-    Object.entries(registrosPorMes).map(([k, v]) => [normalizeMesKey(k), v])
-  );
-
-  const columns = Object.keys(normalizedRegistros).sort((a, b) => {
-    const [ma, aa] = a.split("/");
-    const [mb, ab] = b.split("/");
-    const ia = MES_IDX[ma],
-      ib = MES_IDX[mb];
-    return Number(aa) - Number(ab) || ia - ib;
-  });
-
-  const allAssets = new Set();
-  for (const mes of columns) {
-    (normalizedRegistros[mes] || []).forEach((i) => allAssets.add(i.nome));
-  }
-
-  const rows = Array.from(allAssets)
-    .sort((a, b) => a.localeCompare(b, "pt-BR"))
-    .map((name) => ({
-      ativo: name,
-      valores: columns.map((mes) => {
-        const item = (normalizedRegistros[mes] || []).find(
-          (i) => i.nome === name
-        );
-        return item ? Number(item.valor) : 0;
-      }),
-    }));
-
-  const totais = columns.map((mes) =>
-    (normalizedRegistros[mes] || []).reduce(
-      (acc, i) => acc + Number(i.valor || 0),
-      0
-    )
-  );
-
-  const idx = columns.length - 1;
-  const mesAtual = columns[idx] || "-";
-  const patrimonioAtual = totais[idx] || 0;
-  const totalAntes = (n) => totais[idx - n] || 0;
-
-  const distribuicao = rows
-    .map((r) => ({
-      nome: r.ativo,
-      valor: Number(r.valores[idx] || 0),
-    }))
-    .filter((i) => Number.isFinite(i.valor) && i.valor > 0)
-    .sort((a, b) => b.valor - a.valor);
-
-  const dadosResumo = {
-    mesAtual,
-    patrimonioAtual,
-    comparativos: {
-      mesAnterior: totalAntes(1),
-      m3: totalAntes(3),
-      m6: totalAntes(6),
-      m12: totalAntes(12),
-    },
-    distribuicao,
-  };
-
+export default function Relatorios() {
   return (
-    <div className="pt-3 pr-6">
-      {/* Linha superior */}
-      <div className="flex items-start gap-3 flex-wrap md:flex-nowrap">
-        <CardResumo data={dadosResumo} />
-        <CardEvolucao columns={columns} rows={rows} />
-      </div>
+    <div className="relative min-h-screen text-slate-100 overflow-hidden">
 
-      {/* Linha do meio */}
-      <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
-        <CardRegistro
-          columns={columns}
-          rows={rows}
-          onDeleteMonth={onDeleteMonth}
-        />
+      {/* ================= OVERLAY BLOQUEADOR ================= */}
+      <div className="fixed inset-0 z-[9999] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center">
+        <div className="max-w-md mx-4 rounded-2xl border border-amber-400/30 bg-slate-900/90 p-6 shadow-2xl text-center">
+          
+          <div className="flex justify-center mb-4">
+            <div className="rounded-full bg-amber-400/15 p-4 border border-amber-400/30">
+              <Construction className="text-amber-300" size={32} />
+            </div>
+          </div>
 
-        {/* ✅ Coluna direita agora mostra apenas o card Meus Dividendos */}
-        <div className="flex flex-col gap-3">
-          <CardDividendosCash />
+          <h2 className="text-lg font-semibold text-amber-200">
+            Relatórios em construção
+          </h2>
+
+          <p className="mt-2 text-sm text-slate-300 leading-relaxed">
+            Estamos trabalhando para transformar esta área em um painel completo
+            de análises financeiras, com gráficos claros e insights úteis.
+          </p>
+
+          <p className="mt-3 text-xs text-slate-400">
+            Por enquanto, esta seção está disponível apenas para visualização.
+          </p>
+
+          {/* ✅ BOTÃO DE RETORNO PARA O DASHBOARD */}
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href = "/";
+            }}
+            className="
+              mt-5 inline-flex items-center justify-center
+              rounded-xl px-4 py-2
+              bg-emerald-500 hover:bg-emerald-400
+              text-slate-950 font-semibold text-sm
+              transition shadow
+            "
+          >
+            Voltar para o Dashboard
+          </button>
         </div>
       </div>
 
-      {/* Linha inferior */}
-      <div className="mt-3">
-        <CardEvolucaoPct columns={columns} rows={rows} />
+      {/* ================= CONTEÚDO NORMAL (VISÍVEL, MAS BLOQUEADO) ================= */}
+      <div className="pt-4 pr-6 pl-0">
+
+        {/* ================= HERO PRINCIPAL ================= */}
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 shadow-lg">
+          <div className="absolute inset-0 opacity-20 bg-[url('/hero-pattern.png')] bg-cover" />
+          <h1 className="relative text-2xl font-bold tracking-tight">
+            Sua Jornada Financeira
+          </h1>
+          <p className="relative mt-1 text-sm text-white/90">
+            Um resumo claro, bonito e motivador da sua evolução.
+          </p>
+
+          <div className="relative mt-5 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <HeroCard label="Patrimônio Atual" value="R$ 0,00" icon={TrendingUp} />
+            <HeroCard label="Evolução Total" value="+0%" icon={PieChart} />
+            <HeroCard label="Nível da Jornada" value="Iniciante" icon={Layers} />
+            <HeroCard label="Meses Consistentes" value="0" icon={BookOpen} />
+          </div>
+        </section>
+
+        {/* ================= SEÇÕES ================= */}
+        <div className="mt-6 space-y-6">
+
+          <SectionCard title="Despesas & Receitas do Mês" icon={Coins}>
+            <p className="text-slate-400 text-sm">
+              Em breve, gráficos e análises reais baseados nos seus registros.
+            </p>
+            <PlaceholderGraph />
+          </SectionCard>
+
+          <SectionCard title="Seu progresso nos Cursos" icon={BookOpen}>
+            <p className="text-slate-400 text-sm">
+              Acompanhe seu avanço no aprendizado e veja o impacto no seu patrimônio.
+            </p>
+            <PlaceholderBar />
+          </SectionCard>
+
+          <SectionCard title="Dividendos Recebidos" icon={Coins}>
+            <p className="text-slate-400 text-sm">
+              Aqui você vai ver seus dividendos mensais e totais do ano.
+            </p>
+            <PlaceholderGraph />
+          </SectionCard>
+
+          <SectionCard title="Distribuição da Carteira" icon={PieChart}>
+            <p className="text-slate-400 text-sm">
+              Visual moderno da sua carteira — Ações, FIIs, Cripto, Caixa e mais.
+            </p>
+            <PlaceholderPie />
+          </SectionCard>
+
+        </div>
       </div>
+    </div>
+  );
+}
+
+/* ================= COMPONENTES BASE ================= */
+
+function HeroCard({ label, value, icon: Icon }) {
+  return (
+    <div className="rounded-xl bg-white/15 backdrop-blur-sm p-4 shadow flex flex-col items-start">
+      <div className="bg-white/20 p-2 rounded-lg mb-2">
+        <Icon size={22} />
+      </div>
+      <span className="text-xs text-white/80">{label}</span>
+      <span className="text-lg font-bold">{value}</span>
+    </div>
+  );
+}
+
+function SectionCard({ title, icon: Icon, children }) {
+  return (
+    <section className="rounded-xl bg-slate-900/60 border border-slate-700/50 p-5 shadow-md">
+      <div className="flex items-center gap-2 mb-3">
+        <Icon size={18} className="text-emerald-400" />
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-emerald-300">
+          {title}
+        </h2>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/* ================= PLACEHOLDERS ================= */
+
+function PlaceholderGraph() {
+  return (
+    <div className="mt-3 h-32 rounded-xl bg-slate-800/60 border border-slate-700/40 flex items-center justify-center text-xs text-slate-500">
+      Gráfico virá aqui
+    </div>
+  );
+}
+
+function PlaceholderBar() {
+  return (
+    <div className="mt-3 h-24 rounded-xl bg-slate-800/60 border border-slate-700/40 flex items-center justify-center text-xs text-slate-500">
+      Barra de progresso virá aqui
+    </div>
+  );
+}
+
+function PlaceholderPie() {
+  return (
+    <div className="mt-3 h-40 rounded-xl bg-slate-800/60 border border-slate-700/40 flex items-center justify-center text-xs text-slate-500">
+      Gráfico de pizza virá aqui
     </div>
   );
 }
