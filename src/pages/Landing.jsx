@@ -1,4 +1,4 @@
-// src/pages/Landing.jsx → VERSÃO FINAL 100% CERTA (12/12/2025)
+// src/pages/Landing.jsx → VERSÃO FINAL 100% DO SEU JEITO
 import React, { useState } from "react";
 
 const IconWhatsApp = (props) => (
@@ -28,12 +28,12 @@ export default function Landing({ onNavigate }) {
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* HEADER */}
-      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-white5">
+      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <button onClick={() => onNavigate?.("landing")} className="text-2xl font-black text-white">
             UpMoney
           </button>
-          <nav className="hidden lg:flex items-center gap-10 text-white80 font-medium">
+          <nav className="hidden lg:flex items-center gap-10 text-white/80 font-medium">
             <button onClick={() => onNavigate?.("cursos")} className="hover:text-white">Cursos</button>
             <button onClick={() => onNavigate?.("cashcontrol-home")} className="hover:text-white">UpControl</button>
             <button onClick={() => onNavigate?.("saida-fiscal")} className="hover:text-white">Saída Fiscal</button>
@@ -47,23 +47,12 @@ export default function Landing({ onNavigate }) {
         </div>
       </header>
 
-      {/* HERO FINAL – BADGE VERMELHO SOBRE O UPCONTROL + ESQUERDA SUBIDA */}
-      <section className="relative bg-gradient-to-b from-white to-amber-5030 pt-16 pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          {/* BADGE VERMELHO CENTRALIZADO SOBRE O UPCONTROL */}
-          <div className="absolute top-16 lg:top-20 right-4 lg:right-32 z-50">
-            <div className="bg-red-600 text-white px-6 py-3 rounded-full text-sm font-black uppercase tracking-wider shadow-2xl shadow-red-60060 flex items-center gap-2 animate-pulse">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
-              </span>
-              Vagas limitadas para 1 turma · Depois só em 2026
-            </div>
-          </div>
-
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* BLOCO ESQUERDO SUBIDO ATÉ QUASE O HEADER */}
-            <div className="text-center lg:text-left lg:-mt-24">
+      {/* HERO FINAL – BADGE VERMELHO ACIMA DO UPCONTROL, CENTRALIZADO */}
+      <section className="relative bg-gradient-to-b from-white to-amber-50/30 pt-20 pb-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-start relative">
+            {/* BLOCO ESQUERDO SUBIDO */}
+            <div className="text-center lg:text-left lg:-mt-16">
               <h1 className="text-5xl lg:text-6xl font-black tracking-tight text-slate-900 leading-tight">
                 Receba seu <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">primeiro dividendo</span>
                 <br className="hidden lg:block" />
@@ -78,19 +67,21 @@ export default function Landing({ onNavigate }) {
                 Resultado garantido ou devolvo cada centavo.
               </p>
 
+             
+
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <button onClick={() => setIsModalOpen(true)} className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 px-10 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-amber-50050 hover:scale-105 transition-all duration-300">
-                  <span className="absolute inset-0 bg-white25 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                <button onClick={() => setIsModalOpen(true)} className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 px-10 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-amber-500/50 hover:scale-105 transition-all duration-300">
+                  <span className="absolute inset-0 bg-white/25 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                   Quero meu primeiro dividendo em 30 dias
                 </button>
-                <button onClick={falarAgora} className="flex items-center justify-center gap-3 bg-[#25D366] px-10 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-green-50050 hover:scale-105 transition">
+                <button onClick={falarAgora} className="flex items-center justify-center gap-3 bg-[#25D366] px-10 py-5 rounded-2xl text-xl font-bold text-white shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition">
                   <IconWhatsApp className="w-8 h-8" />
                   Falar agora no WhatsApp
                 </button>
               </div>
 
               <div className="mt-6">
-                <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-emerald-50050 hover:scale-105 transition-all duration-300">
+                <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-300">
                   <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
@@ -100,9 +91,20 @@ export default function Landing({ onNavigate }) {
               </div>
             </div>
 
-            {/* UPCONTROL COM BADGE EM CIMA */}
+            {/* UPCONTROL COM BADGE VERMELHO EM CIMA, CENTRALIZADO */}
             <div className="relative">
-              <div className="bg-white rounded-3xl shadow-2xl p-8 border border-slate-200">
+              {/* BADGE VERMELHO ACIMA DO QUADRO, CENTRALIZADO */}
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 z-50">
+                <div className="bg-red-600 text-white px-6 py-3 rounded-full text-sm font-black uppercase tracking-wider shadow-2xl shadow-red-600/60 animate-pulse flex items-center gap-2 whitespace-nowrap">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                  </span>
+                  VAGAS LIMITADAS PARA 1 TURMA · DEPOIS SÓ EM 2026
+                </div>
+              </div>
+
+              <div className="bg-white rounded-3xl shadow-2xl p-8 border border-slate-200 mt-8">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center text-white text-5xl font-black shadow-2xl">
                     U
@@ -123,9 +125,9 @@ export default function Landing({ onNavigate }) {
         </div>
       </section>
 
-      {/* MODAL E FOOTER (mantidos) */}
+      {/* MODAL E FOOTER */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-slate-900">Avaliação Gratuita (15 min)</h2>
@@ -144,7 +146,7 @@ export default function Landing({ onNavigate }) {
         </div>
       )}
 
-      <footer className="bg-slate-900 text-white60 py-12 mt-20">
+      <footer className="bg-slate-900 text-white/60 py-12 mt-20">
         <div className="max-w-7xl mx-auto px-6 text-center text-sm">
           UpMoney © 2025 — O seu primeiro dividendo começa aqui.
         </div>
