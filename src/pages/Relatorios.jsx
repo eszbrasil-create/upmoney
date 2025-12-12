@@ -1,7 +1,7 @@
 // src/pages/Relatorios.jsx
 // Relatórios 2.0 — Protótipo inicial lúdico, visual e moderno
 // Tela BLOQUEADA (em construção) + botão "Voltar para o Dashboard"
-// ✅ Rota corrigida para HashRouter: /#/dash (evita cair no Hero)
+// ✅ Navegação sem react-router-dom e sem reload (para não cair no Hero)
 
 import React from "react";
 import {
@@ -14,6 +14,23 @@ import {
 } from "lucide-react";
 
 export default function Relatorios() {
+  const goToDash = () => {
+    try {
+      // 1) Se estiver usando HashRouter (URL com #/alguma-coisa)
+      if (window.location.hash && window.location.hash.startsWith("#/")) {
+        window.location.hash = "#/dash";
+        return;
+      }
+
+      // 2) SPA / BrowserRouter: navega sem recarregar
+      window.history.pushState({}, "", "/dash");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    } catch (e) {
+      // 3) fallback: navega recarregando (último recurso)
+      window.location.href = "/dash";
+    }
+  };
+
   return (
     <div className="relative min-h-screen text-slate-100 overflow-hidden">
       {/* ================= OVERLAY BLOQUEADOR ================= */}
@@ -38,13 +55,10 @@ export default function Relatorios() {
             Por enquanto, esta seção está disponível apenas para visualização.
           </p>
 
-          {/* ✅ VOLTA PARA O DASHBOARD REAL (HashRouter) */}
+          {/* ✅ VOLTA PARA O DASHBOARD (sem reload) */}
           <button
             type="button"
-            onClick={() => {
-              // Mantém a navegação consistente com HashRouter
-              window.location.assign("/#/dash");
-            }}
+            onClick={goToDash}
             className="
               mt-5 inline-flex items-center justify-center
               rounded-xl px-4 py-2
@@ -71,11 +85,7 @@ export default function Relatorios() {
           </p>
 
           <div className="relative mt-5 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <HeroCard
-              label="Patrimônio Atual"
-              value="R$ 0,00"
-              icon={TrendingUp}
-            />
+            <HeroCard label="Patrimônio Atual" value="R$ 0,00" icon={TrendingUp} />
             <HeroCard label="Evolução Total" value="+0%" icon={PieChart} />
             <HeroCard label="Nível da Jornada" value="Iniciante" icon={Layers} />
             <HeroCard label="Meses Consistentes" value="0" icon={BookOpen} />
@@ -93,8 +103,7 @@ export default function Relatorios() {
 
           <SectionCard title="Seu progresso nos Cursos" icon={BookOpen}>
             <p className="text-slate-400 text-sm">
-              Acompanhe seu avanço no aprendizado e veja o impacto no seu
-              patrimônio.
+              Acompanhe seu avanço no aprendizado e veja o impacto no seu patrimônio.
             </p>
             <PlaceholderBar />
           </SectionCard>
