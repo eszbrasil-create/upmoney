@@ -1,4 +1,4 @@
-// src/pages/Landing.jsx → VERSÃO 100% FUNCIONAL (COMPILA NO VERCEL)
+// src/pages/Landing.jsx → VERSÃO FINAL BRABA E PRONTA PRA SUBIR
 import React, { useState } from "react";
 
 const IconWhatsApp = (props) => (
@@ -9,7 +9,6 @@ const IconWhatsApp = (props) => (
 
 export default function Landing({ onNavigate }) {
   const WHATSAPP_NUMBER = "393517380919";
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({ nome: "", email: "", telefone: "" });
 
@@ -23,7 +22,7 @@ export default function Landing({ onNavigate }) {
   };
 
   const falarAgora = () => {
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=Oi! Quero meu primeiro dividendo em 30 dias. Podemos conversar?`, "_blank");
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=Oi! Quero meu primeiro dividendo em 30 dias. Podemos falar agora?`, "_blank");
   };
 
   return (
@@ -49,18 +48,19 @@ export default function Landing({ onNavigate }) {
         </div>
       </header>
 
-      {/* HERO COM BOTÕES COLADOS */}
+      {/* HERO BRABA */}
       <section className="relative overflow-hidden bg-gradient-to-b from-white to-amber-50/30 py-12 lg:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-            {/* TEXTO + BOTÕES COLADÍSSIMOS */}
+            {/* TEXTO + BOTÕES COLADOS */}
             <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-600 text-white px-5 py-2.5 rounded-full text-sm font-bold mb-6 shadow-lg">
+              {/* BADGE BRABO */}
+              <div className="inline-flex items-center gap-3 bg-red-600 text-white px-6 py-3 rounded-full text-base font-black uppercase tracking-wider mb-6 shadow-2xl shadow-red-600/50 animate-pulse">
                 <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
                 </span>
-                Vagas abertas para os próximos 50 alunos em 2025
+                Vagas limitadas para 1 turma. Depois só em 2026. Aproveite agora!
               </div>
 
               <h1 className="text-5xl lg:text-6xl font-black tracking-tight text-slate-900 leading-tight">
@@ -77,7 +77,7 @@ export default function Landing({ onNavigate }) {
                 Resultado garantido ou devolvo cada centavo.
               </p>
 
-              {/* BOTÕES QUASE ENCOSTADOS NO TEXTO */}
+              {/* BOTÕES COLADÍSSIMOS */}
               <div className="mt-5 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <button
                   onClick={() => setIsModalOpen(true)}
@@ -101,7 +101,7 @@ export default function Landing({ onNavigate }) {
               </p>
             </div>
 
-            {/* IMAGEM SUBIDA */}
+            {/* IMAGEM */}
             <div className="relative lg:-mt-10">
               <div className="absolute -inset-6 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-3xl blur-3xl -z-10" />
               <div className="bg-white rounded-3xl shadow-2xl p-6 border border-slate-200">
@@ -114,11 +114,7 @@ export default function Landing({ onNavigate }) {
                     <div className="text-slate-600">Controle total do seu patrimônio</div>
                   </div>
                 </div>
-                <img
-                  src="/dash_recortado.jpg"
-                  alt="Dashboard UpControl"
-                  className="w-full rounded-2xl border border-slate-200 shadow-inner"
-                />
+                <img src="/dash_recortado.jpg" alt="Dashboard UpControl" className="w-full rounded-2xl border border-slate-200 shadow-inner" />
                 <div className="mt-6 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-center py-6 rounded-2xl shadow-lg">
                   <div className="text-4xl font-black">R$ 1.847,22</div>
                   <div className="text-lg opacity-90">Dividendos este mês</div>
