@@ -1,7 +1,7 @@
 // src/pages/Relatorios.jsx
 // Relatórios 2.0 — Protótipo inicial lúdico, visual e moderno
 // Tela BLOQUEADA (em construção) + botão "Voltar para o Dashboard"
-// ✅ Navegação sem react-router-dom e sem reload (para não cair no Hero)
+// ✅ Navegação robusta (HashRouter e BrowserRouter) SEM react-router-dom
 
 import React from "react";
 import {
@@ -15,19 +15,39 @@ import {
 
 export default function Relatorios() {
   const goToDash = () => {
+    const targetPath = "/dash";
+    const targetHash = "#/dash";
+
     try {
-      // 1) Se estiver usando HashRouter (URL com #/alguma-coisa)
-      if (window.location.hash && window.location.hash.startsWith("#/")) {
-        window.location.hash = "#/dash";
-        return;
+      // 1) Tenta HashRouter (não recarrega)
+      //    Se o app estiver usando hash, isso funciona direto.
+      window.location.hash = targetHash;
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+
+      // 2) Tenta History API (não recarrega)
+      //    Muitos apps escutam pushstate/locationchange além de popstate.
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({}, "", targetPath);
       }
 
-      // 2) SPA / BrowserRouter: navega sem recarregar
-      window.history.pushState({}, "", "/dash");
+      window.dispatchEvent(new Event("pushstate"));
+      window.dispatchEvent(new Event("locationchange"));
       window.dispatchEvent(new PopStateEvent("popstate"));
-    } catch (e) {
-      // 3) fallback: navega recarregando (último recurso)
-      window.location.href = "/dash";
+
+      // 3) Se nada reagir, faz fallback com reload (último recurso)
+      //    (Coloco um pequeno delay para dar tempo do SPA reagir sem reload.)
+      setTimeout(() => {
+        // Se ainda não estiver no /dash (ou hash /#/dash), força navegação
+        const inDashPath = window.location.pathname === targetPath;
+        const inDashHash = window.location.hash === targetHash;
+
+        if (!inDashPath && !inDashHash) {
+          window.location.assign(targetPath);
+        }
+      }, 80);
+    } catch {
+      // fallback final
+      window.location.assign(targetPath);
     }
   };
 
@@ -55,7 +75,7 @@ export default function Relatorios() {
             Por enquanto, esta seção está disponível apenas para visualização.
           </p>
 
-          {/* ✅ VOLTA PARA O DASHBOARD (sem reload) */}
+          {/* ✅ VOLTA PARA O DASH (robusto) */}
           <button
             type="button"
             onClick={goToDash}
