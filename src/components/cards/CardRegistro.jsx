@@ -67,12 +67,12 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
       };
     });
 
-    // 🔧 ordena sempre Jan..Dez; dentro do mesmo mês, ano crescente
+    // ✔️ Ordena primeiro por ano (menor → maior), depois por mês (Jan..Dez)
     meta.sort((a, b) => {
-      if (a.monthIndex !== b.monthIndex) {
-        return a.monthIndex - b.monthIndex;
+      if (a.yearNumber !== b.yearNumber) {
+        return a.yearNumber - b.yearNumber; // ano menor primeiro
       }
-      return a.yearNumber - b.yearNumber;
+      return a.monthIndex - b.monthIndex; // depois mês
     });
 
     return meta;
@@ -121,7 +121,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
                   Ativos
                 </th>
 
-                {/* Meses em ordem Jan → Dez, mês em cima / ano embaixo */}
+                {/* Meses em ordem Ano → Mês (Jan → Dez), mês em cima / ano embaixo */}
                 {columnMeta.map((col) => (
                   <th
                     key={col.label}
@@ -139,7 +139,7 @@ export default function CardRegistro({ columns = [], rows = [], onDeleteMonth })
                       <button
                         type="button"
                         onClick={() => onDeleteMonth?.(col.label)}
-                        className="p-1 rounded-md hover:bg-white/10 text-slate-400 hover:text-rose-400 transition"
+                        className="p-1 rounded-md hover:bg白/10 text-slate-400 hover:text-rose-400 transition"
                         aria-label={`Excluir mês ${col.label}`}
                         title={`Excluir mês ${col.label}`}
                       >
