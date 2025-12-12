@@ -1,9 +1,9 @@
-// src/pages/Landing.jsx → FINAL, FUNCIONA NO VERCEL AGORA
+// src/pages/Landing.jsx → FINAL E FUNCIONANDO 100% NO VERCEL
 import React, { useState } from "react";
 
 const IconWhatsApp = (props) => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-    <path d="M20.52 3.48A11.86 11.86 0 0 0 12.06 0C5.48 0 .13 5.35.13 11.94c0 2.1.55 4.14 1.6 5.96L0 24l6.28-1.64a11.92 11.92 0 0 0 5.78 1.48h.01.01 0 0 1 .01 0c6.58 0 11.94-5.35 11.94-11.94a11.86 11.86 0 0 0-3.5-8.42ZM12.07 21.2h-.01a9.23 9.23 0 0 1-4.71-1.29l-.34-.2-3.73.98 1-3.64-.22-.37a9.25 9.25 0 0 1-1.41-4.95c0-5.1 4.15-9.25 9.26-9.25 2.47 0 4.79.96 6.53 2.7a9.2 9.2 0 0 1 2.71 6.55c0 5.1-4.15 9.24-9.26 9.24Z" />
+    <path d="M20.52 3.48A11.86 11.86 0 0 0 12.06 0C5.48 0 .13 5.35.13 11.94c0 2.1.55 4.14 1.6 5.96L0 24l6.28-1.64a11.92 11.92 0 0 0 5.78 1.48h.01c6.58 0 11.94-5.35 11.94-11.94a11.86 11.86 0 0 0-3.5-8.42ZM12.07 21.2h-.01a9.23 9.23 0 0 1-4.71-1.29l-.34-.2-3.73.98 1-3.64-.22-.37a9.25 9.25 0 0 1-1.41-4.95c0-5.1 4.15-9.25 9.26-9.25 2.47 0 4.79.96 6.53 2.7a9.2 9.2 0 0 1 2.71 6.55c0 5.1-4.15 9.24-9.26 9.24Z" />
   </svg>
 );
 
@@ -14,7 +14,7 @@ export default function Landing({ onNavigate }) {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
-  const enviarWhats = (e => {
+  const enviarWhats = (e) => {
     e.preventDefault();
     const msg = `Olá! Vim da landing.\nNome: ${form.nome}\nE-mail: ${form.email}\nTel: ${form.telefone}\nQuero a avaliação gratuita de 15 minutos`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
@@ -33,27 +33,23 @@ export default function Landing({ onNavigate }) {
           <button onClick={() => onNavigate?.("landing")} className="text-2xl font-black text-white">
             UpMoney
           </button>
-
           <nav className="hidden lg:flex items-center gap-10 text-white/80 font-medium">
             <button onClick={() => onNavigate?.("cursos")} className="hover:text-white">Cursos</button>
             <button onClick={() => onNavigate?.("cashcontrol-home")} className="hover:text-white">UpControl</button>
             <button onClick={() => onNavigate?.("saida-fiscal")} className="hover:text-white">Saída Fiscal</button>
             <button onClick={() => onNavigate?.("invista-exterior")} className="hover:text-white">Invista no Exterior</button>
           </nav>
-
           <div className="flex items-center gap-5">
             <button onClick={() => onNavigate?.("login")} className="bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-900 px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition hidden sm:block">
               Meu Plano
             </button>
-
             <a href="https://youtube.com/@upmoney" target="_blank" rel="noopener noreferrer">
               <div className="w-11 h-11 bg-red-600 rounded-full flex items-center justify-center hover:scale-110 transition">
                 <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M23.5 6.19a3.03 3.03 0 0-2.13-2.13C19.6 3.5 12 3.5 12 3.5s-7.6 0-9.37.56A3.03 3.03 0 0 0 .5 6.19 31.5 31.5 0 0 0 0 0 12c0 1.94.18 3.87.5 5.81.28 1.01 1.11 1.8 2.13 2.08C4.4 20.5 12 20.5 12 20.5s7.6 0 9.37-.56a3.03 3.03 0 0 0 2.13-2.13c.32-1.93.5-3.86.5-5.81 0-1.94-.18-3.87-.5-5.81ZM9.75 15.5v-7l6 3.5-6 3.5Z"/>
+                  <path d="M23.5 6.19a3.03 3.03 0 0-2.13-2.13C19.6 3.5 12 3.5 12 3.5s-7.6 0-9.37.56A3.03 3.03 0 0 0 .5 6.19 31.5 31.5 0 0 0 0 12c0 1.94.18 3.87.5 5.81.28 1.01 1.11 1.8 2.13 2.08C4.4 20.5 12 20.5 12 20.5s7.6 0 9.37-.56a3.03 3.03 0 0 0 2.13-2.13c.32-1.93.5-3.86.5-5.81 0-1.94-.18-3.87-.5-5.81ZM9.75 15.5v-7l6 3.5-6 3.5Z"/>
                 </svg>
               </div>
             </a>
-
             <a href="https://instagram.com/upmoneybr" target="_blank" rel="noopener noreferrer">
               <div className="w-11 h-11 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-full p-0.5">
                 <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center hover:scale-110 transition">
@@ -67,7 +63,7 @@ export default function Landing({ onNavigate }) {
         </div>
       </header>
 
-      {/* HERO FINAL COM BADGE VERMELHO GIGANTE */}
+      {/* HERO FINAL – BADGE VERMELHO GIGANTE */}
       <section className="relative bg-gradient-to-b from-white to-amber-50/30 pt-20 pb-20">
         {/* BADGE VERMELHO CENTRALIZADO */}
         <div className="container mx-auto px-4 text-center mb-10">
@@ -162,7 +158,6 @@ export default function Landing({ onNavigate }) {
         </div>
       )}
 
-      {/* FOOTER */}
       <footer className="bg-slate-900 text-white/60 py-12 mt-20">
         <div className="max-w-7xl mx-auto px-6 text-center text-sm">
           UpMoney © 2025 — O seu primeiro dividendo começa aqui.
