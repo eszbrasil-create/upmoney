@@ -1,6 +1,6 @@
 // src/pages/Relatorios.jsx
 // Relatórios 2.0 — Protótipo inicial lúdico, visual e moderno
-// Tela BLOQUEADA (em construção) + botão "Voltar para o Dashboard"
+// Tela BLOQUEADA (em construção) + botão "Voltar para o Dashboard (/dash)"
 
 import React from "react";
 import {
@@ -19,7 +19,6 @@ export default function Relatorios() {
       {/* ================= OVERLAY BLOQUEADOR ================= */}
       <div className="fixed inset-0 z-[9999] bg-slate-950/85 backdrop-blur-sm flex items-center justify-center">
         <div className="max-w-md mx-4 rounded-2xl border border-amber-400/30 bg-slate-900/90 p-6 shadow-2xl text-center">
-          
           <div className="flex justify-center mb-4">
             <div className="rounded-full bg-amber-400/15 p-4 border border-amber-400/30">
               <Construction className="text-amber-300" size={32} />
@@ -39,11 +38,11 @@ export default function Relatorios() {
             Por enquanto, esta seção está disponível apenas para visualização.
           </p>
 
-          {/* ✅ BOTÃO DE RETORNO PARA O DASHBOARD */}
+          {/* ✅ VOLTA PARA O DASHBOARD REAL (Dashboard.jsx) */}
           <button
             type="button"
             onClick={() => {
-              window.location.href = "/";
+              window.location.href = "/dash";
             }}
             className="
               mt-5 inline-flex items-center justify-center
