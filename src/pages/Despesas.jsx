@@ -1,6 +1,7 @@
 // src/pages/Despesas.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Trash2, Download, Eraser } from "lucide-react";
+import { exportRelatorioPDF } from "../utils/exportRelatorioPDF";
 
 const MESES = [
   "Jan",
@@ -105,7 +106,6 @@ function parseBRNumber(input) {
   }
 
   // sem vírgula: pode ser "1200", "1200.50" ou "1.200"
-  // se tiver mais de um ".", é milhar => remove todos
   const dots = (s.match(/\./g) || []).length;
   if (dots >= 2) {
     const n = Number(s.replace(/\./g, ""));
@@ -144,7 +144,7 @@ export default function DespesasPage() {
     }
   });
 
-  // Hint de replicar (duplo clique) — aparece quando foca em célula mensal
+  // Hint de replicar (duplo clique)
   const [showReplicarHint, setShowReplicarHint] = useState(false);
   const hintTimerRef = useRef(null);
 
@@ -225,7 +225,6 @@ export default function DespesasPage() {
     totalReceitasAno,
     totalDespesasAno,
     saldoAno,
-    despesasPorCategoriaAno,
     topCategoriasAno,
   } = useMemo(() => {
     const r = Array(12).fill(0);
@@ -265,7 +264,6 @@ export default function DespesasPage() {
       totalReceitasAno: sum(r),
       totalDespesasAno: totalD,
       saldoAno: sum(r) - totalD,
-      despesasPorCategoriaAno: catAno,
       topCategoriasAno: top,
     };
   }, [linhas]);
@@ -315,6 +313,20 @@ export default function DespesasPage() {
     URL.revokeObjectURL(url);
   };
 
+  const exportPDF = async () => {
+    await exportRelatorioPDF({
+      anoSelecionado,
+      meses: MESES,
+      totReceitas,
+      totDespesas,
+      saldo,
+      totalReceitasAno,
+      totalDespesasAno,
+      saldoAno,
+      topCategoriasAno,
+    });
+  };
+
   const clearAll = () => {
     if (confirm(`Apagar todas as linhas de ${anoSelecionado}?`)) {
       setLinhas([]);
@@ -339,7 +351,8 @@ export default function DespesasPage() {
   const firstColCell = "px-2 py-0.5 border-t border-slate-700 text-sm text-left";
 
   const headBaseNoColor = "px-2 py-0.5 border-t border-slate-700 text-xs font-medium text-right";
-  const firstColHeadNoColor = "px-2 py-0.5 border-t border-slate-700 text-sm font-semibold text-left";
+  const firstColHeadNoColor =
+    "px-2 py-0.5 border-t border-slate-700 text-sm font-semibold text-left";
 
   const SectionDivider = ({ label, variant }) => (
     <tr>
@@ -365,9 +378,7 @@ export default function DespesasPage() {
 
   // ===== Navegação por teclado =====
   const focusCell = (sec, row, col) => {
-    const el = document.querySelector(
-      `input[data-sec="${sec}"][data-row="${row}"][data-col="${col}"]`
-    );
+    const el = document.querySelector(`input[data-sec="${sec}"][data-row="${row}"][data-col="${col}"]`);
     if (el) el.focus();
   };
 
@@ -493,11 +504,19 @@ export default function DespesasPage() {
             </button>
 
             <button
-              onClick={exportCSV}
-              title="Exportar CSV"
+              onClick={exportPDF}
+              title="Exportar Relatório PDF"
               className="flex items-center gap-1 px-3 py-2 rounded-md bg-slate-700 text-white text-sm hover:bg-slate-600"
             >
-              <Download size={16} /> Exportar
+              <Download size={16} /> Exportar PDF
+            </button>
+
+            <button
+              onClick={exportCSV}
+              title="Exportar CSV"
+              className="flex items-center gap-1 px-3 py-2 rounded-md bg-slate-800 text-white text-sm hover:bg-slate-700"
+            >
+              <Download size={16} /> CSV
             </button>
 
             <button
@@ -589,14 +608,10 @@ export default function DespesasPage() {
             <thead className="sticky top-0 z-40 bg-slate-900">
               <tr>
                 <th className="px-2 py-1 border-t border-slate-700 text-slate-300 text-xs font-medium text-center sticky left-0 bg-slate-900 z-50" />
-                <th
-                  className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 z-50 text-xs`}
-                >
+                <th className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 z-50 text-xs`}>
                   Categoria
                 </th>
-                <th
-                  className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 z-50`}
-                >
+                <th className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 z-50`}>
                   Descrição
                 </th>
                 {MESES.map((m) => (
@@ -687,12 +702,8 @@ export default function DespesasPage() {
               {/* TOTAL RECEITAS */}
               <tr className="bg-slate-900 h-8">
                 <td className="sticky left-0 bg-slate-900 border-t border-slate-700 z-30" />
-                <td
-                  className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 text-emerald-300 text-xs z-30`}
-                />
-                <td
-                  className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 text-emerald-300 z-30`}
-                >
+                <td className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 text-emerald-300 text-xs z-30`} />
+                <td className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 text-emerald-300 z-30`}>
                   Total Receitas
                 </td>
                 {totReceitas.map((v, i) => (
@@ -783,12 +794,8 @@ export default function DespesasPage() {
               {/* TOTAL DESPESAS */}
               <tr className="bg-slate-900 h-8">
                 <td className="sticky left-0 bg-slate-900 border-t border-slate-700 z-30" />
-                <td
-                  className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 text-rose-300 text-xs z-30`}
-                />
-                <td
-                  className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 text-rose-300 z-30`}
-                >
+                <td className={`${firstColHead} sticky left-[${LEFT_CATEG}px] bg-slate-900 text-rose-300 text-xs z-30`} />
+                <td className={`${firstColHead} sticky left-[${LEFT_DESC}px] bg-slate-900 text-rose-300 z-30`}>
                   Total Despesas
                 </td>
                 {totDespesas.map((v, i) => (
