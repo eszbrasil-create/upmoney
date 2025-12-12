@@ -13,13 +13,13 @@ import { mergeDyBaseIntoCarteira } from "../../utils/mergeDyBase";
 
 const PT_MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
-// ✅ 12 meses fixos começando em Dez/2025 (Dez/2025 → Nov/2026)
-const DY_MONTHS_12 = (() => {
+// ✅ IGUAL ao CarteiraCash: 24 meses começando em Dez/2025
+const DY_MONTHS_24 = (() => {
   const result = [];
   let year = 2025;
   let month = 11; // Dez
 
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 24; i++) {
     result.push({
       label: `${PT_MESES[month]} ${year}`,
       month,
@@ -34,6 +34,9 @@ const DY_MONTHS_12 = (() => {
   }
   return result;
 })();
+
+// ✅ Mas o DASH vai mostrar só 12 (Dez/2025 → Nov/2026)
+const DY_MONTHS_12 = DY_MONTHS_24.slice(0, 12);
 
 function toNum(x) {
   if (x === "" || x === null || x === undefined) return 0;
@@ -55,18 +58,11 @@ function Tooltip({ x, y, label, valor }) {
 }
 
 export default function CardDividendosCash() {
-  // 🔗 DY base (GitHub)
   const { dyBase, dyBaseLoading } = useDyBase();
 
-  // 👤 user
   const [user, setUser] = useState(null);
-
-  // 📦 carteira (agregada) para o merge com DY base
   const [carteira, setCarteira] = useState([]);
 
-  // ============================
-  // 1) Pega usuário logado
-  // ============================
   useEffect(() => {
     async function loadUser() {
       const { data } = await supabase.auth.getUser();
@@ -75,9 +71,6 @@ export default function CardDividendosCash() {
     loadUser();
   }, []);
 
-  // ============================
-  // 2) Carrega wallet_items (Supabase) e agrega por ticker+tipo
-  // ============================
   useEffect(() => {
     if (!user) return;
 
@@ -148,8 +141,8 @@ export default function CardDividendosCash() {
           qtd: g.somaQtd ? String(g.somaQtd) : "",
           entrada: precoMedio ? String(precoMedio.toFixed(2)) : "",
           valorAtual: precoMedio ? String(precoMedio.toFixed(2)) : "",
-          // ✅ dyMeses vai ser preenchido pelo merge com DY base
-          dyMeses: Array(DY_MONTHS_12.length).fill(""),
+          // ✅ IMPORTANTE: 24 meses (compatível com o merge do CarteiraCash)
+          dyMeses: Array(DY_MONTHS_24.length).fill(""),
           dy: "",
         };
       });
@@ -164,30 +157,27 @@ export default function CardDividendosCash() {
     };
   }, [user]);
 
-  // ============================
-  // 3) Merge DY base (GitHub) na carteira
-  // ============================
+  // ✅ Merge usando 24 meses (igual CarteiraCash)
   const carteiraComDy = useMemo(() => {
-    return mergeDyBaseIntoCarteira(carteira, dyBase, DY_MONTHS_12);
+    return mergeDyBaseIntoCarteira(carteira, dyBase, DY_MONTHS_24);
   }, [carteira, dyBase]);
 
-  // ============================
-  // 4) Soma DY mensal total (12 meses fixos Dez/2025 → Nov/2026)
-  // ============================
-  const totals = useMemo(() => {
-    const dyMesTotal = Array(DY_MONTHS_12.length).fill(0);
+  // ✅ Soma 24 meses, depois recorta os 12 que o DASH quer mostrar
+  const totals12 = useMemo(() => {
+    const dyMesTotal = Array(DY_MONTHS_24.length).fill(0);
 
     carteiraComDy.forEach((r) => {
       const arrMeses = Array.isArray(r.dyMeses) ? r.dyMeses : [];
-      for (let i = 0; i < DY_MONTHS_12.length; i++) {
+      for (let i = 0; i < DY_MONTHS_24.length; i++) {
         dyMesTotal[i] += toNum(arrMeses[i]);
       }
     });
 
-    return dyMesTotal;
+    return dyMesTotal.slice(0, 12);
   }, [carteiraComDy]);
 
-  const max = Math.max(1, ...totals);
+  const max = Math.max(1, ...totals12);
+  const isEmpty = totals12.every((v) => (v || 0) === 0);
 
   const [animate, setAnimate] = useState(false);
   useEffect(() => {
@@ -221,8 +211,6 @@ export default function CardDividendosCash() {
     return () => ro.disconnect();
   }, []);
 
-  const isEmpty = totals.every((v) => (v || 0) === 0);
-
   return (
     <div className="rounded-3xl bg-slate-800/70 border border-white/10 shadow-lg p-4 w-[590px] h-[360px] overflow-hidden shrink-0 flex flex-col">
       <div className="flex items-center justify-between mb-3">
@@ -248,7 +236,7 @@ export default function CardDividendosCash() {
           </div>
         ) : (
           <div className="flex items-end gap-1 h-full">
-            {totals.map((valor, i) => {
+            {totals12.map((valor, i) => {
               const alturaReal = Math.max(
                 4,
                 Math.round((valor / max) * barMaxHeight)
@@ -280,7 +268,7 @@ export default function CardDividendosCash() {
                     onMouseLeave={() => setTip(null)}
                   />
 
-                  {/* ✅ Sempre mês em cima e ano embaixo (fixo do período) */}
+                  {/* ✅ mês em cima, ano embaixo (fixo) */}
                   <div
                     className="text-[13px] text-slate-200 text-center leading-tight whitespace-nowrap font-medium"
                     style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
@@ -301,9 +289,7 @@ export default function CardDividendosCash() {
         )}
       </div>
 
-      {tip && (
-        <Tooltip x={tip.x} y={tip.y} label={tip.label} valor={tip.valor} />
-      )}
+      {tip && <Tooltip x={tip.x} y={tip.y} label={tip.label} valor={tip.valor} />}
     </div>
   );
 }
