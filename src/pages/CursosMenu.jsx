@@ -7,7 +7,7 @@ function CourseCard({
   bullets = [],
   badge,
   imageUrl,
-  imagePosition = "50% 50%", // padrão central
+  imagePosition = "50% 50%",
   icon,
   onClick,
 }) {
@@ -122,12 +122,6 @@ export default function CursosMenu({ onNavigate }) {
             ]}
             onClick={() => onNavigate("curso-configuracao-mental")}
           />
-        </div>
-
-        {/* FOOTER */}
-        <div className="mt-6 text-xs text-slate-500">
-          <span className="text-slate-200">/public/img</span>. Exemplo:{" "}
-          <span className="text-slate-200">curso-dividendo.jpg</span>
         </div>
       </div>
     </div>
