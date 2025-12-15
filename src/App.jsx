@@ -1,4 +1,4 @@
-// src/App.jsx — VERSÃO ATUALIZADA COM RESET DE SENHA E RESUMO CORRIGIDO (+ MENU DE CURSOS)
+// src/App.jsx - updated (reset password + courses menu)
 import { useEffect, useMemo, useState, useCallback } from "react";
 import AppLayout from "./layouts/AppLayout";
 
@@ -22,7 +22,7 @@ import CashControlHome from "./pages/CashControlHome";
 import Login from "./pages/Login.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 
-// NOVOS IMPORTS
+// new course pages
 import CursosMenu from "./pages/CursosMenu.jsx";
 import CursoConfiguracaoMental from "./pages/CursoConfiguracaoMental.jsx";
 
@@ -44,7 +44,7 @@ const MES_IDX = {
   Dez: 11,
 };
 
-// CARREGA TODOS OS REGISTROS DO SUPABASE
+// load records from supabase
 async function carregarRegistrosAtivos() {
   const {
     data: { user },
@@ -81,7 +81,7 @@ async function carregarRegistrosAtivos() {
   return porMes;
 }
 
-// DASHBOARD PRINCIPAL
+// dashboard
 function DashboardMain({ registrosPorMes, onDeleteMonth }) {
   const columns = useMemo(
     () =>
@@ -233,12 +233,13 @@ export default function App() {
     refreshData();
   };
 
-  if (!authLoaded)
+  if (!authLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-300">
-        Carregando...
+        Loading...
       </div>
     );
+  }
 
   const protectedViews = [
     "dashboard",
@@ -251,7 +252,9 @@ export default function App() {
     "mercado",
   ];
 
-  if (!user && protectedViews.includes(view)) setView("login");
+  if (!user && protectedViews.includes(view)) {
+    setView("login");
+  }
 
   const screens = {
     landing: <Landing onNavigate={setView} />,
@@ -280,7 +283,7 @@ export default function App() {
     carteira: <CarteiraCash />,
     despesas: <Despesas />,
     relatorios: <Relatorios />,
-    mercado: <div className="p-6 text-white">Mercado (em breve)</div>,
+    mercado: <div className="p-6 text-white">Mercado (soon)</div>,
   };
 
   if (
@@ -304,12 +307,7 @@ export default function App() {
       currentView={view}
       refreshData={refreshData}
     >
-      {screens[view] || (
-        <DashboardMain
-          registrosPorMes={registrosPorMes}
-          onDeleteMonth={handleDeleteMonth}
-        />
-      )}
+      {screens[view]}
     </AppLayout>
   );
 }
