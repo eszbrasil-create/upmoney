@@ -1,4 +1,4 @@
-// src/App.jsx — VERSÃO ATUALIZADA COM RESET DE SENHA E RESUMO CORRIGIDO
+// src/App.jsx — VERSÃO ATUALIZADA COM MENU DE CURSOS
 import { useEffect, useMemo, useState, useCallback } from "react";
 import AppLayout from "./layouts/AppLayout";
 
@@ -13,6 +13,9 @@ import CarteiraCash from "./pages/CarteiraCash";
 import Despesas from "./pages/Despesas";
 import Relatorios from "./pages/Relatorios";
 import CursosPage from "./pages/CursosPage";
+import CursosMenu from "./pages/CursosMenu";
+import CursoReconfiguracaoMental from "./pages/CursoReconfiguracaoMental";
+
 import Landing from "./pages/Landing";
 import SaidaFiscal from "./pages/SaidaFiscal";
 import InvistaExterior from "./pages/InvistaExterior";
@@ -40,7 +43,9 @@ const MES_IDX = {
   Dez: 11,
 };
 
-// CARREGA TODOS OS REGISTROS DO SUPABASE
+// ================================
+// CARREGA REGISTROS
+// ================================
 async function carregarRegistrosAtivos() {
   const {
     data: { user },
@@ -60,9 +65,7 @@ async function carregarRegistrosAtivos() {
     .select("registro_id, nome_ativo, valor");
 
   const porMes = {};
-  registros.forEach((reg) => {
-    porMes[reg.mes_ano] = [];
-  });
+  registros.forEach((reg) => (porMes[reg.mes_ano] = []));
 
   itens?.forEach((i) => {
     const reg = registros.find((r) => r.id === i.registro_id);
@@ -77,78 +80,64 @@ async function carregarRegistrosAtivos() {
   return porMes;
 }
 
-// DASHBOARD PRINCIPAL
+// ================================
+// DASHBOARD
+// ================================
 function DashboardMain({ registrosPorMes, onDeleteMonth }) {
-  // Meses ordenados cronologicamente
   const columns = useMemo(
     () =>
       Object.keys(registrosPorMes).sort((a, b) => {
         const [ma, aa] = a.split("/");
         const [mb, ab] = b.split("/");
-        const ya = parseInt(aa, 10);
-        const yb = parseInt(ab, 10);
-        const ia = MES_IDX[ma] ?? 0;
-        const ib = MES_IDX[mb] ?? 0;
-        return ya !== yb ? ya - yb : ia - ib;
+        return aa !== ab
+          ? parseInt(aa) - parseInt(ab)
+          : (MES_IDX[ma] ?? 0) - (MES_IDX[mb] ?? 0);
       }),
     [registrosPorMes]
   );
 
-  // Linhas: cada ativo, com seus valores por mês
   const rows = useMemo(() => {
     const ativos = new Set();
     columns.forEach((mes) =>
       (registrosPorMes[mes] || []).forEach((i) => ativos.add(i.nome))
     );
-    return Array.from(ativos)
-      .sort()
-      .map((nome) => ({
-        ativo: nome,
-        valores: columns.map((mes) => {
-          const item = (registrosPorMes[mes] || []).find(
-            (i) => i.nome === nome
-          );
-          return item ? Number(item.valor) : 0;
-        }),
-      }));
+    return Array.from(ativos).map((nome) => ({
+      ativo: nome,
+      valores: columns.map(
+        (mes) =>
+          (registrosPorMes[mes] || []).find((i) => i.nome === nome)?.valor || 0
+      ),
+    }));
   }, [columns, registrosPorMes]);
 
-  // 🔥 RESUMO: patrimônio atual, comparativos e distribuição
   const dadosResumo = useMemo(() => {
-    if (columns.length === 0) {
+    if (!columns.length)
       return {
         mesAtual: "-",
         patrimonioAtual: 0,
         comparativos: {},
         distribuicao: [],
       };
-    }
 
     const totais = columns.map((mes) =>
       (registrosPorMes[mes] || []).reduce(
-        (acc, item) => acc + (Number(item.valor) || 0),
+        (acc, i) => acc + Number(i.valor || 0),
         0
       )
     );
 
-    const idxLast = columns.length - 1;
-    const mesAtualKey = columns[idxLast];
-
-    function pegarMesesAtras(qtd) {
-      const pos = idxLast - qtd;
-      return pos >= 0 ? totais[pos] : null;
-    }
+    const idx = columns.length - 1;
 
     return {
-      mesAtual: mesAtualKey,
-      patrimonioAtual: totais[idxLast],
+      mesAtual: columns[idx],
+      patrimonioAtual: totais[idx],
       comparativos: {
-        mesAnterior: pegarMesesAtras(1),
-        m3: pegarMesesAtras(3),
-        m6: pegarMesesAtras(6),
-        m12: pegarMesesAtras(12),
+        mesAnterior: totais[idx - 1] ?? null,
+        m3: totais[idx - 3] ?? null,
+        m6: totais[idx - 6] ?? null,
+        m12: totais[idx - 12] ?? null,
       },
-      distribuicao: [...(registrosPorMes[mesAtualKey] || [])].sort(
+      distribuicao: [...(registrosPorMes[columns[idx]] || [])].sort(
         (a, b) => b.valor - a.valor
       ),
     };
@@ -156,11 +145,11 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
 
   return (
     <div className="pt-1 pr-6 pl-0">
-      <div className="flex items-start gap-3 flex-wrap md:flex-nowrap">
+      <div className="flex gap-3 flex-wrap md:flex-nowrap">
         <CardResumo data={dadosResumo} />
         <CardEvolucao columns={columns} rows={rows} />
       </div>
-      <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
+      <div className="mt-3 flex gap-3 flex-wrap md:flex-nowrap">
         <CardRegistro
           columns={columns}
           rows={rows}
@@ -168,7 +157,7 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
         />
         <CardDividendosCash columns={columns} />
       </div>
-      <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
+      <div className="mt-3 flex gap-3 flex-wrap md:flex-nowrap">
         <CardEvolucaoPct columns={columns} rows={rows} />
         <CardParticipacao
           itens={dadosResumo.distribuicao}
@@ -179,19 +168,11 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
   );
 }
 
+// ================================
+// APP
+// ================================
 export default function App() {
-  // 👇 já inicializa a view certa se a URL for /reset-password
-  const [view, setView] = useState(() => {
-    if (typeof window !== "undefined") {
-      const path = window.location.pathname;
-      const hash = window.location.hash;
-      if (path === "/reset-password" || hash.includes("reset-password")) {
-        return "reset-password";
-      }
-    }
-    return "landing";
-  });
-
+  const [view, setView] = useState("landing");
   const [user, setUser] = useState(null);
   const [authLoaded, setAuthLoaded] = useState(false);
   const [registrosPorMes, setRegistrosPorMes] = useState({});
@@ -202,32 +183,17 @@ export default function App() {
     []
   );
 
-  // CARREGA DADOS DO SUPABASE
   useEffect(() => {
-    if (!user) {
-      setRegistrosPorMes({});
-      return;
-    }
+    if (!user) return setRegistrosPorMes({});
     carregarRegistrosAtivos().then(setRegistrosPorMes);
   }, [user, refreshTrigger]);
 
-  // AUTENTICAÇÃO
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
-    supabase.auth.onAuthStateChange((_event, session) =>
-      setUser(session?.user ?? null)
+    supabase.auth.onAuthStateChange((_e, s) =>
+      setUser(s?.user ?? null)
     );
     setAuthLoaded(true);
-  }, []);
-
-  // Garante que se vier um link de recuperação do Supabase, cai na tela de reset
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const hash = window.location.hash || "";
-    const path = window.location.pathname;
-    if (path === "/reset-password" || hash.includes("type=recovery")) {
-      setView("reset-password");
-    }
   }, []);
 
   const handleDeleteMonth = async (mesAno) => {
@@ -243,15 +209,17 @@ export default function App() {
       </div>
     );
 
-  // Views que exigem usuário logado
   const protectedViews = [
     "dashboard",
+    "cursos-menu",
     "cursos-dashboard",
+    "curso-reconfiguracao-mental",
     "carteira",
     "despesas",
     "relatorios",
     "mercado",
   ];
+
   if (!user && protectedViews.includes(view)) setView("login");
 
   const screens = {
@@ -263,20 +231,26 @@ export default function App() {
     cursos: <Cursos onNavigate={setView} />,
     noticias: <Noticias onNavigate={setView} />,
     "cashcontrol-home": <CashControlHome onNavigate={setView} />,
+
     dashboard: (
       <DashboardMain
         registrosPorMes={registrosPorMes}
         onDeleteMonth={handleDeleteMonth}
       />
     ),
+
+    "cursos-menu": <CursosMenu onNavigate={setView} />,
     "cursos-dashboard": <CursosPage />,
+    "curso-reconfiguracao-mental": (
+      <CursoReconfiguracaoMental onNavigate={setView} />
+    ),
+
     carteira: <CarteiraCash />,
     despesas: <Despesas />,
     relatorios: <Relatorios />,
     mercado: <div className="p-6 text-white">Mercado (em breve)</div>,
   };
 
-  // Telas full-screen (sem sidebar)
   if (
     [
       "landing",
@@ -292,19 +266,13 @@ export default function App() {
     return screens[view];
   }
 
-  // Todas as outras telas com sidebar
   return (
     <AppLayout
       onNavigate={setView}
       currentView={view}
       refreshData={refreshData}
     >
-      {screens[view] || (
-        <DashboardMain
-          registrosPorMes={registrosPorMes}
-          onDeleteMonth={handleDeleteMonth}
-        />
-      )}
+      {screens[view]}
     </AppLayout>
   );
 }
