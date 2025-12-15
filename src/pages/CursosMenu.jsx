@@ -86,20 +86,12 @@ export default function CursosMenu({ onNavigate }) {
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold text-slate-100">Menu de Cursos</h1>
-            <p className="text-slate-300 mt-2 max-w-xl">
+            <p className="text-slate-300 mt-2 whitespace-nowrap">
               Aprenda com um método prático, organizado e focado em resultado real.
             </p>
           </div>
 
-          <a
-            href="https://wa.me/"
-            target="_blank"
-            rel="noreferrer"
-            className="px-4 py-2 rounded-lg border border-white/10 bg-slate-900/40 hover:bg-slate-900/60 text-slate-100 text-sm transition"
-          >
-            Falar no WhatsApp
-          </a>
-        </div>
+
 
         {/* GRID DE CURSOS */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -128,7 +120,7 @@ export default function CursosMenu({ onNavigate }) {
             bullets={[
               "Elimine procrastinação e bloqueios mentais",
               "Construa disciplina com ações simples",
-              "Construa disciplina com ações simples",
+              "Invista com razão",
             ]}
             onClick={() => onNavigate("curso-configuracao-mental")}
           />
