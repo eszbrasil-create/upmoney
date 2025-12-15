@@ -24,7 +24,7 @@ import ResetPassword from "./pages/ResetPassword.jsx";
 
 // ✅ NOVOS IMPORTS
 import CursosMenu from "./pages/CursosMenu.jsx";
-import CursoReconfiguracaoMental from "./pages/CursoReconfiguracaoMental.jsx";
+import CursoConfiguracaoMental from "./pages/CursoConfiguracaoMental.jsx";
 
 import { supabase } from "./lib/supabaseClient";
 import { deleteRegistroAtivosPorMesAno } from "./components/modals/EditAtivosModal";
@@ -83,7 +83,6 @@ async function carregarRegistrosAtivos() {
 
 // DASHBOARD PRINCIPAL
 function DashboardMain({ registrosPorMes, onDeleteMonth }) {
-  // Meses ordenados cronologicamente
   const columns = useMemo(
     () =>
       Object.keys(registrosPorMes).sort((a, b) => {
@@ -98,7 +97,6 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
     [registrosPorMes]
   );
 
-  // Linhas: cada ativo, com seus valores por mês
   const rows = useMemo(() => {
     const ativos = new Set();
     columns.forEach((mes) =>
@@ -117,7 +115,6 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
       }));
   }, [columns, registrosPorMes]);
 
-  // 🔥 RESUMO: patrimônio atual, comparativos e distribuição
   const dadosResumo = useMemo(() => {
     if (columns.length === 0) {
       return {
@@ -184,7 +181,6 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
 }
 
 export default function App() {
-  // 👇 já inicializa a view certa se a URL for /reset-password
   const [view, setView] = useState(() => {
     if (typeof window !== "undefined") {
       const path = window.location.pathname;
@@ -206,7 +202,6 @@ export default function App() {
     []
   );
 
-  // CARREGA DADOS DO SUPABASE
   useEffect(() => {
     if (!user) {
       setRegistrosPorMes({});
@@ -215,7 +210,6 @@ export default function App() {
     carregarRegistrosAtivos().then(setRegistrosPorMes);
   }, [user, refreshTrigger]);
 
-  // AUTENTICAÇÃO
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
     supabase.auth.onAuthStateChange((_event, session) =>
@@ -224,7 +218,6 @@ export default function App() {
     setAuthLoaded(true);
   }, []);
 
-  // Garante que se vier um link de recuperação do Supabase, cai na tela de reset
   useEffect(() => {
     if (typeof window === "undefined") return;
     const hash = window.location.hash || "";
@@ -247,17 +240,17 @@ export default function App() {
       </div>
     );
 
-  // Views que exigem usuário logado
   const protectedViews = [
     "dashboard",
     "cursos-dashboard",
-    "cursos-menu", // ✅ NOVO
-    "curso-reconfiguracao-mental", // ✅ NOVO
+    "cursos-menu",
+    "curso-configuracao-mental",
     "carteira",
     "despesas",
     "relatorios",
     "mercado",
   ];
+
   if (!user && protectedViews.includes(view)) setView("login");
 
   const screens = {
@@ -277,13 +270,11 @@ export default function App() {
       />
     ),
 
-    // ✅ NOVAS VIEWS
     "cursos-menu": <CursosMenu onNavigate={setView} />,
-    "curso-reconfiguracao-mental": (
-      <CursoReconfiguracaoMental onNavigate={setView} />
+    "curso-configuracao-mental": (
+      <CursoConfiguracaoMental onNavigate={setView} />
     ),
 
-    // Mantém o curso atual intacto
     "cursos-dashboard": <CursosPage />,
 
     carteira: <CarteiraCash />,
@@ -292,7 +283,6 @@ export default function App() {
     mercado: <div className="p-6 text-white">Mercado (em breve)</div>,
   };
 
-  // Telas full-screen (sem sidebar)
   if (
     [
       "landing",
@@ -308,7 +298,6 @@ export default function App() {
     return screens[view];
   }
 
-  // Todas as outras telas com sidebar
   return (
     <AppLayout
       onNavigate={setView}
