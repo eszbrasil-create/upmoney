@@ -22,7 +22,7 @@ import CashControlHome from "./pages/CashControlHome";
 import Login from "./pages/Login.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 
-// ✅ NOVOS IMPORTS
+// NOVOS IMPORTS
 import CursosMenu from "./pages/CursosMenu.jsx";
 import CursoConfiguracaoMental from "./pages/CursoConfiguracaoMental.jsx";
 
