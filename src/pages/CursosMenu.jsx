@@ -9,6 +9,7 @@ function CourseCard({
   imageUrl,
   icon,
   onClick,
+  imagePosition = "50% 50%", // ✅ controla o foco do corte (object-position)
 }) {
   return (
     <button
@@ -17,16 +18,15 @@ function CourseCard({
     >
       {/* IMAGEM / CAPA */}
       <div className="relative h-48 w-full overflow-hidden">
-        {/* FUNDO PADRÃO (sempre) */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-900 to-indigo-900" />
-
-        {/* IMAGEM (sem corte) */}
-        {imageUrl && (
+        {imageUrl ? (
           <img
             src={imageUrl}
             alt={title}
-            className="absolute inset-0 h-full w-full object-contain p-6 opacity-95 group-hover:opacity-100 transition"
+            className="h-full w-full object-cover opacity-90 group-hover:opacity-100 transition"
+            style={{ objectPosition: imagePosition }} // ✅ aqui ajusta sem “estragar” o layout
           />
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-slate-700 via-slate-900 to-indigo-900" />
         )}
 
         {/* OVERLAY */}
@@ -85,10 +85,11 @@ export default function CursosMenu({ onNavigate }) {
         {/* HEADER */}
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-3xl font-bold text-slate-100">Menu de Cursos</h1>
+            <h1 className="text-3xl font-bold text-slate-100">
+              Menu de Cursos
+            </h1>
             <p className="text-slate-300 mt-2 max-w-xl">
-              Aprenda com um método prático, organizado e focado em resultado
-              real.
+              Aprenda com um método prático, organizado e focado em resultado real.
             </p>
           </div>
 
@@ -110,6 +111,7 @@ export default function CursosMenu({ onNavigate }) {
             subtitle="Do zero à renda passiva"
             badge="Curso principal"
             imageUrl="/img/curso-dividendo.jpg"
+            imagePosition="50% 45%"   // ✅ leve ajuste (opcional)
             icon={<PiggyBank size={22} className="text-emerald-300" />}
             bullets={[
               "Entenda renda fixa e variável sem confusão",
@@ -124,6 +126,7 @@ export default function CursosMenu({ onNavigate }) {
             subtitle="Disciplina, foco e execução"
             badge="Novo"
             imageUrl="/img/curso-mente.jpg"
+            imagePosition="70% 45%"   // ✅ move o foco pra direita e alinha com o outro
             icon={<Sparkles size={22} className="text-emerald-300" />}
             bullets={[
               "Elimine procrastinação e bloqueios mentais",
@@ -135,9 +138,8 @@ export default function CursosMenu({ onNavigate }) {
 
         {/* FOOTER */}
         <div className="mt-6 text-xs text-slate-500">
-          As imagens devem ficar em{" "}
-          <span className="text-slate-200">/public/img</span>. Exemplo:{" "}
-          <span className="text-slate-200">curso-dividendo.jpg</span>
+          As imagens devem ficar em <span className="text-slate-200">/public/img</span>.
+          Exemplo: <span className="text-slate-200">curso-dividendo.jpg</span>
         </div>
       </div>
     </div>
