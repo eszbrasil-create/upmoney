@@ -17,14 +17,16 @@ function CourseCard({
     >
       {/* IMAGEM / CAPA */}
       <div className="relative h-48 w-full overflow-hidden">
-        {imageUrl ? (
+        {/* FUNDO PADRÃO (sempre) */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-900 to-indigo-900" />
+
+        {/* IMAGEM (sem corte) */}
+        {imageUrl && (
           <img
             src={imageUrl}
             alt={title}
-            className="h-full w-full object-cover opacity-90 group-hover:opacity-100 transition"
+            className="absolute inset-0 h-full w-full object-contain p-6 opacity-95 group-hover:opacity-100 transition"
           />
-        ) : (
-          <div className="h-full w-full bg-gradient-to-br from-slate-700 via-slate-900 to-indigo-900" />
         )}
 
         {/* OVERLAY */}
@@ -45,9 +47,7 @@ function CourseCard({
           </div>
           <div className="text-slate-100">
             <div className="text-lg font-bold leading-tight">{title}</div>
-            <div className="text-xs text-slate-300 mt-0.5">
-              {subtitle}
-            </div>
+            <div className="text-xs text-slate-300 mt-0.5">{subtitle}</div>
           </div>
         </div>
       </div>
@@ -56,10 +56,7 @@ function CourseCard({
       <div className="p-5">
         <div className="grid gap-2">
           {bullets.map((item, index) => (
-            <div
-              key={index}
-              className="text-sm text-slate-200 flex gap-2"
-            >
+            <div key={index} className="text-sm text-slate-200 flex gap-2">
               <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-emerald-400" />
               <span>{item}</span>
             </div>
@@ -88,11 +85,10 @@ export default function CursosMenu({ onNavigate }) {
         {/* HEADER */}
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-3xl font-bold text-slate-100">
-              Menu de Cursos
-            </h1>
+            <h1 className="text-3xl font-bold text-slate-100">Menu de Cursos</h1>
             <p className="text-slate-300 mt-2 max-w-xl">
-              Aprenda com um método prático, organizado e focado em resultado real.
+              Aprenda com um método prático, organizado e focado em resultado
+              real.
             </p>
           </div>
 
@@ -139,8 +135,9 @@ export default function CursosMenu({ onNavigate }) {
 
         {/* FOOTER */}
         <div className="mt-6 text-xs text-slate-500">
-          As imagens devem ficar em <span className="text-slate-200">/public/img</span>.
-          Exemplo: <span className="text-slate-200">curso-dividendo.jpg</span>
+          As imagens devem ficar em{" "}
+          <span className="text-slate-200">/public/img</span>. Exemplo:{" "}
+          <span className="text-slate-200">curso-dividendo.jpg</span>
         </div>
       </div>
     </div>
