@@ -126,7 +126,7 @@ export default function CursosMenu({ onNavigate }) {
             subtitle="Disciplina, foco e execução"
             badge="Novo"
             imageUrl="/img/curso-mente.jpg"
-            imagePosition="70% 45%"   // ✅ move o foco pra direita e alinha com o outro
+            imagePosition="70% 40%"   // ✅ move o foco pra direita e alinha com o outro
             icon={<Sparkles size={22} className="text-emerald-300" />}
             bullets={[
               "Elimine procrastinação e bloqueios mentais",
