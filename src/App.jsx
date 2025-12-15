@@ -1,7 +1,7 @@
-// src/App.jsx - updated (reset password + courses menu)
 import { useEffect, useMemo, useState, useCallback } from "react";
 import AppLayout from "./layouts/AppLayout";
 
+// Cards
 import CardResumo from "./components/cards/CardResumo";
 import CardRegistro from "./components/cards/CardRegistro";
 import CardEvolucao from "./components/cards/CardEvolucao";
@@ -9,6 +9,7 @@ import CardEvolucaoPct from "./components/cards/CardEvolucaoPct";
 import CardParticipacao from "./components/cards/CardParticipacao";
 import CardDividendosCash from "./components/cards/CardDividendosCash";
 
+// Pages
 import CarteiraCash from "./pages/CarteiraCash";
 import Despesas from "./pages/Despesas";
 import Relatorios from "./pages/Relatorios";
@@ -22,10 +23,11 @@ import CashControlHome from "./pages/CashControlHome";
 import Login from "./pages/Login.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 
-// new course pages
+// Cursos (NOVOS)
 import CursosMenu from "./pages/CursosMenu.jsx";
 import CursoConfiguracaoMental from "./pages/CursoConfiguracaoMental.jsx";
 
+// Libs
 import { supabase } from "./lib/supabaseClient";
 import { deleteRegistroAtivosPorMesAno } from "./components/modals/EditAtivosModal";
 
@@ -44,11 +46,14 @@ const MES_IDX = {
   Dez: 11,
 };
 
-// load records from supabase
+// ===============================
+// SUPABASE — REGISTROS
+// ===============================
 async function carregarRegistrosAtivos() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   if (!user) return {};
 
   const { data: registros } = await supabase
@@ -81,27 +86,28 @@ async function carregarRegistrosAtivos() {
   return porMes;
 }
 
-// dashboard
+// ===============================
+// DASHBOARD
+// ===============================
 function DashboardMain({ registrosPorMes, onDeleteMonth }) {
-  const columns = useMemo(
-    () =>
-      Object.keys(registrosPorMes).sort((a, b) => {
-        const [ma, aa] = a.split("/");
-        const [mb, ab] = b.split("/");
-        const ya = parseInt(aa, 10);
-        const yb = parseInt(ab, 10);
-        const ia = MES_IDX[ma] ?? 0;
-        const ib = MES_IDX[mb] ?? 0;
-        return ya !== yb ? ya - yb : ia - ib;
-      }),
-    [registrosPorMes]
-  );
+  const columns = useMemo(() => {
+    return Object.keys(registrosPorMes).sort((a, b) => {
+      const [ma, aa] = a.split("/");
+      const [mb, ab] = b.split("/");
+      const ya = parseInt(aa, 10);
+      const yb = parseInt(ab, 10);
+      const ia = MES_IDX[ma] ?? 0;
+      const ib = MES_IDX[mb] ?? 0;
+      return ya !== yb ? ya - yb : ia - ib;
+    });
+  }, [registrosPorMes]);
 
   const rows = useMemo(() => {
     const ativos = new Set();
     columns.forEach((mes) =>
       (registrosPorMes[mes] || []).forEach((i) => ativos.add(i.nome))
     );
+
     return Array.from(ativos)
       .sort()
       .map((nome) => ({
@@ -135,10 +141,10 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
     const idxLast = columns.length - 1;
     const mesAtualKey = columns[idxLast];
 
-    function pegarMesesAtras(qtd) {
+    const pegarMesesAtras = (qtd) => {
       const pos = idxLast - qtd;
       return pos >= 0 ? totais[pos] : null;
-    }
+    };
 
     return {
       mesAtual: mesAtualKey,
@@ -161,6 +167,7 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
         <CardResumo data={dadosResumo} />
         <CardEvolucao columns={columns} rows={rows} />
       </div>
+
       <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
         <CardRegistro
           columns={columns}
@@ -169,6 +176,7 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
         />
         <CardDividendosCash columns={columns} />
       </div>
+
       <div className="mt-3 flex items-start gap-3 flex-wrap md:flex-nowrap">
         <CardEvolucaoPct columns={columns} rows={rows} />
         <CardParticipacao
@@ -180,6 +188,9 @@ function DashboardMain({ registrosPorMes, onDeleteMonth }) {
   );
 }
 
+// ===============================
+// APP
+// ===============================
 export default function App() {
   const [view, setView] = useState(() => {
     if (typeof window !== "undefined") {
@@ -197,10 +208,9 @@ export default function App() {
   const [registrosPorMes, setRegistrosPorMes] = useState({});
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const refreshData = useCallback(
-    () => setRefreshTrigger((t) => t + 1),
-    []
-  );
+  const refreshData = useCallback(() => {
+    setRefreshTrigger((t) => t + 1);
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -211,11 +221,14 @@ export default function App() {
   }, [user, refreshTrigger]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user ?? null));
-    supabase.auth.onAuthStateChange((_event, session) =>
-      setUser(session?.user ?? null)
-    );
-    setAuthLoaded(true);
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user ?? null);
+      setAuthLoaded(true);
+    });
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
   }, []);
 
   useEffect(() => {
@@ -236,7 +249,7 @@ export default function App() {
   if (!authLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-300">
-        Loading...
+        Carregando...
       </div>
     );
   }
@@ -279,11 +292,10 @@ export default function App() {
     ),
 
     "cursos-dashboard": <CursosPage />,
-
     carteira: <CarteiraCash />,
     despesas: <Despesas />,
     relatorios: <Relatorios />,
-    mercado: <div className="p-6 text-white">Mercado (soon)</div>,
+    mercado: <div className="p-6 text-white">Mercado (em breve)</div>,
   };
 
   if (
@@ -307,7 +319,13 @@ export default function App() {
       currentView={view}
       refreshData={refreshData}
     >
-      {screens[view]}
+      {screens[view] ||
+        (
+          <DashboardMain
+            registrosPorMes={registrosPorMes}
+            onDeleteMonth={handleDeleteMonth}
+          />
+        )}
     </AppLayout>
   );
 }
