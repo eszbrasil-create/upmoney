@@ -77,7 +77,7 @@ export default function Landing({ onNavigate }) {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
               <span className="relative inline-flex rounded-full h-5 w-5 bg-white"></span>
             </span>
-            VAGAS LIMITADAS PARA 1 TURMA · DEPOIS SÓ EM 2026
+            VAGAS LIMITADAS PARA 1 TURMA 
           </div>
         </div>
 
