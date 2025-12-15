@@ -7,7 +7,7 @@ function CourseCard({
   bullets = [],
   badge,
   imageUrl,
-  imagePosition = "50% 50%", // <-- NOVO (padrão central)
+  imagePosition = "50% 50%", // padrão central
   icon,
   onClick,
 }) {
@@ -23,7 +23,7 @@ function CourseCard({
             src={imageUrl}
             alt={title}
             className="h-full w-full object-cover opacity-90 group-hover:opacity-100 transition"
-            style={{ objectPosition: imagePosition }} // <-- AQUI É ONDE FUNCIONA
+            style={{ objectPosition: imagePosition }}
           />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-slate-700 via-slate-900 to-indigo-900" />
@@ -90,8 +90,7 @@ export default function CursosMenu({ onNavigate }) {
               Aprenda com um método prático, organizado e focado em resultado real.
             </p>
           </div>
-
-
+        </div>
 
         {/* GRID DE CURSOS */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -100,7 +99,6 @@ export default function CursosMenu({ onNavigate }) {
             subtitle="Do zero à renda passiva"
             badge="Curso principal"
             imageUrl="/img/curso-dividendo.jpg"
-            // aqui pode deixar padrão (centro)
             icon={<PiggyBank size={22} className="text-emerald-300" />}
             bullets={[
               "Entenda renda fixa e variável sem confusão",
@@ -115,7 +113,7 @@ export default function CursosMenu({ onNavigate }) {
             subtitle="Disciplina, foco e execução"
             badge="Novo"
             imageUrl="/img/curso-mente.jpg"
-            imagePosition="85% 50%" // <-- AJUSTE AQUI (puxa pra direita)
+            imagePosition="85% 50%"
             icon={<Sparkles size={22} className="text-emerald-300" />}
             bullets={[
               "Elimine procrastinação e bloqueios mentais",
@@ -126,6 +124,7 @@ export default function CursosMenu({ onNavigate }) {
           />
         </div>
 
+        {/* FOOTER */}
         <div className="mt-6 text-xs text-slate-500">
           As imagens devem ficar em{" "}
           <span className="text-slate-200">/public/img</span>. Exemplo:{" "}
