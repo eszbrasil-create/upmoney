@@ -124,7 +124,7 @@ export default function EditAtivosModal({
     setErro("");
   }, [open]);
 
-  // Ao trocar o mês manualmente: sempre reseta para UMA linha virgem
+  // Ao trocar o mês: reseta linhas
   useEffect(() => {
     if (!open || !mesAno) return;
     setLinhas([{ id: crypto.randomUUID(), nome: "", valor: "" }]);
@@ -140,7 +140,7 @@ export default function EditAtivosModal({
   const removerLinha = (id) =>
     setLinhas((prev) => prev.filter((l) => l.id !== id));
 
-  // helper para converter "Jan/2025" -> chave numérica
+  // converter "Jan/2025" -> chave numérica
   const parseMesAnoKey = (mesAnoStr) => {
     if (!mesAnoStr) return null;
     const [mStr, anoStr] = mesAnoStr.split("/");
@@ -148,7 +148,7 @@ export default function EditAtivosModal({
     if (idx === -1) return null;
     const anoNum = Number(anoStr);
     if (Number.isNaN(anoNum)) return null;
-    return anoNum * 12 + idx; // ano * 12 + indiceMes
+    return anoNum * 12 + idx;
   };
 
   // Copiar "mês anterior"
@@ -165,6 +165,7 @@ export default function EditAtivosModal({
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
       if (!user) {
         setIsLoading(false);
         setErro("Usuário não autenticado.");
@@ -177,7 +178,6 @@ export default function EditAtivosModal({
         .eq("user_id", user.id);
 
       if (error) throw error;
-
       if (!regs || regs.length === 0) {
         setIsLoading(false);
         setErro("Você ainda não possui nenhum mês salvo para copiar.");
@@ -187,23 +187,12 @@ export default function EditAtivosModal({
       const keyAtual = parseMesAnoKey(mesAno);
 
       let candidatos = regs
-        .map((r) => ({
-          ...r,
-          key: parseMesAnoKey(r.mes_ano),
-        }))
+        .map((r) => ({ ...r, key: parseMesAnoKey(r.mes_ano) }))
         .filter((r) => r.key !== null);
-
-      if (candidatos.length === 0) {
-        setIsLoading(false);
-        setErro("Não foi possível interpretar as datas salvas para copiar.");
-        return;
-      }
 
       if (keyAtual !== null) {
         const anteriores = candidatos.filter((r) => r.key < keyAtual);
-        if (anteriores.length > 0) {
-          candidatos = anteriores;
-        }
+        if (anteriores.length > 0) candidatos = anteriores;
       }
 
       candidatos.sort((a, b) => b.key - a.key);
@@ -239,7 +228,7 @@ export default function EditAtivosModal({
     }
   };
 
-  // 🔧 AQUI É ONDE ESTAVA O PROBLEMA: SALVAR SOBRESCREVIA TUDO
+  // SALVAR — mescla itens existentes com os novos
   const salvar = async () => {
     if (!mesAno) return setErro("Selecione um mês.");
     setErro("");
@@ -251,9 +240,7 @@ export default function EditAtivosModal({
     });
 
     if (linhasParciais.length > 0) {
-      setErro(
-        "Preencha NOME DO ATIVO e VALOR em todas as linhas usadas ou apague as linhas incompletas."
-      );
+      setErro("Preencha NOME DO ATIVO e VALOR em todas as linhas usadas ou apague as linhas incompletas.");
       return;
     }
 
@@ -270,7 +257,6 @@ export default function EditAtivosModal({
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
-      // 1) Busca (ou cria) o registro do mês
       const { data: regExistente } = await supabase
         .from("registros_ativos")
         .select("id")
@@ -279,8 +265,8 @@ export default function EditAtivosModal({
         .maybeSingle();
 
       let registroId = regExistente?.id;
+
       if (!registroId) {
-        // cria registro "casca" com total 0 por enquanto
         const { data } = await supabase
           .from("registros_ativos")
           .insert({ user_id: user.id, mes_ano: mesAno, total: 0 })
@@ -289,34 +275,28 @@ export default function EditAtivosModal({
         registroId = data.id;
       }
 
-      // 2) Carrega itens antigos do mês (se houver)
       const { data: itensAntigos } = await supabase
         .from("registros_ativos_itens")
         .select("nome_ativo, valor")
         .eq("registro_id", registroId);
 
-      // 3) Monta um mapa nome_ativo -> valor a partir do que já existia
       const mapa = new Map();
 
       if (Array.isArray(itensAntigos)) {
         for (const it of itensAntigos) {
           const nome = String(it.nome_ativo || "").trim();
           if (!nome) continue;
-          const valNum = Number(it.valor) || 0;
-          mapa.set(nome, valNum);
+          mapa.set(nome, Number(it.valor) || 0);
         }
       }
 
-      // 4) Aplica os itens novos/atuais: substitui se já existe, adiciona se for novo
       for (const l of itensValidos) {
         const nome = l.nome.trim();
-        const valNum =
-          Number(l.valor.replace(/\./g, "").replace(",", ".")) || 0;
+        const valNum = Number(l.valor.replace(/\./g, "").replace(",", ".")) || 0;
         if (!nome) continue;
-        mapa.set(nome, valNum); // sobrescreve o valor anterior deste ativo
+        mapa.set(nome, valNum);
       }
 
-      // 5) Constrói lista final de itens a salvar
       const itensFinais = Array.from(mapa.entries()).map(([nome_ativo, valor]) => ({
         registro_id: registroId,
         user_id: user.id,
@@ -324,21 +304,11 @@ export default function EditAtivosModal({
         valor,
       }));
 
-      // 6) Recalcula o total com base em TODOS os ativos (antigos + novos mesclados)
       const totalCalc = itensFinais.reduce((acc, it) => acc + (Number(it.valor) || 0), 0);
 
-      // 7) Atualiza total no registro principal
-      await supabase
-        .from("registros_ativos")
-        .update({ total: totalCalc })
-        .eq("id", registroId);
+      await supabase.from("registros_ativos").update({ total: totalCalc }).eq("id", registroId);
 
-      // 8) Sobrescreve itens do mês com a lista mesclada
-      await supabase
-        .from("registros_ativos_itens")
-        .delete()
-        .eq("registro_id", registroId);
-
+      await supabase.from("registros_ativos_itens").delete().eq("registro_id", registroId);
       await supabase.from("registros_ativos_itens").insert(itensFinais);
 
       onSave?.({ mesAno, total: totalCalc, deleted: false });
@@ -389,7 +359,9 @@ export default function EditAtivosModal({
 
           {/* Linha 1 - Título */}
           <div className="bg-gray-200 px-8 py-2 border-b border-gray-300">
-            <h2 className="text-lg font-bold text-gray-800 text-center">Editar Ativos</h2>
+            <h2 className="text-lg font-bold text-gray-800 text-center">
+              Editar Ativos
+            </h2>
           </div>
 
           {/* Linha 2 - Mês/Ano + Copiar + Adicionar */}
@@ -430,22 +402,17 @@ export default function EditAtivosModal({
                     <th className="px-3 py-2 w-12 text-center">Lixeira</th>
                   </tr>
                 </thead>
+
                 <tbody className="divide-y divide-gray-200">
                   {isLoading ? (
                     <tr>
-                      <td
-                        colSpan={3}
-                        className="text-center py-8 text-gray-500 text-xs font-medium"
-                      >
+                      <td colSpan={3} className="text-center py-8 text-gray-500 text-xs font-medium">
                         Carregando dados...
                       </td>
                     </tr>
                   ) : linhas.length === 0 ? (
                     <tr>
-                      <td
-                        colSpan={3}
-                        className="text-center py-8 text-gray-400 text-xs font-medium"
-                      >
+                      <td colSpan={3} className="text-center py-8 text-gray-400 text-xs font-medium">
                         Nenhum ativo adicionado
                       </td>
                     </tr>
@@ -473,6 +440,7 @@ export default function EditAtivosModal({
             >
               <Trash2 size={14} /> Zerar este mês
             </button>
+
             <div className="text-right">
               <div className="text-[10px] text-gray-600 uppercase tracking-wide">
                 Total do mês
@@ -504,7 +472,7 @@ export default function EditAtivosModal({
   );
 }
 
-/* ============== LINHA DA TABELA ============== */
+/* ============== LINHA DA TABELA (com dropdown corrigido) ============== */
 function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
   const inputRef = useRef(null);
   const [query, setQuery] = useState(linha.nome || "");
@@ -516,9 +484,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
 
   const sugestoes = useMemo(() => {
     if (!ativosExistentes || ativosExistentes.length === 0) return [];
-    if (!query.trim()) {
-      return ativosExistentes.slice(0, 8);
-    }
+    if (!query.trim()) return ativosExistentes.slice(0, 8);
     return ativosExistentes
       .filter((a) => a.toLowerCase().includes(query.toLowerCase()))
       .slice(0, 8);
@@ -542,11 +508,12 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
             placeholder="Ex: Petrobras, Tesouro Selic..."
             className="w-full px-3 py-1.5 text-xs font-medium text-gray-800 bg-white border border-gray-300 rounded-md focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
           />
+
           {showDropdown &&
             sugestoes.length > 0 &&
             createPortal(
               <div
-                className="fixed bg-white border-2 border-gray-300 rounded-xl shadow-2xl overflow-hidden z-[9999] text-emerald-700"
+                className="fixed bg-white border-2 border-gray-300 rounded-xl shadow-2xl overflow-hidden text-emerald-700 z-[1000000]"
                 style={{
                   top: inputRef.current?.getBoundingClientRect().bottom + window.scrollY + 8,
                   left: inputRef.current?.getBoundingClientRect().left + window.scrollX,
@@ -572,6 +539,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
             )}
         </div>
       </td>
+
       <td className="px-3 py-2">
         <input
           type="text"
@@ -590,6 +558,7 @@ function LinhaAtivoSimples({ linha, onUpdate, onRemove, ativosExistentes }) {
           className="w-full px-3 py-1.5 text-xs font-bold text-right text-emerald-700 bg-white border border-gray-300 rounded-md focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none"
         />
       </td>
+
       <td className="px-3 py-2 text-center">
         <button
           onClick={onRemove}
