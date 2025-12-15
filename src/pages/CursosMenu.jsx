@@ -126,7 +126,6 @@ export default function CursosMenu({ onNavigate }) {
 
         {/* FOOTER */}
         <div className="mt-6 text-xs text-slate-500">
-          As imagens devem ficar em{" "}
           <span className="text-slate-200">/public/img</span>. Exemplo:{" "}
           <span className="text-slate-200">curso-dividendo.jpg</span>
         </div>
