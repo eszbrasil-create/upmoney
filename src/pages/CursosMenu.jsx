@@ -128,6 +128,7 @@ export default function CursosMenu({ onNavigate }) {
             bullets={[
               "Elimine procrastinação e bloqueios mentais",
               "Construa disciplina com ações simples",
+              "Construa disciplina com ações simples",
             ]}
             onClick={() => onNavigate("curso-configuracao-mental")}
           />
