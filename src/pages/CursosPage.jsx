@@ -25,7 +25,7 @@ export default function CursosPage() {
       },
       {
         id: 2,
-        titulo: "Abrir Conta na Corretora",
+        titulo: "Configuração Mental",
         pdf: "/pdfs/modulo2.pdf",
       },
       {
