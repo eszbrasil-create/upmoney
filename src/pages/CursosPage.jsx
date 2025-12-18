@@ -46,7 +46,7 @@ export default function CursosPage() {
       {
         id: 6,
         titulo: "Dividendos",
-        pdf: "/pdfs/Apostila Curso_5_Dividendos.pdf",
+        pdf: "/pdfs/Dividendos.pdf",
       },
       {
         id: 7,
