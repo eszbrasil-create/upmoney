@@ -26,7 +26,7 @@ export default function CursosPage() {
       {
         id: 2,
         titulo: "Configuração Mental",
-        pdf: "/pdfs/modulo2.pdf",
+        pdf: "/pdfs/Neurociencia-e-Inv.pdf",
       },
       {
         id: 3,
