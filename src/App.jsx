@@ -16,7 +16,6 @@ import Relatorios from "./pages/Relatorios";
 import CursosPage from "./pages/CursosPage";
 import Landing from "./pages/Landing";
 import SaidaFiscal from "./pages/SaidaFiscal";
-import InvistaExterior from "./pages/InvistaExterior";
 import Cursos from "./pages/Cursos";
 import Noticias from "./pages/Noticias";
 import CashControlHome from "./pages/CashControlHome";
@@ -274,7 +273,6 @@ export default function App() {
     login: <Login onNavigate={setView} />,
     "reset-password": <ResetPassword onNavigate={setView} />,
     "saida-fiscal": <SaidaFiscal onNavigate={setView} />,
-    "invista-exterior": <InvistaExterior onNavigate={setView} />,
     cursos: <Cursos onNavigate={setView} />,
     noticias: <Noticias onNavigate={setView} />,
     "cashcontrol-home": <CashControlHome onNavigate={setView} />,
@@ -304,7 +302,6 @@ export default function App() {
       "login",
       "reset-password",
       "saida-fiscal",
-      "invista-exterior",
       "cursos",
       "noticias",
       "cashcontrol-home",
