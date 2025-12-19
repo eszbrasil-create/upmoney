@@ -33,7 +33,9 @@ const FAQItem = ({ q, a }) => (
   <details className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
     <summary className="cursor-pointer list-none flex items-center justify-between gap-4">
       <span className="text-slate-900 font-bold">{q}</span>
-      <span className="text-slate-400 group-open:rotate-45 transition text-2xl leading-none">+</span>
+      <span className="text-slate-400 group-open:rotate-45 transition text-2xl leading-none">
+        +
+      </span>
     </summary>
     <div className="mt-3 text-slate-700 leading-relaxed">{a}</div>
   </details>
@@ -41,16 +43,35 @@ const FAQItem = ({ q, a }) => (
 
 export default function Landing({ onNavigate }) {
   const WHATSAPP_NUMBER = "393517380919";
+  const OWNER_EMAIL = "eszbrasil@gmail.com"; // <- troque para o e-mail que vai receber os leads
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); // modal avaliação gratuita
   const [form, setForm] = useState({ nome: "", email: "", telefone: "" });
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  // modal “Quero entrar na turma”
+  const [isTurmaOpen, setIsTurmaOpen] = useState(false);
+  const [leadOk, setLeadOk] = useState(false);
+  const [lead, setLead] = useState({
+    nome: "",
+    sobrenome: "",
+    email: "",
+    telefone: "",
+  });
+
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleLeadChange = (e) =>
+    setLead({ ...lead, [e.target.name]: e.target.value });
 
   const enviarWhats = (e) => {
     e.preventDefault();
     const msg = `Olá! Vim da landing.\nNome: ${form.nome}\nE-mail: ${form.email}\nTel: ${form.telefone}\nQuero a avaliação gratuita de 15 minutos`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
+    window.open(
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
     setIsModalOpen(false);
   };
 
@@ -59,7 +80,8 @@ export default function Landing({ onNavigate }) {
       `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
         "Oi! Quero começar o Meu Primeiro Dividendo. Podemos falar agora?"
       )}`,
-      "_blank"
+      "_blank",
+      "noopener,noreferrer"
     );
   };
 
@@ -68,10 +90,57 @@ export default function Landing({ onNavigate }) {
     onNavigate?.("login");
   };
 
+  // ENVIAR LEAD (TURMA): WhatsApp + Email (mailto) + mensagem de confirmação
+  const enviarTurma = (e) => {
+    e.preventDefault();
+
+    const nome = (lead.nome || "").trim();
+    const sobrenome = (lead.sobrenome || "").trim();
+    const email = (lead.email || "").trim();
+    const telefone = (lead.telefone || "").trim();
+
+    const msg = [
+      "🔥 Novo interessado na turma (UpMoney)",
+      "",
+      `Nome: ${nome} ${sobrenome}`,
+      `E-mail: ${email}`,
+      `Telefone: ${telefone}`,
+      "",
+      "Quero entrar na turma",
+    ].join("\n");
+
+    // 1) WhatsApp
+    const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+      msg
+    )}`;
+    window.open(waUrl, "_blank", "noopener,noreferrer");
+
+    // 2) E-mail (cliente abre o app de e-mail com o texto pronto)
+    const subject = "Novo lead — Quero entrar na turma (UpMoney)";
+    const mailtoUrl = `mailto:${OWNER_EMAIL}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(msg)}`;
+
+    // pequeno delay para evitar bloqueio em alguns navegadores
+    setTimeout(() => {
+      window.location.href = mailtoUrl;
+    }, 350);
+
+    // 3) Confirmação no modal + reset
+    setLeadOk(true);
+
+    setTimeout(() => {
+      setIsTurmaOpen(false);
+      setLeadOk(false);
+      setLead({ nome: "", sobrenome: "", email: "", telefone: "" });
+    }, 2500);
+  };
+
   const oferta = useMemo(
     () => ({
       titulo: "Meu Primeiro Dividendo em até 30 dias",
-      subtitulo: "Programa educacional com acompanhamento individual + 12 meses de UpControl",
+      subtitulo:
+        "Programa educacional com acompanhamento individual + 12 meses de UpControl",
       preco: "R$ 497",
       bonus: "UpControl por 12 meses incluso",
       oQueInclui: [
@@ -90,7 +159,8 @@ export default function Landing({ onNavigate }) {
     () => ({
       titulo: "UpControl Essencial (somente app)",
       preco: "R$ 199",
-      detalhe: "Acesso anual ao app para controle de despesas/receitas e organização financeira.",
+      detalhe:
+        "Acesso anual ao app para controle de despesas/receitas e organização financeira.",
       inclui: [
         "Controle de despesas e receitas (dash Despesas)",
         "Organização mensal/por ano",
@@ -107,21 +177,36 @@ export default function Landing({ onNavigate }) {
       {/* HEADER */}
       <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <button onClick={() => onNavigate?.("landing")} className="text-2xl font-black text-white">
+          <button
+            onClick={() => onNavigate?.("landing")}
+            className="text-2xl font-black text-white"
+          >
             UpMoney
           </button>
 
           <nav className="hidden lg:flex items-center gap-10 text-white/80 font-medium">
-            <button onClick={() => onNavigate?.("cursos")} className="hover:text-white">
+            <button
+              onClick={() => onNavigate?.("cursos")}
+              className="hover:text-white"
+            >
               Cursos
             </button>
-            <button onClick={() => onNavigate?.("cashcontrol-home")} className="hover:text-white">
+            <button
+              onClick={() => onNavigate?.("cashcontrol-home")}
+              className="hover:text-white"
+            >
               UpControl
             </button>
-            <button onClick={() => onNavigate?.("saida-fiscal")} className="hover:text-white">
+            <button
+              onClick={() => onNavigate?.("saida-fiscal")}
+              className="hover:text-white"
+            >
               Saída Fiscal
             </button>
-            <button onClick={() => onNavigate?.("invista-exterior")} className="hover:text-white">
+            <button
+              onClick={() => onNavigate?.("invista-exterior")}
+              className="hover:text-white"
+            >
               Invista no Exterior
             </button>
           </nav>
@@ -135,19 +220,37 @@ export default function Landing({ onNavigate }) {
             </button>
 
             {/* YOUTUBE */}
-            <a href="https://youtube.com/@upmoney" target="_blank" rel="noopener noreferrer" className="group">
+            <a
+              href="https://youtube.com/@upmoney"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group"
+            >
               <div className="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center shadow-xl hover:shadow-red-600/60 hover:scale-110 transition-all duration-300">
-                <svg className="w-9 h-9 text-white drop-shadow-md" fill="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-9 h-9 text-white drop-shadow-md"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.016 3.016 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.016 3.016 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.75 15.5l6.225-3.5L9.75 8.5v7z" />
                 </svg>
               </div>
             </a>
 
             {/* INSTAGRAM */}
-            <a href="https://instagram.com/upmoneybr" target="_blank" rel="noopener noreferrer" className="group">
+            <a
+              href="https://instagram.com/upmoneybr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group"
+            >
               <div className="w-14 h-14 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-2xl p-0.5">
                 <div className="w-full h-full bg-slate-900 rounded-2xl flex items-center justify-center hover:scale-110 transition-all">
-                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-8 h-8 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.24.42.56.22.96.49 1.38.9.41.41.67.82.9 1.38.17.43.37 1.07.42 2.24.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.42 2.24a3.6 3.6 0 0 1-.9 1.38 3.6 3.6 0 0 1-1.38.9c-.43.17-1.07.37-2.24.42-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.24-.42a3.6 3.6 0 0 1-1.38-.9 3.6 3.6 0 0 1-.9-1.38c-.17-.43-.37-1.07-.42-2.24C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.42-2.24.22-.56.49-.96.9-1.38.41-.41.82-.67 1.38-.9.43-.17 1.07-.37 2.24-.42C8.42 2.17 8.8 2.16 12 2.16Zm0 3.4c-3.16 0-3.53.01-4.77.07-.98.05-1.52.21-1.87.35-.47.18-.8.4-1.15.75-.35.35-.57.68-.75 1.15-.14.35-.3.89-.35 1.87-.06 1.24-.07 1.61-.07 4.77s.01 3.53.07 4.77c.05.98.21 1.52.35 1.87.18.47.4.8.75 1.15.35.35.68.57 1.15.75.35.14.89.3 1.87.35 1.24.06 1.61.07 4.77.07s3.53-.01 4.77-.07c.98-.05 1.52-.21 1.87-.35.47-.18.8-.4 1.15-1.15.35-.35.57-.68.75-1.15.14-.35.3-.89.35-1.87.06-1.24.07-1.61.07-4.77s-.01-3.53-.07-4.77c-.05-.98.21-1.52.35-1.87a2.62 2.62 0 0 0-.75-1.15c-.35-.35-.68-.57-1.15-.75-.35-.14-.89-.3-1.87-.35-1.24-.06-1.61-.07-4.77-.07Zm0 2.7a4.64 4.64 0 1 1 0 9.28 4.64 4.64 0 0 1 0-9.28Zm0 1.8a2.84 2.84 0 1 0 0 5.68 2.84 2.84 0 0 0 0-5.68Zm5.93-2.18a1.09 1.09 0 1 1 0 2.18 1.09 1.09 0 0 1 0-2.18Z" />
                   </svg>
                 </div>
@@ -186,7 +289,8 @@ export default function Landing({ onNavigate }) {
               </h1>
 
               <p className="mt-6 text-xl lg:text-2xl text-slate-700 font-medium">
-                Programa educacional com acompanhamento individual até você sair com um roteiro executável — e controle tudo no{" "}
+                Programa educacional com acompanhamento individual até você sair
+                com um roteiro executável — e controle tudo no{" "}
                 <span className="font-black text-slate-900">UpControl</span>.
               </p>
 
@@ -206,8 +310,9 @@ export default function Landing({ onNavigate }) {
               </div>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                {/* ✅ ALTERADO: abre modal de turma */}
                 <button
-                  onClick={irParaCompra}
+                  onClick={() => setIsTurmaOpen(true)}
                   className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 px-10 py-5 rounded-2xl text-xl font-black text-white shadow-2xl hover:shadow-amber-500/50 hover:scale-[1.02] transition-all duration-300"
                 >
                   <span className="absolute inset-0 bg-white/25 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
@@ -228,7 +333,11 @@ export default function Landing({ onNavigate }) {
                   onClick={() => setIsModalOpen(true)}
                   className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-2xl font-black text-lg shadow-xl hover:shadow-emerald-500/50 hover:scale-[1.02] transition-all duration-300"
                 >
-                  <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
+                  <svg
+                    className="w-7 h-7"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                   </svg>
@@ -237,8 +346,10 @@ export default function Landing({ onNavigate }) {
               </div>
 
               <div className="mt-6 text-sm text-slate-500 leading-relaxed">
-                <strong>Importante:</strong> o programa é <span className="font-bold">educacional</span>. Não é recomendação individual de investimento.
-                Você aprende método, estratégia e execução — com clareza e responsabilidade.
+                <strong>Importante:</strong> o programa é{" "}
+                <span className="font-bold">educacional</span>. Não é
+                recomendação individual de investimento. Você aprende método,
+                estratégia e execução — com clareza e responsabilidade.
               </div>
             </div>
 
@@ -250,8 +361,12 @@ export default function Landing({ onNavigate }) {
                     U
                   </div>
                   <div>
-                    <div className="text-2xl font-black text-slate-900">UpControl</div>
-                    <div className="text-slate-600">Controle total do seu patrimônio</div>
+                    <div className="text-2xl font-black text-slate-900">
+                      UpControl
+                    </div>
+                    <div className="text-slate-600">
+                      Controle total do seu patrimônio
+                    </div>
                   </div>
                 </div>
 
@@ -263,17 +378,25 @@ export default function Landing({ onNavigate }) {
 
                 <div className="mt-6 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-center py-6 rounded-2xl shadow-lg">
                   <div className="text-4xl font-black">Organização</div>
-                  <div className="text-lg opacity-90">Você enxerga o mês inteiro em 1 tela</div>
+                  <div className="text-lg opacity-90">
+                    Você enxerga o mês inteiro em 1 tela
+                  </div>
                 </div>
 
                 <div className="mt-5 grid sm:grid-cols-2 gap-3 text-sm">
                   <div className="rounded-2xl border border-slate-200 p-4">
-                    <div className="font-black text-slate-900">Despesas & Receitas</div>
-                    <div className="text-slate-600 mt-1">Tabela mensal + resumo anual</div>
+                    <div className="font-black text-slate-900">
+                      Despesas & Receitas
+                    </div>
+                    <div className="text-slate-600 mt-1">
+                      Tabela mensal + resumo anual
+                    </div>
                   </div>
                   <div className="rounded-2xl border border-slate-200 p-4">
                     <div className="font-black text-slate-900">Relatório PDF</div>
-                    <div className="text-slate-600 mt-1">Exporte quando quiser</div>
+                    <div className="text-slate-600 mt-1">
+                      Exporte quando quiser
+                    </div>
                   </div>
                 </div>
               </div>
@@ -287,9 +410,12 @@ export default function Landing({ onNavigate }) {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <h2 className="text-4xl font-black text-slate-900">O que você vai sair com em 30 dias</h2>
+            <h2 className="text-4xl font-black text-slate-900">
+              O que você vai sair com em 30 dias
+            </h2>
             <p className="mt-4 text-lg text-slate-700">
-              Não é teoria solta. É um plano simples, executável e acompanhado — pra você ganhar clareza e consistência.
+              Não é teoria solta. É um plano simples, executável e acompanhado —
+              pra você ganhar clareza e consistência.
             </p>
           </div>
 
@@ -308,12 +434,19 @@ export default function Landing({ onNavigate }) {
                 desc: "Você não fica travado: tem 1:1 e WhatsApp para ajustar o caminho.",
               },
             ].map((c) => (
-              <div key={c.title} className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
+              <div
+                key={c.title}
+                className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm"
+              >
                 <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center mb-4 font-black">
                   U
                 </div>
-                <div className="text-xl font-black text-slate-900">{c.title}</div>
-                <div className="mt-2 text-slate-700 leading-relaxed">{c.desc}</div>
+                <div className="text-xl font-black text-slate-900">
+                  {c.title}
+                </div>
+                <div className="mt-2 text-slate-700 leading-relaxed">
+                  {c.desc}
+                </div>
               </div>
             ))}
           </div>
@@ -324,25 +457,51 @@ export default function Landing({ onNavigate }) {
       <section className="py-16 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <h2 className="text-4xl font-black text-slate-900">Como funciona (30 dias)</h2>
+            <h2 className="text-4xl font-black text-slate-900">
+              Como funciona (30 dias)
+            </h2>
             <p className="mt-4 text-lg text-slate-700">
-              Um processo leve, direto e prático — com acompanhamento para você não se perder.
+              Um processo leve, direto e prático — com acompanhamento para você
+              não se perder.
             </p>
           </div>
 
           <div className="mt-10 grid lg:grid-cols-4 gap-6">
             {[
-              { step: "Semana 1", title: "Organização e visão geral", desc: "Mapear sua realidade, metas e rotina. UpControl configurado." },
-              { step: "Semana 2", title: "Estratégia e fundamentos", desc: "Entender opções, riscos e montar uma rota coerente." },
-              { step: "Semana 3", title: "Execução guiada", desc: "Passo a passo para tirar do papel com consistência." },
-              { step: "Semana 4", title: "Ajustes e autonomia", desc: "Revisar, corrigir e deixar o processo rodando sozinho." },
+              {
+                step: "Semana 1",
+                title: "Organização e visão geral",
+                desc: "Mapear sua realidade, metas e rotina. UpControl configurado.",
+              },
+              {
+                step: "Semana 2",
+                title: "Estratégia e fundamentos",
+                desc: "Entender opções, riscos e montar uma rota coerente.",
+              },
+              {
+                step: "Semana 3",
+                title: "Execução guiada",
+                desc: "Passo a passo para tirar do papel com consistência.",
+              },
+              {
+                step: "Semana 4",
+                title: "Ajustes e autonomia",
+                desc: "Revisar, corrigir e deixar o processo rodando sozinho.",
+              },
             ].map((s) => (
-              <div key={s.step} className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
+              <div
+                key={s.step}
+                className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm"
+              >
                 <div className="text-sm font-black text-amber-700 bg-amber-100 inline-flex px-3 py-1 rounded-full">
                   {s.step}
                 </div>
-                <div className="mt-4 text-xl font-black text-slate-900">{s.title}</div>
-                <div className="mt-2 text-slate-700 leading-relaxed">{s.desc}</div>
+                <div className="mt-4 text-xl font-black text-slate-900">
+                  {s.title}
+                </div>
+                <div className="mt-2 text-slate-700 leading-relaxed">
+                  {s.desc}
+                </div>
               </div>
             ))}
           </div>
@@ -353,9 +512,12 @@ export default function Landing({ onNavigate }) {
       <section className="py-16 bg-white" id="planos">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <h2 className="text-4xl font-black text-slate-900">Escolha o melhor caminho</h2>
+            <h2 className="text-4xl font-black text-slate-900">
+              Escolha o melhor caminho
+            </h2>
             <p className="mt-4 text-lg text-slate-700">
-              Se você quer velocidade e clareza, vá no programa completo. Se quer só o app, existe o plano essencial.
+              Se você quer velocidade e clareza, vá no programa completo. Se
+              quer só o app, existe o plano essencial.
             </p>
           </div>
 
@@ -368,12 +530,18 @@ export default function Landing({ onNavigate }) {
 
               <div className="flex items-start justify-between gap-6">
                 <div>
-                  <div className="text-2xl font-black text-slate-900">{oferta.titulo}</div>
+                  <div className="text-2xl font-black text-slate-900">
+                    {oferta.titulo}
+                  </div>
                   <div className="mt-2 text-slate-600">{oferta.subtitulo}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-4xl font-black text-slate-900">{oferta.preco}</div>
-                  <div className="text-sm text-emerald-700 font-black mt-1">{oferta.bonus}</div>
+                  <div className="text-4xl font-black text-slate-900">
+                    {oferta.preco}
+                  </div>
+                  <div className="text-sm text-emerald-700 font-black mt-1">
+                    {oferta.bonus}
+                  </div>
                 </div>
               </div>
 
@@ -387,8 +555,9 @@ export default function Landing({ onNavigate }) {
               </div>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                {/* ✅ ALTERADO: abre modal de turma */}
                 <button
-                  onClick={irParaCompra}
+                  onClick={() => setIsTurmaOpen(true)}
                   className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:shadow-amber-500/40 hover:scale-[1.01] transition"
                 >
                   Entrar na turma (R$ 497)
@@ -407,24 +576,30 @@ export default function Landing({ onNavigate }) {
                   Garantia de satisfação
                 </div>
                 <div className="mt-2 text-slate-700 text-sm leading-relaxed">
-                  Se você entrar, seguir o processo e sentir que o programa não te entregou clareza e estrutura educacional,
-                  você pode solicitar avaliação de reembolso conforme as regras do checkout/plataforma.
+                  Se você entrar, seguir o processo e sentir que o programa não
+                  te entregou clareza e estrutura educacional, você pode solicitar
+                  avaliação de reembolso conforme as regras do checkout/plataforma.
                 </div>
               </div>
 
               <div className="mt-4 text-xs text-slate-500 leading-relaxed">
-                *Conteúdo educacional. Não é recomendação individual de investimento. Resultados variam conforme execução e contexto.
+                *Conteúdo educacional. Não é recomendação individual de
+                investimento. Resultados variam conforme execução e contexto.
               </div>
             </div>
 
             {/* APP ONLY */}
             <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-              <div className="text-2xl font-black text-slate-900">{produtoAppOnly.titulo}</div>
+              <div className="text-2xl font-black text-slate-900">
+                {produtoAppOnly.titulo}
+              </div>
               <div className="mt-2 text-slate-600">{produtoAppOnly.detalhe}</div>
 
               <div className="mt-6 flex items-end justify-between">
                 <div>
-                  <div className="text-4xl font-black text-slate-900">{produtoAppOnly.preco}</div>
+                  <div className="text-4xl font-black text-slate-900">
+                    {produtoAppOnly.preco}
+                  </div>
                   <div className="text-sm text-slate-500 font-medium">por ano</div>
                 </div>
                 <div className="text-sm font-black text-slate-900 bg-slate-100 px-4 py-2 rounded-full">
@@ -441,7 +616,9 @@ export default function Landing({ onNavigate }) {
                 ))}
               </div>
 
-              <div className="mt-6 text-sm text-slate-600">{produtoAppOnly.observacao}</div>
+              <div className="mt-6 text-sm text-slate-600">
+                {produtoAppOnly.observacao}
+              </div>
 
               <div className="mt-8">
                 <button
@@ -453,21 +630,25 @@ export default function Landing({ onNavigate }) {
               </div>
 
               <div className="mt-4 text-xs text-slate-500 leading-relaxed">
-                *Esse plano é ideal para quem quer organizar finanças com autonomia. Se você quer um caminho guiado para o primeiro dividendo,
-                escolha o programa completo.
+                *Esse plano é ideal para quem quer organizar finanças com
+                autonomia. Se você quer um caminho guiado para o primeiro
+                dividendo, escolha o programa completo.
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* DEPOIMENTOS (placeholder) */}
+      {/* DEPOIMENTOS */}
       <section className="py-16 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <h2 className="text-4xl font-black text-slate-900">O que as pessoas costumam sentir</h2>
+            <h2 className="text-4xl font-black text-slate-900">
+              O que as pessoas costumam sentir
+            </h2>
             <p className="mt-4 text-lg text-slate-700">
-              Você pode trocar esse bloco por depoimentos reais conforme for coletando.
+              Você pode trocar esse bloco por depoimentos reais conforme for
+              coletando.
             </p>
           </div>
 
@@ -486,9 +667,14 @@ export default function Landing({ onNavigate }) {
                 text: "“Com o UpControl eu finalmente enxerguei onde eu estava vazando dinheiro.”",
               },
             ].map((t) => (
-              <div key={t.title} className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
+              <div
+                key={t.title}
+                className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm"
+              >
                 <div className="text-lg font-black text-slate-900">{t.title}</div>
-                <div className="mt-3 text-slate-700 leading-relaxed">{t.text}</div>
+                <div className="mt-3 text-slate-700 leading-relaxed">
+                  {t.text}
+                </div>
                 <div className="mt-4 text-sm text-slate-500">— aluno(a) UpMoney</div>
               </div>
             ))}
@@ -500,8 +686,12 @@ export default function Landing({ onNavigate }) {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <h2 className="text-4xl font-black text-slate-900">Perguntas frequentes</h2>
-            <p className="mt-4 text-lg text-slate-700">Sem enrolação — respostas diretas.</p>
+            <h2 className="text-4xl font-black text-slate-900">
+              Perguntas frequentes
+            </h2>
+            <p className="mt-4 text-lg text-slate-700">
+              Sem enrolação — respostas diretas.
+            </p>
           </div>
 
           <div className="mt-10 grid lg:grid-cols-2 gap-6">
@@ -532,8 +722,9 @@ export default function Landing({ onNavigate }) {
           </div>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-4">
+            {/* ✅ ALTERADO: abre modal de turma */}
             <button
-              onClick={irParaCompra}
+              onClick={() => setIsTurmaOpen(true)}
               className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:shadow-amber-500/40 hover:scale-[1.01] transition"
             >
               Entrar agora
@@ -547,18 +738,26 @@ export default function Landing({ onNavigate }) {
           </div>
 
           <div className="mt-6 text-xs text-slate-500 leading-relaxed">
-            Aviso legal: UpMoney/UpControl oferecem conteúdo educacional e ferramentas de organização financeira. Não são consultoria, não garantem retorno financeiro e não fazem recomendações individualizadas.
+            Aviso legal: UpMoney/UpControl oferecem conteúdo educacional e
+            ferramentas de organização financeira. Não são consultoria, não
+            garantem retorno financeiro e não fazem recomendações
+            individualizadas.
           </div>
         </div>
       </section>
 
-      {/* MODAL */}
+      {/* MODAL - AVALIAÇÃO GRATUITA */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-black text-slate-900">Avaliação Gratuita (15 min)</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-3xl text-slate-400 hover:text-slate-600">
+              <h2 className="text-2xl font-black text-slate-900">
+                Avaliação Gratuita (15 min)
+              </h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-3xl text-slate-400 hover:text-slate-600"
+              >
                 ×
               </button>
             </div>
@@ -609,9 +808,107 @@ export default function Landing({ onNavigate }) {
               </div>
 
               <div className="text-xs text-slate-500 leading-relaxed">
-                Ao enviar, você será redirecionado para o WhatsApp com uma mensagem pré-formatada.
+                Ao enviar, você será redirecionado para o WhatsApp com uma
+                mensagem pré-formatada.
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL - QUERO ENTRAR NA TURMA */}
+      {isTurmaOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-black text-slate-900">
+                Quero entrar na turma
+              </h2>
+              <button
+                onClick={() => {
+                  setIsTurmaOpen(false);
+                  setLeadOk(false);
+                }}
+                className="text-3xl text-slate-400 hover:text-slate-600"
+              >
+                ×
+              </button>
+            </div>
+
+            {leadOk ? (
+              <div className="rounded-2xl border border-emerald-500/40 bg-emerald-50 p-5">
+                <div className="text-emerald-900 font-black text-lg">
+                  Enviado com sucesso ✅
+                </div>
+                <div className="mt-2 text-emerald-800 text-sm leading-relaxed">
+                  Aguarde — nosso time irá entrar em contato com você.
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={enviarTurma} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    name="nome"
+                    value={lead.nome}
+                    onChange={handleLeadChange}
+                    placeholder="Nome"
+                    required
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                  />
+                  <input
+                    type="text"
+                    name="sobrenome"
+                    value={lead.sobrenome}
+                    onChange={handleLeadChange}
+                    placeholder="Sobrenome"
+                    required
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                  />
+                </div>
+
+                <input
+                  type="email"
+                  name="email"
+                  value={lead.email}
+                  onChange={handleLeadChange}
+                  placeholder="seu@email.com"
+                  required
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                />
+
+                <input
+                  type="tel"
+                  name="telefone"
+                  value={lead.telefone}
+                  onChange={handleLeadChange}
+                  placeholder="WhatsApp (DDD) 99999-9999"
+                  required
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                />
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsTurmaOpen(false)}
+                    className="flex-1 py-3 border border-slate-300 rounded-xl font-black hover:bg-slate-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-black hover:scale-[1.02] transition"
+                  >
+                    Enviar
+                  </button>
+                </div>
+
+                <div className="text-xs text-slate-500 leading-relaxed">
+                  Ao enviar, abriremos WhatsApp e e-mail com uma mensagem pronta
+                  para você.
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
@@ -619,9 +916,13 @@ export default function Landing({ onNavigate }) {
       {/* FOOTER */}
       <footer className="bg-slate-900 text-white/60 py-12 mt-10">
         <div className="max-w-7xl mx-auto px-6 text-center text-sm space-y-2">
-          <div className="text-white font-black">UpMoney © 2025 — O seu primeiro dividendo começa com organização e método.</div>
+          <div className="text-white font-black">
+            UpMoney © 2025 — O seu primeiro dividendo começa com organização e
+            método.
+          </div>
           <div>
-            Conteúdo educacional. Não constitui recomendação de investimento. Resultados variam conforme execução.
+            Conteúdo educacional. Não constitui recomendação de investimento.
+            Resultados variam conforme execução.
           </div>
         </div>
       </footer>
