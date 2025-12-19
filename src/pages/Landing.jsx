@@ -888,7 +888,7 @@ export default function Landing({ onNavigate }) {
                       onChange={handleLeadChange}
                       placeholder="Ex: Silva"
                       required
-                      className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                      className="w-full px-4 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder:text-slate-400 bg-white focus:ring-4 focus:ring-amber-300 outline-none"
                     />
                   </div>
                 </div>
