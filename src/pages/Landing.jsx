@@ -937,7 +937,7 @@ export default function Landing({ onNavigate }) {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-3 rounded-xl font-black bg-slate-100 text-slate-900 border border-slate-300 hover:bg-slate-200 active:scale-[0.99] transition"
+                    className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-black hover:scale-[1.02] transition"
                   >
                     Enviar
                   </button>
