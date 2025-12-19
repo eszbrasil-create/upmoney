@@ -208,12 +208,6 @@ export default function Landing({ onNavigate }) {
             >
               Saída Fiscal
             </button>
-            <button
-              onClick={() => onNavigate?.("invista-exterior")}
-              className="hover:text-white"
-            >
-              Invista no Exterior
-            </button>
           </nav>
 
           <div className="flex items-center gap-4">
