@@ -43,7 +43,7 @@ const FAQItem = ({ q, a }) => (
 
 export default function Landing({ onNavigate }) {
   const WHATSAPP_NUMBER = "393517380919";
-  const OWNER_EMAIL = "eszbrasil@gmail.com"; // <- troque para o e-mail que vai receber os leads
+  const OWNER_EMAIL = "eszbrasil@gmail.com"; // <- e-mail que vai receber os leads
 
   const [isModalOpen, setIsModalOpen] = useState(false); // modal avaliação gratuita
   const [form, setForm] = useState({ nome: "", email: "", telefone: "" });
@@ -104,7 +104,7 @@ export default function Landing({ onNavigate }) {
       "",
       `Nome: ${nome} ${sobrenome}`,
       `E-mail: ${email}`,
-      `Telefone: ${telefone}`,
+      `WhatsApp: ${telefone}`,
       "",
       "Quero entrar na turma",
     ].join("\n");
@@ -121,7 +121,7 @@ export default function Landing({ onNavigate }) {
       subject
     )}&body=${encodeURIComponent(msg)}`;
 
-    // pequeno delay para evitar bloqueio em alguns navegadores
+    // pequeno delay para reduzir bloqueio em alguns navegadores
     setTimeout(() => {
       window.location.href = mailtoUrl;
     }, 350);
@@ -251,7 +251,7 @@ export default function Landing({ onNavigate }) {
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.24.42.56.22.96.49 1.38.9.41.41.67.82.9 1.38.17.43.37 1.07.42 2.24.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.42 2.24a3.6 3.6 0 0 1-.9 1.38 3.6 3.6 0 0 1-1.38.9c-.43.17-1.07.37-2.24.42-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.24-.42a3.6 3.6 0 0 1-1.38-.9 3.6 3.6 0 0 1-.9-1.38c-.17-.43-.37-1.07-.42-2.24C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.42-2.24.22-.56.49-.96.9-1.38.41-.41.82-.67 1.38-.9.43-.17 1.07-.37 2.24-.42C8.42 2.17 8.8 2.16 12 2.16Zm0 3.4c-3.16 0-3.53.01-4.77.07-.98.05-1.52.21-1.87.35-.47.18-.8.4-1.15.75-.35.35-.57.68-.75 1.15-.14.35-.3.89-.35 1.87-.06 1.24-.07 1.61-.07 4.77s.01 3.53.07 4.77c.05.98.21 1.52.35 1.87.18.47.4.8.75 1.15.35.35.68.57 1.15.75.35.14.89.3 1.87.35 1.24.06 1.61.07 4.77.07s3.53-.01 4.77-.07c.98-.05 1.52-.21 1.87-.35.47-.18.8-.4 1.15-1.15.35-.35.57-.68.75-1.15.14-.35.3-.89.35-1.87.06-1.24.07-1.61.07-4.77s-.01-3.53-.07-4.77c-.05-.98.21-1.52.35-1.87a2.62 2.62 0 0 0-.75-1.15c-.35-.35-.68-.57-1.15-.75-.35-.14-.89-.3-1.87-.35-1.24-.06-1.61-.07-4.77-.07Zm0 2.7a4.64 4.64 0 1 1 0 9.28 4.64 4.64 0 0 1 0-9.28Zm0 1.8a2.84 2.84 0 1 0 0 5.68 2.84 2.84 0 0 0 0-5.68Zm5.93-2.18a1.09 1.09 0 1 1 0 2.18 1.09 1.09 0 0 1 0-2.18Z" />
+                    <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.24.42.56.22.96.49 1.38.9.41.41.67.82.9 1.38.17.43.37 1.07.42 2.24.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.42 2.24a3.6 3.6 0 0 1-.9 1.38 3.6 3.6 0 0 1-1.38.9c-.43.17-1.07.37-2.24.42-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.24-.42a3.6 3.6 0 0 1-1.38-.9 3.6 3.6 0 0 1-.9-1.38c-.17-.43-.37-1.07-.42-2.24C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.42-2.24.22-.56.49-.96.9-1.38.41-.41.82-.67 1.38-.9.43-.17 1.07-.37 2.24-.42C8.42 2.17 8.8 2.16 12 2.16Zm0 3.4c-3.16 0-3.53.01-4.77.07-.98.05-1.52.21-1.87.35-.47.18-.8.4-1.15.75-.35.35-.57.68-.75 1.15-.14.35-.3.89-.35 1.87-.06 1.24-.07 1.61-.07 4.77s.01 3.53.07 4.77c.05.98.21 1.52.35 1.87.18.47.4.8.75 1.15.35.35.68.57 1.15.75.35.14.89.3 1.87.35 1.24.06 1.61.07 4.77.07s3.53-.01 4.77-.07c.98-.05 1.52-.21 1.87-.35.47-.18.8-.4 1.15-1.15.35-.35.57-.68.75-1.15.14-.35.3-.89.35-1.87.06-1.24.07-1.61.07-4.77s-.01 3.53-.07 4.77c-.05-.98.21-1.52.35-1.87a2.62 2.62 0 0 0-.75-1.15c-.35-.35-.68-.57-1.15-.75-.35-.14-.89-.3-1.87-.35-1.24-.06-1.61-.07-4.77-.07Zm0 2.7a4.64 4.64 0 1 1 0 9.28 4.64 4.64 0 0 1 0-9.28Zm0 1.8a2.84 2.84 0 1 0 0 5.68 2.84 2.84 0 0 0 0-5.68Zm5.93-2.18a1.09 1.09 0 1 1 0 2.18 1.09 1.09 0 0 1 0-2.18Z" />
                   </svg>
                 </div>
               </div>
@@ -310,7 +310,6 @@ export default function Landing({ onNavigate }) {
               </div>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                {/* ✅ ALTERADO: abre modal de turma */}
                 <button
                   onClick={() => setIsTurmaOpen(true)}
                   className="group relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 px-10 py-5 rounded-2xl text-xl font-black text-white shadow-2xl hover:shadow-amber-500/50 hover:scale-[1.02] transition-all duration-300"
@@ -555,7 +554,6 @@ export default function Landing({ onNavigate }) {
               </div>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                {/* ✅ ALTERADO: abre modal de turma */}
                 <button
                   onClick={() => setIsTurmaOpen(true)}
                   className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:shadow-amber-500/40 hover:scale-[1.01] transition"
@@ -577,8 +575,9 @@ export default function Landing({ onNavigate }) {
                 </div>
                 <div className="mt-2 text-slate-700 text-sm leading-relaxed">
                   Se você entrar, seguir o processo e sentir que o programa não
-                  te entregou clareza e estrutura educacional, você pode solicitar
-                  avaliação de reembolso conforme as regras do checkout/plataforma.
+                  te entregou clareza e estrutura educacional, você pode
+                  solicitar avaliação de reembolso conforme as regras do
+                  checkout/plataforma.
                 </div>
               </div>
 
@@ -722,7 +721,6 @@ export default function Landing({ onNavigate }) {
           </div>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-4">
-            {/* ✅ ALTERADO: abre modal de turma */}
             <button
               onClick={() => setIsTurmaOpen(true)}
               className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg hover:shadow-amber-500/40 hover:scale-[1.01] transition"
@@ -757,45 +755,57 @@ export default function Landing({ onNavigate }) {
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="text-3xl text-slate-400 hover:text-slate-600"
+                aria-label="Fechar"
               >
                 ×
               </button>
             </div>
 
             <form onSubmit={enviarWhats} className="space-y-5">
-              <input
-                type="text"
-                name="nome"
-                value={form.nome}
-                onChange={handleChange}
-                placeholder="Seu nome completo"
-                required
-                className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
-              />
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="seu@email.com"
-                required
-                className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
-              />
-              <input
-                type="tel"
-                name="telefone"
-                value={form.telefone}
-                onChange={handleChange}
-                placeholder="(11) 98765-4321"
-                required
-                className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
-              />
+              <div className="space-y-1">
+                <label className="text-xs font-black text-slate-700">Nome</label>
+                <input
+                  type="text"
+                  name="nome"
+                  value={form.nome}
+                  onChange={handleChange}
+                  placeholder="Seu nome completo"
+                  required
+                  className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-black text-slate-700">E-mail</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="seu@email.com"
+                  required
+                  className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-black text-slate-700">WhatsApp</label>
+                <input
+                  type="tel"
+                  name="telefone"
+                  value={form.telefone}
+                  onChange={handleChange}
+                  placeholder="(11) 98765-4321"
+                  required
+                  className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                />
+              </div>
 
               <div className="flex gap-4 pt-4">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-4 border border-slate-300 rounded-xl font-bold hover:bg-slate-50"
+                  className="flex-1 py-4 border border-slate-300 rounded-xl font-black hover:bg-slate-50"
                 >
                   Cancelar
                 </button>
@@ -816,11 +826,11 @@ export default function Landing({ onNavigate }) {
         </div>
       )}
 
-      {/* MODAL - QUERO ENTRAR NA TURMA */}
+      {/* MODAL - QUERO ENTRAR NA TURMA (✅ melhorado com labels) */}
       {isTurmaOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-black text-slate-900">
                 Quero entrar na turma
               </h2>
@@ -829,11 +839,16 @@ export default function Landing({ onNavigate }) {
                   setIsTurmaOpen(false);
                   setLeadOk(false);
                 }}
-                className="text-3xl text-slate-400 hover:text-slate-600"
+                className="text-3xl text-slate-400 hover:text-slate-600 leading-none"
+                aria-label="Fechar"
               >
                 ×
               </button>
             </div>
+
+            <p className="text-sm text-slate-600 mb-6">
+              Preencha seus dados e nós entraremos em contato por WhatsApp.
+            </p>
 
             {leadOk ? (
               <div className="rounded-2xl border border-emerald-500/40 bg-emerald-50 p-5">
@@ -847,45 +862,70 @@ export default function Landing({ onNavigate }) {
             ) : (
               <form onSubmit={enviarTurma} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-black text-slate-700">
+                      Nome
+                    </label>
+                    <input
+                      type="text"
+                      name="nome"
+                      value={lead.nome}
+                      onChange={handleLeadChange}
+                      placeholder="Ex: João"
+                      required
+                      className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-black text-slate-700">
+                      Sobrenome
+                    </label>
+                    <input
+                      type="text"
+                      name="sobrenome"
+                      value={lead.sobrenome}
+                      onChange={handleLeadChange}
+                      placeholder="Ex: Silva"
+                      required
+                      className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-black text-slate-700">
+                    E-mail
+                  </label>
                   <input
-                    type="text"
-                    name="nome"
-                    value={lead.nome}
+                    type="email"
+                    name="email"
+                    value={lead.email}
                     onChange={handleLeadChange}
-                    placeholder="Nome"
-                    required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
-                  />
-                  <input
-                    type="text"
-                    name="sobrenome"
-                    value={lead.sobrenome}
-                    onChange={handleLeadChange}
-                    placeholder="Sobrenome"
+                    placeholder="ex: joao@email.com"
                     required
                     className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
                   />
                 </div>
 
-                <input
-                  type="email"
-                  name="email"
-                  value={lead.email}
-                  onChange={handleLeadChange}
-                  placeholder="seu@email.com"
-                  required
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
-                />
-
-                <input
-                  type="tel"
-                  name="telefone"
-                  value={lead.telefone}
-                  onChange={handleLeadChange}
-                  placeholder="WhatsApp (DDD) 99999-9999"
-                  required
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
-                />
+                <div className="space-y-1">
+                  <label className="text-xs font-black text-slate-700">
+                    WhatsApp
+                  </label>
+                  <input
+                    type="tel"
+                    name="telefone"
+                    value={lead.telefone}
+                    onChange={handleLeadChange}
+                    placeholder="(DDD) 99999-9999"
+                    required
+                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                  />
+                  <div className="text-[11px] text-slate-500">
+                    Usaremos este número apenas para falar com você sobre a
+                    turma.
+                  </div>
+                </div>
 
                 <div className="flex gap-3 pt-2">
                   <button
@@ -893,7 +933,7 @@ export default function Landing({ onNavigate }) {
                     onClick={() => setIsTurmaOpen(false)}
                     className="flex-1 py-3 border border-slate-300 rounded-xl font-black hover:bg-slate-50"
                   >
-                    Cancelar
+                    Voltar
                   </button>
                   <button
                     type="submit"
