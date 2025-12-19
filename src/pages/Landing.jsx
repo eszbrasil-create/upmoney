@@ -696,7 +696,7 @@ export default function Landing({ onNavigate }) {
           <div className="mt-10 grid lg:grid-cols-2 gap-6">
             <FAQItem
               q="Preciso ter muito dinheiro para começar?"
-              a="Não. O foco é montar um processo realista com a sua realidade. Você aprende a organizar finanças, definir metas e executar um plano coerente."
+              a="Não. O foco é montar um processo realista de acordo com a sua necessidade. Você aprende a organizar finanças, definir metas e executar um plano coerente."
             />
             <FAQItem
               q="Isso é recomendação de investimento?"
@@ -704,7 +704,7 @@ export default function Landing({ onNavigate }) {
             />
             <FAQItem
               q="Como funciona o acompanhamento 1:1?"
-              a="Você terá 3 horas de encontros ao vivo (formato combinado), além de suporte no WhatsApp por 30 dias para tirar dúvidas e destravar execução."
+              a="Você terá 3 horas de encontros pessoal (formato combinado), além de suporte no WhatsApp por 30 dias para tirar dúvidas e destravar execução."
             />
             <FAQItem
               q="O app (UpControl) fica comigo por quanto tempo?"
@@ -712,7 +712,7 @@ export default function Landing({ onNavigate }) {
             />
             <FAQItem
               q="Vou ver apenas meus dados dentro do app?"
-              a="Sim — cada usuário acessa com login e enxerga apenas os próprios dados (desde que as regras de segurança/Policies do banco estejam ativas e corretas)."
+              a="Sim — cada usuário acessa com login e enxerga apenas os próprios dados."
             />
             <FAQItem
               q="Posso comprar mais horas depois?"
@@ -736,7 +736,7 @@ export default function Landing({ onNavigate }) {
           </div>
 
           <div className="mt-6 text-xs text-slate-500 leading-relaxed">
-            Aviso legal: UpMoney/UpControl oferecem conteúdo educacional e
+            Aviso legal: UpMoney/UpControl oferecem conteúdo exclusivamente educacional e
             ferramentas de organização financeira. Não são consultoria, não
             garantem retorno financeiro e não fazem recomendações
             individualizadas.
