@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Trash2, Download, Eraser, Save } from "lucide-react";
 import { exportRelatorioPDF } from "../utils/exportRelatorioPDF";
-import { supabase } from "../lib/supabaseClient"; // <-- ajuste aqui se seu caminho for diferente
+import { supabase } from "../lib/supabaseClient"; // ajuste se o caminho for diferente
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const ANOS = [2025, 2026];
@@ -31,7 +31,20 @@ const LEFT_CATEG = ACTIONS_PX; // 56
 const LEFT_DESC = ACTIONS_PX + CATEG_PX; // 184
 
 // ===== Supabase =====
-const TABELA = "cc_transacoes"; // se sua tabela tiver outro nome, mude aqui
+const TABELA = "cc_transacoes";
+
+// ✅ Mapeamento de colunas (Supabase -> app)
+// (Seu banco está usando year/month/type/description/value)
+const DB = {
+  ano: "year",
+  mes: "month",
+  tipo: "type",
+  descricao: "description",
+  valor: "value",
+  categoria: "categoria", // precisa existir na tabela (text). Se não existir, crie no Supabase.
+  userId: "user_id",
+  linhaId: "linha_id",
+};
 
 const uid = () => {
   try {
@@ -114,7 +127,7 @@ const toInt = (x) => Math.round(parseBRNumber(x));
 
 // Normalização consistente para gravar/apagar no banco:
 const normCategoria = (c) => (c || "Sem categoria").trim() || "Sem categoria";
-const normDescricao = (d) => (d ?? "").toString(); // mantém como string (sem trim pra não surpreender)
+const normDescricao = (d) => (d ?? "").toString();
 
 export default function DespesasPage() {
   const [anoSelecionado, setAnoSelecionado] = useState(initialAno);
@@ -148,9 +161,9 @@ export default function DespesasPage() {
     try {
       const { data, error } = await supabase
         .from(TABELA)
-        .select("linha_id, tipo, categoria, descricao, mes, valor")
-        .eq("user_id", user_id)
-        .eq("ano", ano);
+        .select(`${DB.linhaId}, ${DB.tipo}, ${DB.categoria}, ${DB.descricao}, ${DB.mes}, ${DB.valor}`)
+        .eq(DB.userId, user_id)
+        .eq(DB.ano, ano);
 
       if (error) {
         console.error("Erro ao carregar supabase:", error);
@@ -162,28 +175,28 @@ export default function DespesasPage() {
       const map = new Map();
 
       for (const r of data || []) {
-        const linhaId = r.linha_id || uid(); // fallback (não deveria acontecer se coluna estiver ok)
+        const linhaId = r[DB.linhaId] || uid();
         if (!map.has(linhaId)) {
           map.set(linhaId, {
-            id: linhaId, // <- mantém o mesmo id no state (722 continuam 722)
-            tipo: r.tipo === "RECEITA" ? "RECEITA" : "DESPESA",
+            id: linhaId,
+            tipo: r[DB.tipo] === "RECEITA" ? "RECEITA" : "DESPESA",
             // no UI, "Sem categoria" é representado por categoria = ""
-            categoria: r.categoria === "Sem categoria" ? "" : (r.categoria ?? ""),
-            descricao: r.descricao ?? "",
+            categoria: r[DB.categoria] === "Sem categoria" ? "" : (r[DB.categoria] ?? ""),
+            descricao: r[DB.descricao] ?? "",
             valores: Array(12).fill(""),
           });
         }
         const linha = map.get(linhaId);
-        const idx = Number(r.mes);
+        const idx = Number(r[DB.mes]);
         if (Number.isFinite(idx) && idx >= 0 && idx < 12) {
-          linha.valores[idx] = r.valor ? String(r.valor) : "";
+          linha.valores[idx] = r[DB.valor] !== null && r[DB.valor] !== undefined ? String(r[DB.valor]) : "";
         }
       }
 
       const novas = Array.from(map.values());
       setLinhas(novas);
 
-      // cache local (não quebra nada do seu fluxo antigo)
+      // cache local (não quebra nada do fluxo antigo)
       try {
         localStorage.setItem(lsKeyForAno(ano), JSON.stringify(novas));
       } catch {}
@@ -356,12 +369,12 @@ export default function DespesasPage() {
 
     setSavingSupabase(true);
     try {
-      // 1) apaga tudo do ano do usuário (isso já resolve deletar célula/linha etc.)
+      // 1) apaga tudo do ano do usuário
       const { error: delErr } = await supabase
         .from(TABELA)
         .delete()
-        .eq("user_id", user_id)
-        .eq("ano", anoSelecionado);
+        .eq(DB.userId, user_id)
+        .eq(DB.ano, anoSelecionado);
 
       if (delErr) {
         console.error("Erro ao limpar ano antes de salvar:", delErr);
@@ -372,7 +385,7 @@ export default function DespesasPage() {
       // 2) monta payload
       const payload = [];
       for (const l of linhas) {
-        const linha_id = l.id; // <- identidade real da linha
+        const linha_id = l.id;
         const tipo = l.tipo === "RECEITA" ? "RECEITA" : "DESPESA";
         const categoria = normCategoria(l.categoria);
         const descricao = normDescricao(l.descricao);
@@ -381,20 +394,20 @@ export default function DespesasPage() {
           const valor = toInt(l.valores[mes]);
           if (valor > 0) {
             payload.push({
-              user_id,
-              ano: anoSelecionado,
-              mes,
-              tipo,
-              categoria,
-              descricao,
-              valor,
-              linha_id,
+              [DB.userId]: user_id,
+              [DB.ano]: anoSelecionado,
+              [DB.mes]: mes,
+              [DB.tipo]: tipo,
+              [DB.categoria]: categoria,
+              [DB.descricao]: descricao,
+              [DB.valor]: valor,
+              [DB.linhaId]: linha_id,
             });
           }
         }
       }
 
-      // 3) insere tudo (se não tiver nada, ok)
+      // 3) insere tudo
       if (payload.length > 0) {
         const { error: insErr } = await supabase.from(TABELA).insert(payload);
         if (insErr) {
@@ -405,7 +418,6 @@ export default function DespesasPage() {
       }
 
       alert("Salvo com sucesso!");
-      // recarrega do supabase pra garantir consistência
       await carregarAnoDoSupabase(anoSelecionado);
     } finally {
       setSavingSupabase(false);
@@ -420,21 +432,20 @@ export default function DespesasPage() {
       return;
     }
 
-    // remove da UI primeiro (responsivo)
+    // remove da UI primeiro
     delLinha(linha.id);
 
     // apaga no banco
     const { error } = await supabase
       .from(TABELA)
       .delete()
-      .eq("user_id", user_id)
-      .eq("ano", anoSelecionado)
-      .eq("linha_id", linha.id);
+      .eq(DB.userId, user_id)
+      .eq(DB.ano, anoSelecionado)
+      .eq(DB.linhaId, linha.id);
 
     if (error) {
       console.error("Erro ao deletar linha:", error);
       alert("Erro ao deletar no Supabase. Veja o console.");
-      // fallback: recarrega do banco
       await carregarAnoDoSupabase(anoSelecionado);
     }
   };
@@ -455,8 +466,8 @@ export default function DespesasPage() {
     const { error } = await supabase
       .from(TABELA)
       .delete()
-      .eq("user_id", user_id)
-      .eq("ano", anoSelecionado);
+      .eq(DB.userId, user_id)
+      .eq(DB.ano, anoSelecionado);
 
     if (error) {
       console.error("Erro ao limpar ano:", error);
