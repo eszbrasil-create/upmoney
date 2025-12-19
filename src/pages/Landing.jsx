@@ -58,6 +58,11 @@ export default function Landing({ onNavigate }) {
     telefone: "",
   });
 
+  // ✅ base de estilo para inputs (texto preto em tudo)
+  const inputBase =
+    "w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-slate-900 placeholder:text-slate-400 " +
+    "focus:ring-4 focus:ring-amber-300 outline-none";
+
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -251,7 +256,7 @@ export default function Landing({ onNavigate }) {
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.24.42.56.22.96.49 1.38.9.41.41.67.82.9 1.38.17.43.37 1.07.42 2.24.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.42 2.24a3.6 3.6 0 0 1-.9 1.38 3.6 3.6 0 0 1-1.38.9c-.43.17-1.07.37-2.24.42-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.24-.42a3.6 3.6 0 0 1-1.38-.9 3.6 3.6 0 0 1-.9-1.38c-.17-.43-.37-1.07-.42-2.24C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.42-2.24.22-.56.49-.96.9-1.38.41-.41.82-.67 1.38-.9.43-.17 1.07-.37 2.24-.42C8.42 2.17 8.8 2.16 12 2.16Zm0 3.4c-3.16 0-3.53.01-4.77.07-.98.05-1.52.21-1.87.35-.47.18-.8.4-1.15.75-.35.35-.57.68-.75 1.15-.14.35-.3.89-.35 1.87-.06 1.24-.07 1.61-.07 4.77s.01 3.53.07 4.77c.05.98.21 1.52.35 1.87.18.47.4.8.75 1.15.35.35.68.57 1.15.75.35.14.89.3 1.87.35 1.24.06 1.61.07 4.77.07s3.53-.01 4.77-.07c.98-.05 1.52-.21 1.87-.35.47-.18.8-.4 1.15-1.15.35-.35.57-.68.75-1.15.14-.35.3-.89.35-1.87.06-1.24.07-1.61.07-4.77s-.01 3.53-.07 4.77c-.05-.98.21-1.52.35-1.87a2.62 2.62 0 0 0-.75-1.15c-.35-.35-.68-.57-1.15-.75-.35-.14-.89-.3-1.87-.35-1.24-.06-1.61-.07-4.77-.07Zm0 2.7a4.64 4.64 0 1 1 0 9.28 4.64 4.64 0 0 1 0-9.28Zm0 1.8a2.84 2.84 0 1 0 0 5.68 2.84 2.84 0 0 0 0-5.68Zm5.93-2.18a1.09 1.09 0 1 1 0 2.18 1.09 1.09 0 0 1 0-2.18Z" />
+                    <path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.24.42.56.22.96.49 1.38.9.41.41.67.82.9 1.38.17.43.37 1.07.42 2.24.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.42 2.24a3.6 3.6 0 0 1-.9 1.38 3.6 3.6 0 0 1-1.38.9c-.43.17-1.07.37-2.24.42-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.24-.42a3.6 3.6 0 0 1-1.38-.9 3.6 3.6 0 0 1-.9-1.38c-.17-.43-.37-1.07-.42-2.24C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.42-2.24.22-.56.49-.96.9-1.38.41-.41.82-.67 1.38-.9.43-.17 1.07-.37 2.24-.42C8.42 2.17 8.8 2.16 12 2.16Zm0 3.4c-3.16 0-3.53.01-4.77.07-.98.05-1.52.21-1.87.35-.47.18-.8.4-1.15.75-.35.35-.57.68-.75 1.15-.14.35-.3.89-.35 1.87-.06 1.24-.07 1.61-.07 4.77s.01 3.53.07 4.77c.05.98.21 1.52.35 1.87.18.47.4.8.75 1.15.35.35.68.57 1.15.75.35.14.89.3 1.87.35 1.24.06 1.61.07 4.77.07s3.53-.01 4.77-.07c.98.05 1.52.21 1.87.35.47.18.8.4 1.15-1.15.35-.35.57-.68.75-1.15.14-.35.3-.89.35-1.87.06-1.24.07-1.61.07-4.77s-.01 3.53-.07 4.77c-.05.98-.21 1.52-.35 1.87a2.62 2.62 0 0 0-.75-1.15c-.35-.35-.68-.57-1.15-.75-.35-.14-.89-.3-1.87-.35-1.24-.06-1.61-.07-4.77-.07Zm0 2.7a4.64 4.64 0 1 1 0 9.28 4.64 4.64 0 0 1 0-9.28Zm0 1.8a2.84 2.84 0 1 0 0 5.68 2.84 2.84 0 0 0 0-5.68Zm5.93-2.18a1.09 1.09 0 1 1 0 2.18 1.09 1.09 0 0 1 0-2.18Z" />
                   </svg>
                 </div>
               </div>
@@ -736,10 +741,10 @@ export default function Landing({ onNavigate }) {
           </div>
 
           <div className="mt-6 text-xs text-slate-500 leading-relaxed">
-            Aviso legal: UpMoney/UpControl oferecem conteúdo exclusivamente educacional e
-            ferramentas de organização financeira. Não são consultoria, não
-            garantem retorno financeiro e não fazem recomendações
-            individualizadas.
+            Aviso legal: UpMoney/UpControl oferecem conteúdo exclusivamente
+            educacional e ferramentas de organização financeira. Não são
+            consultoria, não garantem retorno financeiro e não fazem
+            recomendações individualizadas.
           </div>
         </div>
       </section>
@@ -771,7 +776,7 @@ export default function Landing({ onNavigate }) {
                   onChange={handleChange}
                   placeholder="Seu nome completo"
                   required
-                  className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                  className={inputBase.replace("px-4 py-3", "px-5 py-4")}
                 />
               </div>
 
@@ -784,12 +789,14 @@ export default function Landing({ onNavigate }) {
                   onChange={handleChange}
                   placeholder="seu@email.com"
                   required
-                  className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                  className={inputBase.replace("px-4 py-3", "px-5 py-4")}
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-black text-slate-700">WhatsApp</label>
+                <label className="text-xs font-black text-slate-700">
+                  WhatsApp
+                </label>
                 <input
                   type="tel"
                   name="telefone"
@@ -797,7 +804,7 @@ export default function Landing({ onNavigate }) {
                   onChange={handleChange}
                   placeholder="(11) 98765-4321"
                   required
-                  className="w-full px-5 py-4 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                  className={inputBase.replace("px-4 py-3", "px-5 py-4")}
                 />
               </div>
 
@@ -805,7 +812,7 @@ export default function Landing({ onNavigate }) {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-4 border border-slate-300 rounded-xl font-black hover:bg-slate-50"
+                  className="flex-1 py-4 border border-slate-300 rounded-xl font-black hover:bg-slate-50 text-slate-900"
                 >
                   Cancelar
                 </button>
@@ -826,7 +833,7 @@ export default function Landing({ onNavigate }) {
         </div>
       )}
 
-      {/* MODAL - QUERO ENTRAR NA TURMA (✅ melhorado com labels) */}
+      {/* MODAL - QUERO ENTRAR NA TURMA */}
       {isTurmaOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
@@ -873,7 +880,7 @@ export default function Landing({ onNavigate }) {
                       onChange={handleLeadChange}
                       placeholder="Ex: João"
                       required
-                      className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                      className={inputBase}
                     />
                   </div>
 
@@ -888,7 +895,7 @@ export default function Landing({ onNavigate }) {
                       onChange={handleLeadChange}
                       placeholder="Ex: Silva"
                       required
-                      className="w-full px-4 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder:text-slate-400 bg-white focus:ring-4 focus:ring-amber-300 outline-none"
+                      className={inputBase}
                     />
                   </div>
                 </div>
@@ -904,7 +911,7 @@ export default function Landing({ onNavigate }) {
                     onChange={handleLeadChange}
                     placeholder="ex: joao@email.com"
                     required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                    className={inputBase}
                   />
                 </div>
 
@@ -919,7 +926,7 @@ export default function Landing({ onNavigate }) {
                     onChange={handleLeadChange}
                     placeholder="(DDD) 99999-9999"
                     required
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-amber-300 outline-none"
+                    className={inputBase}
                   />
                   <div className="text-[11px] text-slate-500">
                     Usaremos este número apenas para falar com você sobre a
