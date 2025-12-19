@@ -56,12 +56,12 @@ export default function CursosPage() {
       {
         id: 8,
         titulo: "UpControl (1 to 1)",
-        pdf: "/pdfs/modulo6.pdf",
+        pdf: "/pdfs/.pdf",
       },
       {
         id: 9,
         titulo: "Meu Primeiro Dividendo (1 to 1)",
-        pdf: "/pdfs/modulo7.pdf",
+        pdf: "/pdfs/.pdf",
       },
     ],
     []
