@@ -1,7 +1,8 @@
 // src/pages/Despesas.jsx
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Trash2, Download, Eraser } from "lucide-react";
+import { Trash2, Download, Eraser, Save } from "lucide-react";
 import { exportRelatorioPDF } from "../utils/exportRelatorioPDF";
+import { supabase } from "../lib/supabaseClient"; // <-- ajuste aqui se seu caminho for diferente
 
 const MESES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const ANOS = [2025, 2026];
@@ -28,6 +29,9 @@ const CATEG_PX = 128;
 const DESC_PX = 220;
 const LEFT_CATEG = ACTIONS_PX; // 56
 const LEFT_DESC = ACTIONS_PX + CATEG_PX; // 184
+
+// ===== Supabase =====
+const TABELA = "cc_transacoes"; // se sua tabela tiver outro nome, mude aqui
 
 const uid = () => {
   try {
@@ -108,6 +112,10 @@ function parseBRNumber(input) {
 
 const toInt = (x) => Math.round(parseBRNumber(x));
 
+// Normalização consistente para gravar/apagar no banco:
+const normCategoria = (c) => (c || "Sem categoria").trim() || "Sem categoria";
+const normDescricao = (d) => (d ?? "").toString(); // mantém como string (sem trim pra não surpreender)
+
 export default function DespesasPage() {
   const [anoSelecionado, setAnoSelecionado] = useState(initialAno);
 
@@ -123,16 +131,83 @@ export default function DespesasPage() {
   const [showReplicarHint, setShowReplicarHint] = useState(false);
   const hintTimerRef = useRef(null);
 
+  const [loadingSupabase, setLoadingSupabase] = useState(false);
+  const [savingSupabase, setSavingSupabase] = useState(false);
+
+  const getUserId = async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) return null;
+    return data?.user?.id ?? null;
+  };
+
+  const carregarAnoDoSupabase = async (ano) => {
+    const user_id = await getUserId();
+    if (!user_id) return;
+
+    setLoadingSupabase(true);
+    try {
+      const { data, error } = await supabase
+        .from(TABELA)
+        .select("linha_id, tipo, categoria, descricao, mes, valor")
+        .eq("user_id", user_id)
+        .eq("ano", ano);
+
+      if (error) {
+        console.error("Erro ao carregar supabase:", error);
+        return;
+      }
+
+      // Reconstrói SEM consolidar por categoria/descrição.
+      // Agrupa somente por linha_id (identidade real da linha).
+      const map = new Map();
+
+      for (const r of data || []) {
+        const linhaId = r.linha_id || uid(); // fallback (não deveria acontecer se coluna estiver ok)
+        if (!map.has(linhaId)) {
+          map.set(linhaId, {
+            id: linhaId, // <- mantém o mesmo id no state (722 continuam 722)
+            tipo: r.tipo === "RECEITA" ? "RECEITA" : "DESPESA",
+            // no UI, "Sem categoria" é representado por categoria = ""
+            categoria: r.categoria === "Sem categoria" ? "" : (r.categoria ?? ""),
+            descricao: r.descricao ?? "",
+            valores: Array(12).fill(""),
+          });
+        }
+        const linha = map.get(linhaId);
+        const idx = Number(r.mes);
+        if (Number.isFinite(idx) && idx >= 0 && idx < 12) {
+          linha.valores[idx] = r.valor ? String(r.valor) : "";
+        }
+      }
+
+      const novas = Array.from(map.values());
+      setLinhas(novas);
+
+      // cache local (não quebra nada do seu fluxo antigo)
+      try {
+        localStorage.setItem(lsKeyForAno(ano), JSON.stringify(novas));
+      } catch {}
+    } finally {
+      setLoadingSupabase(false);
+    }
+  };
+
   const trocarAno = (ano) => {
     setAnoSelecionado(ano);
+
+    // 1) carrega rápido do cache (como era antes)
     try {
       const raw = localStorage.getItem(lsKeyForAno(ano));
       setLinhas(raw ? normalizarLinhas(raw) : []);
     } catch {
       setLinhas([]);
     }
+
+    // 2) depois sincroniza com Supabase
+    carregarAnoDoSupabase(ano);
   };
 
+  // Salva cache local como antes (mantém UX offline / rápido)
   useEffect(() => {
     const t = setTimeout(() => {
       try {
@@ -142,6 +217,12 @@ export default function DespesasPage() {
 
     return () => clearTimeout(t);
   }, [linhas, anoSelecionado]);
+
+  // Carrega Supabase no primeiro render também
+  useEffect(() => {
+    carregarAnoDoSupabase(anoSelecionado);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const setDescricao = (id, texto) =>
     setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, descricao: texto } : l)));
@@ -265,12 +346,122 @@ export default function DespesasPage() {
     }
   };
 
-  const clearAll = () => {
-    if (confirm(`Apagar todas as linhas de ${anoSelecionado}?`)) {
-      setLinhas([]);
-      try {
-        localStorage.removeItem(lsKeyForAno(anoSelecionado));
-      } catch {}
+  // ✅ SALVAR (SYNC COMPLETO DO ANO)
+  const salvarTudo = async () => {
+    const user_id = await getUserId();
+    if (!user_id) {
+      alert("Usuário não autenticado. Faça login novamente.");
+      return;
+    }
+
+    setSavingSupabase(true);
+    try {
+      // 1) apaga tudo do ano do usuário (isso já resolve deletar célula/linha etc.)
+      const { error: delErr } = await supabase
+        .from(TABELA)
+        .delete()
+        .eq("user_id", user_id)
+        .eq("ano", anoSelecionado);
+
+      if (delErr) {
+        console.error("Erro ao limpar ano antes de salvar:", delErr);
+        alert("Erro ao salvar (delete). Veja o console.");
+        return;
+      }
+
+      // 2) monta payload
+      const payload = [];
+      for (const l of linhas) {
+        const linha_id = l.id; // <- identidade real da linha
+        const tipo = l.tipo === "RECEITA" ? "RECEITA" : "DESPESA";
+        const categoria = normCategoria(l.categoria);
+        const descricao = normDescricao(l.descricao);
+
+        for (let mes = 0; mes < 12; mes++) {
+          const valor = toInt(l.valores[mes]);
+          if (valor > 0) {
+            payload.push({
+              user_id,
+              ano: anoSelecionado,
+              mes,
+              tipo,
+              categoria,
+              descricao,
+              valor,
+              linha_id,
+            });
+          }
+        }
+      }
+
+      // 3) insere tudo (se não tiver nada, ok)
+      if (payload.length > 0) {
+        const { error: insErr } = await supabase.from(TABELA).insert(payload);
+        if (insErr) {
+          console.error("Erro ao inserir:", insErr);
+          alert("Erro ao salvar (insert). Veja o console.");
+          return;
+        }
+      }
+
+      alert("Salvo com sucesso!");
+      // recarrega do supabase pra garantir consistência
+      await carregarAnoDoSupabase(anoSelecionado);
+    } finally {
+      setSavingSupabase(false);
+    }
+  };
+
+  // ✅ LIXEIRA: apaga a linha no Supabase pelo linha_id
+  const handleDeleteLinha = async (linha) => {
+    const user_id = await getUserId();
+    if (!user_id) {
+      alert("Usuário não autenticado. Faça login novamente.");
+      return;
+    }
+
+    // remove da UI primeiro (responsivo)
+    delLinha(linha.id);
+
+    // apaga no banco
+    const { error } = await supabase
+      .from(TABELA)
+      .delete()
+      .eq("user_id", user_id)
+      .eq("ano", anoSelecionado)
+      .eq("linha_id", linha.id);
+
+    if (error) {
+      console.error("Erro ao deletar linha:", error);
+      alert("Erro ao deletar no Supabase. Veja o console.");
+      // fallback: recarrega do banco
+      await carregarAnoDoSupabase(anoSelecionado);
+    }
+  };
+
+  // ✅ LIMPAR: apaga tudo do ano (Supabase + UI + cache)
+  const clearAll = async () => {
+    if (!confirm(`Apagar todas as linhas de ${anoSelecionado}?`)) return;
+
+    const user_id = await getUserId();
+    if (!user_id) {
+      alert("Usuário não autenticado. Faça login novamente.");
+      return;
+    }
+
+    setLinhas([]);
+    try { localStorage.removeItem(lsKeyForAno(anoSelecionado)); } catch {}
+
+    const { error } = await supabase
+      .from(TABELA)
+      .delete()
+      .eq("user_id", user_id)
+      .eq("ano", anoSelecionado);
+
+    if (error) {
+      console.error("Erro ao limpar ano:", error);
+      alert("Erro ao limpar no Supabase. Veja o console.");
+      await carregarAnoDoSupabase(anoSelecionado);
     }
   };
 
@@ -413,6 +604,10 @@ export default function DespesasPage() {
                 </button>
               ))}
             </div>
+
+            {loadingSupabase && (
+              <span className="text-xs text-slate-400">Carregando Supabase…</span>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -438,6 +633,15 @@ export default function DespesasPage() {
               className="px-3 py-2 rounded-md bg-rose-600 text-white text-sm hover:bg-rose-500"
             >
               + Despesa
+            </button>
+
+            <button
+              onClick={salvarTudo}
+              title="Salvar no Supabase"
+              className="flex items-center gap-1 px-3 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-500 disabled:opacity-60"
+              disabled={savingSupabase}
+            >
+              <Save size={16} /> {savingSupabase ? "Salvando..." : "Salvar"}
             </button>
 
             <button
@@ -523,13 +727,13 @@ export default function DespesasPage() {
         <div className="relative h-full overflow-y-auto">
           <table className={`table-fixed ${tableMinW} w-full`}>
             <colgroup>
-              <col className={actionsColWidth} />
-              <col className={categoriaColWidth} />
-              <col className={descColWidth} />
+              <col className={"w-14"} />
+              <col className={"w-32"} />
+              <col className={`w-[${DESC_PX}px]`} />
               {MESES.map((_, i) => (
-                <col key={`c${i}`} className={colW} />
+                <col key={`c${i}`} className={"w-20"} />
               ))}
-              <col className={colW} />
+              <col className={"w-20"} />
             </colgroup>
 
             <thead className="sticky top-0 z-40 bg-slate-900">
@@ -562,7 +766,7 @@ export default function DespesasPage() {
                   <tr key={l.id} className="hover:bg-slate-800/30">
                     <td className="px-2 py-0.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900 z-30">
                       <button
-                        onClick={() => delLinha(l.id)}
+                        onClick={() => handleDeleteLinha(l)}
                         className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-rose-400"
                         title="Excluir linha"
                       >
@@ -652,7 +856,7 @@ export default function DespesasPage() {
                   <tr key={l.id} className="hover:bg-slate-800/30">
                     <td className="px-2 py-0.5 border-t border-slate-700 text-center sticky left-0 bg-slate-900 z-30">
                       <button
-                        onClick={() => delLinha(l.id)}
+                        onClick={() => handleDeleteLinha(l)}
                         className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-rose-400"
                         title="Excluir linha"
                       >
