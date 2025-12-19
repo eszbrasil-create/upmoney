@@ -931,7 +931,7 @@ export default function Landing({ onNavigate }) {
                   <button
                     type="button"
                     onClick={() => setIsTurmaOpen(false)}
-                    className="flex-1 py-3 border border-slate-300 rounded-xl font-black hover:bg-slate-50"
+                    className="flex-1 py-3 rounded-xl font-black bg-slate-100 text-slate-900 border border-slate-300 hover:bg-slate-200 active:scale-[0.99] transition"
                   >
                     Voltar
                   </button>
