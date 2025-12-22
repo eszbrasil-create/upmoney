@@ -39,12 +39,12 @@ export default function CursoConfiguracaoMental({ onNavigate = () => {} }) {
       },
       {
         id: 4,
-        titulo: "Disciplina e execução",
+        titulo: "Estabilidade emocional",
         pdf: "/pdfs/rm_modulo04.pdf",
       },
       {
         id: 5,
-        titulo: "Ansiedade, comparação e foco",
+        titulo: "Construção do mindset investidor",
         pdf: "/pdfs/rm_modulo05.pdf",
       },
       {
