@@ -49,7 +49,7 @@ export default function CursoConfiguracaoMental({ onNavigate = () => {} }) {
       },
       {
         id: 6,
-        titulo: "Plano de 30 dias (prático)",
+        titulo: "Dividendo, Símbolo de transformação",
         pdf: "/pdfs/rm_modulo06.pdf",
       },
     ],
