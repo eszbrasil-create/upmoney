@@ -25,7 +25,7 @@ export default function CursoConfiguracaoMental({ onNavigate = () => {} }) {
       {
         id: 1,
         titulo: "Pense no futuro Bem-vindo a configuração Mental",
-        pdf: "/pdfs/rmmodulo01.pdf",
+        pdf: "/pdfs/rm01.pdf",
       },
       {
         id: 2,
