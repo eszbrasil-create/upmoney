@@ -24,17 +24,17 @@ export default function CursoConfiguracaoMental({ onNavigate = () => {} }) {
     () => [
       {
         id: 1,
-        titulo: "Pense no futuro Bem-vindo a configuração Mental",
+        titulo: "Como o cérebro funciona",
         pdf: "/pdfs/rm01.pdf",
       },
       {
         id: 2,
-        titulo: "Mindset: o jogo invisível",
+        titulo: "Quem você é com dinheiro",
         pdf: "/pdfs/rm_modulo02.pdf",
       },
       {
         id: 3,
-        titulo: "Hábitos e consistência",
+        titulo: "Escolhas que constroem o futuro",
         pdf: "/pdfs/rm_modulo03.pdf",
       },
       {
