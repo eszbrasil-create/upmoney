@@ -509,76 +509,122 @@ export default function CarteiraCash() {
               </span>
             </div>
 
-            <p className="text-[12px] text-slate-200">
-              Foco em montar uma carteira que gere fluxo de caixa recorrente ao
-              longo do tempo, por meio de proventos (dividendos, JCP e
-              rendimentos mensais de FIIs).
-            </p>
+            {/* TABELA (Ações + FIIs + Caixa) */}
+            <div className="overflow-hidden rounded-lg border border-white/10">
+              <table className="w-full text-[12px]">
+                <thead className="bg-slate-800/70 text-slate-300">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-semibold">Ativo</th>
+                    <th className="px-3 py-2 text-left font-semibold">Tipo</th>
+                    <th className="px-3 py-2 text-right font-semibold">Peso</th>
+                  </tr>
+                </thead>
 
-            <div className="grid gap-3 md:grid-cols-2 text-[12px]">
-              <div className="space-y-1.5">
-                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide">
-                  Quando faz sentido
-                </div>
-                <ul className="list-disc list-inside text-slate-200/90 space-y-0.5">
-                  <li>Quando você quer construir renda no médio / longo prazo.</li>
-                  <li>Quando gosta da ideia de “proventos caindo na conta”.</li>
-                  <li>Quando aceita oscilações de preço em troca de renda.</li>
-                </ul>
-              </div>
+                <tbody className="bg-slate-900/60">
+                  {/* AÇÕES */}
+                  <tr className="bg-slate-800/40">
+                    <td
+                      colSpan={3}
+                      className="px-3 py-1 text-[11px] font-semibold text-emerald-300 uppercase"
+                    >
+                      Ações
+                    </td>
+                  </tr>
 
-              <div className="space-y-1.5">
-                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide">
-                  Composição típica (exemplo)
-                </div>
-                <ul className="list-disc list-inside text-slate-200/90 space-y-0.5">
-                  <li>Ações de empresas maduras que pagam bons proventos.</li>
-                  <li>Fundos Imobiliários (FIIs) com renda mensal.</li>
-                  <li>Uma parte em renda fixa para estabilidade.</li>
-                </ul>
-              </div>
-            </div>
+                  {[
+                    ["PETR4", "Ação", "5%"],
+                    ["GGBR4", "Ação", "5%"],
+                    ["ITUB4", "Ação", "8%"],
+                    ["DIRR3", "Ação", "5%"],
+                    ["VIVT3", "Ação", "5%"],
+                    ["VALE3", "Ação", "6%"],
+                  ].map(([ticker, tipo, peso]) => (
+                    <tr key={ticker} className="border-t border-white/5">
+                      <td className="px-3 py-1.5 text-slate-100">{ticker}</td>
+                      <td className="px-3 py-1.5 text-slate-300">{tipo}</td>
+                      <td className="px-3 py-1.5 text-right text-slate-100">
+                        {peso}
+                      </td>
+                    </tr>
+                  ))}
 
-            <div className="mt-2 grid gap-3 md:grid-cols-2 text-[12px]">
-              <div>
-                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
-                  Exemplos de ações pagadoras
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-emerald-200 text-[11px] border border-emerald-500/30">
-                    VALE3 — Mineração
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-emerald-200 text-[11px] border border-emerald-500/30">
-                    ITUB4 — Bancos
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[11px] border border-slate-600/70">
-                    (ex.: TAEE11, PETR4, etc.)
-                  </span>
-                </div>
-              </div>
+                  <tr className="border-t border-white/10 font-semibold">
+                    <td className="px-3 py-1.5 text-slate-300">
+                      Subtotal Ações
+                    </td>
+                    <td />
+                    <td className="px-3 py-1.5 text-right text-emerald-300">
+                      34%
+                    </td>
+                  </tr>
 
-            <div>
-              <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
-                Exemplos de FIIs de renda
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-amber-200 text-[11px] border border-amber-400/40">
-                  HGLG11 — Logística
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[11px] border border-slate-600/70">
-                  (ex.: MXRF11, KNRI11, VISC11…)
-                </span>
-              </div>
+                  {/* FIIs */}
+                  <tr className="bg-slate-800/40">
+                    <td
+                      colSpan={3}
+                      className="px-3 py-1 text-[11px] font-semibold text-amber-300 uppercase"
+                    >
+                      FIIs
+                    </td>
+                  </tr>
+
+                  {[
+                    ["TRXF11", "FII", "10%"],
+                    ["RBRY11", "FII", "10%"],
+                    ["KNCR11", "FII", "16%"],
+                    ["KORE11", "FII", "5%"],
+                    ["BODB11", "FII", "5%"],
+                  ].map(([ticker, tipo, peso]) => (
+                    <tr key={ticker} className="border-t border-white/5">
+                      <td className="px-3 py-1.5 text-slate-100">{ticker}</td>
+                      <td className="px-3 py-1.5 text-slate-300">{tipo}</td>
+                      <td className="px-3 py-1.5 text-right text-slate-100">
+                        {peso}
+                      </td>
+                    </tr>
+                  ))}
+
+                  <tr className="border-t border-white/10 font-semibold">
+                    <td className="px-3 py-1.5 text-slate-300">Subtotal FIIs</td>
+                    <td />
+                    <td className="px-3 py-1.5 text-right text-amber-300">
+                      46%
+                    </td>
+                  </tr>
+
+                  {/* CAIXA */}
+                  <tr className="bg-slate-800/40">
+                    <td
+                      colSpan={3}
+                      className="px-3 py-1 text-[11px] font-semibold text-sky-300 uppercase"
+                    >
+                      Caixa
+                    </td>
+                  </tr>
+
+                  <tr className="border-t border-white/5">
+                    <td className="px-3 py-1.5 text-slate-100">Caixa</td>
+                    <td className="px-3 py-1.5 text-slate-300">Liquidez</td>
+                    <td className="px-3 py-1.5 text-right text-slate-100">
+                      20%
+                    </td>
+                  </tr>
+
+                  {/* TOTAL */}
+                  <tr className="border-t border-white/20 font-bold bg-slate-800/60">
+                    <td className="px-3 py-2 text-slate-100">
+                      Total da Carteira
+                    </td>
+                    <td />
+                    <td className="px-3 py-2 text-right text-emerald-400">
+                      100%
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-
-          <p className="mt-2 text-[11px] text-slate-400">
-            Esta visão é apenas educacional e não constitui recomendação de
-            compra ou venda de ativos. Use como referência para estudar e
-            adaptar à sua realidade.
-          </p>
         </div>
-      </div>
       );
     }
 
@@ -623,9 +669,7 @@ export default function CarteiraCash() {
                   <li>
                     Maior peso em cripto mais consolidadas (Bitcoin, Ethereum).
                   </li>
-                  <li>
-                    Parte menor em altcoins / projetos específicos.
-                  </li>
+                  <li>Parte menor em altcoins / projetos específicos.</li>
                   <li>Opcionalmente, ETFs de cripto em bolsa regulada.</li>
                 </ul>
               </div>
@@ -1226,8 +1270,8 @@ export default function CarteiraCash() {
 
           <span className="text-[11px] text-slate-400">
             As colunas principales são preenchidas automaticamente pelos
-            lançamentos (Supabase). Edite apenas os DYs, se desejar (janela de 24
-            meses a partir de Dez/2025).
+            lançamentos (Supabase). Edite apenas os DYs, se desejar (janela de
+            24 meses a partir de Dez/2025).
           </span>
         </div>
 
@@ -1263,9 +1307,7 @@ export default function CarteiraCash() {
                       className="inline-flex items-center gap-1 whitespace-nowrap"
                     >
                       <span>Data entrada</span>
-                      <span className="text-[10px]">
-                        {getSortIcon("data")}
-                      </span>
+                      <span className="text-[10px]">{getSortIcon("data")}</span>
                     </button>
                   </th>
 
@@ -1367,10 +1409,7 @@ export default function CarteiraCash() {
                       ].slice(0, DY_MONTHS.length)
                     : Array(DY_MONTHS.length).fill("");
 
-                  const dy12mValor = dyMeses.reduce(
-                    (acc, v) => acc + toNum(v),
-                    0
-                  );
+                  const dy12mValor = dyMeses.reduce((acc, v) => acc + toNum(v), 0);
 
                   return (
                     <tr
@@ -1449,7 +1488,9 @@ export default function CarteiraCash() {
                       </td>
 
                       {/* % Var */}
-                      <td className={`px-2 py-1.5 text-right text-xs w-28 ${varClass}`}>
+                      <td
+                        className={`px-2 py-1.5 text-right text-xs w-28 ${varClass}`}
+                      >
                         {hasVar ? `${varPerc.toFixed(2)}%` : "—"}
                       </td>
 
