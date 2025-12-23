@@ -121,12 +121,12 @@ export default function Cursos({ onNavigate }) {
               <p className="mt-4 text-sm sm:text-base text-slate-300 max-w-xl">
                 Aulas e acompanhamentos desenhados para você sair do zero,
                 organizar suas finanças e começar a investir com confiança —
-                sempre conectado ao uso do CashControl.
+                sempre conectado ao uso do UpControl.
               </p>
 
               <ul className="mt-5 space-y-2 text-sm text-slate-300">
                 <li>• Linguagem simples, foco total na prática.</li>
-                <li>• Integração direta com seus dashboards do CashControl.</li>
+                <li>• Integração direta com seus dashboards do UphControl.</li>
                 <li>• Acompanhamento por WhatsApp no programa principal.</li>
               </ul>
 

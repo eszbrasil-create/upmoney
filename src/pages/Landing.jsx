@@ -145,16 +145,16 @@ export default function Landing({ onNavigate }) {
     () => ({
       titulo: "Meu Primeiro Dividendo em até 30 dias",
       subtitulo:
-        "Programa educacional com acompanhamento individual + 12 meses de UpControl",
+        "Programa educacional com acompanhamento + 12 meses de UpControl",
       preco: "R$ 497",
       bonus: "UpControl por 12 meses incluso",
       oQueInclui: [
-        "Programa educacional (30 dias) com roteiro de execução",
+        "Programa educacional (30 dias) com roteiro claro de execução",
         "3 horas de acompanhamento 1:1 (encontros ao vivo)",
         "Suporte via WhatsApp durante 30 dias",
         "Acesso ao UpControl por 12 meses (bônus incluso)",
         "Materiais de apoio (checklist + apostila + passos práticos)",
-        "Opção de horas extras após o programa",
+        "Curso Configuração mental + Curso Meu Primeiro Dividendo",
       ],
     }),
     []
@@ -163,14 +163,14 @@ export default function Landing({ onNavigate }) {
   const produtoAppOnly = useMemo(
     () => ({
       titulo: "UpControl Essencial (somente app)",
-      preco: "R$ 199",
+      preco: "R$ 197",
       detalhe:
         "Acesso anual ao app para controle de despesas/receitas e organização financeira.",
       inclui: [
         "Controle de despesas e receitas (dash Despesas)",
         "Organização mensal/por ano",
-        "Exportação PDF (relatório)",
-        "Acesso por 12 meses",
+        "Exportação PDF (sugestões)",
+        "Acesso por 12 meses ao up control",
       ],
       observacao: "Sem acompanhamento 1:1 e sem trilha do curso.",
     }),
@@ -573,10 +573,7 @@ export default function Landing({ onNavigate }) {
                   Garantia de satisfação
                 </div>
                 <div className="mt-2 text-slate-700 text-sm leading-relaxed">
-                  Se você entrar, seguir o processo e sentir que o programa não
-                  te entregou clareza e estrutura educacional, você pode
-                  solicitar avaliação de reembolso conforme as regras do
-                  checkout/plataforma.
+                  Solicite seu reembolso dentro do prazo de 7 dias, caso se arrependa tenha seu reembolso do valor integral.
                 </div>
               </div>
 
