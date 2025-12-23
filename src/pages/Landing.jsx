@@ -238,7 +238,7 @@ export default function Landing({ onNavigate }) {
 
             {/* INSTAGRAM */}
             <a
-              href="https://instagram.com/upmoneybr"
+              href="https://instagram.com/emersonalves.souza"
               target="_blank"
               rel="noopener noreferrer"
               className="group"
@@ -300,7 +300,7 @@ export default function Landing({ onNavigate }) {
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full bg-amber-100 text-amber-900 px-4 py-2 text-sm font-bold">
                   <Lightning className="w-5 h-5" />
-                  3h 1:1 + WhatsApp 30 dias
+                  3h 1:1, Exclusivo
                 </span>
                 <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 text-emerald-900 px-4 py-2 text-sm font-bold">
                   <Check className="w-5 h-5" />
