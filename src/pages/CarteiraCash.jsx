@@ -927,33 +927,15 @@ export default function CarteiraCash() {
                   Composição típica (exemplo)
                 </div>
                 <ul className="list-disc list-inside text-slate-200/90 space-y-0.5">
-                  <li>
-                    Maior peso em criptos consolidadas .
-                  </li>
+                  <li>Maior peso em criptos consolidadas .</li>
                   <li>Parte menor em altcoins / projetos específicos.</li>
                   <li>Opcionalmente, ETFs de cripto em bolsa regulada.</li>
                 </ul>
               </div>
             </div>
 
-            <div className="mt-2 grid gap-3 md:grid-cols-2 text-[12px]">
-              <div>
-                <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
-                  Exemplos de criptoativos
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-fuchsia-200 text-[11px] border border-fuchsia-500/40">
-                    BTC — Bitcoin
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-fuchsia-200 text-[11px] border border-fuchsia-500/40">
-                    ETH — Ethereum
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[11px] border border-slate-600/70">
-                
-                  </span>
-                </div>
-              </div>
-
+            {/* ✅ AJUSTE: removido o bloco "Exemplos de criptoativos" (BTC/ETH) e o balão vazio */}
+            <div className="mt-2 grid gap-3 md:grid-cols-1 text-[12px]">
               <div>
                 <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wide mb-1">
                   Cuidados importantes
@@ -1286,9 +1268,7 @@ export default function CarteiraCash() {
                             fill={p.color}
                             fillOpacity={selected ? 1 : 0.85}
                             className={`transition-all duration-150 cursor-pointer ${
-                              selected
-                                ? "drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]"
-                                : ""
+                              selected ? "drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]" : ""
                             }`}
                             onMouseEnter={() => setHoverIdxAtivo(i)}
                             onMouseLeave={() => setHoverIdxAtivo(null)}
@@ -1363,9 +1343,7 @@ export default function CarteiraCash() {
                             fill={p.color}
                             fillOpacity={selected ? 1 : 0.85}
                             className={`transition-all duration-150 cursor-pointer ${
-                              selected
-                                ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]"
-                                : ""
+                              selected ? "drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" : ""
                             }`}
                             onMouseEnter={() => setHoverIdxTipo(i)}
                             onMouseLeave={() => setHoverIdxTipo(null)}
