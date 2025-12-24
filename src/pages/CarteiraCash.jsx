@@ -928,7 +928,7 @@ export default function CarteiraCash() {
                 </div>
                 <ul className="list-disc list-inside text-slate-200/90 space-y-0.5">
                   <li>
-                    Maior peso em cripto mais consolidadas (Bitcoin, Ethereum).
+                    Maior peso em criptos consolidadas .
                   </li>
                   <li>Parte menor em altcoins / projetos específicos.</li>
                   <li>Opcionalmente, ETFs de cripto em bolsa regulada.</li>
