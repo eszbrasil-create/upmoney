@@ -1029,7 +1029,7 @@ export default function CarteiraCash() {
         </div>
 
         {/* Espaço para não sobrepor os cards abaixo */}
-        <div className="h-20" />
+        <div className="h-28" />
       </div>
 
       {/* PAINEL INFORMATIVO DO MODELO SELECIONADO (FASE 1) */}
