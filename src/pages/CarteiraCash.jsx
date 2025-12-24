@@ -1129,7 +1129,10 @@ export default function CarteiraCash() {
             >
               <button
                 type="button"
-                onClick={() => setOpenCarteiras((prev) => !prev)}
+                onClick={() =>{
+                setSobreTip(null); // fecha o balão "Sobre" junto
+                setOpenCarteiras((prev) => !prev);
+              }}
                 className="w-full flex items-center justify-between hover:bg-slate-900/95 rounded-xl px-2 py-1 transition"
                 title="Sugestões de carteiras modelo"
               >
