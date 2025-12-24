@@ -121,6 +121,11 @@ export default function CarteiraCash() {
   const [sobreTip, setSobreTip] = useState(null); // { x, y, title, text }
   const sobreTipRef = useRef(null);
 
+  // ✅ AJUSTE: se fechar o balão principal, fecha o "Sobre" automaticamente
+  useEffect(() => {
+    if (!openCarteiras) setSobreTip(null);
+  }, [openCarteiras]);
+
   useEffect(() => {
     if (!sobreTip) return;
 
@@ -1129,10 +1134,10 @@ export default function CarteiraCash() {
             >
               <button
                 type="button"
-                onClick={() =>{
-                setSobreTip(null); // fecha o balão "Sobre" junto
-                setOpenCarteiras((prev) => !prev);
-              }}
+                onClick={() => {
+                  setSobreTip(null); // fecha o balão "Sobre" junto
+                  setOpenCarteiras((prev) => !prev);
+                }}
                 className="w-full flex items-center justify-between hover:bg-slate-900/95 rounded-xl px-2 py-1 transition"
                 title="Sugestões de carteiras modelo"
               >
@@ -1812,7 +1817,8 @@ export default function CarteiraCash() {
       />
 
       {/* Tooltip flutuante do "Sobre" */}
-      {sobreTip && (
+      {/* ✅ AJUSTE: só renderiza se o balão principal estiver aberto */}
+      {openCarteiras && sobreTip && (
         <TooltipSobre
           x={sobreTip.x}
           y={sobreTip.y}
