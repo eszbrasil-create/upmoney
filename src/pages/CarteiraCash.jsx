@@ -509,116 +509,168 @@ export default function CarteiraCash() {
               </span>
             </div>
 
-            {/* TABELA (Ações + FIIs + Caixa) */}
+            {/* TABELA (reestruturada) */}
             <div className="overflow-hidden rounded-lg border border-white/10">
               <table className="w-full text-[12px]">
                 <thead className="bg-slate-800/70 text-slate-300">
                   <tr>
-                    <th className="px-3 py-2 text-left font-semibold">Ativo</th>
                     <th className="px-3 py-2 text-left font-semibold">Tipo</th>
+                    <th className="px-3 py-2 text-left font-semibold">Nome</th>
+                    <th className="px-3 py-2 text-left font-semibold">Ticker</th>
                     <th className="px-3 py-2 text-right font-semibold">Peso</th>
+                    <th className="px-3 py-2 text-left font-semibold">Setor</th>
+                    <th className="px-3 py-2 text-left font-semibold">DY</th>
                   </tr>
                 </thead>
 
                 <tbody className="bg-slate-900/60">
-                  {/* AÇÕES */}
-                  <tr className="bg-slate-800/40">
-                    <td
-                      colSpan={3}
-                      className="px-3 py-1 text-[11px] font-semibold text-emerald-300 uppercase"
-                    >
-                      Ações
-                    </td>
-                  </tr>
-
-                  {[
-                    ["Ação","ITUB4", "8%"],
-                    ["Ação","VALE3", "6%"],
-                    ["Ação","PETR4", "5%"],
-                    ["Ação","GGBR4", "5%"],
-                    ["Ação","DIRR3", "5%"],
-                    ["Ação","VIVT3", "5%"],
-                  ].map(([ticker, tipo, peso]) => (
-                    <tr key={ticker} className="border-t border-white/5">
-                      <td className="px-3 py-1.5 text-slate-100">{ticker}</td>
-                      <td className="px-3 py-1.5 text-slate-300">{tipo}</td>
-                      <td className="px-3 py-1.5 text-right text-slate-100">
-                        {peso}
-                      </td>
-                    </tr>
-                  ))}
-
-                  <tr className="border-t border-white/10 font-semibold">
-                    <td className="px-3 py-1.5 text-slate-300">
-                      Subtotal Ações
-                    </td>
-                    <td />
-                    <td className="px-3 py-1.5 text-right text-emerald-300">
-                      34%
-                    </td>
-                  </tr>
-
-                  {/* FIIs */}
-                  <tr className="bg-slate-800/40">
-                    <td
-                      colSpan={3}
-                      className="px-3 py-1 text-[11px] font-semibold text-amber-300 uppercase"
-                    >
-                      FIIs
-                    </td>
-                  </tr>
-
-                  {[
-                    ["FII","KNCR11", "16%"],
-                    ["FII","TRXF11", "10%"],
-                    ["FII","RBRY11", "10%"],
-                    ["FII","KORE11", " 5%"],
-                    ["FII","BODB11", " 5%"],
-                  ].map(([ticker, tipo, peso]) => (
-                    <tr key={ticker} className="border-t border-white/5">
-                      <td className="px-3 py-1.5 text-slate-100">{ticker}</td>
-                      <td className="px-3 py-1.5 text-slate-300">{tipo}</td>
-                      <td className="px-3 py-1.5 text-right text-slate-100">
-                        {peso}
-                      </td>
-                    </tr>
-                  ))}
-
-                  <tr className="border-t border-white/10 font-semibold">
-                    <td className="px-3 py-1.5 text-slate-300">Subtotal FIIs</td>
-                    <td />
-                    <td className="px-3 py-1.5 text-right text-amber-300">
-                      46%
-                    </td>
-                  </tr>
-
-                  {/* CAIXA */}
-                  <tr className="bg-slate-800/40">
-                    <td
-                      colSpan={3}
-                      className="px-3 py-1 text-[11px] font-semibold text-sky-300 uppercase"
-                    >
+                  {/* Caixa */}
+                  <tr className="border-t border-white/5">
+                    <td className="px-3 py-1.5 text-sky-300 font-semibold">
                       Caixa
                     </td>
-                  </tr>
-
-                  <tr className="border-t border-white/5">
-                    <td className="px-3 py-1.5 text-slate-100">Caixa</td>
-                    <td className="px-3 py-1.5 text-slate-300">Liquidez</td>
+                    <td className="px-3 py-1.5 text-slate-100">
+                      Tesouro Selic / CDB liquidez diária
+                    </td>
+                    <td className="px-3 py-1.5 text-slate-400">—</td>
                     <td className="px-3 py-1.5 text-right text-slate-100">
                       20%
                     </td>
+                    <td className="px-3 py-1.5 text-slate-400">—</td>
+                    <td className="px-3 py-1.5 text-slate-400">—</td>
                   </tr>
+
+                  {/* Ações */}
+                  {[
+                    [
+                      "Ação",
+                      "Petrobras",
+                      "PETR4",
+                      "5%",
+                      "Petróleo e Gás",
+                      "Trimestral",
+                    ],
+                    [
+                      "Ação",
+                      "Gerdau",
+                      "GGBR4",
+                      "5%",
+                      "Mineração e Siderurgia",
+                      "Trimestral",
+                    ],
+                    [
+                      "Ação",
+                      "Itaú Unibanco",
+                      "ITUB4",
+                      "8%",
+                      "Financeiro",
+                      "Mensal",
+                    ],
+                    [
+                      "Ação",
+                      "Direcional",
+                      "DIRR3",
+                      "5%",
+                      "Construção Civil",
+                      "Irregular",
+                    ],
+                    [
+                      "Ação",
+                      "Vivo",
+                      "VIVT3",
+                      "5%",
+                      "Telecomunicações",
+                      "Semestral",
+                    ],
+                    [
+                      "Ação",
+                      "Vale",
+                      "VALE3",
+                      "6%",
+                      "Mineração",
+                      "Irregular",
+                    ],
+                  ].map(([tipo, nome, ticker, peso, setor, dy]) => (
+                    <tr key={ticker} className="border-t border-white/5">
+                      <td className="px-3 py-1.5 text-emerald-300 font-semibold">
+                        {tipo}
+                      </td>
+                      <td className="px-3 py-1.5 text-slate-100">{nome}</td>
+                      <td className="px-3 py-1.5 text-slate-200">{ticker}</td>
+                      <td className="px-3 py-1.5 text-right text-slate-100">
+                        {peso}
+                      </td>
+                      <td className="px-3 py-1.5 text-slate-300">{setor}</td>
+                      <td className="px-3 py-1.5 text-slate-300">{dy}</td>
+                    </tr>
+                  ))}
+
+                  {/* FIIs */}
+                  {[
+                    [
+                      "FII",
+                      "TRX Real Estate FII",
+                      "TRXF11",
+                      "10%",
+                      "Renda Urbana",
+                      "Mensal",
+                    ],
+                    [
+                      "FII",
+                      "RBR Crédito Imobiliário Estruturado FII",
+                      "RBRY11",
+                      "10%",
+                      "Crédito",
+                      "Mensal",
+                    ],
+                    [
+                      "FII",
+                      "Kinea Rendimentos Imobiliários FII",
+                      "KNCR11",
+                      "16%",
+                      "Crédito",
+                      "Mensal",
+                    ],
+                    [
+                      "FII",
+                      "Kinea Oportunidades Real Estate",
+                      "KORE11",
+                      "5%",
+                      "Lajes Corporativas",
+                      "Mensal",
+                    ],
+                    [
+                      "FII",
+                      "Bocaina FIC FI-Infra",
+                      "BODB11",
+                      "5%",
+                      "Infraestrutura",
+                      "Mensal",
+                    ],
+                  ].map(([tipo, nome, ticker, peso, setor, dy]) => (
+                    <tr key={ticker} className="border-t border-white/5">
+                      <td className="px-3 py-1.5 text-amber-300 font-semibold">
+                        {tipo}
+                      </td>
+                      <td className="px-3 py-1.5 text-slate-100">{nome}</td>
+                      <td className="px-3 py-1.5 text-slate-200">{ticker}</td>
+                      <td className="px-3 py-1.5 text-right text-slate-100">
+                        {peso}
+                      </td>
+                      <td className="px-3 py-1.5 text-slate-300">{setor}</td>
+                      <td className="px-3 py-1.5 text-slate-300">{dy}</td>
+                    </tr>
+                  ))}
 
                   {/* TOTAL */}
                   <tr className="border-t border-white/20 font-bold bg-slate-800/60">
-                    <td className="px-3 py-2 text-slate-100">
+                    <td className="px-3 py-2 text-slate-100" colSpan={3}>
                       Total da Carteira
                     </td>
-                    <td />
                     <td className="px-3 py-2 text-right text-emerald-400">
                       100%
                     </td>
+                    <td colSpan={2} />
                   </tr>
                 </tbody>
               </table>
