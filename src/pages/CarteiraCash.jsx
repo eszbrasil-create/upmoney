@@ -532,12 +532,12 @@ export default function CarteiraCash() {
                   </tr>
 
                   {[
-                    ["PETR4", "Ação", "5%"],
-                    ["GGBR4", "Ação", "5%"],
-                    ["ITUB4", "Ação", "8%"],
-                    ["DIRR3", "Ação", "5%"],
-                    ["VIVT3", "Ação", "5%"],
-                    ["VALE3", "Ação", "6%"],
+                    ["Ação","ITUB4", "8%"],
+                    ["Ação","VALE3", "6%"],
+                    ["Ação","PETR4", "5%"],
+                    ["Ação","GGBR4", "5%"],
+                    ["Ação","DIRR3", "5%"],
+                    ["Ação","VIVT3", "5%"],
                   ].map(([ticker, tipo, peso]) => (
                     <tr key={ticker} className="border-t border-white/5">
                       <td className="px-3 py-1.5 text-slate-100">{ticker}</td>
@@ -569,11 +569,11 @@ export default function CarteiraCash() {
                   </tr>
 
                   {[
-                    ["TRXF11", "FII", "10%"],
-                    ["RBRY11", "FII", "10%"],
-                    ["KNCR11", "FII", "16%"],
-                    ["KORE11", "FII", "5%"],
-                    ["BODB11", "FII", "5%"],
+                    [,"FII","KNCR11", "16%"],
+                    [,"FII","TRXF11", "10%"],
+                    [,"FII","RBRY11", "10%"],
+                    [,"FII","KORE11", " 5%"],
+                    [,"FII","BODB11", " 5%"],
                   ].map(([ticker, tipo, peso]) => (
                     <tr key={ticker} className="border-t border-white/5">
                       <td className="px-3 py-1.5 text-slate-100">{ticker}</td>
