@@ -6,6 +6,7 @@ export default function Login({ onNavigate }) {
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [showSenha, setShowSenha] = useState(false); // ✅ ajuste: olho na senha
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
@@ -105,8 +106,65 @@ export default function Login({ onNavigate }) {
           </div>
         </div>
 
-        {/* NOVO LAYOUT: somente o formulário, centralizado */}
-        <div className="flex justify-center">
+        <div className="grid lg:grid-cols-2 gap-8 items-start">
+          {/* LADO ESQUERDO (branding/benefícios) */}
+          <div className="hidden lg:block">
+            <div className="rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-900/60 to-slate-900/20 p-8 shadow-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-emerald-500/50 mb-6">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]" />
+                <span className="text-[11px] font-medium text-emerald-200 tracking-wide">
+                  UpControl • Meu Patrimônio
+                </span>
+              </div>
+
+              <h1 className="text-4xl font-black text-slate-50 leading-tight">
+                Organize sua vida financeira
+                <span className="text-emerald-300"> com clareza</span>.
+              </h1>
+
+              <p className="mt-3 text-slate-300">
+                Acompanhe despesas e receitas, exporte relatórios e mantenha seus
+                dados salvos com segurança.
+              </p>
+
+              <div className="mt-6 space-y-3 text-sm">
+                {[
+                  "Controle mensal em uma única tela",
+                  "Relatórios em PDF quando quiser",
+                  "Acesso exclusivo: cada usuário vê apenas os próprios dados",
+                ].map((t) => (
+                  <div key={t} className="flex items-start gap-3">
+                    <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-200">
+                      ✓
+                    </span>
+                    <span className="text-slate-200">{t}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-950/30 p-5">
+                <div className="text-sm font-semibold text-slate-100">
+                  Ainda não tem conta?
+                </div>
+                <div className="mt-1 text-sm text-slate-300">
+                  Crie agora e comece a salvar seus dados.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("signup");
+                    setErro("");
+                    setMensagem("");
+                    setShowSenha(false); // ✅ opcional: reseta o olho ao trocar modo
+                  }}
+                  className="mt-4 w-full rounded-xl bg-slate-800 hover:bg-slate-700 py-3 text-sm font-semibold text-white transition"
+                >
+                  Criar conta
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* LADO DIREITO (formulário) */}
           <div className="w-full max-w-md mx-auto">
             <div className="mb-6 text-center lg:text-left">
@@ -136,6 +194,7 @@ export default function Login({ onNavigate }) {
                     setMode("login");
                     setErro("");
                     setMensagem("");
+                    setShowSenha(false); // ✅ opcional: reseta o olho ao trocar modo
                   }}
                   className={`flex-1 py-1.5 rounded-full transition ${
                     mode === "login"
@@ -151,6 +210,7 @@ export default function Login({ onNavigate }) {
                     setMode("signup");
                     setErro("");
                     setMensagem("");
+                    setShowSenha(false); // ✅ opcional: reseta o olho ao trocar modo
                   }}
                   className={`flex-1 py-1.5 rounded-full transition ${
                     mode === "signup"
@@ -190,21 +250,35 @@ export default function Login({ onNavigate }) {
                   />
                 </div>
 
+                {/* ✅ ajuste: senha com olho */}
                 <div>
                   <label className="block text-xs font-medium text-slate-300">
                     Senha
                   </label>
-                  <input
-                    type="password"
-                    required
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                    className="w-full rounded-lg bg-slate-950/60 border border-slate-700 px-3 py-2 text-sm text-slate-100 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                    placeholder="Sua senha"
-                    autoComplete={
-                      mode === "login" ? "current-password" : "new-password"
-                    }
-                  />
+
+                  <div className="relative">
+                    <input
+                      type={showSenha ? "text" : "password"}
+                      required
+                      value={senha}
+                      onChange={(e) => setSenha(e.target.value)}
+                      className="w-full rounded-lg bg-slate-950/60 border border-slate-700 px-3 py-2 pr-10 text-sm text-slate-100 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                      placeholder="Sua senha"
+                      autoComplete={
+                        mode === "login" ? "current-password" : "new-password"
+                      }
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => setShowSenha((prev) => !prev)}
+                      className="absolute inset-y-0 right-2 flex items-center text-slate-400 hover:text-slate-200 transition"
+                      title={showSenha ? "Ocultar senha" : "Mostrar senha"}
+                      aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
+                    >
+                      {showSenha ? "🙈" : "👁️"}
+                    </button>
+                  </div>
 
                   {mode === "login" && (
                     <button
@@ -246,12 +320,6 @@ export default function Login({ onNavigate }) {
                 de organização financeira. Conteúdo educacional — não constitui
                 recomendação de investimento.
               </div>
-            </div>
-
-            {/* “Seguro…” embaixo (mobile), já que no topo some no xs */}
-            <div className="sm:hidden mt-4 flex items-center justify-center gap-2 text-xs text-slate-400">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.55)]" />
-              Seguro • Seus dados ficam só com você
             </div>
           </div>
         </div>
