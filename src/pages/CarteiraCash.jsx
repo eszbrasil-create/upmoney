@@ -92,6 +92,15 @@ function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle) {
   ].join(" ");
 }
 
+function tipoLabel(tipo) {
+  if (tipo === "RF") return "RF";
+  if (tipo === "FII") return "FII";
+  if (tipo === "CRIPTO") return "Cripto";
+  if (tipo === "CAIXA") return "Caixa";
+  if (tipo === "OUTROS") return "Outros";
+  return "Ações";
+}
+
 export default function CarteiraCash() {
   // 🔗 Lê a base de DY do GitHub
   const { dyBase, dyBaseLoading, dyBaseError } = useDyBase();
@@ -484,6 +493,47 @@ export default function CarteiraCash() {
     setIsAddModalOpen(true);
   };
 
+  // ====== Tooltip do "Sobre" (coluna final) ======
+  const [sobreTip, setSobreTip] = useState(null);
+  useEffect(() => {
+    if (!sobreTip) return;
+
+    const onKey = (e) => {
+      if (e.key === "Escape") setSobreTip(null);
+    };
+    const onClick = () => setSobreTip(null);
+
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onClick);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onClick);
+    };
+  }, [sobreTip]);
+
+  const TooltipSobre = ({ x, y, title, text }) => (
+    <div className="fixed z-[9999]" style={{ left: x, top: y }}>
+      <div className="w-[320px] max-w-[80vw] rounded-xl bg-slate-950/95 border border-white/10 px-3 py-2 shadow-2xl">
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-[11px] text-slate-300 font-medium truncate">
+            {title}
+          </div>
+          <button
+            type="button"
+            onClick={() => setSobreTip(null)}
+            className="text-[11px] text-slate-400 hover:text-slate-200 transition"
+            title="Fechar"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="mt-1 text-[12px] text-slate-100 leading-relaxed whitespace-pre-wrap">
+          {text}
+        </div>
+      </div>
+    </div>
+  );
+
   // ====== Conteúdo informativo dos modelos (Fase 1) ======
   const renderModeloInfo = () => {
     if (!selectedModelo) return null;
@@ -582,14 +632,7 @@ export default function CarteiraCash() {
                       "Telecomunicações",
                       "Semestral",
                     ],
-                    [
-                      "Ação",
-                      "Vale",
-                      "VALE3",
-                      "6%",
-                      "Mineração",
-                      "Irregular",
-                    ],
+                    ["Ação", "Vale", "VALE3", "6%", "Mineração", "Irregular"],
                   ].map(([tipo, nome, ticker, peso, setor, dy]) => (
                     <tr key={ticker} className="border-t border-white/5">
                       <td className="px-3 py-1.5 text-emerald-300 font-semibold">
@@ -908,6 +951,35 @@ export default function CarteiraCash() {
       return valB - valA;
     });
   }, [carteiraComDy, sortConfig, totalGeral]);
+
+  // ====== Subtotal por tipo (posição + part.%) ======
+  const subtotaisPorTipo = useMemo(() => {
+    const order = ["RF", "ACOES", "FII", "CRIPTO", "CAIXA", "OUTROS"];
+    const map = new Map();
+
+    carteiraComDy.forEach((r) => {
+      const qtdNum = toNum(r.qtd);
+      const entradaNum = toNum(r.entrada);
+      const valorAtualNum = toNum(r.valorAtual) || entradaNum;
+      const valorPosicao = qtdNum * valorAtualNum;
+
+      if (valorPosicao <= 0) return;
+
+      const t = r.tipo || "ACOES";
+      map.set(t, (map.get(t) || 0) + valorPosicao);
+    });
+
+    const rows = order
+      .map((t) => {
+        const v = map.get(t) || 0;
+        if (v <= 0) return null;
+        const part = totalGeral > 0 ? (v / totalGeral) * 100 : 0;
+        return { tipo: t, valor: v, part };
+      })
+      .filter(Boolean);
+
+    return rows;
+  }, [carteiraComDy, totalGeral]);
 
   return (
     <div className="pt-0 pr-3 pl-0 relative">
@@ -1425,6 +1497,11 @@ export default function CarteiraCash() {
                       {`DY ${m.label}`}
                     </th>
                   ))}
+
+                  {/* Sobre (novo) */}
+                  <th className="px-2 py-1.5 text-center text-[12px] font-semibold whitespace-nowrap w-16">
+                    Sobre
+                  </th>
                 </tr>
               </thead>
 
@@ -1461,7 +1538,26 @@ export default function CarteiraCash() {
                       ].slice(0, DY_MONTHS.length)
                     : Array(DY_MONTHS.length).fill("");
 
-                  const dy12mValor = dyMeses.reduce((acc, v) => acc + toNum(v), 0);
+                  const dy12mValor = dyMeses.reduce(
+                    (acc, v) => acc + toNum(v),
+                    0
+                  );
+
+                  // Conteúdo do "Sobre" (tenta vários campos sem quebrar)
+                  const sobreTextoRaw =
+                    r.sobre ??
+                    r.about ??
+                    r.descricao ??
+                    r.description ??
+                    r.info ??
+                    "";
+                  const sobreTexto =
+                    String(sobreTextoRaw || "").trim() ||
+                    "Sem informações disponíveis para este ativo.";
+
+                  const sobreTitulo = `${r.ticker || "Ativo"} — ${
+                    r.nome || tipoLabel(r.tipo)
+                  }`;
 
                   return (
                     <tr
@@ -1482,17 +1578,7 @@ export default function CarteiraCash() {
                       {/* Tipo */}
                       <td className="px-2 py-1.5 w-32 text-center">
                         <span className="inline-flex items-center justify-center rounded-md bg-slate-900 border border-slate-700 px-2 py-0.5 text-[11px] text-slate-100">
-                          {r.tipo === "RF"
-                            ? "RF"
-                            : r.tipo === "FII"
-                            ? "FII"
-                            : r.tipo === "CRIPTO"
-                            ? "Cripto"
-                            : r.tipo === "CAIXA"
-                            ? "Caixa"
-                            : r.tipo === "OUTROS"
-                            ? "Outros"
-                            : "Ações"}
+                          {tipoLabel(r.tipo)}
                         </span>
                       </td>
 
@@ -1584,13 +1670,154 @@ export default function CarteiraCash() {
                           />
                         </td>
                       ))}
+
+                      {/* Sobre (novo) */}
+                      <td className="px-2 py-1.5 text-center w-16">
+                        <button
+                          type="button"
+                          className="
+                            inline-flex items-center justify-center
+                            h-7 w-7 rounded-lg
+                            bg-slate-900 border border-slate-700
+                            text-slate-200 hover:text-white
+                            hover:border-slate-500 hover:bg-slate-800
+                            transition
+                          "
+                          title="Ver informações"
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setSobreTip({
+                              x: rect.left - 280 + rect.width,
+                              y: rect.bottom + 8,
+                              title: sobreTitulo,
+                              text: sobreTexto,
+                            });
+                          }}
+                        >
+                          📄
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
+
+                {/* ===== Subtotal por tipo (novo) ===== */}
+                {subtotaisPorTipo.length > 0 && (
+                  <>
+                    <tr className="border-t border-white/10 bg-slate-800/40">
+                      <td className="px-2 py-2 text-[11px] text-slate-400 sticky left-0 bg-slate-800/40 z-10 w-8">
+                        —
+                      </td>
+                      <td className="px-2 py-2 text-left sticky left-[2rem] bg-slate-800/40 z-10 w-28">
+                        <span className="text-[11px] font-semibold text-slate-200">
+                          Subtotal por tipo
+                        </span>
+                      </td>
+
+                      {/* Tipo */}
+                      <td className="px-2 py-2 w-32" />
+                      {/* Setor */}
+                      <td className="px-2 py-2 w-40" />
+                      {/* Data */}
+                      <td className="px-2 py-2 w-32" />
+                      {/* Qtd */}
+                      <td className="px-2 py-2 w-24" />
+                      {/* Entrada */}
+                      <td className="px-2 py-2 w-36" />
+                      {/* Posição */}
+                      <td className="px-2 py-2 w-36" />
+                      {/* %Var */}
+                      <td className="px-2 py-2 w-28" />
+                      {/* Part */}
+                      <td className="px-2 py-2 w-28" />
+                      {/* DY12 */}
+                      <td className="px-2 py-2 w-32" />
+                      {/* DY meses */}
+                      {DY_MONTHS.map((m) => (
+                        <td key={m.label} className="px-2 py-2" />
+                      ))}
+                      {/* Sobre */}
+                      <td className="px-2 py-2 w-16" />
+                    </tr>
+
+                    {subtotaisPorTipo.map((s) => (
+                      <tr
+                        key={s.tipo}
+                        className="border-t border-white/5 bg-slate-900/30"
+                      >
+                        <td className="px-2 py-1.5 text-[11px] text-slate-500 sticky left-0 bg-slate-900/70 z-10 w-8">
+                          —
+                        </td>
+
+                        <td className="px-2 py-1.5 text-left sticky left-[2rem] bg-slate-900/70 z-10 w-28">
+                          <span className="text-[11px] text-slate-200">
+                            Subtotal
+                          </span>
+                        </td>
+
+                        {/* Tipo */}
+                        <td className="px-2 py-1.5 w-32 text-center">
+                          <span className="inline-flex items-center justify-center rounded-md bg-slate-900 border border-slate-700 px-2 py-0.5 text-[11px] text-slate-100">
+                            {tipoLabel(s.tipo)}
+                          </span>
+                        </td>
+
+                        {/* Setor */}
+                        <td className="px-2 py-1.5 w-40" />
+                        {/* Data */}
+                        <td className="px-2 py-1.5 w-32" />
+                        {/* Qtd */}
+                        <td className="px-2 py-1.5 w-24" />
+                        {/* Entrada */}
+                        <td className="px-2 py-1.5 w-36" />
+
+                        {/* Posição (R$) */}
+                        <td className="px-2 py-1.5 text-left text-xs text-slate-200 w-36 font-semibold">
+                          {s.valor.toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </td>
+
+                        {/* % Var */}
+                        <td className="px-2 py-1.5 w-28" />
+
+                        {/* Part. % */}
+                        <td className="px-2 py-1.5 text-right text-xs text-slate-200 w-28 font-semibold">
+                          {totalGeral > 0 ? `${s.part.toFixed(2)}%` : "—"}
+                        </td>
+
+                        {/* DY 12m */}
+                        <td className="px-2 py-1.5 w-32" />
+
+                        {/* DY meses */}
+                        {DY_MONTHS.map((m) => (
+                          <td key={m.label} className="px-2 py-1.5" />
+                        ))}
+
+                        {/* Sobre */}
+                        <td className="px-2 py-1.5 w-16" />
+                      </tr>
+                    ))}
+                  </>
+                )}
               </tbody>
             </table>
           </div>
         </div>
+
+        {sobreTip && (
+          <TooltipSobre
+            x={sobreTip.x}
+            y={sobreTip.y}
+            title={sobreTip.title}
+            text={sobreTip.text}
+          />
+        )}
 
         <p className="mt-3 text-[11px] text-slate-500">
           Esta carteira é um modelo educacional e não constitui recomendação de
