@@ -121,7 +121,7 @@ export default function CarteiraCash() {
   const [sobreTip, setSobreTip] = useState(null); // { x, y, title, text }
   const sobreTipRef = useRef(null);
 
-  // ✅ AJUSTE: se fechar o balão principal, fecha o "Sobre" automaticamente
+  // ✅ garante o mesmo comportamento do balão principal
   useEffect(() => {
     if (!openCarteiras) setSobreTip(null);
   }, [openCarteiras]);
@@ -504,12 +504,10 @@ export default function CarteiraCash() {
   }, []);
 
   const handleModeloClick = (tipo) => {
-    // Fase 1: só seleciona o modelo e exibe texto + exemplos
     setSelectedModelo(tipo);
     setOpenCarteiras(true);
   };
 
-  // Abrir modal de lançamentos
   const handleOpenAdd = () => {
     setIsAddModalOpen(true);
   };
@@ -620,7 +618,211 @@ export default function CarteiraCash() {
       setOpenCarteiras(false);
     };
 
+    // ✅ helpers de subtotal (somente para a tabela do modelo Dividendos)
+    const pctToNum = (s) => {
+      if (!s) return 0;
+      const n = Number(String(s).replace("%", "").replace(",", ".").trim());
+      return Number.isFinite(n) ? n : 0;
+    };
+    const sumPct = (rows) => rows.reduce((acc, r) => acc + pctToNum(r.peso), 0);
+    const fmtPct = (n) =>
+      `${(Math.round(n * 100) / 100).toLocaleString("pt-BR", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      })}%`;
+
     if (selectedModelo === "dividendos") {
+      const caixaRows = [
+        {
+          tipo: "Caixa",
+          nome: "Tesouro Selic / CDB liquidez diária",
+          ticker: "—",
+          peso: "20%",
+          setor: "—",
+          dy: "—",
+          sobre:
+            "Investimento de baixo risco e alta liquidez, usado como base de segurança da carteira. Serve para proteger o capital e aproveitar oportunidades.",
+        },
+      ];
+
+      const acoesRows = [
+        {
+          tipo: "Ação",
+          nome: "Petrobras",
+          ticker: "PETR4",
+          peso: "5%",
+          setor: "Petróleo e Gás",
+          dy: "Trimestral",
+          sobre:
+            "Empresa do setor de petróleo e gás, com atuação global. Gera forte caixa e é conhecida por dividendos elevados, porém variáveis e influenciados por preços do petróleo e decisões governamentais.",
+        },
+        {
+          tipo: "Ação",
+          nome: "Gerdau",
+          ticker: "GGBR4",
+          peso: "5%",
+          setor: "Mineração e Siderurgia",
+          dy: "Trimestral",
+          sobre:
+            "Empresa do setor de siderurgia, com atuação global e forte geração de caixa. Seus resultados acompanham ciclos da economia, especialmente investimentos em infraestrutura e construção.",
+        },
+        {
+          tipo: "Ação",
+          nome: "Itaú Unibanco",
+          ticker: "ITUB4",
+          peso: "8%",
+          setor: "Financeiro",
+          dy: "Mensal",
+          sobre:
+            "Maior banco privado do Brasil, com lucros recorrentes e previsibilidade. Referência em estabilidade e pagamento regular de dividendos.",
+        },
+        {
+          tipo: "Ação",
+          nome: "Direcional",
+          ticker: "DIRR3",
+          peso: "5%",
+          setor: "Construção Civil",
+          dy: "Irregular",
+          sobre:
+            "Construtora focada em habitação popular, com demanda mais estável. Pode pagar dividendos de forma menos previsível dependendo do ciclo do setor.",
+        },
+        {
+          tipo: "Ação",
+          nome: "Vivo",
+          ticker: "VIVT3",
+          peso: "5%",
+          setor: "Telecomunicações",
+          dy: "Semestral",
+          sobre:
+            "Empresa de telecomunicações, considerada defensiva. Gera caixa recorrente e distribui dividendos com boa regularidade, funcionando como um “aluguel digital”.",
+        },
+        {
+          tipo: "Ação",
+          nome: "Vale",
+          ticker: "VALE3",
+          peso: "6%",
+          setor: "Mineração",
+          dy: "Irregular",
+          sobre:
+            "Uma das maiores mineradoras do mundo, ligada ao setor de commodities. Pode pagar dividendos elevados em ciclos favoráveis, mas com maior volatilidade, ensinando o investidor sobre ciclos econômicos globais.",
+        },
+      ];
+
+      const fiiRows = [
+        {
+          tipo: "FII",
+          nome: "TRX Real Estate FII",
+          ticker: "TRXF11",
+          peso: "10%",
+          setor: "Renda Urbana",
+          dy: "Mensal",
+          sobre:
+            "FII de tijolo (imóveis físicos) com foco em contratos de longo prazo e imóveis locados para gerar renda recorrente.",
+        },
+        {
+          tipo: "FII",
+          nome: "RBR Crédito Imobiliário Estruturado FII",
+          ticker: "RBRY11",
+          peso: "10%",
+          setor: "Crédito",
+          dy: "Mensal",
+          sobre:
+            "Investe em CRIs (Certificados de Recebíveis Imobiliários), ou seja, títulos de dívida ligados ao setor imobiliário, buscando renda mensal via juros.",
+        },
+        {
+          tipo: "FII",
+          nome: "Kinea Rendimentos Imobiliários FII",
+          ticker: "KNCR11",
+          peso: "16%",
+          setor: "Crédito",
+          dy: "Mensal",
+          sobre:
+            "Fundo de papel com foco em crédito imobiliário indexado ao CDI (taxa de juros). Muito próximo da renda fixa, com renda variável.",
+        },
+        {
+          tipo: "FII",
+          nome: "Kinea Oportunidades Real Estate",
+          ticker: "KORE11",
+          peso: "5%",
+          setor: "Lajes Corporativas",
+          dy: "Mensal",
+          sobre:
+            "Investe em oportunidades especiais (imóveis descontados, reestruturações) fora do padrão tradicional, buscando gerar valor no tempo.",
+        },
+        {
+          tipo: "FII",
+          nome: "Bocaina FIC FI-Infra",
+          ticker: "BODB11",
+          peso: "5%",
+          setor: "Infraestrutura",
+          dy: "Mensal",
+          sobre:
+            "Investe em debêntures incentivadas (empréstimo/financiamento feito para empresas) do setor de infraestrutura (energia, rodovias, saneamento). Em sua maioria indexadas ao IPCA.",
+        },
+      ];
+
+      const subtotalCaixa = sumPct(caixaRows);
+      const subtotalAcoes = sumPct(acoesRows);
+      const subtotalFiis = sumPct(fiiRows);
+      const total = subtotalCaixa + subtotalAcoes + subtotalFiis;
+
+      const renderRow = (r) => (
+        <tr key={`${r.tipo}-${r.ticker}-${r.nome}`} className="border-t border-white/5">
+          <td
+            className={`px-3 py-1.5 font-semibold ${
+              r.tipo === "Caixa"
+                ? "text-sky-300"
+                : r.tipo === "Ação"
+                ? "text-emerald-300"
+                : "text-amber-300"
+            }`}
+          >
+            {r.tipo}
+          </td>
+          <td className="px-3 py-1.5 text-slate-100">{r.nome}</td>
+          <td className="px-3 py-1.5 text-slate-200">{r.ticker}</td>
+          <td className="px-3 py-1.5 text-right text-slate-100">{r.peso}</td>
+          <td className="px-3 py-1.5 text-slate-300">{r.setor}</td>
+          <td className="px-3 py-1.5 text-slate-300">{r.dy}</td>
+          <td className="px-3 py-1.5 text-center">
+            <button
+              type="button"
+              onClick={(e) =>
+                openSobreTip(e, {
+                  ticker: r.ticker,
+                  nome: r.nome,
+                  text: r.sobre,
+                })
+              }
+              className="
+                inline-flex items-center justify-center
+                w-9 h-8 rounded-lg
+                bg-slate-800/60 hover:bg-slate-800
+                border border-white/10
+                text-slate-200 hover:text-slate-100
+                transition
+              "
+              title="Ver Sobre"
+              aria-label={`Ver Sobre ${r.ticker}`}
+            >
+              <IconDoc className="w-4 h-4" />
+            </button>
+          </td>
+        </tr>
+      );
+
+      const renderSubtotal = (label, pct, tone = "text-slate-200") => (
+        <tr className="border-t border-white/10 bg-slate-800/40">
+          <td className={`px-3 py-2 font-semibold ${tone}`} colSpan={3}>
+            {label}
+          </td>
+          <td className="px-3 py-2 text-right font-bold text-slate-100">
+            {fmtPct(pct)}
+          </td>
+          <td colSpan={3} />
+        </tr>
+      );
+
       return (
         <div
           className="mb-3 rounded-xl border border-emerald-500/40 bg-slate-900/80 shadow-lg p-4"
@@ -636,7 +838,6 @@ export default function CarteiraCash() {
               </span>
             </div>
 
-            {/* TABELA (reestruturada) */}
             <div className="overflow-hidden rounded-lg border border-white/10">
               <table className="w-full text-[12px]">
                 <thead className="bg-slate-800/70 text-slate-300">
@@ -647,10 +848,7 @@ export default function CarteiraCash() {
                     <th className="px-3 py-2 text-right font-semibold">Peso</th>
                     <th className="px-3 py-2 text-left font-semibold">Setor</th>
                     <th className="px-3 py-2 text-left font-semibold">DY</th>
-                    <th
-                      className="px-3 py-2 text-center font-semibold w-14"
-                      title="Sobre"
-                    >
+                    <th className="px-3 py-2 text-center font-semibold w-14" title="Sobre">
                       &nbsp;
                     </th>
                   </tr>
@@ -658,218 +856,16 @@ export default function CarteiraCash() {
 
                 <tbody className="bg-slate-900/60">
                   {/* Caixa */}
-                  <tr className="border-t border-white/5">
-                    <td className="px-3 py-1.5 text-sky-300 font-semibold">
-                      Caixa
-                    </td>
-                    <td className="px-3 py-1.5 text-slate-100">
-                      Tesouro Selic / CDB liquidez diária
-                    </td>
-                    <td className="px-3 py-1.5 text-slate-400">—</td>
-                    <td className="px-3 py-1.5 text-right text-slate-100">
-                      20%
-                    </td>
-                    <td className="px-3 py-1.5 text-slate-400">—</td>
-                    <td className="px-3 py-1.5 text-slate-400">—</td>
-                    <td className="px-3 py-1.5 text-center">
-                      <button
-                        type="button"
-                        onClick={(e) =>
-                          openSobreTip(e, {
-                            ticker: "—",
-                            nome: "Tesouro Selic / CDB liquidez diária",
-                            text:
-                              "Investimento de baixo risco e alta liquidez, usado como base de segurança da carteira. Serve para proteger o capital e aproveitar oportunidades.",
-                          })
-                        }
-                        className="
-                          inline-flex items-center justify-center
-                          w-9 h-8 rounded-lg
-                          bg-slate-800/60 hover:bg-slate-800
-                          border border-white/10
-                          text-slate-200 hover:text-slate-100
-                          transition
-                        "
-                        title="Ver Sobre"
-                        aria-label="Ver Sobre"
-                      >
-                        <IconDoc className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
+                  {caixaRows.map(renderRow)}
+                  {renderSubtotal("Subtotal — Caixa", subtotalCaixa, "text-sky-200")}
 
                   {/* Ações */}
-                  {[
-                    [
-                      "Ação",
-                      "Petrobras",
-                      "PETR4",
-                      "5%",
-                      "Petróleo e Gás",
-                      "Trimestral",
-                      "Empresa do setor de petróleo e gás, com atuação global. Gera forte caixa e é conhecida por dividendos elevados, porém variáveis e influenciados por preços do petróleo e decisões governamentais.",
-                    ],
-                    [
-                      "Ação",
-                      "Gerdau",
-                      "GGBR4",
-                      "5%",
-                      "Mineração e Siderurgia",
-                      "Trimestral",
-                      "Empresa do setor de siderurgia, com atuação global e forte geração de caixa. Seus resultados acompanham ciclos da economia, especialmente investimentos em infraestrutura e construção.",
-                    ],
-                    [
-                      "Ação",
-                      "Itaú Unibanco",
-                      "ITUB4",
-                      "8%",
-                      "Financeiro",
-                      "Mensal",
-                      "Maior banco privado do Brasil, com lucros recorrentes e previsibilidade. Referência em estabilidade e pagamento regular de dividendos.",
-                    ],
-                    [
-                      "Ação",
-                      "Direcional",
-                      "DIRR3",
-                      "5%",
-                      "Construção Civil",
-                      "Irregular",
-                      "Construtora focada em habitação popular, com demanda mais estável. Pode pagar dividendos de forma menos previsível dependendo do ciclo do setor.",
-                    ],
-                    [
-                      "Ação",
-                      "Vivo",
-                      "VIVT3",
-                      "5%",
-                      "Telecomunicações",
-                      "Semestral",
-                      "Empresa de telecomunicações, considerada defensiva. Gera caixa recorrente e distribui dividendos com boa regularidade, funcionando como um “aluguel digital”.",
-                    ],
-                    [
-                      "Ação",
-                      "Vale",
-                      "VALE3",
-                      "6%",
-                      "Mineração",
-                      "Irregular",
-                      "Uma das maiores mineradoras do mundo, ligada ao setor de commodities. Pode pagar dividendos elevados em ciclos favoráveis, mas com maior volatilidade, ensinando o investidor sobre ciclos econômicos globais.",
-                    ],
-                  ].map(([tipo, nome, ticker, peso, setor, dy, sobre]) => (
-                    <tr key={ticker} className="border-t border-white/5">
-                      <td className="px-3 py-1.5 text-emerald-300 font-semibold">
-                        {tipo}
-                      </td>
-                      <td className="px-3 py-1.5 text-slate-100">{nome}</td>
-                      <td className="px-3 py-1.5 text-slate-200">{ticker}</td>
-                      <td className="px-3 py-1.5 text-right text-slate-100">
-                        {peso}
-                      </td>
-                      <td className="px-3 py-1.5 text-slate-300">{setor}</td>
-                      <td className="px-3 py-1.5 text-slate-300">{dy}</td>
-                      <td className="px-3 py-1.5 text-center">
-                        <button
-                          type="button"
-                          onClick={(e) =>
-                            openSobreTip(e, { ticker, nome, text: sobre })
-                          }
-                          className="
-                            inline-flex items-center justify-center
-                            w-9 h-8 rounded-lg
-                            bg-slate-800/60 hover:bg-slate-800
-                            border border-white/10
-                            text-slate-200 hover:text-slate-100
-                            transition
-                          "
-                          title="Ver Sobre"
-                          aria-label={`Ver Sobre ${ticker}`}
-                        >
-                          <IconDoc className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {acoesRows.map(renderRow)}
+                  {renderSubtotal("Subtotal — Ações", subtotalAcoes, "text-emerald-200")}
 
                   {/* FIIs */}
-                  {[
-                    [
-                      "FII",
-                      "TRX Real Estate FII",
-                      "TRXF11",
-                      "10%",
-                      "Renda Urbana",
-                      "Mensal",
-                      "FII de tijolo (imóveis físicos) com foco em contratos de longo prazo e imóveis locados para gerar renda recorrente.",
-                    ],
-                    [
-                      "FII",
-                      "RBR Crédito Imobiliário Estruturado FII",
-                      "RBRY11",
-                      "10%",
-                      "Crédito",
-                      "Mensal",
-                      "Investe em CRIs (Certificados de Recebíveis Imobiliários), ou seja, títulos de dívida ligados ao setor imobiliário, buscando renda mensal via juros.",
-                    ],
-                    [
-                      "FII",
-                      "Kinea Rendimentos Imobiliários FII",
-                      "KNCR11",
-                      "16%",
-                      "Crédito",
-                      "Mensal",
-                      "Fundo de papel com foco em crédito imobiliário indexado ao CDI (taxa de juros). Muito próximo da renda fixa, com renda variável.",
-                    ],
-                    [
-                      "FII",
-                      "Kinea Oportunidades Real Estate",
-                      "KORE11",
-                      "5%",
-                      "Lajes Corporativas",
-                      "Mensal",
-                      "Investe em oportunidades especiais (imóveis descontados, reestruturações) fora do padrão tradicional, buscando gerar valor no tempo.",
-                    ],
-                    [
-                      "FII",
-                      "Bocaina FIC FI-Infra",
-                      "BODB11",
-                      "5%",
-                      "Infraestrutura",
-                      "Mensal",
-                      "Investe em debêntures incentivadas (empréstimo/financiamento feito para empresas) do setor de infraestrutura (energia, rodovias, saneamento). Em sua maioria indexadas ao IPCA.",
-                    ],
-                  ].map(([tipo, nome, ticker, peso, setor, dy, sobre]) => (
-                    <tr key={ticker} className="border-t border-white/5">
-                      <td className="px-3 py-1.5 text-amber-300 font-semibold">
-                        {tipo}
-                      </td>
-                      <td className="px-3 py-1.5 text-slate-100">{nome}</td>
-                      <td className="px-3 py-1.5 text-slate-200">{ticker}</td>
-                      <td className="px-3 py-1.5 text-right text-slate-100">
-                        {peso}
-                      </td>
-                      <td className="px-3 py-1.5 text-slate-300">{setor}</td>
-                      <td className="px-3 py-1.5 text-slate-300">{dy}</td>
-                      <td className="px-3 py-1.5 text-center">
-                        <button
-                          type="button"
-                          onClick={(e) =>
-                            openSobreTip(e, { ticker, nome, text: sobre })
-                          }
-                          className="
-                            inline-flex items-center justify-center
-                            w-9 h-8 rounded-lg
-                            bg-slate-800/60 hover:bg-slate-800
-                            border border-white/10
-                            text-slate-200 hover:text-slate-100
-                            transition
-                          "
-                          title="Ver Sobre"
-                          aria-label={`Ver Sobre ${ticker}`}
-                        >
-                          <IconDoc className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {fiiRows.map(renderRow)}
+                  {renderSubtotal("Subtotal — FIIs", subtotalFiis, "text-amber-200")}
 
                   {/* TOTAL */}
                   <tr className="border-t border-white/20 font-bold bg-slate-800/60">
@@ -877,12 +873,16 @@ export default function CarteiraCash() {
                       Total da Carteira
                     </td>
                     <td className="px-3 py-2 text-right text-emerald-400">
-                      100%
+                      {fmtPct(total)}
                     </td>
                     <td colSpan={3} />
                   </tr>
                 </tbody>
               </table>
+            </div>
+
+            <div className="text-[11px] text-slate-400">
+              Subtotais ajudam a visualizar a distribuição por tipo (Caixa / Ações / FIIs).
             </div>
           </div>
         </div>
@@ -1135,7 +1135,7 @@ export default function CarteiraCash() {
               <button
                 type="button"
                 onClick={() => {
-                  setSobreTip(null); // fecha o balão "Sobre" junto
+                  setSobreTip(null);
                   setOpenCarteiras((prev) => !prev);
                 }}
                 className="w-full flex items-center justify-between hover:bg-slate-900/95 rounded-xl px-2 py-1 transition"
@@ -1240,11 +1240,9 @@ export default function CarteiraCash() {
           </div>
         </div>
 
-        {/* Espaço para não sobrepor os cards abaixo */}
         <div className="h-28" />
       </div>
 
-      {/* PAINEL INFORMATIVO DO MODELO SELECIONADO (FASE 1) */}
       {renderModeloInfo()}
 
       {/* BALÃO: 2 donuts + 1 barra */}
@@ -1256,7 +1254,7 @@ export default function CarteiraCash() {
           </p>
         ) : (
           <div className="grid gap-4 md:grid-cols-4 items-stretch">
-            {/* Donut 1: por ATIVO (sem legenda) */}
+            {/* Donut 1 */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -1265,11 +1263,7 @@ export default function CarteiraCash() {
 
                 <div className="flex-1 flex items-center justify-center">
                   <div className="relative" style={{ width: size, height: size }}>
-                    <svg
-                      width={size}
-                      height={size}
-                      viewBox={`0 0 ${size} ${size}`}
-                    >
+                    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
                       <circle
                         cx={cx}
                         cy={cy}
@@ -1299,9 +1293,7 @@ export default function CarteiraCash() {
                             onMouseEnter={() => setHoverIdxAtivo(i)}
                             onMouseLeave={() => setHoverIdxAtivo(null)}
                             onClick={() =>
-                              setActiveIdxAtivo((prev) =>
-                                prev === i ? null : i
-                              )
+                              setActiveIdxAtivo((prev) => (prev === i ? null : i))
                             }
                           />
                         );
@@ -1339,7 +1331,7 @@ export default function CarteiraCash() {
               </div>
             </div>
 
-            {/* Donut 2: por TIPO (sem legenda) */}
+            {/* Donut 2 */}
             <div className="md:col-span-1">
               <div className="h-full rounded-lg bg-slate-900/70 border border-slate-700/70 p-3 flex flex-col">
                 <div className="text-slate-100 text-sm font-semibold mb-2">
@@ -1348,11 +1340,7 @@ export default function CarteiraCash() {
 
                 <div className="flex-1 flex items-center justify-center">
                   <div className="relative" style={{ width: size, height: size }}>
-                    <svg
-                      width={size}
-                      height={size}
-                      viewBox={`0 0 ${size} ${size}`}
-                    >
+                    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
                       <circle
                         cx={cx}
                         cy={cy}
@@ -1382,9 +1370,7 @@ export default function CarteiraCash() {
                             onMouseEnter={() => setHoverIdxTipo(i)}
                             onMouseLeave={() => setHoverIdxTipo(null)}
                             onClick={() =>
-                              setActiveIdxTipo((prev) =>
-                                prev === i ? null : i
-                              )
+                              setActiveIdxTipo((prev) => (prev === i ? null : i))
                             }
                           />
                         );
@@ -1447,10 +1433,7 @@ export default function CarteiraCash() {
                       const altura = animateDy ? alturaReal : 4;
 
                       return (
-                        <div
-                          key={i}
-                          className="flex flex-col items-center gap-2 w-10"
-                        >
+                        <div key={i} className="flex flex-col items-center gap-2 w-10">
                           <div
                             className="
                               w-full rounded-xl
@@ -1461,8 +1444,7 @@ export default function CarteiraCash() {
                             "
                             style={{ height: `${altura}px` }}
                             onMouseEnter={(e) => {
-                              const rect =
-                                e.currentTarget.getBoundingClientRect();
+                              const rect = e.currentTarget.getBoundingClientRect();
                               setDyTip({
                                 x: rect.left + rect.width / 2,
                                 y: rect.top - 8,
@@ -1473,18 +1455,13 @@ export default function CarteiraCash() {
                             onMouseMove={(e) => {
                               setDyTip((prev) =>
                                 prev
-                                  ? {
-                                      ...prev,
-                                      x: e.clientX,
-                                      y: e.clientY - 12,
-                                    }
+                                  ? { ...prev, x: e.clientX, y: e.clientY - 12 }
                                   : prev
                               );
                             }}
                             onMouseLeave={() => setDyTip(null)}
                           />
 
-                          {/* LABEL: mês em cima, ano embaixo */}
                           <div
                             className="text-[11px] text-slate-300 text-center leading-tight whitespace-nowrap font-medium"
                             style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}
@@ -1502,12 +1479,7 @@ export default function CarteiraCash() {
                 </div>
 
                 {dyTip && (
-                  <TooltipDy
-                    x={dyTip.x}
-                    y={dyTip.y}
-                    mes={dyTip.mes}
-                    valor={dyTip.valor}
-                  />
+                  <TooltipDy x={dyTip.x} y={dyTip.y} mes={dyTip.mes} valor={dyTip.valor} />
                 )}
               </div>
             </div>
@@ -1548,22 +1520,18 @@ export default function CarteiraCash() {
                     #
                   </th>
 
-                  {/* Ticker */}
                   <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap sticky left-[2rem] bg-slate-800/70 z-20 w-28">
                     Ticker
                   </th>
 
-                  {/* Tipo */}
                   <th className="px-2 py-1.5 text-center text-[12px] font-semibold whitespace-nowrap w-32">
                     Tipo
                   </th>
 
-                  {/* Setor */}
                   <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap w-40">
                     Setor
                   </th>
 
-                  {/* Data entrada */}
                   <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap w-32">
                     <button
                       type="button"
@@ -1579,12 +1547,10 @@ export default function CarteiraCash() {
                     Quantidade
                   </th>
 
-                  {/* Entrada */}
                   <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap w-36">
                     Entrada (R$)
                   </th>
 
-                  {/* Posição */}
                   <th className="px-2 py-1.5 text-left text-[12px] font-semibold whitespace-nowrap w-36">
                     <button
                       type="button"
@@ -1592,13 +1558,10 @@ export default function CarteiraCash() {
                       className="inline-flex items-center gap-1 whitespace-nowrap"
                     >
                       <span>Posição (R$)</span>
-                      <span className="text-[10px]">
-                        {getSortIcon("posicao")}
-                      </span>
+                      <span className="text-[10px]">{getSortIcon("posicao")}</span>
                     </button>
                   </th>
 
-                  {/* % Var */}
                   <th className="px-2 py-1.5 text-right text-[12px] font-semibold whitespace-nowrap w-28">
                     <button
                       type="button"
@@ -1610,7 +1573,6 @@ export default function CarteiraCash() {
                     </button>
                   </th>
 
-                  {/* Part % */}
                   <th className="px-2 py-1.5 text-right text-[12px] font-semibold whitespace-nowrap w-28">
                     <button
                       type="button"
@@ -1618,13 +1580,10 @@ export default function CarteiraCash() {
                       className="inline-flex items-center gap-1 whitespace-nowrap"
                     >
                       <span>Part. %</span>
-                      <span className="text-[10px]">
-                        {getSortIcon("part")}
-                      </span>
+                      <span className="text-[10px]">{getSortIcon("part")}</span>
                     </button>
                   </th>
 
-                  {/* DY 12m */}
                   <th className="px-2 py-1.5 text-right text-[12px] font-semibold whitespace-nowrap w-32">
                     DY (12m)
                   </th>
@@ -1647,12 +1606,9 @@ export default function CarteiraCash() {
                   const valorAtualNum = toNum(r.valorAtual) || entradaNum;
                   const valorPosicao = qtdNum * valorAtualNum;
 
-                  const partAtual =
-                    totalGeral > 0 ? (valorPosicao / totalGeral) * 100 : 0;
+                  const partAtual = totalGeral > 0 ? (valorPosicao / totalGeral) * 100 : 0;
                   const partStr =
-                    totalGeral > 0 && valorPosicao > 0
-                      ? `${partAtual.toFixed(2)}%`
-                      : "—";
+                    totalGeral > 0 && valorPosicao > 0 ? `${partAtual.toFixed(2)}%` : "—";
 
                   let varPerc = 0;
                   let hasVar = false;
@@ -1667,31 +1623,24 @@ export default function CarteiraCash() {
                     : "text-rose-300 font-semibold";
 
                   const dyMeses = Array.isArray(r.dyMeses)
-                    ? [
-                        ...r.dyMeses,
-                        ...Array(DY_MONTHS.length - r.dyMeses.length).fill(""),
-                      ].slice(0, DY_MONTHS.length)
+                    ? [...r.dyMeses, ...Array(DY_MONTHS.length - r.dyMeses.length).fill("")].slice(
+                        0,
+                        DY_MONTHS.length
+                      )
                     : Array(DY_MONTHS.length).fill("");
 
                   const dy12mValor = dyMeses.reduce((acc, v) => acc + toNum(v), 0);
 
                   return (
-                    <tr
-                      key={r.id}
-                      className="border-t border-white/5 hover:bg-slate-800/30"
-                    >
+                    <tr key={r.id} className="border-t border-white/5 hover:bg-slate-800/30">
                       <td className="px-2 py-1.5 text-[11px] text-slate-500 sticky left-0 bg-slate-900/90 z-10 w-8">
                         {i + 1}
                       </td>
 
-                      {/* Ticker */}
                       <td className="px-2 py-1.5 text-left sticky left-[2rem] bg-slate-900/90 z-10 w-28">
-                        <span className="text-[11px] text-slate-200">
-                          {r.ticker || "—"}
-                        </span>
+                        <span className="text-[11px] text-slate-200">{r.ticker || "—"}</span>
                       </td>
 
-                      {/* Tipo */}
                       <td className="px-2 py-1.5 w-32 text-center">
                         <span className="inline-flex items-center justify-center rounded-md bg-slate-900 border border-slate-700 px-2 py-0.5 text-[11px] text-slate-100">
                           {r.tipo === "RF"
@@ -1708,26 +1657,18 @@ export default function CarteiraCash() {
                         </span>
                       </td>
 
-                      {/* Setor */}
                       <td className="px-2 py-1.5 text-slate-200 w-40 truncate">
-                        <span className="text-slate-100 text-xs">
-                          {r.nome || "—"}
-                        </span>
+                        <span className="text-slate-100 text-xs">{r.nome || "—"}</span>
                       </td>
 
-                      {/* Data entrada */}
                       <td className="px-2 py-1.5 text-left w-32">
-                        <span className="text-[11px] text-slate-100">
-                          {formatDateBR(r.dataEntrada)}
-                        </span>
+                        <span className="text-[11px] text-slate-100">{formatDateBR(r.dataEntrada)}</span>
                       </td>
 
-                      {/* Quantidade */}
                       <td className="px-2 py-1.5 text-center text-xs text-slate-100 w-24">
                         {r.qtd || "—"}
                       </td>
 
-                      {/* Entrada (R$) */}
                       <td className="px-2 py-1.5 text-left text-xs text-slate-100 w-36">
                         {entradaNum > 0
                           ? entradaNum.toLocaleString("pt-BR", {
@@ -1739,7 +1680,6 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
-                      {/* Posição (R$) */}
                       <td className="px-2 py-1.5 text-left text-xs text-slate-200 w-36">
                         {valorPosicao > 0
                           ? valorPosicao.toLocaleString("pt-BR", {
@@ -1751,19 +1691,14 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
-                      {/* % Var */}
-                      <td
-                        className={`px-2 py-1.5 text-right text-xs w-28 ${varClass}`}
-                      >
+                      <td className={`px-2 py-1.5 text-right text-xs w-28 ${varClass}`}>
                         {hasVar ? `${varPerc.toFixed(2)}%` : "—"}
                       </td>
 
-                      {/* Part. % */}
                       <td className="px-2 py-1.5 text-right text-xs text-slate-200 w-28">
                         {partStr}
                       </td>
 
-                      {/* DY 12m */}
                       <td className="px-2 py-1.5 text-right text-xs text-slate-200 font-semibold w-32">
                         {dy12mValor > 0
                           ? dy12mValor.toLocaleString("pt-BR", {
@@ -1773,7 +1708,6 @@ export default function CarteiraCash() {
                           : "—"}
                       </td>
 
-                      {/* DY meses — 24 colunas */}
                       {DY_MONTHS.map((m, idx) => (
                         <td key={m.label} className="px-2 py-1.5 text-right">
                           <input
@@ -1805,26 +1739,14 @@ export default function CarteiraCash() {
         </div>
 
         <p className="mt-3 text-[11px] text-slate-500">
-          Esta carteira é um modelo educacional e não constitui recomendação de
-          investimento.
+          Esta carteira é um modelo educacional e não constitui recomendação de investimento.
         </p>
       </div>
 
-      {/* Modal Adicionar Ativos (Supabase) */}
-      <ModalLancamentos
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-      />
+      <ModalLancamentos isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
 
-      {/* Tooltip flutuante do "Sobre" */}
-      {/* ✅ AJUSTE: só renderiza se o balão principal estiver aberto */}
       {openCarteiras && sobreTip && (
-        <TooltipSobre
-          x={sobreTip.x}
-          y={sobreTip.y}
-          title={sobreTip.title}
-          text={sobreTip.text}
-        />
+        <TooltipSobre x={sobreTip.x} y={sobreTip.y} title={sobreTip.title} text={sobreTip.text} />
       )}
     </div>
   );
