@@ -103,7 +103,6 @@ export default function Login({ onNavigate }) {
 
           <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400">
             <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.55)]" />
-            Seguro • Seus dados ficam só com você
           </div>
         </div>
 
