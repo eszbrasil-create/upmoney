@@ -569,11 +569,11 @@ export default function CarteiraCash() {
                   </tr>
 
                   {[
-                    [,"FII","KNCR11", "16%"],
-                    [,"FII","TRXF11", "10%"],
-                    [,"FII","RBRY11", "10%"],
-                    [,"FII","KORE11", " 5%"],
-                    [,"FII","BODB11", " 5%"],
+                    ["FII","KNCR11", "16%"],
+                    ["FII","TRXF11", "10%"],
+                    ["FII","RBRY11", "10%"],
+                    ["FII","KORE11", " 5%"],
+                    ["FII","BODB11", " 5%"],
                   ].map(([ticker, tipo, peso]) => (
                     <tr key={ticker} className="border-t border-white/5">
                       <td className="px-3 py-1.5 text-slate-100">{ticker}</td>
