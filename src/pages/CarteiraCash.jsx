@@ -949,7 +949,7 @@ export default function CarteiraCash() {
                     ETH — Ethereum
                   </span>
                   <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[11px] border border-slate-600/70">
-                    ("")
+                
                   </span>
                 </div>
               </div>
