@@ -133,7 +133,7 @@ export default function CursosMenu({ onNavigate }) {
             title="Previdência Privada"
             subtitle="Planejamento e benefícios fiscais"
             badge="Novo"
-            imageUrl="/img/curso-previdencia.jpg"
+            imageUrl="/img/curso-previdencia.png"
             // Se precisar ajustar o foco da imagem, use algo assim:
             // imagePosition="50% 45%"
             icon={<Shield size={22} className="text-emerald-300" />}
