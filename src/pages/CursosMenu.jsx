@@ -93,7 +93,7 @@ function CourseCard({
 export default function CursosMenu({ onNavigate }) {
   return (
     <div className="pt-3 pr-6 pl-0">
-      <div className="mx-auto w-full max-w-6xl rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg p-6">
+      <div className="mx-auto w-full max-w-8xl rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg p-6">
         {/* HEADER */}
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
