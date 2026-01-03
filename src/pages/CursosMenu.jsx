@@ -143,7 +143,6 @@ export default function CursosMenu({ onNavigate }) {
 
           {/* CURSO 3 — PREVIDÊNCIA PRIVADA */}
           <CourseCard
-            title="Previdência Privada"
             subtitle="Planejamento e benefícios fiscais"
             badge="Novo"
             imageUrl="/img/curso-previdencia.jpg"
