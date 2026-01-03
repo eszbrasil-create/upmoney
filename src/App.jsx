@@ -291,6 +291,10 @@ export default function App() {
       <CursoConfiguracaoMental onNavigate={setView} />
     ),
 
+    "curso-previdencia-privada": (
+  <CursoPrevidencia onNavigate={setView} />
+    ),
+
     "cursos-dashboard": <CursosPage />,
     carteira: <CarteiraCash />,
     despesas: <Despesas />,
