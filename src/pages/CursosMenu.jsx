@@ -1,5 +1,10 @@
 import React from "react";
-import { ArrowRight, Sparkles, PiggyBank } from "lucide-react";
+import {
+  ArrowRight,
+  Sparkles,
+  PiggyBank,
+  Shield,
+} from "lucide-react";
 
 function CourseCard({
   title,
@@ -13,8 +18,10 @@ function CourseCard({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="group w-full text-left rounded-2xl overflow-hidden border border-white/10 bg-slate-900/40 hover:bg-slate-900/60 transition shadow-lg"
+      aria-label={`Abrir curso ${title}`}
+      className="group w-full text-left rounded-2xl overflow-hidden border border-white/10 bg-slate-900/40 hover:bg-slate-900/60 transition shadow-lg focus-visible:ring-2 focus-visible:ring-emerald-500"
     >
       {/* IMAGEM / CAPA */}
       <div className="relative h-48 w-full overflow-hidden">
@@ -47,7 +54,9 @@ function CourseCard({
           </div>
           <div className="text-slate-100">
             <div className="text-lg font-bold leading-tight">{title}</div>
-            <div className="text-xs text-slate-300 mt-0.5">{subtitle}</div>
+            <div className="text-xs text-slate-300 mt-0.5">
+              {subtitle}
+            </div>
           </div>
         </div>
       </div>
@@ -55,8 +64,11 @@ function CourseCard({
       {/* CONTEÚDO */}
       <div className="p-5">
         <div className="grid gap-2">
-          {bullets.map((item, index) => (
-            <div key={index} className="text-sm text-slate-200 flex gap-2">
+          {bullets.map((item) => (
+            <div
+              key={item}
+              className="text-sm text-slate-200 flex gap-2"
+            >
               <span className="mt-[6px] h-1.5 w-1.5 rounded-full bg-emerald-400" />
               <span>{item}</span>
             </div>
@@ -81,19 +93,22 @@ function CourseCard({
 export default function CursosMenu({ onNavigate }) {
   return (
     <div className="pt-3 pr-6 pl-0">
-      <div className="rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg w-[1200px] max-w-full p-6">
+      <div className="mx-auto w-full max-w-6xl rounded-2xl bg-slate-800/70 border border-white/10 shadow-lg p-6">
         {/* HEADER */}
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <h1 className="text-3xl font-bold text-slate-100">Menu de Cursos</h1>
-            <p className="text-slate-300 mt-2 whitespace-nowrap">
+            <h1 className="text-3xl font-bold text-slate-100">
+              Menu de Cursos
+            </h1>
+            <p className="text-slate-300 mt-2">
               Aprenda com um método prático, organizado e focado em resultado real.
             </p>
           </div>
         </div>
 
         {/* GRID DE CURSOS */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* CURSO 1 */}
           <CourseCard
             title="Meu Primeiro Dividendo"
             subtitle="Do zero à renda passiva"
@@ -105,9 +120,10 @@ export default function CursosMenu({ onNavigate }) {
               "Monte sua estratégia com segurança",
               "Acompanhe tudo dentro do UpControl",
             ]}
-            onClick={() => onNavigate("cursos-dashboard")}
+            onClick={() => onNavigate?.("cursos-dashboard")}
           />
 
+          {/* CURSO 2 */}
           <CourseCard
             title="Configuração Mental"
             subtitle="Disciplina, foco e execução"
@@ -120,7 +136,26 @@ export default function CursosMenu({ onNavigate }) {
               "Construa disciplina com ações simples",
               "Invista com razão",
             ]}
-            onClick={() => onNavigate("curso-configuracao-mental")}
+            onClick={() =>
+              onNavigate?.("curso-configuracao-mental")
+            }
+          />
+
+          {/* CURSO 3 — PREVIDÊNCIA PRIVADA */}
+          <CourseCard
+            title="Previdência Privada"
+            subtitle="Planejamento e benefícios fiscais"
+            badge="Novo"
+            imageUrl="/img/curso-previdencia.jpg"
+            icon={<Shield size={22} className="text-emerald-300" />}
+            bullets={[
+              "Entenda PGBL e VGBL sem complicação",
+              "Taxas, tributação e armadilhas comuns",
+              "Estratégia de longo prazo e aposentadoria",
+            ]}
+            onClick={() =>
+              onNavigate?.("curso-previdencia-privada")
+            }
           />
         </div>
       </div>
