@@ -117,7 +117,7 @@ export default function CursosMenu({ onNavigate }) {
             title="Configuração Mental"
             subtitle="Disciplina, foco e execução"
             badge="Novo"
-            imageUrl="/img/curso-mente.jpg"
+            imageUrl="/img/curso-mente.png"
             imagePosition="85% 50%"
             icon={<Sparkles size={22} className="text-emerald-300" />}
             bullets={[
