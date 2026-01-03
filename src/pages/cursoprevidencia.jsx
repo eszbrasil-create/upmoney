@@ -332,10 +332,6 @@ export default function CursoPrevidencia({ onNavigate = () => {} }) {
                     </button>
                   </div>
 
-                  <div className="mt-3 text-[11px] text-slate-400">
-                    Dica: coloque os PDFs em{" "}
-                    <span className="text-slate-200">/public/pdfs/</span>
-                  </div>
                 </div>
               </div>
             );
