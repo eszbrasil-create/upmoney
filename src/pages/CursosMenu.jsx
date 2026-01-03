@@ -102,7 +102,7 @@ export default function CursosMenu({ onNavigate }) {
             title="Meu Primeiro Dividendo"
             subtitle="Do zero à renda passiva"
             badge="Curso principal"
-            imageUrl="/img/curso-dividendo.jpg"
+            imageUrl="/img/curso-dividendo.png"
             icon={<PiggyBank size={22} className="text-emerald-300" />}
             bullets={[
               "Entenda renda fixa e variável sem confusão",
