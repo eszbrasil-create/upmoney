@@ -21,6 +21,7 @@ import Noticias from "./pages/Noticias";
 import CashControlHome from "./pages/CashControlHome";
 import Login from "./pages/Login.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
+import CursoPrevidencia from "./pages/cursoprevidencia.jsx";
 
 // Cursos (NOVOS)
 import CursosMenu from "./pages/CursosMenu.jsx";
@@ -258,6 +259,7 @@ export default function App() {
     "cursos-dashboard",
     "cursos-menu",
     "curso-configuracao-mental",
+    "curso-previdencia-privada",
     "carteira",
     "despesas",
     "relatorios",
