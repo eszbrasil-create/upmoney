@@ -211,9 +211,10 @@ export default function Landing({ onNavigate }) {
           </nav>
 
           <div className="flex items-center gap-4">
+            {/* ✅ OPÇÃO A: agora aparece no celular também (removido "hidden sm:block") */}
             <button
               onClick={irParaCompra}
-              className="bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-900 px-6 py-2.5 rounded-xl font-black hover:scale-105 transition hidden sm:block"
+              className="bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-900 px-6 py-2.5 rounded-xl font-black hover:scale-105 transition"
             >
               Meu Plano
             </button>
@@ -573,7 +574,8 @@ export default function Landing({ onNavigate }) {
                   Garantia de satisfação
                 </div>
                 <div className="mt-2 text-slate-700 text-sm leading-relaxed">
-                  Solicite seu reembolso dentro do prazo de 7 dias, caso se arrependa tenha seu reembolso do valor integral.
+                  Solicite seu reembolso dentro do prazo de 7 dias, caso se
+                  arrependa tenha seu reembolso do valor integral.
                 </div>
               </div>
 
@@ -670,7 +672,9 @@ export default function Landing({ onNavigate }) {
                 <div className="mt-3 text-slate-700 leading-relaxed">
                   {t.text}
                 </div>
-                <div className="mt-4 text-sm text-slate-500">— aluno(a) UpMoney</div>
+                <div className="mt-4 text-sm text-slate-500">
+                  — aluno(a) UpMoney
+                </div>
               </div>
             ))}
           </div>
