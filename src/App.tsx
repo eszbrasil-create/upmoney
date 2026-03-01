@@ -246,6 +246,7 @@ function App() {
   ])
   const [activeEvolutionBar, setActiveEvolutionBar] = useState<EvolutionMonthKey | null>(null)
   const evolutionTooltipHideTimeoutRef = useRef<number | null>(null)
+  const evolutionChartRef = useRef<HTMLDivElement | null>(null)
   const [monthlyFlowTotals, setMonthlyFlowTotals] = useState<{
     income: number[]
     expense: number[]
@@ -338,6 +339,19 @@ function App() {
       setActiveEvolutionBar(null)
       evolutionTooltipHideTimeoutRef.current = null
     }, delayMs)
+  }
+
+  const resolveEvolutionMonthFromTouch = (touchPoint: {
+    clientX: number
+    clientY: number
+  }): EvolutionMonthKey | null => {
+    if (typeof document === 'undefined') return null
+    const target = document.elementFromPoint(touchPoint.clientX, touchPoint.clientY)
+    if (!(target instanceof Element)) return null
+    const column = target.closest('.evolution-col')
+    const month = column?.getAttribute('data-month')
+    if (!month) return null
+    return evolutionMonthKeys.includes(month as EvolutionMonthKey) ? (month as EvolutionMonthKey) : null
   }
 
   const persistEvolutionRows = (rows: EvolutionStorageRow[]) => {
@@ -1697,7 +1711,28 @@ function App() {
                   </div>
                 </div>
                 <div className="evolution-scroll">
-                  <div className="evolution-chart">
+                  <div
+                    className="evolution-chart"
+                    ref={evolutionChartRef}
+                    onTouchStart={(event) => {
+                      const touch = event.touches[0]
+                      if (!touch) return
+                      const month = resolveEvolutionMonthFromTouch(touch)
+                      if (month) {
+                        showEvolutionBarTooltip(month)
+                      }
+                    }}
+                    onTouchMove={(event) => {
+                      const touch = event.touches[0]
+                      if (!touch) return
+                      const month = resolveEvolutionMonthFromTouch(touch)
+                      if (month) {
+                        showEvolutionBarTooltip(month)
+                      }
+                    }}
+                    onTouchEnd={() => scheduleHideEvolutionBarTooltip(0)}
+                    onTouchCancel={() => scheduleHideEvolutionBarTooltip(0)}
+                  >
                     {visibleEvolutionChartMonths.map((month) => {
                       const index = EVOLUTION_MONTHS.findIndex((item) => item.key === month.key)
                       const value = evolutionMonthlyTotals[index] ?? 0
@@ -1711,6 +1746,7 @@ function App() {
                         <div
                           className={`evolution-col ${isBarActive ? 'is-active' : ''}`.trim()}
                           key={month.key}
+                          data-month={month.key}
                         >
                           <div className="evolution-bar-wrap">
                             <span className="evolution-tooltip">{valueLabel}</span>
