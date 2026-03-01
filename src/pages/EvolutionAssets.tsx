@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   EVOLUTION_ACTIVE_YEAR_STORAGE_KEY,
+  EVOLUTION_DATA_CHANGED_EVENT,
   EVOLUTION_MONTHS,
   clampEvolutionYear,
   createEvolutionStorageRow,
@@ -24,7 +25,7 @@ const MONTH_LABELS = Object.fromEntries(
 ) as Record<(typeof MONTH_FIELDS)[number], string>
 
 export function EvolutionAssetsPage() {
-  const [selectedYear] = useState(() => {
+  const [selectedYear, setSelectedYear] = useState(() => {
     if (typeof window === 'undefined') return new Date().getFullYear()
     const raw = Number(window.localStorage.getItem(EVOLUTION_ACTIVE_YEAR_STORAGE_KEY))
     return clampEvolutionYear(raw)
@@ -49,6 +50,35 @@ export function EvolutionAssetsPage() {
     setVisibleMonths(visible)
     setRows(parsed.length ? parsed : [createEmptyRow()])
   }, [selectedYear])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const reloadFromStorage = (explicitYear?: number) => {
+      const fromStorage = Number(window.localStorage.getItem(EVOLUTION_ACTIVE_YEAR_STORAGE_KEY))
+      const year = clampEvolutionYear(
+        typeof explicitYear === 'number' && Number.isFinite(explicitYear) ? explicitYear : fromStorage
+      )
+      setSelectedYear(year)
+      const parsed = readEvolutionRowsForYear(window.localStorage, year)
+      const visible = readEvolutionVisibleMonthsForYear(window.localStorage, year)
+      loadedYearRef.current = year
+      setVisibleMonths(visible)
+      setRows(parsed.length ? parsed : [createEmptyRow()])
+    }
+
+    const handleEvolutionChanged = (event: Event) => {
+      const custom = event as CustomEvent<{ year?: number }>
+      reloadFromStorage(custom.detail?.year)
+    }
+
+    window.addEventListener(EVOLUTION_DATA_CHANGED_EVENT, handleEvolutionChanged as EventListener)
+    return () =>
+      window.removeEventListener(
+        EVOLUTION_DATA_CHANGED_EVENT,
+        handleEvolutionChanged as EventListener
+      )
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return

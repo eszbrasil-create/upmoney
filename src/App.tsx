@@ -91,6 +91,13 @@ type EvolutionSheetRecord = {
   visible_months: unknown
 }
 
+const hasEvolutionContent = (rows: EvolutionStorageRow[], months: EvolutionMonthKey[]) =>
+  rows.some(
+    (row) =>
+      row.name.trim().length > 0 ||
+      months.some((month) => typeof row[month] === 'string' && row[month].trim().length > 0)
+  )
+
 type ActivityCounts = {
   assetsAdded: number
   coursesOpened: number
@@ -845,6 +852,33 @@ function App() {
         )
       }
 
+      // If the current active year has no content, move focus to the newest year with remote data.
+      const activeYearRows = readEvolutionRowsForYear(window.localStorage, evolutionActiveYear)
+      if (!hasEvolutionContent(activeYearRows, evolutionMonthKeys)) {
+        const remoteYearsWithData = Array.from(remoteByYear.entries())
+          .map(([year, row]) => {
+            const payload =
+              typeof row.rows === 'string'
+                ? (() => {
+                    try {
+                      return JSON.parse(row.rows)
+                    } catch {
+                      return []
+                    }
+                  })()
+                : row.rows
+            const normalized = normalizeEvolutionRows(payload)
+            return hasEvolutionContent(normalized, evolutionMonthKeys) ? year : null
+          })
+          .filter((year): year is number => year != null)
+
+        if (remoteYearsWithData.length) {
+          const nextYear = Math.max(...remoteYearsWithData)
+          setSharedEvolutionYear(nextYear)
+          setEvolutionEditorYear(nextYear)
+        }
+      }
+
       for (const year of targetYears) {
         if (remoteByYear.has(year)) continue
 
@@ -872,6 +906,7 @@ function App() {
       }
 
       if (!cancelled) {
+        notifyEvolutionDataChanged(readStoredEvolutionActiveYear())
         setEvolutionDataVersion((prev) => prev + 1)
       }
     }
