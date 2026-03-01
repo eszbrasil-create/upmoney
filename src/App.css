@@ -3917,6 +3917,12 @@ body.menu-open {
   box-shadow: 0 10px 18px rgba(11, 111, 181, 0.25);
 }
 
+.evolution-col.is-active .evolution-bar {
+  transform: translateY(-2px) scaleX(1.08);
+  filter: brightness(1.03);
+  box-shadow: 0 10px 18px rgba(11, 111, 181, 0.25);
+}
+
 .evolution-tooltip {
   position: absolute;
   bottom: calc(100% + 8px);
@@ -3937,6 +3943,11 @@ body.menu-open {
 }
 
 .evolution-col:hover .evolution-tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.evolution-col.is-active .evolution-tooltip {
   opacity: 1;
   transform: translate(-50%, 0);
 }

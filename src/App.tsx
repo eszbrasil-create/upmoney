@@ -244,6 +244,8 @@ function App() {
   const [evolutionEditorAssets, setEvolutionEditorAssets] = useState<EvolutionEditorAsset[]>([
     createEvolutionEditorAsset(),
   ])
+  const [activeEvolutionBar, setActiveEvolutionBar] = useState<EvolutionMonthKey | null>(null)
+  const evolutionTooltipHideTimeoutRef = useRef<number | null>(null)
   const [monthlyFlowTotals, setMonthlyFlowTotals] = useState<{
     income: number[]
     expense: number[]
@@ -315,6 +317,27 @@ function App() {
       setEvolutionEditorYear(targetYear)
     }
     setEvolutionDataVersion((prev) => prev + 1)
+  }
+
+  const clearEvolutionTooltipHideTimer = () => {
+    if (typeof window === 'undefined') return
+    if (evolutionTooltipHideTimeoutRef.current === null) return
+    window.clearTimeout(evolutionTooltipHideTimeoutRef.current)
+    evolutionTooltipHideTimeoutRef.current = null
+  }
+
+  const showEvolutionBarTooltip = (month: EvolutionMonthKey) => {
+    clearEvolutionTooltipHideTimer()
+    setActiveEvolutionBar(month)
+  }
+
+  const scheduleHideEvolutionBarTooltip = (delayMs = 900) => {
+    if (typeof window === 'undefined') return
+    clearEvolutionTooltipHideTimer()
+    evolutionTooltipHideTimeoutRef.current = window.setTimeout(() => {
+      setActiveEvolutionBar(null)
+      evolutionTooltipHideTimeoutRef.current = null
+    }, delayMs)
   }
 
   const persistEvolutionRows = (rows: EvolutionStorageRow[]) => {
@@ -779,6 +802,13 @@ function App() {
         handleEvolutionChange as EventListener
       )
   }, [storageAvailable, evolutionActiveYear, evolutionEditorYear])
+
+  useEffect(
+    () => () => {
+      clearEvolutionTooltipHideTimer()
+    },
+    []
+  )
 
   useEffect(() => {
     if (
@@ -1676,13 +1706,27 @@ function App() {
                           ? `${Math.max((value / maxEvolutionTotal) * 100, 6)}%`
                           : '8%'
                       const valueLabel = formatBRL.format(value)
+                      const isBarActive = activeEvolutionBar === month.key
                       return (
-                        <div className="evolution-col" key={month.key}>
+                        <div
+                          className={`evolution-col ${isBarActive ? 'is-active' : ''}`.trim()}
+                          key={month.key}
+                        >
                           <div className="evolution-bar-wrap">
                             <span className="evolution-tooltip">{valueLabel}</span>
                             <div
                               className="evolution-bar"
                               style={{ height }}
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`${month.label.toUpperCase()} ${evolutionActiveYear}: ${valueLabel}`}
+                              onMouseEnter={() => showEvolutionBarTooltip(month.key)}
+                              onMouseLeave={() => scheduleHideEvolutionBarTooltip(0)}
+                              onFocus={() => showEvolutionBarTooltip(month.key)}
+                              onBlur={() => scheduleHideEvolutionBarTooltip(0)}
+                              onTouchStart={() => showEvolutionBarTooltip(month.key)}
+                              onTouchEnd={() => scheduleHideEvolutionBarTooltip()}
+                              onTouchCancel={() => scheduleHideEvolutionBarTooltip(0)}
                             />
                           </div>
                           <span className="evolution-month-label">
