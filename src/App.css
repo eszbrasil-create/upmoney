@@ -6962,6 +6962,67 @@ canvas {
     min-width: 0;
   }
 
+  .panel-card--summary .panel-card__header {
+    margin-bottom: 0;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .panel-card--summary .summary-list--tight {
+    margin-top: 0;
+    gap: 8px;
+    padding-bottom: 10px;
+  }
+
+  .panel-card--summary .summary-row,
+  .summary-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    line-height: 1.25;
+  }
+
+  .summary-label {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .summary-value {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 6px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .summary-delta {
+    margin-left: 0;
+  }
+
+  .summary-section {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .summary-bars {
+    margin-top: 0;
+    gap: 8px;
+  }
+
+  .summary-bar {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+    gap: 8px;
+    font-size: 0.78rem;
+  }
+
+  .summary-bar > span {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
   .simulator-scenarios {
     grid-template-columns: 1fr;
   }
