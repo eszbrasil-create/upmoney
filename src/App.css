@@ -7036,4 +7036,34 @@ canvas {
   .flow-drilldown__grid {
     min-width: 0;
   }
+
+  .evolution-chart {
+    gap: 2px;
+    padding: 28px 6px 8px;
+  }
+
+  .evolution-col {
+    gap: 6px;
+  }
+
+  .evolution-month-label {
+    font-size: 0.64rem;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+
+  .evolution-month-label__year {
+    font-size: 0.52rem;
+    line-height: 1;
+  }
+}
+
+@media (max-width: 430px) {
+  .evolution-month-label {
+    font-size: 0.6rem;
+  }
+
+  .evolution-month-label__year {
+    font-size: 0.48rem;
+  }
 }
