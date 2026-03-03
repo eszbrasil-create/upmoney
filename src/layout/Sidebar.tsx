@@ -116,30 +116,6 @@ export function Sidebar({
           </button>
 
           <button
-            className={`nav-btn ${activePage === 'minha_previdencia' ? 'active' : ''}`}
-            type="button"
-            onClick={() => handleNavigate('minha_previdencia')}
-          >
-            <span className="nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M6 20V9m6 11V5m6 15v-8"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M4 20h16"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
-            Previdência
-          </button>
-
-          <button
             className={`nav-btn ${activePage === 'wallets' ? 'active' : ''}`}
             type="button"
             onClick={() => handleNavigate('wallets')}

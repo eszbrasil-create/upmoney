@@ -1405,8 +1405,14 @@ function App() {
     )
   }
 
+  const usesHamburgerSidebar = activePage === 'expenses'
+
   return (
-    <div className={`page ${activePage === 'expenses' ? 'page--fixed' : ''}`}>
+    <div
+      className={`page ${activePage === 'expenses' ? 'page--fixed' : ''} ${
+        usesHamburgerSidebar ? 'page--sidebar-hamburger' : ''
+      }`}
+    >
       <Sidebar
         activePage={activePage}
         open={isSidebarOpen}
