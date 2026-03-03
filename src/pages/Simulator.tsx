@@ -11,22 +11,9 @@ type InfoContent = {
   description: string
 }
 
-const PARAMETER_INFO: Record<string, InfoContent> = {
-  currentAge: {
-    label: 'Idade atual',
-    description:
-      'Sua idade hoje. Junto com a idade da liberdade, ela define o prazo automatico da simulacao.',
-  },
-  freedomAge: {
-    label: 'Idade da liberdade',
-    description:
-      'Idade em que voce quer ter liberdade financeira. O prazo em anos sera calculado como diferenca para a idade atual.',
-  },
-  expectedSalary: {
-    label: 'Salario esperado (R$)',
-    description:
-      'Renda mensal que voce deseja ter no futuro. Serve como referencia para comparar com a renda sustentavel estimada.',
-  },
+type SimulationMode = 'regular' | 'previdencia'
+
+const REGULAR_PARAMETER_INFO: Record<string, InfoContent> = {
   initial: {
     label: 'Aporte inicial (R$)',
     description:
@@ -51,6 +38,60 @@ const PARAMETER_INFO: Record<string, InfoContent> = {
     label: 'Inflacao anual (%)',
     description:
       'Estimativa de inflacao media por ano. Ela e usada para mostrar o valor real (poder de compra) do patrimonio no futuro.',
+  },
+}
+
+const PREVIDENCIA_PARAMETER_INFO: Record<string, InfoContent> = {
+  currentAge: {
+    label: 'Idade atual',
+    description:
+      'Idade no momento da simulacao. Junto com a idade de aposentadoria, define o horizonte principal de contribuicao.',
+  },
+  freedomAge: {
+    label: 'Idade de aposentadoria',
+    description:
+      'Idade estimada para comecar a usufruir da renda da previdencia privada.',
+  },
+  initial: {
+    label: 'Reserva inicial (R$)',
+    description:
+      'Valor ja acumulado no plano de previdencia ou que sera aportado no inicio.',
+  },
+  monthly: {
+    label: 'Contribuicao mensal (R$)',
+    description:
+      'Valor de contribuicao mensal ao plano. Considere uma contribuicao recorrente realista.',
+  },
+  years: {
+    label: 'Prazo complementar (anos)',
+    description:
+      'Usado apenas quando nao houver idade atual e idade de aposentadoria preenchidas de forma valida.',
+  },
+  pensionFee: {
+    label: 'Taxa anual do plano (%)',
+    description:
+      'Taxa anual total estimada do plano (administracao e outros custos recorrentes).',
+  },
+  rate: {
+    label: 'Rentabilidade anual bruta (%)',
+    description:
+      'Retorno anual estimado antes de custos do plano. A simulacao desconta a taxa anual do plano para estimar rentabilidade liquida.',
+  },
+  inflation: {
+    label: 'Inflacao anual (%)',
+    description:
+      'Inflacao anual esperada para calcular o valor real (poder de compra) do patrimonio acumulado.',
+  },
+}
+
+const SIMULATION_MODE_META: Record<SimulationMode, { title: string; description: string }> = {
+  regular: {
+    title: 'Simulacao regular',
+    description: 'Aportes diretos com foco em liberdade financeira geral.',
+  },
+  previdencia: {
+    title: 'Simulacao de previdencia',
+    description: 'Aportes com foco em aposentadoria e acumulacao de longo prazo.',
   },
 }
 
@@ -114,14 +155,15 @@ type SimulatorPageProps = {
 }
 
 export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
+  const [simulationMode, setSimulationMode] = useState<SimulationMode>('regular')
   const [currentAge, setCurrentAge] = useState('35')
   const [freedomAge, setFreedomAge] = useState('55')
-  const [expectedSalary, setExpectedSalary] = useState('8000')
   const [initial, setInitial] = useState('5000')
   const [monthly, setMonthly] = useState('700')
   const [years, setYears] = useState('10')
   const [rate, setRate] = useState('10')
   const [inflation, setInflation] = useState('4,4')
+  const [pensionFee, setPensionFee] = useState('1,2')
   const [openInfoId, setOpenInfoId] = useState<string | null>(null)
   useEffect(() => {
     if (!openInfoId) return
@@ -165,16 +207,23 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
   }
 
   const results = useMemo(() => {
-    const currentAgeValue = Math.max(0, Math.round(toNumber(currentAge)))
-    const freedomAgeValue = Math.max(0, Math.round(toNumber(freedomAge)))
-    const yearsFromAges = Math.max(0, freedomAgeValue - currentAgeValue)
+    const parameterInfo =
+      simulationMode === 'previdencia' ? PREVIDENCIA_PARAMETER_INFO : REGULAR_PARAMETER_INFO
+    const currentAgeValue =
+      simulationMode === 'previdencia' ? Math.max(0, Math.round(toNumber(currentAge))) : 0
+    const freedomAgeValue =
+      simulationMode === 'previdencia' ? Math.max(0, Math.round(toNumber(freedomAge))) : 0
+    const yearsFromAges =
+      simulationMode === 'previdencia' ? Math.max(0, freedomAgeValue - currentAgeValue) : 0
     const initialValue = Math.max(0, toNumber(initial))
     const monthlyValue = Math.max(0, toNumber(monthly))
     const yearsInputValue = Math.max(0, toNumber(years))
-    const yearsValue = yearsFromAges > 0 ? yearsFromAges : yearsInputValue
-    const rateValue = Math.max(0, toNumber(rate))
+    const yearsValue =
+      simulationMode === 'previdencia' && yearsFromAges > 0 ? yearsFromAges : yearsInputValue
+    const grossRateValue = Math.max(0, toNumber(rate))
     const inflationValue = Math.max(0, toNumber(inflation))
-    const expectedSalaryValue = Math.max(0, toNumber(expectedSalary))
+    const pensionFeeValue = simulationMode === 'previdencia' ? Math.max(0, toNumber(pensionFee)) : 0
+    const rateValue = Math.max(0, grossRateValue - pensionFeeValue)
 
     const totalContributed = initialValue + monthlyValue * Math.round(yearsValue * 12)
     const totalFuture = futureValue(initialValue, monthlyValue, yearsValue, rateValue)
@@ -189,9 +238,17 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
         : rateValue
 
     const scenarios: Scenario[] = [
-      { label: 'Conservador', rate: Math.max(0, rateValue - 2), value: 0 },
+      {
+        label: 'Conservador',
+        rate: Math.max(0, rateValue - (simulationMode === 'previdencia' ? 1 : 2)),
+        value: 0,
+      },
       { label: 'Base', rate: rateValue, value: 0 },
-      { label: 'Otimista', rate: rateValue + 2, value: 0 },
+      {
+        label: 'Otimista',
+        rate: rateValue + (simulationMode === 'previdencia' ? 1 : 2),
+        value: 0,
+      },
     ].map((item) => ({
       ...item,
       value: futureValue(initialValue, monthlyValue, yearsValue, item.rate),
@@ -201,7 +258,6 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
       currentAgeValue,
       freedomAgeValue,
       yearsFromAges,
-      expectedSalaryValue,
       totalContributed,
       totalFuture,
       gain,
@@ -209,15 +265,20 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
       yearsValue,
       rateValue,
       inflationValue,
+      grossRateValue,
+      pensionFeeValue,
       realAnnualRate,
+      parameterInfo,
       theoreticalRealMonthlyYield: totalFuture * monthlyRateFromAnnualAny(realAnnualRate),
       sustainableMonthlyIncomeReal4: realValue * (0.04 / 12),
       scenarios,
     }
-  }, [currentAge, freedomAge, expectedSalary, initial, monthly, years, rate, inflation])
+  }, [simulationMode, currentAge, freedomAge, initial, monthly, years, rate, inflation, pensionFee])
 
   const baseScenarioValue =
     results.scenarios.find((item) => item.label === 'Base')?.value ?? results.totalFuture
+  const parameterInfo =
+    simulationMode === 'previdencia' ? PREVIDENCIA_PARAMETER_INFO : REGULAR_PARAMETER_INFO
   const roundedYears = Math.max(0, Math.round(results.yearsValue))
   const selectedYearsValue = String(roundedYears || 1)
   const yearSelectOptions = YEAR_OPTIONS.includes(roundedYears)
@@ -258,72 +319,81 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
           ) : null}
           <h1 className="simulator-title">Simulador</h1>
           <p className="simulator-subtitle">
-            Simule aportes e veja o impacto no seu patrimônio futuro com cenários realistas.
+            {SIMULATION_MODE_META[simulationMode].description}
           </p>
+        </div>
+        <div className="simulator-mode-switch" role="tablist" aria-label="Modo de simulacao">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={simulationMode === 'regular'}
+            className={`simulator-mode-card ${simulationMode === 'regular' ? 'is-active' : ''}`}
+            onClick={() => setSimulationMode('regular')}
+          >
+            <strong>{SIMULATION_MODE_META.regular.title}</strong>
+            <span>Parâmetros de investimentos gerais</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={simulationMode === 'previdencia'}
+            className={`simulator-mode-card ${simulationMode === 'previdencia' ? 'is-active' : ''}`}
+            onClick={() => setSimulationMode('previdencia')}
+          >
+            <strong>{SIMULATION_MODE_META.previdencia.title}</strong>
+            <span>Parâmetros voltados para aposentadoria</span>
+          </button>
         </div>
       </header>
 
       <div className="simulator-grid">
         <div className="simulator-card simulator-form">
           <h2>Parâmetros</h2>
+          {simulationMode === 'previdencia' ? (
+            <>
+              <div className="simulator-field">
+                <div className="simulator-field__head">
+                  <label>{PREVIDENCIA_PARAMETER_INFO.currentAge.label}</label>
+                  {renderInfoButton(
+                    'currentAge',
+                    'Entender idade atual',
+                    <p>{PREVIDENCIA_PARAMETER_INFO.currentAge.description}</p>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  min={0}
+                  step="1"
+                  value={currentAge}
+                  onChange={(event) => setCurrentAge(event.target.value)}
+                />
+              </div>
+              <div className="simulator-field">
+                <div className="simulator-field__head">
+                  <label>{PREVIDENCIA_PARAMETER_INFO.freedomAge.label}</label>
+                  {renderInfoButton(
+                    'freedomAge',
+                    'Entender idade de aposentadoria',
+                    <p>{PREVIDENCIA_PARAMETER_INFO.freedomAge.description}</p>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  min={0}
+                  step="1"
+                  value={freedomAge}
+                  onChange={(event) => setFreedomAge(event.target.value)}
+                />
+              </div>
+            </>
+          ) : null}
           <div className="simulator-field">
             <div className="simulator-field__head">
-              <label>{PARAMETER_INFO.currentAge.label}</label>
-              {renderInfoButton(
-                'currentAge',
-                'Entender idade atual',
-                <p>{PARAMETER_INFO.currentAge.description}</p>
-              )}
-            </div>
-            <input
-              type="number"
-              min={0}
-              step="1"
-              value={currentAge}
-              onChange={(event) => setCurrentAge(event.target.value)}
-            />
-          </div>
-          <div className="simulator-field">
-            <div className="simulator-field__head">
-              <label>{PARAMETER_INFO.freedomAge.label}</label>
-              {renderInfoButton(
-                'freedomAge',
-                'Entender idade da liberdade',
-                <p>{PARAMETER_INFO.freedomAge.description}</p>
-              )}
-            </div>
-            <input
-              type="number"
-              min={0}
-              step="1"
-              value={freedomAge}
-              onChange={(event) => setFreedomAge(event.target.value)}
-            />
-          </div>
-          <div className="simulator-field">
-            <div className="simulator-field__head">
-              <label>{PARAMETER_INFO.expectedSalary.label}</label>
-              {renderInfoButton(
-                'expectedSalary',
-                'Entender salario esperado',
-                <p>{PARAMETER_INFO.expectedSalary.description}</p>
-              )}
-            </div>
-            <input
-              type="text"
-              inputMode="decimal"
-              value={expectedSalary}
-              onChange={(event) => setExpectedSalary(sanitizeNumericInput(event.target.value))}
-              onBlur={() => setExpectedSalary(formatInputNumber(expectedSalary))}
-            />
-          </div>
-          <div className="simulator-field">
-            <div className="simulator-field__head">
-              <label>{PARAMETER_INFO.initial.label}</label>
+              <label>{parameterInfo.initial.label}</label>
               {renderInfoButton(
                 'initial',
                 'Entender aporte inicial',
-                <p>{PARAMETER_INFO.initial.description}</p>
+                <p>{parameterInfo.initial.description}</p>
               )}
             </div>
             <input
@@ -336,11 +406,11 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
           </div>
           <div className="simulator-field">
             <div className="simulator-field__head">
-              <label>{PARAMETER_INFO.monthly.label}</label>
+              <label>{parameterInfo.monthly.label}</label>
               {renderInfoButton(
                 'monthly',
                 'Entender aporte mensal',
-                <p>{PARAMETER_INFO.monthly.description}</p>
+                <p>{parameterInfo.monthly.description}</p>
               )}
             </div>
             <input
@@ -353,11 +423,11 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
           </div>
           <div className="simulator-field">
             <div className="simulator-field__head">
-              <label>{PARAMETER_INFO.years.label}</label>
+              <label>{parameterInfo.years.label}</label>
               {renderInfoButton(
                 'years',
                 'Entender prazo em anos',
-                <p>{PARAMETER_INFO.years.description}</p>
+                <p>{parameterInfo.years.description}</p>
               )}
             </div>
             <input
@@ -373,13 +443,32 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
               </small>
             ) : null}
           </div>
+          {simulationMode === 'previdencia' ? (
+            <div className="simulator-field">
+              <div className="simulator-field__head">
+                <label>{PREVIDENCIA_PARAMETER_INFO.pensionFee.label}</label>
+                {renderInfoButton(
+                  'pensionFee',
+                  'Entender taxa anual do plano',
+                  <p>{PREVIDENCIA_PARAMETER_INFO.pensionFee.description}</p>
+                )}
+              </div>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={pensionFee}
+                onChange={(event) => setPensionFee(sanitizeNumericInput(event.target.value))}
+                onBlur={() => setPensionFee(formatInputNumber(pensionFee))}
+              />
+            </div>
+          ) : null}
           <div className="simulator-field">
             <div className="simulator-field__head">
-              <label>{PARAMETER_INFO.rate.label}</label>
+              <label>{parameterInfo.rate.label}</label>
               {renderInfoButton(
                 'rate',
                 'Entender rentabilidade anual',
-                <p>{PARAMETER_INFO.rate.description}</p>
+                <p>{parameterInfo.rate.description}</p>
               )}
             </div>
             <input
@@ -392,11 +481,11 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
           </div>
           <div className="simulator-field">
             <div className="simulator-field__head">
-              <label>{PARAMETER_INFO.inflation.label}</label>
+              <label>{parameterInfo.inflation.label}</label>
               {renderInfoButton(
                 'inflation',
                 'Entender inflacao anual',
-                <p>{PARAMETER_INFO.inflation.description}</p>
+                <p>{parameterInfo.inflation.description}</p>
               )}
             </div>
             <input
@@ -408,7 +497,10 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
             />
           </div>
           <div className="simulator-note">
-            Os valores são estimativas e não representam recomendação de investimento.
+            Os valores sao estimativas e nao representam recomendacao de investimento.
+            {simulationMode === 'previdencia'
+              ? ` Rentabilidade liquida usada: ${results.rateValue.toFixed(2)}% a.a. (bruta ${results.grossRateValue.toFixed(2)}% - taxa ${results.pensionFeeValue.toFixed(2)}%).`
+              : ''}
           </div>
         </div>
 
@@ -428,17 +520,6 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
               ))}
             </select>
           </div>
-          <p className="simulator-assumptions">
-            Aporte mensal de R$ {formatNumber.format(toNumber(monthly))}, retorno de{' '}
-            {results.rateValue.toFixed(1)}% a.a. e inflação de {results.inflationValue.toFixed(2)}%
-            a.a.
-          </p>
-          {results.expectedSalaryValue > 0 ? (
-            <p className="simulator-assumptions">
-              Salário esperado: R$ {formatNumber.format(results.expectedSalaryValue)}/mês.
-            </p>
-          ) : null}
-
           <div className="simulator-primary">
             <span className="simulator-metric__head">
               Patrimônio estimado
@@ -462,11 +543,16 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
                       <strong>
                         R$ {formatNumber.format(results.sustainableMonthlyIncomeReal4)}/mês
                       </strong>{' '}
-                      como referência de <strong>salário sustentável</strong> (retirada prudente de
-                      4% a.a. do patrimônio real).
+                      como referência de{' '}
+                      <strong>
+                        {simulationMode === 'previdencia'
+                          ? 'renda mensal sustentável'
+                          : 'salário sustentável'}
+                      </strong>{' '}
+                      (retirada prudente de 4% a.a. do patrimônio real).
                     </li>
                   </ul>
-                  <p>
+                    <p>
                     Cálculo com taxa anual de {results.rateValue.toFixed(2)}% e taxa real de{' '}
                     {results.realAnnualRate.toFixed(2)}% a.a.
                   </p>
