@@ -96,6 +96,7 @@ const SIMULATION_MODE_META: Record<SimulationMode, { title: string; description:
 }
 
 const YEAR_OPTIONS = [1, 2, 3, 5, 10, 15, 20, 25, 30, 35, 40]
+const INCOME_DURATION_OPTIONS = [10, 15, 20, 25, 30, 35, 40]
 
 const sanitizeNumericInput = (value: string) => {
   const cleaned = value.replace(/[^0-9.,]/g, '')
@@ -165,6 +166,8 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
   const [inflation, setInflation] = useState('4,4')
   const [pensionFee, setPensionFee] = useState('1,2')
   const [openInfoId, setOpenInfoId] = useState<string | null>(null)
+  const [incomeDuration, setIncomeDuration] = useState('25')
+
   useEffect(() => {
     if (!openInfoId) return
 
@@ -284,6 +287,21 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
   const yearSelectOptions = YEAR_OPTIONS.includes(roundedYears)
     ? YEAR_OPTIONS
     : [...YEAR_OPTIONS, roundedYears].filter((value) => value > 0).sort((a, b) => a - b)
+  const isLifetimeIncome = incomeDuration === 'vitalicia'
+  const incomeDurationYears = isLifetimeIncome ? 0 : Math.max(1, Math.round(toNumber(incomeDuration)))
+  const incomeDurationMonths = incomeDurationYears * 12
+  const realMonthlyRate = monthlyRateFromAnnualAny(results.realAnnualRate)
+  const estimatedMonthlyIncome = useMemo(() => {
+    if (results.realValue <= 0) return 0
+    if (isLifetimeIncome) return results.realValue * (0.04 / 12)
+    if (incomeDurationMonths <= 0) return 0
+    if (Math.abs(realMonthlyRate) < 0.000001) return results.realValue / incomeDurationMonths
+
+    const denominator = 1 - Math.pow(1 + realMonthlyRate, -incomeDurationMonths)
+    if (Math.abs(denominator) < 0.000001) return 0
+
+    return results.realValue * (realMonthlyRate / denominator)
+  }, [results.realValue, isLifetimeIncome, incomeDurationMonths, realMonthlyRate])
 
   const renderInfoButton = (id: string, ariaLabel: string, content: ReactNode) => {
     const isOpen = openInfoId === id
@@ -347,7 +365,9 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
       </header>
 
       <div className="simulator-grid">
-        <div className="simulator-card simulator-form">
+        <div
+          className={`simulator-card simulator-form ${simulationMode === 'previdencia' ? 'simulator-form--previdencia' : ''}`}
+        >
           <h2>Parâmetros</h2>
           {simulationMode === 'previdencia' ? (
             <>
@@ -566,7 +586,9 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
             <strong>R$ {formatNumber.format(results.totalFuture)}</strong>
           </div>
 
-          <div className="simulator-metrics">
+          <div
+            className={`simulator-metrics ${simulationMode === 'previdencia' ? 'simulator-metrics--previdencia' : ''}`}
+          >
             <div className="simulator-metric">
               <span>Total aportado</span>
               <strong>R$ {formatNumber.format(results.totalContributed)}</strong>
@@ -607,6 +629,65 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
                 Rentabilidade real aproximada: {results.realAnnualRate.toFixed(2)}% a.a.
               </p>
             </div>
+            {simulationMode === 'previdencia' ? (
+              <div
+                className="simulator-metric simulator-metric-income"
+                data-simulator-info-root="true"
+              >
+                <div className="simulator-metric__head">
+                  <span>Renda mensal possivel</span>
+                  <span className="simulator-info-wrap" data-simulator-info-root="true">
+                    <button
+                      type="button"
+                      className="simulator-info-btn"
+                      aria-label="Entender renda mensal possivel"
+                      aria-expanded={openInfoId === 'income'}
+                      onClick={() =>
+                        setOpenInfoId((prev) => (prev === 'income' ? null : 'income'))
+                      }
+                    >
+                      i
+                    </button>
+                  </span>
+                </div>
+                <div className="simulator-income-controls">
+                  <label htmlFor="income-duration">Prazo de uso</label>
+                  <select
+                    id="income-duration"
+                    className="simulator-select simulator-income-controls__select"
+                    aria-label="Selecionar por quanto tempo deseja usufruir da renda"
+                    value={incomeDuration}
+                    onChange={(event) => setIncomeDuration(event.target.value)}
+                  >
+                    {INCOME_DURATION_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option} anos
+                      </option>
+                    ))}
+                    <option value="vitalicia">Vitalicia (4% a.a.)</option>
+                  </select>
+                </div>
+                <strong>R$ {formatNumber.format(Math.max(0, estimatedMonthlyIncome))}/mês</strong>
+                <p className="simulator-metric-hint">
+                  {isLifetimeIncome
+                    ? 'Modo vitalicio usa retirada prudente de 4% ao ano.'
+                    : `Estimativa para consumir o patrimonio em ${incomeDurationYears} anos.`}
+                </p>
+                {openInfoId === 'income' ? (
+                  <div className="simulator-income-expand" role="note">
+                    <p>
+                      Pense no patrimonio como uma caixa d&apos;agua: o prazo escolhido define o
+                      tamanho da torneira mensal.
+                    </p>
+                    <ul>
+                      <li>Prazo menor: renda maior por mes, mas termina antes.</li>
+                      <li>Prazo maior: renda menor por mes, com mais folego no tempo.</li>
+                      <li>Modo vitalicio: referencia conservadora para longo prazo.</li>
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           <div className="simulator-scenarios">

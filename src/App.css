@@ -2194,9 +2194,69 @@ body.menu-open {
   color: var(--ink);
 }
 
+.simulator-metric-income {
+  background: linear-gradient(145deg, rgba(15, 111, 107, 0.1), rgba(255, 255, 255, 0.95));
+  border: 1px solid rgba(15, 111, 107, 0.2);
+}
+
+.simulator-income-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.simulator-income-controls label {
+  font-size: 0.78rem;
+  color: var(--slate);
+}
+
+.simulator-income-controls__select {
+  padding: 6px 10px;
+  font-size: 0.8rem;
+}
+
+.simulator-income-expand {
+  margin-top: 2px;
+  border-radius: 12px;
+  border: 1px dashed rgba(15, 111, 107, 0.3);
+  background: rgba(255, 255, 255, 0.82);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.simulator-income-expand p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--slate);
+  line-height: 1.45;
+}
+
+.simulator-income-expand ul {
+  margin: 0;
+  padding-left: 16px;
+  display: grid;
+  gap: 4px;
+}
+
+.simulator-income-expand li {
+  font-size: 0.76rem;
+  color: var(--slate);
+  line-height: 1.4;
+}
+
 .simulator-field {
   display: grid;
   gap: 6px;
+}
+
+.simulator-form--previdencia {
+  gap: 6px;
+}
+
+.simulator-form--previdencia .simulator-field {
+  gap: 2px;
 }
 
 .simulator-field__head {
@@ -2228,6 +2288,10 @@ body.menu-open {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.simulator-metrics--previdencia {
+  gap: 8px;
 }
 
 .simulator-metric {
@@ -5461,6 +5525,11 @@ body.menu-open {
 
   .simulator-scenarios {
     grid-template-columns: 1fr;
+  }
+
+  .simulator-income-controls {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .panel-card.wide {
