@@ -1001,6 +1001,11 @@ function App() {
 
     const syncEvolutionSheets = async () => {
       await flushPendingEvolutionSheets(sb, userId)
+      const pendingYears = new Set(
+        readPendingEvolutionSheets(userId).map((item) =>
+          clampEvolutionYear(item.year, currentYear)
+        )
+      )
 
       const { data, error } = await sb
         .from('evolution_sheets')
@@ -1049,6 +1054,17 @@ function App() {
           window.localStorage,
           year,
           remoteVisible.length ? remoteVisible : evolutionMonthKeys,
+          evolutionStorageScope
+        )
+      }
+
+      for (const year of targetYears) {
+        if (remoteByYear.has(year) || pendingYears.has(year)) continue
+        writeEvolutionRowsForYear(window.localStorage, year, [], evolutionStorageScope)
+        writeEvolutionVisibleMonthsForYear(
+          window.localStorage,
+          year,
+          evolutionMonthKeys,
           evolutionStorageScope
         )
       }
