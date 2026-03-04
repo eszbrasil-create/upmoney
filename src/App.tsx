@@ -92,12 +92,22 @@ type EvolutionSheetRecord = {
   visible_months: unknown
 }
 
+type EvolutionSheetUpsertPayload = {
+  user_id: string
+  year: number
+  rows: EvolutionStorageRow[]
+  visible_months: EvolutionMonthKey[]
+}
+
 const hasEvolutionContent = (rows: EvolutionStorageRow[], months: EvolutionMonthKey[]) =>
   rows.some(
     (row) =>
       row.name.trim().length > 0 ||
       months.some((month) => typeof row[month] === 'string' && row[month].trim().length > 0)
   )
+
+const getEvolutionPendingStorageKey = (userId: string) =>
+  `upmoney_evolution_pending_v1:${userId}`
 
 type ActivityCounts = {
   assetsAdded: number
@@ -309,10 +319,104 @@ function App() {
     () => EVOLUTION_MONTHS.map((month) => month.key),
     []
   )
+  const evolutionStorageScope = authUser?.id
+
+  const readPendingEvolutionSheets = (userId: string): EvolutionSheetUpsertPayload[] => {
+    if (!storageAvailable) return []
+    const raw = window.localStorage.getItem(getEvolutionPendingStorageKey(userId))
+    if (!raw) return []
+    try {
+      const parsed = JSON.parse(raw) as unknown
+      if (!Array.isArray(parsed)) return []
+      return parsed
+        .map((item) => {
+          const source = (item ?? {}) as Record<string, unknown>
+          const year = clampEvolutionYear(Number(source.year), currentYear)
+          const rows = normalizeEvolutionRows(source.rows)
+          const visibleRaw = Array.isArray(source.visible_months) ? source.visible_months : []
+          const visible = Array.from(
+            new Set(
+              visibleRaw.filter(
+                (month): month is EvolutionMonthKey =>
+                  typeof month === 'string' &&
+                  evolutionMonthKeys.includes(month as EvolutionMonthKey)
+              )
+            )
+          )
+          return {
+            user_id: userId,
+            year,
+            rows,
+            visible_months: visible.length ? visible : [...evolutionMonthKeys],
+          }
+        })
+    } catch {
+      return []
+    }
+  }
+
+  const writePendingEvolutionSheets = (userId: string, items: EvolutionSheetUpsertPayload[]) => {
+    if (!storageAvailable) return
+    const key = getEvolutionPendingStorageKey(userId)
+    if (!items.length) {
+      window.localStorage.removeItem(key)
+      return
+    }
+    window.localStorage.setItem(key, JSON.stringify(items))
+  }
+
+  const enqueuePendingEvolutionSheet = (payload: EvolutionSheetUpsertPayload) => {
+    const current = readPendingEvolutionSheets(payload.user_id)
+    const deduped = current.filter((item) => item.year !== payload.year)
+    deduped.push(payload)
+    writePendingEvolutionSheets(payload.user_id, deduped)
+  }
+
+  const removePendingEvolutionSheet = (userId: string, year: number) => {
+    const current = readPendingEvolutionSheets(userId)
+    const next = current.filter((item) => item.year !== year)
+    writePendingEvolutionSheets(userId, next)
+  }
+
+  const upsertEvolutionSheetWithQueue = async (
+    sb: NonNullable<typeof supabase>,
+    payload: EvolutionSheetUpsertPayload
+  ) => {
+    const { error } = await sb.from('evolution_sheets').upsert(payload, {
+      onConflict: 'user_id,year',
+    })
+    if (error) {
+      enqueuePendingEvolutionSheet(payload)
+      return false
+    }
+    removePendingEvolutionSheet(payload.user_id, payload.year)
+    return true
+  }
+
+  const flushPendingEvolutionSheets = async (
+    sb: NonNullable<typeof supabase>,
+    userId: string
+  ) => {
+    const pending = readPendingEvolutionSheets(userId).sort((a, b) => a.year - b.year)
+    if (!pending.length) return
+
+    const remaining: EvolutionSheetUpsertPayload[] = []
+    for (const payload of pending) {
+      const { error } = await sb.from('evolution_sheets').upsert(payload, {
+        onConflict: 'user_id,year',
+      })
+      if (error) {
+        remaining.push(payload)
+      }
+    }
+    writePendingEvolutionSheets(userId, remaining)
+  }
 
   const parseEvolutionRowsFromStorage = (year: number): EvolutionStorageRow[] => {
     if (!storageAvailable) return []
-    return readEvolutionRowsForYear(window.localStorage, year)
+    return readEvolutionRowsForYear(window.localStorage, year, {
+      scope: evolutionStorageScope,
+    })
   }
 
   const readStoredEvolutionActiveYear = () => {
@@ -388,25 +492,32 @@ function App() {
   const persistEvolutionRows = (rows: EvolutionStorageRow[]) => {
     if (!storageAvailable) return
     const savedYear = evolutionEditorYear
-    writeEvolutionRowsForYear(window.localStorage, savedYear, rows)
-    const currentVisibleMonths = readEvolutionVisibleMonthsForYear(window.localStorage, savedYear)
+    writeEvolutionRowsForYear(window.localStorage, savedYear, rows, evolutionStorageScope)
+    const currentVisibleMonths = readEvolutionVisibleMonthsForYear(
+      window.localStorage,
+      savedYear,
+      evolutionStorageScope
+    )
     const nextVisibleMonths = currentVisibleMonths.includes(evolutionEditorMonth)
       ? currentVisibleMonths
       : [...currentVisibleMonths, evolutionEditorMonth]
-    writeEvolutionVisibleMonthsForYear(window.localStorage, savedYear, nextVisibleMonths)
+    writeEvolutionVisibleMonthsForYear(
+      window.localStorage,
+      savedYear,
+      nextVisibleMonths,
+      evolutionStorageScope
+    )
 
     if (!supabaseConfigMissing && supabase && authUser?.id) {
       const sb = supabase
       const userId = authUser.id
-      const payload = {
+      const payload: EvolutionSheetUpsertPayload = {
         user_id: userId,
         year: savedYear,
         rows,
         visible_months: nextVisibleMonths,
       }
-      void sb.from('evolution_sheets').upsert(payload, {
-        onConflict: 'user_id,year',
-      })
+      void upsertEvolutionSheetWithQueue(sb, payload)
     }
 
     setSharedEvolutionYear(savedYear)
@@ -418,9 +529,15 @@ function App() {
     if (!storageAvailable) {
       return EVOLUTION_MONTHS.map(() => 0)
     }
-    const rows = readEvolutionRowsForYear(window.localStorage, evolutionActiveYear)
+    const rows = readEvolutionRowsForYear(window.localStorage, evolutionActiveYear, {
+      scope: evolutionStorageScope,
+    })
     const visibleMonths = new Set(
-      readEvolutionVisibleMonthsForYear(window.localStorage, evolutionActiveYear)
+      readEvolutionVisibleMonthsForYear(
+        window.localStorage,
+        evolutionActiveYear,
+        evolutionStorageScope
+      )
     )
     if (!rows.length) {
       return EVOLUTION_MONTHS.map(() => 0)
@@ -428,13 +545,19 @@ function App() {
     return computeEvolutionTotals(rows).map((value, index) =>
       visibleMonths.has(EVOLUTION_MONTHS[index]!.key) ? value : 0
     )
-  }, [activePage, storageAvailable, evolutionActiveYear, evolutionDataVersion])
+  }, [activePage, storageAvailable, evolutionActiveYear, evolutionDataVersion, evolutionStorageScope])
 
   const visibleEvolutionChartMonths = useMemo(() => {
     if (!storageAvailable) return EVOLUTION_MONTHS
-    const visible = new Set(readEvolutionVisibleMonthsForYear(window.localStorage, evolutionActiveYear))
+    const visible = new Set(
+      readEvolutionVisibleMonthsForYear(
+        window.localStorage,
+        evolutionActiveYear,
+        evolutionStorageScope
+      )
+    )
     return EVOLUTION_MONTHS.filter((month) => visible.has(month.key))
-  }, [storageAvailable, evolutionActiveYear, evolutionDataVersion])
+  }, [storageAvailable, evolutionActiveYear, evolutionDataVersion, evolutionStorageScope])
 
   const buildEditorAssetsForMonth = (
     rows: EvolutionStorageRow[],
@@ -877,6 +1000,8 @@ function App() {
     )
 
     const syncEvolutionSheets = async () => {
+      await flushPendingEvolutionSheets(sb, userId)
+
       const { data, error } = await sb
         .from('evolution_sheets')
         .select('year, rows, visible_months')
@@ -906,7 +1031,7 @@ function App() {
             : remote.rows
 
         const remoteRows = normalizeEvolutionRows(remoteRowsPayload)
-        writeEvolutionRowsForYear(window.localStorage, year, remoteRows)
+        writeEvolutionRowsForYear(window.localStorage, year, remoteRows, evolutionStorageScope)
 
         const remoteVisibleRaw = Array.isArray(remote.visible_months)
           ? remote.visible_months
@@ -923,12 +1048,15 @@ function App() {
         writeEvolutionVisibleMonthsForYear(
           window.localStorage,
           year,
-          remoteVisible.length ? remoteVisible : evolutionMonthKeys
+          remoteVisible.length ? remoteVisible : evolutionMonthKeys,
+          evolutionStorageScope
         )
       }
 
       // If the current active year has no content, move focus to the newest year with remote data.
-      const activeYearRows = readEvolutionRowsForYear(window.localStorage, evolutionActiveYear)
+      const activeYearRows = readEvolutionRowsForYear(window.localStorage, evolutionActiveYear, {
+        scope: evolutionStorageScope,
+      })
       if (!hasEvolutionContent(activeYearRows, evolutionMonthKeys)) {
         const remoteYearsWithData = Array.from(remoteByYear.entries())
           .map(([year, row]) => {
@@ -954,32 +1082,6 @@ function App() {
         }
       }
 
-      for (const year of targetYears) {
-        if (remoteByYear.has(year)) continue
-
-        const localRows = readEvolutionRowsForYear(window.localStorage, year, {
-          migrateLegacyCurrentYear: true,
-        })
-        const localVisible = readEvolutionVisibleMonthsForYear(window.localStorage, year)
-        const hasLocalRows = localRows.some(
-          (row) =>
-            row.name.trim().length > 0 ||
-            evolutionMonthKeys.some((month) => row[month].trim().length > 0)
-        )
-        const hasCustomVisibleMonths = localVisible.length !== evolutionMonthKeys.length
-        if (!hasLocalRows && !hasCustomVisibleMonths) continue
-
-        await sb.from('evolution_sheets').upsert(
-          {
-            user_id: userId,
-            year,
-            rows: localRows,
-            visible_months: localVisible.length ? localVisible : evolutionMonthKeys,
-          },
-          { onConflict: 'user_id,year' }
-        )
-      }
-
       if (!cancelled) {
         notifyEvolutionDataChanged(readStoredEvolutionActiveYear())
         setEvolutionDataVersion((prev) => prev + 1)
@@ -997,8 +1099,46 @@ function App() {
     evolutionActiveYear,
     evolutionEditorYear,
     evolutionMonthKeys,
+    evolutionStorageScope,
     storageAvailable,
   ])
+
+  useEffect(() => {
+    if (
+      !storageAvailable ||
+      supabaseConfigMissing ||
+      !supabase ||
+      !authUser?.id
+    ) {
+      return
+    }
+
+    const sb = supabase
+    const userId = authUser.id
+    let cancelled = false
+
+    const flushNow = async () => {
+      if (cancelled) return
+      await flushPendingEvolutionSheets(sb, userId)
+    }
+
+    const handleOnline = () => {
+      void flushNow()
+    }
+    const handleFocus = () => {
+      void flushNow()
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('focus', handleFocus)
+    void flushNow()
+
+    return () => {
+      cancelled = true
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [authUser?.id, storageAvailable])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -1413,8 +1553,16 @@ function App() {
     if (!storageAvailable) return []
     const monthKey = EVOLUTION_MONTHS[summaryMonthIndex]?.key
     if (!monthKey) return []
-    const rows = readEvolutionRowsForYear(window.localStorage, evolutionActiveYear)
-    const visibleMonths = new Set(readEvolutionVisibleMonthsForYear(window.localStorage, evolutionActiveYear))
+    const rows = readEvolutionRowsForYear(window.localStorage, evolutionActiveYear, {
+      scope: evolutionStorageScope,
+    })
+    const visibleMonths = new Set(
+      readEvolutionVisibleMonthsForYear(
+        window.localStorage,
+        evolutionActiveYear,
+        evolutionStorageScope
+      )
+    )
     if (!visibleMonths.has(monthKey)) return []
 
     const groupedByAsset = new Map<string, { key: string; label: string; value: number }>()
@@ -1460,6 +1608,7 @@ function App() {
     summaryMonthIndex,
     evolutionDataVersion,
     activePage,
+    evolutionStorageScope,
   ])
 
   // Course UI extracted to src/features/courses/*

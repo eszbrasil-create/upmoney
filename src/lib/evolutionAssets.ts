@@ -65,8 +65,19 @@ export const createEvolutionStorageRow = (): EvolutionStorageRow => ({
   dez: '',
 })
 
+const normalizeScope = (scope?: string) => {
+  const trimmed = scope?.trim()
+  return trimmed ? trimmed : undefined
+}
+
 export const getEvolutionStorageKey = (year: number) =>
   `${EVOLUTION_STORAGE_KEY_PREFIX}:${year}`
+export const getScopedEvolutionStorageKey = (year: number, scope?: string) => {
+  const normalizedScope = normalizeScope(scope)
+  return normalizedScope
+    ? `${EVOLUTION_STORAGE_KEY_PREFIX}:${normalizedScope}:${year}`
+    : getEvolutionStorageKey(year)
+}
 
 export const normalizeEvolutionRows = (value: unknown): EvolutionStorageRow[] => {
   if (!Array.isArray(value)) return []
@@ -98,10 +109,10 @@ export const normalizeEvolutionRows = (value: unknown): EvolutionStorageRow[] =>
 export const readEvolutionRowsForYear = (
   storage: Storage,
   year: number,
-  opts?: { migrateLegacyCurrentYear?: boolean }
+  opts?: { migrateLegacyCurrentYear?: boolean; scope?: string }
 ): EvolutionStorageRow[] => {
   const currentYear = new Date().getFullYear()
-  const key = getEvolutionStorageKey(year)
+  const key = getScopedEvolutionStorageKey(year, opts?.scope)
   const scopedRaw = storage.getItem(key)
 
   if (scopedRaw) {
@@ -113,7 +124,9 @@ export const readEvolutionRowsForYear = (
   }
 
   const shouldReadLegacy =
-    opts?.migrateLegacyCurrentYear === true && year === currentYear
+    opts?.migrateLegacyCurrentYear === true &&
+    year === currentYear &&
+    !normalizeScope(opts?.scope)
 
   if (!shouldReadLegacy) {
     return []
@@ -136,20 +149,37 @@ export const readEvolutionRowsForYear = (
 export const writeEvolutionRowsForYear = (
   storage: Storage,
   year: number,
-  rows: EvolutionStorageRow[]
+  rows: EvolutionStorageRow[],
+  scope?: string
 ) => {
-  storage.setItem(getEvolutionStorageKey(year), JSON.stringify(rows))
+  storage.setItem(getScopedEvolutionStorageKey(year, scope), JSON.stringify(rows))
 }
 
 export const getEvolutionHiddenMonthsKey = (year: number) =>
   `${EVOLUTION_HIDDEN_MONTHS_KEY_PREFIX}:${year}`
+export const getScopedEvolutionHiddenMonthsKey = (year: number, scope?: string) => {
+  const normalizedScope = normalizeScope(scope)
+  return normalizedScope
+    ? `${EVOLUTION_HIDDEN_MONTHS_KEY_PREFIX}:${normalizedScope}:${year}`
+    : getEvolutionHiddenMonthsKey(year)
+}
 
 export const getEvolutionVisibleMonthsKey = (year: number) =>
   `${EVOLUTION_VISIBLE_MONTHS_KEY_PREFIX}:${year}`
+export const getScopedEvolutionVisibleMonthsKey = (year: number, scope?: string) => {
+  const normalizedScope = normalizeScope(scope)
+  return normalizedScope
+    ? `${EVOLUTION_VISIBLE_MONTHS_KEY_PREFIX}:${normalizedScope}:${year}`
+    : getEvolutionVisibleMonthsKey(year)
+}
 
-export const readEvolutionHiddenMonthsForYear = (storage: Storage, year: number): EvolutionMonthKey[] => {
+export const readEvolutionHiddenMonthsForYear = (
+  storage: Storage,
+  year: number,
+  scope?: string
+): EvolutionMonthKey[] => {
   try {
-    const raw = storage.getItem(getEvolutionHiddenMonthsKey(year))
+    const raw = storage.getItem(getScopedEvolutionHiddenMonthsKey(year, scope))
     if (!raw) return []
     const parsed = JSON.parse(raw) as unknown
     if (!Array.isArray(parsed)) return []
@@ -163,19 +193,21 @@ export const readEvolutionHiddenMonthsForYear = (storage: Storage, year: number)
 export const writeEvolutionHiddenMonthsForYear = (
   storage: Storage,
   year: number,
-  months: EvolutionMonthKey[]
+  months: EvolutionMonthKey[],
+  scope?: string
 ) => {
   const unique = Array.from(new Set(months))
-  storage.setItem(getEvolutionHiddenMonthsKey(year), JSON.stringify(unique))
+  storage.setItem(getScopedEvolutionHiddenMonthsKey(year, scope), JSON.stringify(unique))
 }
 
 export const readEvolutionVisibleMonthsForYear = (
   storage: Storage,
-  year: number
+  year: number,
+  scope?: string
 ): EvolutionMonthKey[] => {
   const allMonths = EVOLUTION_MONTHS.map((month) => month.key)
   try {
-    const visibleRaw = storage.getItem(getEvolutionVisibleMonthsKey(year))
+    const visibleRaw = storage.getItem(getScopedEvolutionVisibleMonthsKey(year, scope))
     if (visibleRaw) {
       const parsed = JSON.parse(visibleRaw) as unknown
       if (Array.isArray(parsed)) {
@@ -192,20 +224,21 @@ export const readEvolutionVisibleMonthsForYear = (
   }
 
   // Compatibility: derive "existing months" from legacy hidden-months control.
-  const hidden = new Set(readEvolutionHiddenMonthsForYear(storage, year))
+  const hidden = new Set(readEvolutionHiddenMonthsForYear(storage, year, scope))
   return allMonths.filter((month) => !hidden.has(month))
 }
 
 export const writeEvolutionVisibleMonthsForYear = (
   storage: Storage,
   year: number,
-  months: EvolutionMonthKey[]
+  months: EvolutionMonthKey[],
+  scope?: string
 ) => {
   const valid = new Set(EVOLUTION_MONTHS.map((month) => month.key))
   const unique = Array.from(
     new Set(months.filter((month) => valid.has(month)))
   ) as EvolutionMonthKey[]
-  storage.setItem(getEvolutionVisibleMonthsKey(year), JSON.stringify(unique))
+  storage.setItem(getScopedEvolutionVisibleMonthsKey(year, scope), JSON.stringify(unique))
 }
 
 export const clampEvolutionYear = (year: number, fallback = new Date().getFullYear()) => {
