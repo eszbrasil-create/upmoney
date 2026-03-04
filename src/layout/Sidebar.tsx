@@ -6,6 +6,7 @@ type SidebarProps = {
   setOpen: (open: boolean) => void
   onNavigate: (page: AppPage) => void
   onSignOut: () => void
+  userName?: string
 }
 
 export function Sidebar({
@@ -14,11 +15,21 @@ export function Sidebar({
   setOpen,
   onNavigate,
   onSignOut,
+  userName,
 }: SidebarProps) {
   const handleNavigate = (page: AppPage) => {
     setOpen(false)
     onNavigate(page)
   }
+
+  const displayName = (userName?.trim() || 'Usuario').trim()
+  const initials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('')
+    .slice(0, 2) || 'U'
 
   return (
     <>
@@ -34,6 +45,15 @@ export function Sidebar({
         <button className="sidebar-close" type="button" onClick={() => setOpen(false)}>
           Fechar
         </button>
+        <div className="sidebar__user" title={displayName}>
+          <span className="sidebar__user-avatar" aria-hidden="true">
+            {initials}
+          </span>
+          <span className="sidebar__user-meta">
+            <small>Ola</small>
+            <strong>{displayName}</strong>
+          </span>
+        </div>
         <div className="sidebar__brand">Upmoney</div>
         <nav className="sidebar__nav">
           <button

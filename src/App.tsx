@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import type { User as SupabaseAuthUser } from '@supabase/supabase-js'
 import { createPortal } from 'react-dom'
 import meuDividendoImg from './assets/curso-dividendo.png'
 import rendaFixaAposentImg from './assets/carteira-rf-aposent.png'
@@ -104,6 +105,35 @@ type ActivityCounts = {
   expensesOpened: number
 }
 
+type AuthUser = {
+  id: string
+  email?: string
+  name?: string
+}
+
+const resolveAuthUserName = (value: unknown) => {
+  if (!value || typeof value !== 'object') return undefined
+  const meta = value as Record<string, unknown>
+  const fullName = typeof meta.full_name === 'string' ? meta.full_name.trim() : ''
+  if (fullName) return fullName
+  const name = typeof meta.name === 'string' ? meta.name.trim() : ''
+  if (name) return name
+  const displayName = typeof meta.display_name === 'string' ? meta.display_name.trim() : ''
+  if (displayName) return displayName
+  return undefined
+}
+
+const fallbackNameFromEmail = (email?: string) => {
+  if (!email) return ''
+  const prefix = email.split('@')[0]?.trim()
+  if (!prefix) return ''
+  return prefix
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
 const normalizeAssetsSummaryPayload = (value: unknown): AssetsSummaryPayload | null => {
   if (!value || typeof value !== 'object') return null
   const source = value as Record<string, unknown>
@@ -164,7 +194,7 @@ function App() {
   const [completedModulesCourse3, setCompletedModulesCourse3] = useState<
     number[]
   >([])
-  const [authUser, setAuthUser] = useState<{ id: string; email?: string } | null>(null)
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [passwordRecoveryMode, setPasswordRecoveryMode] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -175,6 +205,7 @@ function App() {
     return window.matchMedia('(max-width: 720px)').matches
   })
   const contentRef = useRef<HTMLElement | null>(null)
+  const askedNameForUserRef = useRef<string | null>(null)
   const [dividendGoal, setDividendGoal] = useState<number | null>(() => {
     if (typeof window === 'undefined') return null
     const storedGoal = window.localStorage.getItem('upmoney_dividend_goal')
@@ -1122,24 +1153,83 @@ function App() {
       const timer = window.setTimeout(() => setAuthLoading(false), 0)
       return () => window.clearTimeout(timer)
     }
-    supabase.auth.getUser().then(({ data }) => {
-      setAuthUser(
-        data.user
-          ? { id: data.user.id, email: data.user.email ?? undefined }
-          : null
+    const sb = supabase
+
+    const maybePersistMissingName = async (user: SupabaseAuthUser, allowPrompt = true) => {
+      const currentName = resolveAuthUserName(user.user_metadata)
+      if (currentName) return currentName
+      if (!allowPrompt || askedNameForUserRef.current === user.id) return undefined
+      askedNameForUserRef.current = user.id
+
+      const suggestedName = fallbackNameFromEmail(user.email ?? undefined)
+      const answer = window.prompt(
+        'Como você gostaria de ser chamado no Upmoney?',
+        suggestedName
       )
+      const trimmedName = answer?.trim()
+      if (!trimmedName) return undefined
+
+      const { error } = await sb.auth.updateUser({
+        data: {
+          ...(user.user_metadata ?? {}),
+          full_name: trimmedName,
+        },
+      })
+
+      return error ? undefined : trimmedName
+    }
+
+    const syncAuthUser = async () => {
+      const { data } = await sb.auth.getUser()
+      const user = data.user
+      if (!user) {
+        setAuthUser(null)
+        setAuthLoading(false)
+        return
+      }
+
+      const name = resolveAuthUserName(user.user_metadata) ?? (await maybePersistMissingName(user))
+      setAuthUser({
+        id: user.id,
+        email: user.email ?? undefined,
+        name,
+      })
       setAuthLoading(false)
-    })
-    const { data: authListener } = supabase.auth.onAuthStateChange(
+    }
+
+    void syncAuthUser()
+
+    const { data: authListener } = sb.auth.onAuthStateChange(
       (event, session) => {
         if (event === 'PASSWORD_RECOVERY') {
           setPasswordRecoveryMode(true)
         }
-        setAuthUser(
-          session?.user
-            ? { id: session.user.id, email: session.user.email ?? undefined }
-            : null
-        )
+        const user = session?.user
+        if (!user) {
+          setAuthUser(null)
+          return
+        }
+
+        const currentName = resolveAuthUserName(user.user_metadata)
+        setAuthUser({
+          id: user.id,
+          email: user.email ?? undefined,
+          name: currentName,
+        })
+
+        if (!currentName && event !== 'PASSWORD_RECOVERY') {
+          void maybePersistMissingName(user).then((savedName) => {
+            if (!savedName) return
+            setAuthUser((prev) =>
+              prev && prev.id === user.id
+                ? {
+                    ...prev,
+                    name: savedName,
+                  }
+                : prev
+            )
+          })
+        }
       }
     )
     return () => {
@@ -1419,6 +1509,7 @@ function App() {
         setOpen={(open) => setSidebarOpen(open, 'sidebar')}
         onNavigate={(page) => navigate(page, 'sidebar')}
         onSignOut={() => supabase?.auth.signOut()}
+        userName={authUser?.name}
       />
 
       <main className="content" ref={contentRef}>

@@ -10,6 +10,7 @@ export function LoginPage({
   passwordRecoveryMode = false,
   onPasswordResetDone,
 }: LoginPageProps) {
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -35,11 +36,20 @@ export function LoginPage({
 
   const handleSignUp = async () => {
     if (!supabase) return
+    if (!fullName.trim()) {
+      setError('Informe seu nome para criar a conta.')
+      return
+    }
     setBusy(true)
     setError(null)
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: fullName.trim(),
+        },
+      },
     })
     if (signUpError) {
       setError('Não foi possível criar a conta.')
@@ -148,6 +158,16 @@ export function LoginPage({
           </>
         ) : (
           <>
+            <label>
+              Nome
+              <input
+                type="text"
+                value={fullName}
+                onChange={(event) => setFullName(event.target.value)}
+                placeholder="Seu nome"
+                autoComplete="name"
+              />
+            </label>
             <label>
               Email
               <input

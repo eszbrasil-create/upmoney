@@ -199,6 +199,55 @@ body.menu-open {
   cursor: pointer;
 }
 
+.sidebar__user {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(28, 31, 36, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.sidebar__user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: linear-gradient(145deg, rgba(15, 111, 107, 0.2), rgba(15, 111, 107, 0.08));
+  border: 1px solid rgba(15, 111, 107, 0.3);
+  color: var(--teal);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+.sidebar__user-meta {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.sidebar__user-meta small {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--slate);
+}
+
+.sidebar__user-meta strong {
+  font-size: 0.9rem;
+  line-height: 1.2;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
 .sidebar__brand {
   font-family: 'Fraunces', Georgia, serif;
   font-size: 1.7rem;
