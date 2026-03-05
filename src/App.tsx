@@ -45,6 +45,7 @@ import { CoursePage } from './features/courses/CoursePage'
 import { CoursesListPage } from './features/courses/CoursesListPage'
 import { PrevidenciaPrivadaModulo01Page } from './pages/PrevidenciaPrivadaModulo01'
 import { AssistantDock } from './components/AssistantDock'
+import { applyOperation, type Operation, type Position as PortfolioPosition } from './lib/portfolioEngine'
 import './App.css'
 
 const NAV_TELEMETRY_STORAGE_KEY = 'upmoney_navigation_telemetry'
@@ -84,6 +85,18 @@ type AssetsSummaryRow = {
 type AssetsSummaryPayload = {
   updatedAt: string
   summary: AssetsSummaryRow[]
+}
+
+type DashboardPositionRow = {
+  id: string
+  symbol: string
+  asset_type: string
+  currency: string | null
+  trade_side: 'buy' | 'sell'
+  quantity: number
+  entry_price: number
+  entry_date: string
+  created_at: string
 }
 
 type EvolutionSheetRecord = {
@@ -193,6 +206,71 @@ const normalizeActivityCountsFromDb = (value: unknown): ActivityCounts | null =>
   }
 }
 
+const getPreviousMonthInvestmentBase = (positions: DashboardPositionRow[]) => {
+  const now = new Date()
+  const previousMonthEnd = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    0,
+    23,
+    59,
+    59,
+    999
+  ).getTime()
+
+  const sortByOperationDate = (a: DashboardPositionRow, b: DashboardPositionRow) => {
+    const aDate = new Date(a.entry_date).getTime()
+    const bDate = new Date(b.entry_date).getTime()
+    if (aDate !== bDate) return aDate - bDate
+    const aCreated = new Date(a.created_at).getTime()
+    const bCreated = new Date(b.created_at).getTime()
+    if (aCreated !== bCreated) return aCreated - bCreated
+    return a.id.localeCompare(b.id)
+  }
+
+  const grouped = new Map<string, PortfolioPosition>()
+  const sorted = [...positions]
+    .filter((position) => {
+      const entryTs = new Date(position.entry_date).getTime()
+      return Number.isFinite(entryTs) && entryTs <= previousMonthEnd
+    })
+    .sort(sortByOperationDate)
+
+  for (const position of sorted) {
+    const key = `${position.symbol}::${position.asset_type}::${position.currency ?? ''}`
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        assetId: key,
+        quantity: 0,
+        avgPrice: 0,
+        totalCost: 0,
+        realizedPnL: 0,
+        lastUpdated: '',
+      })
+    }
+    const current = grouped.get(key)!
+    const operation: Operation = {
+      id: position.id,
+      assetId: key,
+      type: position.trade_side === 'sell' ? 'SELL' : 'BUY',
+      date: position.entry_date,
+      quantity: Math.abs(Number(position.quantity)),
+      price: Number(position.entry_price),
+      fees: 0,
+    }
+    const result = applyOperation(current, operation)
+    grouped.set(key, result.positionAfter)
+  }
+
+  let total = 0
+  for (const aggregated of grouped.values()) {
+    if (aggregated.quantity <= 0) continue
+    total += aggregated.totalCost
+  }
+
+  return total
+}
+
 function App() {
   const [activePage, setActivePage] = useState<AppPage>('dash')
   const [completedModulesCourse1, setCompletedModulesCourse1] = useState<
@@ -263,6 +341,12 @@ function App() {
     } catch {
       return null
     }
+  })
+  const [assetsPreviousMonthBase, setAssetsPreviousMonthBase] = useState<number | null>(() => {
+    if (typeof window === 'undefined') return null
+    const raw = window.localStorage.getItem('upmoney_assets_previous_month_base')
+    const parsed = Number(raw)
+    return Number.isFinite(parsed) ? parsed : null
   })
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [evolutionDataVersion, setEvolutionDataVersion] = useState(0)
@@ -908,6 +992,38 @@ function App() {
   }, [activePage, authUser?.id, storageAvailable])
 
   useEffect(() => {
+    if (!storageAvailable) return
+    const timer = window.setTimeout(async () => {
+      const readLocalFallback = () => {
+        const raw = window.localStorage.getItem('upmoney_assets_previous_month_base')
+        const parsed = Number(raw)
+        setAssetsPreviousMonthBase(Number.isFinite(parsed) ? parsed : null)
+      }
+
+      if (supabaseConfigMissing || !supabase || !authUser?.id) {
+        readLocalFallback()
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('positions')
+        .select('id, symbol, asset_type, currency, trade_side, quantity, entry_price, entry_date, created_at')
+        .eq('user_id', authUser.id)
+
+      if (error || !data) {
+        readLocalFallback()
+        return
+      }
+
+      const base = getPreviousMonthInvestmentBase(data as DashboardPositionRow[])
+      setAssetsPreviousMonthBase(base)
+      window.localStorage.setItem('upmoney_assets_previous_month_base', String(base))
+    }, 0)
+
+    return () => window.clearTimeout(timer)
+  }, [activePage, authUser?.id, storageAvailable])
+
+  useEffect(() => {
     if (!storageAvailable || supabaseConfigMissing || !supabase || !authUser?.id) return
     const sb = supabase
     let cancelled = false
@@ -1421,6 +1537,10 @@ function App() {
     () => portfolioTypeSummary.reduce((sum, item) => sum + (Number(item.value) || 0), 0),
     [portfolioTypeSummary]
   )
+  const investmentsVsPreviousMonthPct =
+    assetsPreviousMonthBase != null && assetsPreviousMonthBase > 0
+      ? ((dashboardInvestmentsTotal - assetsPreviousMonthBase) / assetsPreviousMonthBase) * 100
+      : null
 
   const healthScore = useMemo(() => {
     const courseScore = Math.min(overallCourseProgress, 100) * 0.4
@@ -1697,7 +1817,19 @@ function App() {
                   <article className="kpi-card">
                     <span className="kpi-label">Investimentos ativos</span>
                     <h2>{formatBRL.format(dashboardInvestmentsTotal)}</h2>
-                    <p className="kpi-trend up">+1,4% no mes</p>
+                    <p
+                      className={`kpi-trend ${
+                        investmentsVsPreviousMonthPct === null
+                          ? ''
+                          : investmentsVsPreviousMonthPct >= 0
+                            ? 'up'
+                            : 'down'
+                      }`}
+                    >
+                      {investmentsVsPreviousMonthPct !== null
+                        ? `${investmentsVsPreviousMonthPct >= 0 ? '+' : ''}${investmentsVsPreviousMonthPct.toFixed(1)}% vs mês anterior`
+                        : 'Sem base no mês anterior'}
+                    </p>
                   </article>
                   <article className="kpi-card">
                     <span className="kpi-label">Despesa mensal</span>
