@@ -4419,12 +4419,18 @@ body.menu-open {
 
 .summary-bar {
   display: grid;
-  grid-template-columns: 80px 1fr 90px;
+  grid-template-columns: 80px 1fr minmax(52px, 90px);
   gap: 8px;
   align-items: center;
   font-size: 0.8rem;
   line-height: 1.1;
   color: var(--slate);
+}
+
+.summary-bar > span:last-child {
+  justify-self: end;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .summary-bar--placeholder {
@@ -7631,7 +7637,7 @@ canvas {
   }
 
   .summary-bar {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(52px, 74px);
     gap: 8px;
     font-size: 0.78rem;
   }
