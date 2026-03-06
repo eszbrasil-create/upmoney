@@ -17,27 +17,27 @@ const REGULAR_PARAMETER_INFO: Record<string, InfoContent> = {
   initial: {
     label: 'Aporte inicial (R$)',
     description:
-      'Valor que voce ja tem para comecar a investir hoje. Se estiver iniciando do zero, pode preencher 0.',
+      'Valor que você já tem para começar a investir hoje. Se estiver iniciando do zero, pode preencher 0.',
   },
   monthly: {
     label: 'Aporte mensal (R$)',
     description:
-      'Valor que voce pretende investir todos os meses de forma recorrente. Use uma media realista do que cabe no seu orçamento.',
+      'Valor que você pretende investir todos os meses de forma recorrente. Use uma média realista do que cabe no seu orçamento.',
   },
   years: {
     label: 'Prazo (anos)',
     description:
-      'Tempo que o dinheiro ficara investido ate o objetivo. Quanto maior o prazo, maior o efeito dos juros compostos.',
+      'Tempo que o dinheiro ficará investido até o objetivo. Quanto maior o prazo, maior o efeito dos juros compostos.',
   },
   rate: {
     label: 'Rentabilidade anual (%)',
     description:
-      'Retorno medio anual esperado do investimento, em termos nominais (antes de descontar a inflacao).',
+      'Retorno médio anual esperado do investimento, em termos nominais (antes de descontar a inflação).',
   },
   inflation: {
-    label: 'Inflacao anual (%)',
+    label: 'Inflação anual (%)',
     description:
-      'Estimativa de inflacao media por ano. Ela e usada para mostrar o valor real (poder de compra) do patrimonio no futuro.',
+      'Estimativa de inflação média por ano. Ela é usada para mostrar o valor real (poder de compra) do patrimônio no futuro.',
   },
 }
 
@@ -45,53 +45,53 @@ const PREVIDENCIA_PARAMETER_INFO: Record<string, InfoContent> = {
   currentAge: {
     label: 'Idade atual',
     description:
-      'Idade no momento da simulacao. Junto com a idade de aposentadoria, define o horizonte principal de contribuicao.',
+      'Idade no momento da simulação. Junto com a idade de aposentadoria, define o horizonte principal de contribuição.',
   },
   freedomAge: {
     label: 'Idade de aposentadoria',
     description:
-      'Idade estimada para comecar a usufruir da renda da previdencia privada.',
+      'Idade estimada para começar a usufruir da renda da previdência privada.',
   },
   initial: {
     label: 'Reserva inicial (R$)',
     description:
-      'Valor ja acumulado no plano de previdencia ou que sera aportado no inicio.',
+      'Valor já acumulado no plano de previdência ou que será aportado no início.',
   },
   monthly: {
-    label: 'Contribuicao mensal (R$)',
+    label: 'Contribuição mensal (R$)',
     description:
-      'Valor de contribuicao mensal ao plano. Considere uma contribuicao recorrente realista.',
+      'Valor de contribuição mensal ao plano. Considere uma contribuição recorrente realista.',
   },
   years: {
     label: 'Prazo complementar (anos)',
     description:
-      'Usado apenas quando nao houver idade atual e idade de aposentadoria preenchidas de forma valida.',
+      'Usado apenas quando não houver idade atual e idade de aposentadoria preenchidas de forma válida.',
   },
   pensionFee: {
     label: 'Taxa anual do plano (%)',
     description:
-      'Taxa anual total estimada do plano (administracao e outros custos recorrentes).',
+      'Taxa anual total estimada do plano (administração e outros custos recorrentes).',
   },
   rate: {
     label: 'Rentabilidade anual bruta (%)',
     description:
-      'Retorno anual estimado antes de custos do plano. A simulacao desconta a taxa anual do plano para estimar rentabilidade liquida.',
+      'Retorno anual estimado antes de custos do plano. A simulação desconta a taxa anual do plano para estimar rentabilidade líquida.',
   },
   inflation: {
-    label: 'Inflacao anual (%)',
+    label: 'Inflação anual (%)',
     description:
-      'Inflacao anual esperada para calcular o valor real (poder de compra) do patrimonio acumulado.',
+      'Inflação anual esperada para calcular o valor real (poder de compra) do patrimônio acumulado.',
   },
 }
 
 const SIMULATION_MODE_META: Record<SimulationMode, { title: string; description: string }> = {
   regular: {
-    title: 'Simulacao regular',
+    title: 'Simulação regular',
     description: 'Aportes diretos com foco em liberdade financeira geral.',
   },
   previdencia: {
-    title: 'Simulacao de previdencia',
-    description: 'Aportes com foco em aposentadoria e acumulacao de longo prazo.',
+    title: 'Simulação de previdência',
+    description: 'Aportes com foco em aposentadoria e acumulação de longo prazo.',
   },
 }
 
@@ -340,7 +340,7 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
             {SIMULATION_MODE_META[simulationMode].description}
           </p>
         </div>
-        <div className="simulator-mode-switch" role="tablist" aria-label="Modo de simulacao">
+        <div className="simulator-mode-switch" role="tablist" aria-label="Modo de simulação">
           <button
             type="button"
             role="tab"
@@ -504,7 +504,7 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
               <label>{parameterInfo.inflation.label}</label>
               {renderInfoButton(
                 'inflation',
-                'Entender inflacao anual',
+                  'Entender inflação anual',
                 <p>{parameterInfo.inflation.description}</p>
               )}
             </div>
@@ -517,9 +517,9 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
             />
           </div>
           <div className="simulator-note">
-            Os valores sao estimativas e nao representam recomendacao de investimento.
+            Os valores são estimativas e não representam recomendação de investimento.
             {simulationMode === 'previdencia'
-              ? ` Rentabilidade liquida usada: ${results.rateValue.toFixed(2)}% a.a. (bruta ${results.grossRateValue.toFixed(2)}% - taxa ${results.pensionFeeValue.toFixed(2)}%).`
+              ? ` Rentabilidade líquida usada: ${results.rateValue.toFixed(2)}% a.a. (bruta ${results.grossRateValue.toFixed(2)}% - taxa ${results.pensionFeeValue.toFixed(2)}%).`
               : ''}
           </div>
         </div>
@@ -605,20 +605,20 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
                   'Entender poder de compra',
                   <>
                     <p>
-                      O poder de compra e o valor do seu dinheiro ja descontando a inflacao.
+                      O poder de compra é o valor do seu dinheiro já descontando a inflação.
                     </p>
                     <p>A logica e essa:</p>
                     <ul>
                       <li>Rentabilidade faz o dinheiro crescer.</li>
-                      <li>Inflacao faz o dinheiro perder valor.</li>
+                      <li>Inflação faz o dinheiro perder valor.</li>
                     </ul>
                     <p>
-                      Entao o poder de compra mostra o resultado real, depois dessa
+                      Então o poder de compra mostra o resultado real, depois dessa
                       "briga".
                     </p>
                     <p>
                       <strong>
-                        Poder de compra = patrimonio ajustado pela inflacao.
+                        Poder de compra = patrimônio ajustado pela inflação.
                       </strong>
                     </p>
                   </>
@@ -664,25 +664,25 @@ export function SimulatorPage({ onOpenMenu }: SimulatorPageProps = {}) {
                         {option} anos
                       </option>
                     ))}
-                    <option value="vitalicia">Vitalicia (4% a.a.)</option>
+                    <option value="vitalicia">Vitalícia (4% a.a.)</option>
                   </select>
                 </div>
                 <strong>R$ {formatNumber.format(Math.max(0, estimatedMonthlyIncome))}/mês</strong>
                 <p className="simulator-metric-hint">
                   {isLifetimeIncome
-                    ? 'Modo vitalicio usa retirada prudente de 4% ao ano.'
-                    : `Estimativa para consumir o patrimonio em ${incomeDurationYears} anos.`}
+                    ? 'Modo vitalício usa retirada prudente de 4% ao ano.'
+                    : `Estimativa para consumir o patrimônio em ${incomeDurationYears} anos.`}
                 </p>
                 {openInfoId === 'income' ? (
                   <div className="simulator-income-expand" role="note">
                     <p>
-                      Pense no patrimonio como uma caixa d&apos;agua: o prazo escolhido define o
+                      Pense no patrimônio como uma caixa d&apos;água: o prazo escolhido define o
                       tamanho da torneira mensal.
                     </p>
                     <ul>
                       <li>Prazo menor: renda maior por mes, mas termina antes.</li>
                       <li>Prazo maior: renda menor por mes, com mais folego no tempo.</li>
-                      <li>Modo vitalicio: referencia conservadora para longo prazo.</li>
+                      <li>Modo vitalício: referência conservadora para longo prazo.</li>
                     </ul>
                   </div>
                 ) : null}

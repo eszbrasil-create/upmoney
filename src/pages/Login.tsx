@@ -174,7 +174,7 @@ export function LoginPage({
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="voce@email.com"
+                placeholder="você@email.com"
               />
             </label>
             <label>
