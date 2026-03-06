@@ -551,6 +551,11 @@ function App() {
     setActiveEvolutionBar(month)
   }
 
+  const toggleEvolutionBarTooltip = (month: EvolutionMonthKey) => {
+    clearEvolutionTooltipHideTimer()
+    setActiveEvolutionBar((current) => (current === month ? null : month))
+  }
+
   const scheduleHideEvolutionBarTooltip = (delayMs = 900) => {
     if (typeof window === 'undefined') return
     clearEvolutionTooltipHideTimer()
@@ -2124,8 +2129,8 @@ function App() {
                         showEvolutionBarTooltip(month)
                       }
                     }}
-                    onTouchEnd={() => scheduleHideEvolutionBarTooltip(0)}
-                    onTouchCancel={() => scheduleHideEvolutionBarTooltip(0)}
+                    onTouchEnd={() => scheduleHideEvolutionBarTooltip(1200)}
+                    onTouchCancel={() => scheduleHideEvolutionBarTooltip(1200)}
                   >
                     {visibleEvolutionChartMonths.map((month) => {
                       const index = EVOLUTION_MONTHS.findIndex((item) => item.key === month.key)
@@ -2154,6 +2159,11 @@ function App() {
                               onMouseLeave={() => scheduleHideEvolutionBarTooltip(0)}
                               onFocus={() => showEvolutionBarTooltip(month.key)}
                               onBlur={() => scheduleHideEvolutionBarTooltip(0)}
+                              onClick={() => {
+                                if (typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches) {
+                                  toggleEvolutionBarTooltip(month.key)
+                                }
+                              }}
                               onTouchStart={() => showEvolutionBarTooltip(month.key)}
                               onTouchEnd={() => scheduleHideEvolutionBarTooltip()}
                               onTouchCancel={() => scheduleHideEvolutionBarTooltip(0)}
