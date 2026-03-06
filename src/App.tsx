@@ -678,7 +678,13 @@ function App() {
     setEvolutionEditorYear(year)
     setEvolutionEditorMonth(month)
     setEvolutionEditorAssets(buildEditorAssetsForMonth(rows, month))
+    setEvolutionMonthPickerOpen(false)
     setEvolutionEditorOpen(true)
+  }
+
+  const closeEvolutionEditor = () => {
+    setEvolutionMonthPickerOpen(false)
+    setEvolutionEditorOpen(false)
   }
 
   const updateEvolutionEditorAsset = (
@@ -2161,8 +2167,9 @@ function App() {
                               onBlur={() => scheduleHideEvolutionBarTooltip(0)}
                               onClick={() => {
                                 if (typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches) {
-                                  toggleEvolutionBarTooltip(month.key)
+                                  return
                                 }
+                                toggleEvolutionBarTooltip(month.key)
                               }}
                               onTouchStart={() => showEvolutionBarTooltip(month.key)}
                               onTouchEnd={() => undefined}
@@ -3074,7 +3081,7 @@ function App() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="evolution-editor-title"
-              onClick={() => setEvolutionEditorOpen(false)}
+              onClick={closeEvolutionEditor}
             >
               <div
                 className="modal-card evolution-editor-modal"
@@ -3082,7 +3089,7 @@ function App() {
               >
                 <div className="modal-header">
                   <h2 id="evolution-editor-title">Editar ativos</h2>
-                  <button className="modal-close" onClick={() => setEvolutionEditorOpen(false)}>
+                  <button className="modal-close" onClick={closeEvolutionEditor}>
                     ✕
                   </button>
                 </div>
