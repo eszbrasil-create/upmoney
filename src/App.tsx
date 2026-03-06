@@ -2129,7 +2129,7 @@ function App() {
                         showEvolutionBarTooltip(month)
                       }
                     }}
-                    onTouchEnd={() => scheduleHideEvolutionBarTooltip(1200)}
+                    onTouchEnd={() => undefined}
                     onTouchCancel={() => scheduleHideEvolutionBarTooltip(1200)}
                   >
                     {visibleEvolutionChartMonths.map((month) => {
@@ -2165,7 +2165,7 @@ function App() {
                                 }
                               }}
                               onTouchStart={() => showEvolutionBarTooltip(month.key)}
-                              onTouchEnd={() => scheduleHideEvolutionBarTooltip()}
+                              onTouchEnd={() => undefined}
                               onTouchCancel={() => scheduleHideEvolutionBarTooltip(0)}
                             />
                           </div>
