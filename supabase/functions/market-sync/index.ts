@@ -1,8 +1,7 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.0'
 import { fetchBrapiQuotes } from '../_shared/providers/brapi.ts'
-import { fetchYahooQuotes } from '../_shared/providers/yahoo.ts'
-import { normalizeTicker, toYahooSymbol } from '../_shared/utils.ts'
+import { normalizeTicker } from '../_shared/utils.ts'
 
 type PositionRow = {
   symbol: string
@@ -198,7 +197,7 @@ serve(async (req) => {
 
   const now = new Date().toISOString()
   type ProviderQuote = {
-    source: 'brapi' | 'yahoo'
+    source: 'brapi'
     quote: {
       symbol: string
       price: number
@@ -215,19 +214,6 @@ serve(async (req) => {
     const ticker = normalizeTicker(quote.symbol)
     quoteByTicker.set(ticker, { source: 'brapi', quote })
   })
-
-  const missingTickers = tickers.filter((ticker) => !quoteByTicker.has(ticker))
-  if (missingTickers.length) {
-    const yahooSymbols = missingTickers.map((ticker) => toYahooSymbol(ticker))
-    console.log('[market-sync]', requestId, 'yahoo_fallback_request', { tickers: missingTickers.length })
-    const yahooQuotes = await fetchYahooQuotes(yahooSymbols)
-    yahooQuotes.forEach((quote) => {
-      const ticker = normalizeTicker(quote.symbol)
-      if (!quoteByTicker.has(ticker)) {
-        quoteByTicker.set(ticker, { source: 'yahoo', quote })
-      }
-    })
-  }
 
   const upsertRows = tickers
     .map((ticker) => {
