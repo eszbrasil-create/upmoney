@@ -1,7 +1,8 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.0'
 import { fetchBrapiQuotes } from '../_shared/providers/brapi.ts'
-import { normalizeTicker } from '../_shared/utils.ts'
+import { fetchYahooQuotes } from '../_shared/providers/yahoo.ts'
+import { normalizeTicker, toYahooSymbol } from '../_shared/utils.ts'
 
 type PositionRow = {
   symbol: string
@@ -27,17 +28,17 @@ const getUserTickers = async (
   client: ReturnType<typeof createClient>,
   userId: string
 ) => {
+  const tickers = new Set<string>()
+
   const { data: assets, error } = await client
     .from('user_assets')
     .select('ticker,type')
     .eq('user_id', userId)
 
   if (!error && assets?.length) {
-    const tickers = new Set<string>()
     assets.forEach((row) => {
       tickers.add(normalizeTicker(row.ticker))
     })
-    return Array.from(tickers)
   }
 
   const { data: positions, error: positionsError } = await client
@@ -45,16 +46,14 @@ const getUserTickers = async (
     .select('symbol,asset_type')
     .eq('user_id', userId)
 
-  if (positionsError || !positions?.length) {
-    return []
+  if (!positionsError && positions?.length) {
+    positions.forEach((row: PositionRow) => {
+      const symbol = row.symbol?.trim()
+      if (!symbol) return
+      tickers.add(normalizeTicker(symbol))
+    })
   }
 
-  const tickers = new Set<string>()
-  positions.forEach((row: PositionRow) => {
-    const symbol = row.symbol?.trim()
-    if (!symbol) return
-    tickers.add(normalizeTicker(symbol))
-  })
   return Array.from(tickers)
 }
 
@@ -198,10 +197,17 @@ serve(async (req) => {
   }
 
   const now = new Date().toISOString()
-  const quoteByTicker = new Map<
-    string,
-    { source: 'brapi'; quote: (typeof brapiQuotes)[number] }
-  >()
+  type ProviderQuote = {
+    source: 'brapi' | 'yahoo'
+    quote: {
+      symbol: string
+      price: number
+      changePct: number | null
+      currency: string | null
+      marketTime?: string
+    }
+  }
+  const quoteByTicker = new Map<string, ProviderQuote>()
 
   console.log('[market-sync]', requestId, 'brapi_request', { tickers: tickers.length })
   const brapiQuotes = await fetchBrapiQuotes(tickers)
@@ -209,6 +215,19 @@ serve(async (req) => {
     const ticker = normalizeTicker(quote.symbol)
     quoteByTicker.set(ticker, { source: 'brapi', quote })
   })
+
+  const missingTickers = tickers.filter((ticker) => !quoteByTicker.has(ticker))
+  if (missingTickers.length) {
+    const yahooSymbols = missingTickers.map((ticker) => toYahooSymbol(ticker))
+    console.log('[market-sync]', requestId, 'yahoo_fallback_request', { tickers: missingTickers.length })
+    const yahooQuotes = await fetchYahooQuotes(yahooSymbols)
+    yahooQuotes.forEach((quote) => {
+      const ticker = normalizeTicker(quote.symbol)
+      if (!quoteByTicker.has(ticker)) {
+        quoteByTicker.set(ticker, { source: 'yahoo', quote })
+      }
+    })
+  }
 
   const upsertRows = tickers
     .map((ticker) => {

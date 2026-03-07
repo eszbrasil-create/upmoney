@@ -565,12 +565,12 @@ function App() {
     }, delayMs)
   }
 
-  const resolveEvolutionMonthFromTouch = (touchPoint: {
+  const resolveEvolutionMonthFromPoint = (point: {
     clientX: number
     clientY: number
   }): EvolutionMonthKey | null => {
     if (typeof document === 'undefined') return null
-    const target = document.elementFromPoint(touchPoint.clientX, touchPoint.clientY)
+    const target = document.elementFromPoint(point.clientX, point.clientY)
     if (!(target instanceof Element)) return null
     const column = target.closest('.evolution-col')
     const month = column?.getAttribute('data-month')
@@ -2122,7 +2122,7 @@ function App() {
                     onTouchStart={(event) => {
                       const touch = event.touches[0]
                       if (!touch) return
-                      const month = resolveEvolutionMonthFromTouch(touch)
+                      const month = resolveEvolutionMonthFromPoint(touch)
                       if (month) {
                         showEvolutionBarTooltip(month)
                       }
@@ -2130,11 +2130,17 @@ function App() {
                     onTouchMove={(event) => {
                       const touch = event.touches[0]
                       if (!touch) return
-                      const month = resolveEvolutionMonthFromTouch(touch)
+                      const month = resolveEvolutionMonthFromPoint(touch)
                       if (month) {
                         showEvolutionBarTooltip(month)
                       }
                     }}
+                    onMouseMove={(event) => {
+                      const month = resolveEvolutionMonthFromPoint(event)
+                      if (!month || activeEvolutionBar === month) return
+                      showEvolutionBarTooltip(month)
+                    }}
+                    onMouseLeave={() => scheduleHideEvolutionBarTooltip(0)}
                     onTouchEnd={() => undefined}
                     onTouchCancel={() => scheduleHideEvolutionBarTooltip(1200)}
                   >
@@ -2162,7 +2168,6 @@ function App() {
                               tabIndex={0}
                               aria-label={`${month.label.toUpperCase()} ${evolutionActiveYear}: ${valueLabel}`}
                               onMouseEnter={() => showEvolutionBarTooltip(month.key)}
-                              onMouseLeave={() => scheduleHideEvolutionBarTooltip(0)}
                               onFocus={() => showEvolutionBarTooltip(month.key)}
                               onBlur={() => scheduleHideEvolutionBarTooltip(0)}
                               onClick={() => {
