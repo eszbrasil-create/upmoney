@@ -16,6 +16,11 @@ type MarketCacheRow = {
   updated_at: string | null
 }
 
+type MarketSyncStatusRow = {
+  ticker: string
+  last_success_at: string | null
+}
+
 const getTodayDate = () => new Date().toISOString().slice(0, 10)
 const parseIsoTime = (value: string | null | undefined) => {
   if (!value) return null
@@ -150,11 +155,21 @@ serve(async (req) => {
     .eq('user_id', userId)
     .in('ticker', tickers)
 
+  const { data: previousStatusRows } = await admin
+    .from('market_sync_status')
+    .select('ticker,last_success_at')
+    .eq('user_id', userId)
+    .in('ticker', tickers)
+
   const cacheByTicker = new Map<string, MarketCacheRow>()
   ;(cacheRows ?? []).forEach((row) => {
     if (!cacheByTicker.has(row.ticker)) {
       cacheByTicker.set(row.ticker, row)
     }
+  })
+  const previousSuccessByTicker = new Map<string, string | null>()
+  ;((previousStatusRows ?? []) as MarketSyncStatusRow[]).forEach((row) => {
+    previousSuccessByTicker.set(row.ticker, row.last_success_at ?? null)
   })
 
   const { data: logRow } = await admin
@@ -237,6 +252,23 @@ serve(async (req) => {
       onConflict: 'user_id,ticker',
     })
   }
+
+  const syncStatusRows = tickers.map((ticker) => {
+    const entry = quoteByTicker.get(ticker)
+    const updated = Boolean(entry)
+    return {
+      user_id: userId,
+      ticker,
+      provider: 'brapi',
+      status: updated ? 'updated' : 'provider_empty',
+      message: updated ? null : 'Ticker não retornou cotação no provedor.',
+      last_attempt_at: now,
+      last_success_at: updated ? now : previousSuccessByTicker.get(ticker) ?? null,
+    }
+  })
+  await admin.from('market_sync_status').upsert(syncStatusRows, {
+    onConflict: 'user_id,ticker',
+  })
 
   // Only advance the "last_update_*" markers when we actually got fresh quotes.
   // Otherwise we might "lock" the user out of refreshes due to a transient provider failure.

@@ -23,6 +23,14 @@ type MarketSyncResponse = {
   errors?: Array<{ ticker: string; message: string }>
 }
 
+type MarketSyncStatus = {
+  ticker: string
+  status: 'updated' | 'provider_empty' | 'provider_error' | 'no_change'
+  message: string | null
+  last_attempt_at: string
+  last_success_at: string | null
+}
+
 type AssetsPageProps = {
   onOpenMenu?: () => void
   onAssetAdded?: () => void
@@ -35,6 +43,7 @@ export function AssetsPage({ onOpenMenu, onAssetAdded }: AssetsPageProps) {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [syncWarnings, setSyncWarnings] = useState<MarketSyncStatus[]>([])
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null)
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
@@ -221,6 +230,18 @@ export function AssetsPage({ onOpenMenu, onAssetAdded }: AssetsPageProps) {
       }
     }
 
+    let statusData: MarketSyncStatus[] = []
+    if (tickers.length > 0) {
+      const { data: statusRows, error: statusError } = await supabase
+        .from('market_sync_status')
+        .select('ticker,status,message,last_attempt_at,last_success_at')
+        .eq('user_id', user.id)
+        .in('ticker', tickers)
+      if (!statusError && statusRows) {
+        statusData = statusRows as MarketSyncStatus[]
+      }
+    }
+
     const cacheByTicker = new Map<string, MarketCache>()
     cacheData.forEach((cache) => {
       if (!cacheByTicker.has(cache.ticker)) {
@@ -234,6 +255,11 @@ export function AssetsPage({ onOpenMenu, onAssetAdded }: AssetsPageProps) {
     }))
 
     setPositions(merged)
+    setSyncWarnings(
+      statusData
+        .filter((item) => item.status !== 'updated')
+        .sort((a, b) => a.ticker.localeCompare(b.ticker))
+    )
     if (!silent) setLoading(false)
     const latestCache = cacheData[0]?.updated_at ?? null
     if (latestCache) {
@@ -503,6 +529,12 @@ export function AssetsPage({ onOpenMenu, onAssetAdded }: AssetsPageProps) {
 
       {error ? <div className="alert error">{error}</div> : null}
       {toast ? <div className="alert success">{toast}</div> : null}
+      {syncWarnings.length > 0 ? (
+        <div className="alert error">
+          Sem atualização no provedor para: {syncWarnings.map((item) => item.ticker).join(', ')}.
+          {' '}Tente novamente em alguns minutos.
+        </div>
+      ) : null}
 
       {supabaseConfigMissing || !supabase ? (
         <div className="asset-empty">
