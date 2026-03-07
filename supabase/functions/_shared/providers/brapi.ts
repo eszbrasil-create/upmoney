@@ -20,6 +20,16 @@ export type BrapiQuote = {
   raw: BrapiQuoteResult
 }
 
+const getMaxQuotesPerRequest = () => {
+  const raw = Deno.env.get('BRAPI_QUOTES_PER_REQUEST')?.trim()
+  const parsed = raw ? Number(raw) : NaN
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return Math.floor(parsed)
+  }
+  // Free plans commonly allow a single ticker per request.
+  return 1
+}
+
 const getBrapiToken = () => {
   const candidates = [
     'BRAPI_TOKEN',
@@ -54,7 +64,7 @@ const toIsoFromMarketTime = (value: unknown) => {
   return date.toISOString()
 }
 
-export const fetchBrapiQuotes = async (symbols: string[]) => {
+const fetchChunk = async (symbols: string[]) => {
   if (!symbols.length) return []
   const joined = symbols.join(',')
   const token = getBrapiToken()
@@ -78,9 +88,7 @@ export const fetchBrapiQuotes = async (symbols: string[]) => {
     return []
   }
 
-  if (!data?.results?.length) {
-    return []
-  }
+  if (!data?.results?.length) return []
 
   return data.results
     .filter((item) => item.symbol && item.regularMarketPrice != null)
@@ -101,4 +109,19 @@ export const fetchBrapiQuotes = async (symbols: string[]) => {
         raw: item,
       }
     })
+}
+
+export const fetchBrapiQuotes = async (symbols: string[]) => {
+  if (!symbols.length) return []
+
+  const maxPerRequest = getMaxQuotesPerRequest()
+  const quotes: BrapiQuote[] = []
+
+  for (let i = 0; i < symbols.length; i += maxPerRequest) {
+    const chunk = symbols.slice(i, i + maxPerRequest)
+    const chunkQuotes = await fetchChunk(chunk)
+    quotes.push(...chunkQuotes)
+  }
+
+  return quotes
 }
