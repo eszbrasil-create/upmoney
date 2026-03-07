@@ -398,7 +398,9 @@ export function AssetsPage({ onOpenMenu, onAssetAdded }: AssetsPageProps) {
 
     setModalOpen(false)
     setEditing(null)
-    loadPositions()
+    await loadPositions({ silent: true })
+    await syncMarket(true, { silent: true })
+    await loadPositions({ silent: true })
   }
 
 
