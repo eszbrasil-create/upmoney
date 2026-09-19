@@ -92,6 +92,25 @@ export function Sidebar({
           </button>
 
           <button
+            className={`nav-btn ${activePage === 'jornada2' ? 'active' : ''}`}
+            type="button"
+            onClick={() => handleNavigate('jornada2')}
+          >
+            <span className="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M4 12h4l2-5 4 10 2-5h4"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            Jornada
+          </button>
+
+          <button
             className={`nav-btn ${activePage === 'assets' ? 'active' : ''}`}
             type="button"
             onClick={() => handleNavigate('assets')}

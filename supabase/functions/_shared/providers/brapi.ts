@@ -5,6 +5,15 @@ type BrapiQuoteResult = {
   currency?: string
   regularMarketTime?: number
   regularMarketPreviousClose?: number
+  dividendsData?: {
+    cashDividends?: Array<{
+      paymentDate?: string
+      lastDatePrior?: string
+      approvedOn?: string
+      rate?: number
+      label?: string
+    }>
+  }
 }
 
 type BrapiQuoteResponse = {
@@ -18,6 +27,22 @@ export type BrapiQuote = {
   currency: string | null
   marketTime?: string
   raw: BrapiQuoteResult
+}
+
+export type BrapiDividend = {
+  paymentDate: string
+  exDate: string | null
+  approvedOn: string | null
+  rate: number
+  label: string | null
+  raw: unknown
+}
+
+const toDateOnly = (value: string | null | undefined) => {
+  if (!value) return null
+  const time = Date.parse(value)
+  if (!Number.isFinite(time)) return null
+  return new Date(time).toISOString().slice(0, 10)
 }
 
 const getMaxQuotesPerRequest = () => {
@@ -109,6 +134,57 @@ const fetchChunk = async (symbols: string[]) => {
         raw: item,
       }
     })
+}
+
+export const fetchBrapiDividends = async (symbol: string) => {
+  const token = getBrapiToken()
+  const url = new URL(`https://brapi.dev/api/quote/${encodeURIComponent(symbol)}`)
+  url.searchParams.set('dividends', 'true')
+  if (token) {
+    url.searchParams.set('token', token)
+  } else {
+    return { result: null, error: 'missing_token_env' }
+  }
+
+  let data: BrapiQuoteResponse | null = null
+  try {
+    const response = await fetch(url.toString(), { headers })
+    if (!response.ok) {
+      return { result: null, error: `http_${response.status}` }
+    }
+    data = (await response.json()) as BrapiQuoteResponse
+  } catch (error) {
+    return { result: null, error: (error as Error).message }
+  }
+
+  const first = data?.results?.[0]
+  if (!first?.symbol) {
+    return { result: { symbol, dividends: [] as BrapiDividend[] } }
+  }
+
+  const dividends =
+    first.dividendsData?.cashDividends
+      ?.map((item) => {
+        const paymentDate = toDateOnly(item.paymentDate)
+        const rate = Number(item.rate ?? 0)
+        if (!paymentDate || !Number.isFinite(rate) || rate <= 0) return null
+        return {
+          paymentDate,
+          exDate: toDateOnly(item.lastDatePrior),
+          approvedOn: toDateOnly(item.approvedOn),
+          rate,
+          label: item.label?.trim() || null,
+          raw: item,
+        }
+      })
+      .filter((item): item is BrapiDividend => Boolean(item)) ?? []
+
+  return {
+    result: {
+      symbol: first.symbol,
+      dividends,
+    },
+  }
 }
 
 export const fetchBrapiQuotes = async (symbols: string[]) => {

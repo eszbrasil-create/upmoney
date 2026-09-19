@@ -16,6 +16,8 @@ import { ExpensesPage } from './pages/Expenses'
 import { SimulatorPage } from './pages/Simulator'
 import { EvolutionAssetsPage } from './pages/EvolutionAssets'
 import { MinhaPrevidenciaPage } from './pages/MinhaPrevidencia'
+// @ts-expect-error local JSX page used as requested
+import { JornadaPage as Jornada2Page } from './pages/JornadaPage.jsx'
 import { LoginPage } from './pages/Login'
 import { supabase, supabaseConfigMissing } from './lib/supabaseClient'
 import { Sidebar } from './layout/Sidebar'
@@ -132,6 +134,28 @@ type AuthUser = {
   id: string
   email?: string
   name?: string
+}
+
+type UserCourseProgressRow = {
+  course_id: string
+  completed_modules: unknown
+}
+
+type UserJourneyPhaseDataRow = {
+  phase_id: number
+  reserve_value: number | string | null
+}
+
+const normalizeCompletedModules = (value: unknown) => {
+  if (!Array.isArray(value)) return [] as number[]
+  const unique = new Set<number>()
+  value.forEach((item) => {
+    const parsed = Number(item)
+    if (!Number.isFinite(parsed)) return
+    const normalized = Math.max(1, Math.trunc(parsed))
+    unique.add(normalized)
+  })
+  return Array.from(unique).sort((a, b) => a - b)
 }
 
 const resolveAuthUserName = (value: unknown) => {
@@ -282,6 +306,12 @@ function App() {
   const [completedModulesCourse3, setCompletedModulesCourse3] = useState<
     number[]
   >([])
+  const [courseProgressHydrated, setCourseProgressHydrated] = useState(false)
+  const [phase2ReserveValue, setPhase2ReserveValue] = useState<number | null>(null)
+  const [phase3InvestmentValue, setPhase3InvestmentValue] = useState<number | null>(null)
+  const [phase4DividendGoalValue, setPhase4DividendGoalValue] = useState<number | null>(null)
+  const [phase5PassiveIncomeValue, setPhase5PassiveIncomeValue] = useState<number | null>(null)
+  const [journeyPhaseDataHydrated, setJourneyPhaseDataHydrated] = useState(false)
   const [authUser, setAuthUser] = useState<AuthUser | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [passwordRecoveryMode, setPasswordRecoveryMode] = useState(() => {
@@ -1463,27 +1493,33 @@ function App() {
     }
 
     const syncAuthUser = async () => {
-      const { data } = await sb.auth.getUser()
-      const user = data.user
-      if (!user) {
-        setAuthUser(null)
-        setAuthLoading(false)
-        return
-      }
+      try {
+        const { data } = await sb.auth.getUser()
+        const user = data.user
+        if (!user) {
+          setAuthUser(null)
+          return
+        }
 
-      const name = resolveAuthUserName(user.user_metadata) ?? (await maybePersistMissingName(user))
-      setAuthUser({
-        id: user.id,
-        email: user.email ?? undefined,
-        name,
-      })
-      setAuthLoading(false)
+        const name = resolveAuthUserName(user.user_metadata) ?? (await maybePersistMissingName(user))
+        setAuthUser({
+          id: user.id,
+          email: user.email ?? undefined,
+          name,
+        })
+      } catch (error) {
+        console.error('Falha ao verificar sessão:', error)
+        setAuthUser(null)
+      } finally {
+        setAuthLoading(false)
+      }
     }
 
     void syncAuthUser()
 
     const { data: authListener } = sb.auth.onAuthStateChange(
       (event, session) => {
+        setAuthLoading(false)
         if (event === 'PASSWORD_RECOVERY') {
           setPasswordRecoveryMode(true)
         }
@@ -1519,6 +1555,170 @@ function App() {
       authListener.subscription.unsubscribe()
     }
   }, [])
+
+  useEffect(() => {
+    if (supabaseConfigMissing || !supabase || !authUser?.id) {
+      setCourseProgressHydrated(false)
+      return
+    }
+    let cancelled = false
+    const sb = supabase
+
+    const loadCourseProgress = async () => {
+      const { data, error } = await sb
+        .from('user_course_progress')
+        .select('course_id, completed_modules')
+        .eq('user_id', authUser.id)
+
+      if (cancelled) return
+      if (error) {
+        console.error('Falha ao carregar user_course_progress:', error)
+        setCourseProgressHydrated(true)
+        return
+      }
+
+      const rows = Array.isArray(data) ? (data as UserCourseProgressRow[]) : []
+      const byCourse = new Map<string, number[]>()
+      rows.forEach((row) => {
+        byCourse.set(row.course_id, normalizeCompletedModules(row.completed_modules))
+      })
+
+      setCompletedModulesCourse1(byCourse.get('course1') ?? [])
+      setCompletedModulesCourse2(byCourse.get('course2') ?? [])
+      setCompletedModulesCourse3(byCourse.get('course3') ?? [])
+      setCourseProgressHydrated(true)
+    }
+
+    void loadCourseProgress()
+    return () => {
+      cancelled = true
+    }
+  }, [authUser?.id])
+
+  useEffect(() => {
+    if (!courseProgressHydrated || supabaseConfigMissing || !supabase || !authUser?.id) return
+    const sb = supabase
+    const payload = [
+      {
+        user_id: authUser.id,
+        course_id: 'course1',
+        completed_modules: normalizeCompletedModules(completedModulesCourse1),
+      },
+      {
+        user_id: authUser.id,
+        course_id: 'course2',
+        completed_modules: normalizeCompletedModules(completedModulesCourse2),
+      },
+      {
+        user_id: authUser.id,
+        course_id: 'course3',
+        completed_modules: normalizeCompletedModules(completedModulesCourse3),
+      },
+    ]
+
+    void (async () => {
+      const { error } = await sb.from('user_course_progress').upsert(payload, {
+        onConflict: 'user_id,course_id',
+      })
+      if (error) {
+        console.error('Falha ao salvar user_course_progress:', error)
+        return
+      }
+    })()
+  }, [
+    authUser?.id,
+    courseProgressHydrated,
+    completedModulesCourse1,
+    completedModulesCourse2,
+    completedModulesCourse3,
+  ])
+
+  useEffect(() => {
+    if (supabaseConfigMissing || !supabase || !authUser?.id) {
+      setJourneyPhaseDataHydrated(false)
+      return
+    }
+    let cancelled = false
+    const sb = supabase
+
+    const loadJourneyPhaseData = async () => {
+      const { data, error } = await sb
+        .from('user_journey_phase_data')
+        .select('phase_id, reserve_value')
+        .eq('user_id', authUser.id)
+
+      if (cancelled) return
+      if (error) {
+        console.error('Falha ao carregar user_journey_phase_data:', error)
+        setJourneyPhaseDataHydrated(true)
+        return
+      }
+
+      const rows = Array.isArray(data) ? (data as UserJourneyPhaseDataRow[]) : []
+      const phase2 = rows.find((row) => row.phase_id === 2)
+      const phase3 = rows.find((row) => row.phase_id === 3)
+      const phase4 = rows.find((row) => row.phase_id === 4)
+      const phase5 = rows.find((row) => row.phase_id === 5)
+      const parsedPhase2 = phase2?.reserve_value == null ? null : Number(phase2.reserve_value)
+      const parsedPhase3 = phase3?.reserve_value == null ? null : Number(phase3.reserve_value)
+      const parsedPhase4 = phase4?.reserve_value == null ? null : Number(phase4.reserve_value)
+      const parsedPhase5 = phase5?.reserve_value == null ? null : Number(phase5.reserve_value)
+      setPhase2ReserveValue(Number.isFinite(parsedPhase2) ? parsedPhase2 : null)
+      setPhase3InvestmentValue(Number.isFinite(parsedPhase3) ? parsedPhase3 : null)
+      setPhase4DividendGoalValue(Number.isFinite(parsedPhase4) ? parsedPhase4 : null)
+      setPhase5PassiveIncomeValue(Number.isFinite(parsedPhase5) ? parsedPhase5 : null)
+      setJourneyPhaseDataHydrated(true)
+    }
+
+    void loadJourneyPhaseData()
+    return () => {
+      cancelled = true
+    }
+  }, [authUser?.id])
+
+  useEffect(() => {
+    if (!journeyPhaseDataHydrated || supabaseConfigMissing || !supabase || !authUser?.id) return
+    const sb = supabase
+    void (async () => {
+      const { error } = await sb.from('user_journey_phase_data').upsert(
+        [
+          {
+            user_id: authUser.id,
+            phase_id: 2,
+            reserve_value: phase2ReserveValue,
+          },
+          {
+            user_id: authUser.id,
+            phase_id: 3,
+            reserve_value: phase3InvestmentValue,
+          },
+          {
+            user_id: authUser.id,
+            phase_id: 4,
+            reserve_value: phase4DividendGoalValue,
+          },
+          {
+            user_id: authUser.id,
+            phase_id: 5,
+            reserve_value: phase5PassiveIncomeValue,
+          },
+        ],
+        {
+          onConflict: 'user_id,phase_id',
+        }
+      )
+      if (error) {
+        console.error('Falha ao salvar user_journey_phase_data:', error)
+      }
+    })()
+  }, [
+    authUser?.id,
+    journeyPhaseDataHydrated,
+    phase2ReserveValue,
+    phase3InvestmentValue,
+    phase4DividendGoalValue,
+    phase5PassiveIncomeValue,
+  ])
 
 
   const course1Progress = getProgressPercent(
@@ -1582,6 +1782,52 @@ function App() {
     const start = Math.max(endIndex - (flowPeriod - 1), 0)
     return allFlowMonths.slice(start, endIndex + 1)
   }, [allFlowMonths, flowPeriod])
+  const hasAtLeastThreeSavedExpenseMonths = useMemo(() => {
+    let monthsWithData = 0
+    for (let index = 0; index < 12; index += 1) {
+      const income = monthlyFlowTotals.income[index] ?? 0
+      const expense = monthlyFlowTotals.expense[index] ?? 0
+      if (income > 0 || expense > 0) {
+        monthsWithData += 1
+      }
+    }
+    return monthsWithData >= 3
+  }, [monthlyFlowTotals])
+  const expensesInsight = useMemo(() => {
+    const monthsWithData = EVOLUTION_MONTHS.map((_, index) => {
+      const income = monthlyFlowTotals.income[index] ?? 0
+      const expense = monthlyFlowTotals.expense[index] ?? 0
+      return {
+        index,
+        income,
+        expense,
+        hasData: income > 0 || expense > 0,
+      }
+    }).filter((item) => item.hasData)
+
+    if (!monthsWithData.length) {
+      return {
+        hasData: false,
+        averageExpense: 0,
+        percentSpent: 0,
+        isNegative: false,
+      }
+    }
+
+    const recentMonths = monthsWithData.slice(-3)
+    const totalIncome = recentMonths.reduce((sum, month) => sum + month.income, 0)
+    const totalExpense = recentMonths.reduce((sum, month) => sum + month.expense, 0)
+    const averageExpense = totalExpense / recentMonths.length
+    const averageIncome = totalIncome / recentMonths.length
+    const percentSpent = averageIncome > 0 ? (averageExpense / averageIncome) * 100 : 0
+
+    return {
+      hasData: true,
+      averageExpense,
+      percentSpent,
+      isNegative: averageExpense > averageIncome,
+    }
+  }, [monthlyFlowTotals])
   const maxFlowValue = Math.max(
     ...flowMonths.map((item) => Math.max(item.income, item.expense)),
     0
@@ -2511,6 +2757,22 @@ function App() {
           <AssetsPage
             onOpenMenu={() => setSidebarOpen(true, 'assets_page')}
             onAssetAdded={() => incrementActivity('assetsAdded')}
+          />
+        ) : activePage === 'jornada2' ? (
+          <Jornada2Page
+            onNavigate={(page: AppPage) => navigate(page, 'jornada2_page')}
+            completedCourse1Modules={completedModulesCourse1}
+            completedCourse2Modules={completedModulesCourse2}
+            hasAtLeastThreeSavedExpenseMonths={hasAtLeastThreeSavedExpenseMonths}
+            expensesInsight={expensesInsight}
+            phase2ReserveValue={phase2ReserveValue}
+            onPhase2ReserveValueChange={setPhase2ReserveValue}
+            phase3InvestmentValue={phase3InvestmentValue}
+            onPhase3InvestmentValueChange={setPhase3InvestmentValue}
+            phase4DividendGoalValue={phase4DividendGoalValue}
+            onPhase4DividendGoalValueChange={setPhase4DividendGoalValue}
+            phase5PassiveIncomeValue={phase5PassiveIncomeValue}
+            onPhase5PassiveIncomeValueChange={setPhase5PassiveIncomeValue}
           />
         ) : activePage === 'expenses' ? (
           <ExpensesPage onOpenMenu={() => setSidebarOpen(true, 'expenses_page')} />

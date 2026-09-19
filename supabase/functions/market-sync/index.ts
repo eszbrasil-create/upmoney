@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.0'
-import { fetchBrapiQuotes } from '../_shared/providers/brapi.ts'
+import { fetchBrapiDividends, fetchBrapiQuotes } from '../_shared/providers/brapi.ts'
 import { normalizeTicker } from '../_shared/utils.ts'
 
 type PositionRow = {
@@ -21,12 +21,20 @@ type MarketSyncStatusRow = {
   last_success_at: string | null
 }
 
+type DividendSyncStateRow = {
+  ticker: string
+  last_attempt_at: string | null
+  last_success_at: string | null
+}
+
 const getTodayDate = () => new Date().toISOString().slice(0, 10)
 const parseIsoTime = (value: string | null | undefined) => {
   if (!value) return null
   const t = new Date(value).getTime()
   return Number.isFinite(t) ? t : null
 }
+
+const DIVIDEND_HISTORY_START_DATE = '2025-06-01'
 
 const getUserTickers = async (
   client: ReturnType<typeof createClient>,
@@ -161,6 +169,12 @@ serve(async (req) => {
     .eq('user_id', userId)
     .in('ticker', tickers)
 
+  const { data: dividendSyncStateRows } = await admin
+    .from('market_dividend_sync_state')
+    .select('ticker,last_attempt_at,last_success_at')
+    .eq('provider', 'brapi')
+    .in('ticker', tickers)
+
   const cacheByTicker = new Map<string, MarketCacheRow>()
   ;(cacheRows ?? []).forEach((row) => {
     if (!cacheByTicker.has(row.ticker)) {
@@ -170,6 +184,12 @@ serve(async (req) => {
   const previousSuccessByTicker = new Map<string, string | null>()
   ;((previousStatusRows ?? []) as MarketSyncStatusRow[]).forEach((row) => {
     previousSuccessByTicker.set(row.ticker, row.last_success_at ?? null)
+  })
+  const dividendLastAttemptByTicker = new Map<string, string | null>()
+  const dividendLastSuccessByTicker = new Map<string, string | null>()
+  ;((dividendSyncStateRows ?? []) as DividendSyncStateRow[]).forEach((row) => {
+    dividendLastAttemptByTicker.set(row.ticker, row.last_attempt_at ?? null)
+    dividendLastSuccessByTicker.set(row.ticker, row.last_success_at ?? null)
   })
 
   const { data: logRow } = await admin
@@ -211,6 +231,14 @@ serve(async (req) => {
   }
 
   const now = new Date().toISOString()
+  const nowTimestamp = Date.now()
+  const dividendMinIntervalHours = Number(
+    Deno.env.get('MARKET_DIVIDEND_MIN_SYNC_HOURS') ?? '24'
+  )
+  const dividendMinIntervalMs =
+    Number.isFinite(dividendMinIntervalHours) && dividendMinIntervalHours > 0
+      ? dividendMinIntervalHours * 60 * 60 * 1000
+      : 24 * 60 * 60 * 1000
   type ProviderQuote = {
     source: 'brapi'
     quote: {
@@ -250,6 +278,105 @@ serve(async (req) => {
   if (upsertRows.length) {
     await admin.from('market_cache').upsert(upsertRows, {
       onConflict: 'user_id,ticker',
+    })
+  }
+
+  const dividendEventsRows: Array<{
+    provider: 'brapi'
+    ticker: string
+    event_key: string
+    payment_date: string
+    ex_date: string | null
+    approved_on: string | null
+    rate: number
+    label: string | null
+    raw: unknown
+    last_seen_at: string
+  }> = []
+  const dividendSyncRows: Array<{
+    provider: 'brapi'
+    ticker: string
+    status: 'updated' | 'no_change' | 'provider_error' | 'provider_empty'
+    message: string | null
+    last_attempt_at: string
+    last_success_at: string | null
+  }> = []
+
+  for (const ticker of tickers) {
+    const lastAttemptMs = parseIsoTime(dividendLastAttemptByTicker.get(ticker) ?? null)
+    const isDue =
+      force ||
+      lastAttemptMs == null ||
+      nowTimestamp - lastAttemptMs >= dividendMinIntervalMs
+    if (!isDue) continue
+
+    const { result, error: dividendError } = await fetchBrapiDividends(ticker)
+    if (dividendError) {
+      dividendSyncRows.push({
+        provider: 'brapi',
+        ticker,
+        status: 'provider_error',
+        message: `Falha ao consultar dividendos (${dividendError}).`,
+        last_attempt_at: now,
+        last_success_at: dividendLastSuccessByTicker.get(ticker) ?? null,
+      })
+      continue
+    }
+
+    const normalizedTicker = normalizeTicker(result?.symbol ?? ticker)
+    const filteredEvents =
+      result?.dividends.filter((event) => event.paymentDate >= DIVIDEND_HISTORY_START_DATE) ?? []
+
+    if (!filteredEvents.length) {
+      dividendSyncRows.push({
+        provider: 'brapi',
+        ticker: normalizedTicker,
+        status: 'no_change',
+        message: 'Sem novos dividendos/JCP para salvar.',
+        last_attempt_at: now,
+        last_success_at: now,
+      })
+      continue
+    }
+
+    filteredEvents.forEach((event) => {
+      const label = event.label?.trim().toUpperCase() ?? null
+      const exDate = event.exDate ?? ''
+      const key = ['brapi', normalizedTicker, event.paymentDate, exDate, event.rate, label ?? '']
+        .join('|')
+      dividendEventsRows.push({
+        provider: 'brapi',
+        ticker: normalizedTicker,
+        event_key: key,
+        payment_date: event.paymentDate,
+        ex_date: event.exDate,
+        approved_on: event.approvedOn,
+        rate: event.rate,
+        label,
+        raw: event.raw,
+        last_seen_at: now,
+      })
+    })
+
+    dividendSyncRows.push({
+      provider: 'brapi',
+      ticker: normalizedTicker,
+      status: 'updated',
+      message: `${filteredEvents.length} evento(s) de dividendos/JCP processado(s).`,
+      last_attempt_at: now,
+      last_success_at: now,
+    })
+  }
+
+  if (dividendEventsRows.length) {
+    await admin.from('market_dividend_events').upsert(dividendEventsRows, {
+      onConflict: 'event_key',
+    })
+  }
+
+  if (dividendSyncRows.length) {
+    await admin.from('market_dividend_sync_state').upsert(dividendSyncRows, {
+      onConflict: 'provider,ticker',
     })
   }
 

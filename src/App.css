@@ -99,6 +99,20 @@ body.menu-open {
   overflow: hidden;
 }
 
+.page--jornada {
+  height: 100vh;
+  overflow: hidden;
+  padding: 0;
+  gap: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.page--jornada .content {
+  height: 100vh;
+  overflow: hidden;
+  gap: 0;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -7469,6 +7483,12 @@ canvas {
     grid-template-columns: 220px minmax(0, 1fr);
   }
 
+  .page.page--jornada {
+    gap: 0;
+    padding: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .sidebar {
     padding: 14px 14px 24px;
   }
@@ -7580,6 +7600,10 @@ canvas {
     max-width: 100%;
     overflow-x: hidden;
     padding: 20px 4vw 28px 12px;
+  }
+
+  .page.page--jornada {
+    padding: 0;
   }
 
   .content,
@@ -7743,5 +7767,566 @@ canvas {
 
   .evolution-month-label__year {
     font-size: 0.48rem;
+  }
+}
+
+.jornada-page {
+  height: 100%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 8% 10%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.08) 46%, transparent 62%),
+    radial-gradient(circle at 88% 86%, rgba(157, 218, 220, 0.35) 0%, rgba(157, 218, 220, 0) 52%),
+    linear-gradient(145deg, #f5f4f2 0%, #f5f7f7 54%, #e8f5f6 100%);
+}
+
+.jornada-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  height: 56px;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(28, 31, 36, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(233, 237, 242, 0.95);
+  backdrop-filter: blur(8px);
+}
+
+.jornada-topbar-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.jornada-menu-btn {
+  border: 1px solid rgba(15, 111, 107, 0.25);
+  background: rgba(15, 111, 107, 0.08);
+  color: var(--teal);
+  font-weight: 700;
+  border-radius: 9px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.84rem;
+}
+
+.jornada-profile-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(28, 31, 36, 0.14);
+  background: #e8f0ef;
+  color: #466e73;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.jornada-profile-pill {
+  border: none;
+  background: rgba(249, 251, 252, 0.95);
+  border-radius: 999px;
+  padding: 3px 8px 3px 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--slate);
+  font-size: 0.72rem;
+}
+
+.jornada-profile-name {
+  font-weight: 600;
+  color: #24384c;
+  font-size: 0.82rem;
+}
+
+.jornada-shell {
+  width: 100%;
+  height: calc(100vh - 56px);
+  margin-top: 56px;
+  padding: 10px 14px 12px;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 0;
+  overflow: hidden;
+}
+
+.jornada-hero {
+  max-width: none;
+  width: 90%;
+  margin: 0 auto;
+  border-radius: 14px 14px 0 0;
+  border: 1px solid rgba(28, 31, 36, 0.08);
+  border-bottom: 0;
+  background: rgba(255, 255, 255, 0.66);
+  padding: 12px 28px 10px;
+  text-align: center;
+}
+
+.jornada-hero h1 {
+  font-size: clamp(1.9rem, 2.7vw, 2.9rem);
+  margin: 0;
+  letter-spacing: -0.01em;
+  color: #1f3246;
+  line-height: 1.18;
+}
+
+.jornada-hero p {
+  max-width: 980px;
+  margin: 5px auto 0;
+  color: #364456;
+  line-height: 1.3;
+  font-size: clamp(0.96rem, 1.08vw, 1.12rem);
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.jornada-cta {
+  margin-top: 8px;
+  border: none;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #269d76 0%, #1f8a67 100%);
+  color: #fff;
+  font-size: clamp(1rem, 1.4vw, 1.42rem);
+  font-weight: 700;
+  padding: 8px 20px;
+  box-shadow: 0 6px 14px rgba(31, 138, 103, 0.2);
+  cursor: pointer;
+}
+
+.jornada-trail {
+  max-width: none;
+  width: 90%;
+  margin: 0 auto;
+  padding: 8px 18px 10px;
+  border: 1px solid rgba(28, 31, 36, 0.08);
+  border-top: 0;
+  border-bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.jornada-trail-scroll {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 5px;
+  overflow-x: auto;
+}
+
+.jornada-phase-col {
+  display: grid;
+  gap: 5px;
+}
+
+.jornada-phase-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jornada-phase-pill {
+  min-width: 112px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid #d5d9de;
+  background: #ffffff;
+  color: #be5b55;
+  font-size: 1.02rem;
+  font-weight: 700;
+  cursor: not-allowed;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.jornada-phase-pill.is-unlocked {
+  background: #1f8a67;
+  border-color: #1a7d5d;
+  color: #fff;
+  cursor: pointer;
+}
+
+.jornada-phase-pill.is-next {
+  background: #df594b;
+  border-color: #cf4f42;
+  color: #fff;
+}
+
+.jornada-phase-pill.is-selected {
+  box-shadow: 0 0 0 3px rgba(31, 50, 70, 0.08);
+}
+
+.jornada-phase-caret {
+  font-size: 0.66rem;
+}
+
+.jornada-phase-arrow {
+  color: #8e98a3;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.jornada-phase-title {
+  margin: 0;
+  color: #29394b;
+  font-size: 0.7rem;
+  line-height: 1.2;
+}
+
+.jornada-phase-title.is-unlocked {
+  color: #195f5f;
+  font-weight: 700;
+}
+
+.jornada-detail {
+  max-width: 1120px;
+  margin: 0 auto;
+  border-radius: 12px;
+  border: 1px solid rgba(28, 31, 36, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 1.42fr 0.58fr;
+  gap: 10px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.jornada-detail-main h2 {
+  margin: 0;
+  font-size: 2rem;
+  color: #1f3246;
+  line-height: 1.2;
+}
+
+.jornada-detail-main p {
+  margin: 4px 0 0;
+  font-size: 1.12rem;
+  color: #253447;
+  line-height: 1.26;
+}
+
+.jornada-detail-main h3 {
+  margin: 7px 0 3px;
+  font-size: 1.82rem;
+  color: #1f3246;
+}
+
+.jornada-actions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1px;
+  font-size: 1.02rem;
+  color: #273749;
+  line-height: 1.28;
+}
+
+.jornada-actions li::before {
+  content: "✓";
+  color: #1f8a67;
+  margin-right: 5px;
+  font-weight: 700;
+}
+
+.jornada-content {
+  border-radius: 10px;
+  border: 1px solid rgba(28, 31, 36, 0.08);
+  background: #f8fafb;
+  padding: 6px 8px 6px;
+  margin-top: 4px;
+}
+
+.jornada-content h3 {
+  margin: 0 0 5px;
+}
+
+.jornada-content-row {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 6px;
+}
+
+.jornada-book-icon {
+  border-radius: 7px;
+  background: #4aa4cd;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  height: 28px;
+}
+
+.jornada-content-title {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.25;
+}
+
+.jornada-content ul {
+  margin: 4px 0 0;
+  color: #2d3e52;
+  font-size: 0.98rem;
+  line-height: 1.25;
+  padding-left: 15px;
+}
+
+.jornada-content-foot {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 9px;
+}
+
+.jornada-cta-inline {
+  margin: 0;
+  font-size: 1.04rem;
+  padding: 7px 14px;
+}
+
+.jornada-progress-row {
+  margin-top: 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 6px;
+  color: #38495e;
+  font-size: 1rem;
+}
+
+.jornada-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #d8dde3;
+  overflow: hidden;
+}
+
+.jornada-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2aab82 0%, #1f8a67 100%);
+}
+
+.jornada-detail-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+}
+
+.jornada-illustration {
+  height: 100%;
+  min-height: 168px;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 14% 86%, rgba(241, 176, 67, 0.28) 0%, rgba(241, 176, 67, 0) 34%),
+    radial-gradient(circle at 84% 20%, rgba(110, 191, 155, 0.24) 0%, rgba(110, 191, 155, 0) 46%),
+    linear-gradient(180deg, #edf6f5 0%, #f6fbfb 100%);
+  border: 1px solid rgba(28, 31, 36, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.jornada-blob {
+  position: absolute;
+  right: 16px;
+  top: 26px;
+  width: 170px;
+  height: 120px;
+  border-radius: 60% 40% 52% 48% / 40% 55% 45% 60%;
+  background: rgba(167, 214, 221, 0.35);
+}
+
+.jornada-plant {
+  position: absolute;
+  right: 22px;
+  bottom: 10px;
+  width: 155px;
+  height: 138px;
+}
+
+.jornada-pot {
+  position: absolute;
+  left: 48px;
+  bottom: 0;
+  width: 58px;
+  height: 34px;
+  background: linear-gradient(180deg, #e08d62 0%, #cc7548 100%);
+  border-radius: 12px 12px 18px 18px;
+}
+
+.jornada-stem {
+  position: absolute;
+  left: 78px;
+  bottom: 28px;
+  width: 4px;
+  height: 62px;
+  background: #2b9e6f;
+  border-radius: 999px;
+}
+
+.jornada-leaf {
+  position: absolute;
+  width: 34px;
+  height: 16px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #5fc796 0%, #3ea877 100%);
+}
+
+.jornada-leaf.l1 {
+  left: 48px;
+  bottom: 70px;
+  transform: rotate(-26deg);
+}
+
+.jornada-leaf.l2 {
+  left: 78px;
+  bottom: 78px;
+  transform: rotate(22deg);
+}
+
+.jornada-leaf.l3 {
+  left: 58px;
+  bottom: 50px;
+  width: 42px;
+}
+
+.jornada-coin {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f8cb69 0%, #efae45 100%);
+  border: 1px solid #e4a042;
+  color: #ba7d2a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.jornada-coin.c1 {
+  left: 45px;
+  bottom: 92px;
+}
+
+.jornada-coin.c2 {
+  left: 88px;
+  bottom: 98px;
+}
+
+.jornada-coin.c3 {
+  left: 68px;
+  bottom: 112px;
+}
+
+.jornada-detail-side .jornada-cta {
+  margin-top: 0;
+  width: 100%;
+}
+
+.jornada-empty {
+  min-height: 320px;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+
+@media (max-width: 980px) {
+  .jornada-topbar {
+    height: 52px;
+  }
+
+  .jornada-shell {
+    width: 100%;
+    height: auto;
+    margin-top: 52px;
+    padding: 8px 8px 12px;
+    display: block;
+    overflow: visible;
+  }
+
+  .jornada-hero {
+    padding: 22px 14px 18px;
+  }
+
+  .jornada-hero h1 {
+    font-size: 1.4rem;
+  }
+
+  .jornada-hero p {
+    font-size: 1.02rem;
+  }
+
+  .jornada-cta {
+    font-size: 0.96rem;
+    padding: 8px 14px;
+  }
+
+  .jornada-trail {
+    padding: 14px 10px;
+  }
+
+  .jornada-trail-scroll {
+    width: max-content;
+    min-width: 100%;
+    justify-content: flex-start;
+  }
+
+  .jornada-phase-pill {
+    min-width: 108px;
+    height: 34px;
+    font-size: 0.76rem;
+  }
+
+  .jornada-phase-title {
+    font-size: 0.72rem;
+  }
+
+  .jornada-detail {
+    margin: 10px;
+    padding: 14px;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .jornada-detail-main h2 {
+    font-size: 1.5rem;
+  }
+
+  .jornada-detail-main p,
+  .jornada-actions,
+  .jornada-content ul {
+    font-size: 0.92rem;
+  }
+
+  .jornada-detail-main h3 {
+    font-size: 1.14rem;
+  }
+
+  .jornada-progress-row {
+    font-size: 0.85rem;
+  }
+
+  .jornada-illustration {
+    min-height: 180px;
+  }
+
+  .jornada-content-foot {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 }

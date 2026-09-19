@@ -1,5 +1,6 @@
 export type AppPage =
   | 'dash'
+  | 'jornada2'
   | 'assets'
   | 'expenses'
   | 'minha_previdencia'
