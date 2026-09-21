@@ -170,6 +170,59 @@ const parseValue = (value: string) => {
   return parseSingleNumber(value)
 }
 
+export const expensesLocalBackupStorageKey = (year: number) =>
+  `upmoney_expenses_sheet_backup:${year}`
+
+const normalizePersistedRows = (value: unknown): RowData[] | null => {
+  if (!Array.isArray(value)) return null
+
+  const normalized = value.map((raw, index) => {
+    const row = typeof raw === 'object' && raw ? (raw as Partial<RowData>) : {}
+    const type = row.type === 'income' || row.type === 'expense' ? row.type : 'expense'
+    const label =
+      typeof row.label === 'string' && row.label.trim().length > 0
+        ? row.label
+        : type === 'income'
+          ? `Receita ${index + 1}`
+          : `Despesa ${index + 1}`
+
+    const valuesSource = Array.isArray(row.values) ? row.values : []
+    const values = Array.from({ length: MONTHS.length }, (_, monthIndex) => {
+      const value = valuesSource[monthIndex]
+      return value === undefined || value === null ? '' : String(value)
+    })
+
+    const order = typeof row.order === 'number' ? row.order : index + 1
+    const id = typeof row.id === 'string' && row.id.length > 0 ? row.id : createRow(label, type, order).id
+
+    return { id, label, type, values, order }
+  })
+
+  return normalized
+}
+
+export const writeExpensesLocalBackup = (year: number, rows: RowData[]) => {
+  if (typeof window === 'undefined') return
+  const payload = rows.map((row) => ({
+    ...row,
+    values: row.values.map((value) => (value ?? '').toString()),
+  }))
+  window.localStorage.setItem(expensesLocalBackupStorageKey(year), JSON.stringify(payload))
+}
+
+export const readExpensesLocalBackup = (year: number): RowData[] | null => {
+  if (typeof window === 'undefined') return null
+  const raw = window.localStorage.getItem(expensesLocalBackupStorageKey(year))
+  if (!raw) return null
+
+  try {
+    const parsed = JSON.parse(raw)
+    return normalizePersistedRows(parsed)
+  } catch {
+    return null
+  }
+}
+
 type ExpensesPageProps = {
   onOpenMenu?: () => void
 }
@@ -804,8 +857,15 @@ export function ExpensesPage({ onOpenMenu }: ExpensesPageProps) {
       .maybeSingle()
 
     if (loadError) {
-      setError('Não foi possível carregar sua planilha.')
-      setRows(buildDefaultRows())
+      const localRows = readExpensesLocalBackup(year)
+      if (localRows) {
+        setRows(localRows)
+        setLastSavedAt(new Date())
+        setError('Dados locais restaurados. A sincronização com a conta falhou.')
+      } else {
+        setError('Não foi possível carregar sua planilha.')
+        setRows(buildDefaultRows())
+      }
       setLoading(false)
       return
     }
@@ -819,12 +879,20 @@ export function ExpensesPage({ onOpenMenu }: ExpensesPageProps) {
           rowsPayload = null
         }
       }
-      setRows(normalizeRows(rowsPayload))
+      const normalizedRows = normalizeRows(rowsPayload)
+      setRows(normalizedRows)
+      writeExpensesLocalBackup(year, normalizedRows)
       setLastSavedAt(data.updated_at ? new Date(data.updated_at) : null)
       setDirtyRowIds(new Set())
     } else {
-      setRows(buildDefaultRows())
-      setLastSavedAt(null)
+      const localRows = readExpensesLocalBackup(year)
+      if (localRows) {
+        setRows(localRows)
+        setLastSavedAt(new Date())
+      } else {
+        setRows(buildDefaultRows())
+        setLastSavedAt(null)
+      }
       setDirtyRowIds(new Set())
     }
     setLoading(false)
@@ -921,7 +989,16 @@ export function ExpensesPage({ onOpenMenu }: ExpensesPageProps) {
 
   useEffect(() => {
     if (loading) return
-    if (supabaseConfigMissing || !supabase) return
+    if (typeof window === 'undefined') return
+
+    writeExpensesLocalBackup(selectedYear, rows)
+
+    if (supabaseConfigMissing || !supabase) {
+      setError('Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY para salvar despesas.')
+      setSaving(false)
+      return
+    }
+
     const sb = supabase
     if (skipNextSaveRef.current) {
       skipNextSaveRef.current = false
@@ -954,7 +1031,9 @@ export function ExpensesPage({ onOpenMenu }: ExpensesPageProps) {
         )
 
       if (upsertError) {
-        setError('Não foi possível salvar automaticamente.')
+        setLastSavedAt(new Date())
+        setDirtyRowIds(new Set())
+        setError('Salvo localmente. A sincronização com a conta falhou.')
         setSaving(false)
         return
       }
@@ -1026,7 +1105,9 @@ export function ExpensesPage({ onOpenMenu }: ExpensesPageProps) {
     : saving
       ? 'Salvando...'
       : error
-        ? 'Erro ao salvar'
+        ? error.startsWith('Salvo localmente')
+          ? 'Salvo localmente'
+          : 'Erro ao salvar'
         : lastSavedAt
           ? `Salvo em ${lastSavedAt.toLocaleString('pt-BR', {
               day: '2-digit',
