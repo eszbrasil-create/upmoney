@@ -21,6 +21,7 @@ import { JornadaPage as Jornada2Page } from './pages/JornadaPage.jsx'
 import { LoginPage } from './pages/Login'
 import { supabase, supabaseConfigMissing } from './lib/supabaseClient'
 import { Sidebar } from './layout/Sidebar'
+import { clearExpensesLocalBackupsForUser } from './pages/Expenses'
 import type { AppPage } from './types/app'
 import { formatBRL } from './lib/format'
 import { EXPENSES_SHEET_CHANGED_EVENT } from './lib/expensesSheetEvents'
@@ -2050,7 +2051,12 @@ function App() {
         open={isSidebarOpen}
         setOpen={(open) => setSidebarOpen(open, 'sidebar')}
         onNavigate={(page) => navigate(page, 'sidebar')}
-        onSignOut={() => supabase?.auth.signOut()}
+        onSignOut={() => {
+          if (authUser?.id) {
+            clearExpensesLocalBackupsForUser(authUser.id)
+          }
+          void supabase?.auth.signOut()
+        }}
         userName={authUser?.name}
       />
 
@@ -2775,7 +2781,10 @@ function App() {
             onPhase5PassiveIncomeValueChange={setPhase5PassiveIncomeValue}
           />
         ) : activePage === 'expenses' ? (
-          <ExpensesPage onOpenMenu={() => setSidebarOpen(true, 'expenses_page')} />
+          <ExpensesPage
+            userId={authUser?.id}
+            onOpenMenu={() => setSidebarOpen(true, 'expenses_page')}
+          />
         ) : activePage === 'minha_previdencia' ? (
           <MinhaPrevidenciaPage onOpenMenu={() => setSidebarOpen(true, 'minha_previdencia_page')} />
         ) : activePage === 'simulator' ? (

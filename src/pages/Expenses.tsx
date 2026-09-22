@@ -170,8 +170,21 @@ const parseValue = (value: string) => {
   return parseSingleNumber(value)
 }
 
-export const expensesLocalBackupStorageKey = (year: number) =>
-  `upmoney_expenses_sheet_backup:${year}`
+export const expensesLocalBackupStorageKey = (year: number, userId?: string | null) =>
+  `upmoney_expenses_sheet_backup:${userId ?? 'anonymous'}:${year}`
+
+export const clearExpensesLocalBackupsForUser = (userId: string) => {
+  if (typeof window === 'undefined') return
+  const prefix = `upmoney_expenses_sheet_backup:${userId}:`
+  const keysToRemove: string[] = []
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index)
+    if (key && key.startsWith(prefix)) {
+      keysToRemove.push(key)
+    }
+  }
+  keysToRemove.forEach((key) => window.localStorage.removeItem(key))
+}
 
 const normalizePersistedRows = (value: unknown): RowData[] | null => {
   if (!Array.isArray(value)) return null
@@ -201,18 +214,21 @@ const normalizePersistedRows = (value: unknown): RowData[] | null => {
   return normalized
 }
 
-export const writeExpensesLocalBackup = (year: number, rows: RowData[]) => {
+export const writeExpensesLocalBackup = (year: number, userId: string | null, rows: RowData[]) => {
   if (typeof window === 'undefined') return
   const payload = rows.map((row) => ({
     ...row,
     values: row.values.map((value) => (value ?? '').toString()),
   }))
-  window.localStorage.setItem(expensesLocalBackupStorageKey(year), JSON.stringify(payload))
+  window.localStorage.setItem(
+    expensesLocalBackupStorageKey(year, userId),
+    JSON.stringify(payload)
+  )
 }
 
-export const readExpensesLocalBackup = (year: number): RowData[] | null => {
+export const readExpensesLocalBackup = (year: number, userId: string | null): RowData[] | null => {
   if (typeof window === 'undefined') return null
-  const raw = window.localStorage.getItem(expensesLocalBackupStorageKey(year))
+  const raw = window.localStorage.getItem(expensesLocalBackupStorageKey(year, userId))
   if (!raw) return null
 
   try {
@@ -224,6 +240,7 @@ export const readExpensesLocalBackup = (year: number): RowData[] | null => {
 }
 
 type ExpensesPageProps = {
+  userId?: string | null
   onOpenMenu?: () => void
 }
 
@@ -236,7 +253,7 @@ type AnalysisAlert = {
   focusLabel?: string
 }
 
-export function ExpensesPage({ onOpenMenu }: ExpensesPageProps) {
+export function ExpensesPage({ userId, onOpenMenu }: ExpensesPageProps) {
   const buildDefaultRows = () => {
     const incomeRows = Array.from({ length: 2 }, (_, index) =>
       createRow('', 'income', index + 1)
@@ -857,7 +874,7 @@ export function ExpensesPage({ onOpenMenu }: ExpensesPageProps) {
       .maybeSingle()
 
     if (loadError) {
-      const localRows = readExpensesLocalBackup(year)
+      const localRows = readExpensesLocalBackup(year, userId ?? null)
       if (localRows) {
         setRows(localRows)
         setLastSavedAt(new Date())
@@ -885,7 +902,7 @@ export function ExpensesPage({ onOpenMenu }: ExpensesPageProps) {
       setLastSavedAt(data.updated_at ? new Date(data.updated_at) : null)
       setDirtyRowIds(new Set())
     } else {
-      const localRows = readExpensesLocalBackup(year)
+      const localRows = readExpensesLocalBackup(year, userId ?? null)
       if (localRows) {
         setRows(localRows)
         setLastSavedAt(new Date())
@@ -991,7 +1008,7 @@ export function ExpensesPage({ onOpenMenu }: ExpensesPageProps) {
     if (loading) return
     if (typeof window === 'undefined') return
 
-    writeExpensesLocalBackup(selectedYear, rows)
+    writeExpensesLocalBackup(selectedYear, userId ?? null, rows)
 
     if (supabaseConfigMissing || !supabase) {
       setError('Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY para salvar despesas.')
