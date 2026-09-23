@@ -898,7 +898,7 @@ export function ExpensesPage({ userId, onOpenMenu }: ExpensesPageProps) {
       }
       const normalizedRows = normalizeRows(rowsPayload)
       setRows(normalizedRows)
-      writeExpensesLocalBackup(year, normalizedRows)
+      writeExpensesLocalBackup(year, userId ?? null, normalizedRows)
       setLastSavedAt(data.updated_at ? new Date(data.updated_at) : null)
       setDirtyRowIds(new Set())
     } else {
